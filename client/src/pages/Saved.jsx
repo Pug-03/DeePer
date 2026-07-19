@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
+import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash } from '../components/icons.jsx';
@@ -8,6 +9,7 @@ import { IcTrash } from '../components/icons.jsx';
 export default function Saved() {
   const nav = useNavigate();
   const toast = useToast();
+  const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -39,7 +41,7 @@ export default function Saved() {
     try {
       await api.del(`/saved/${id}`);
       setItems((prev) => prev.filter((x) => x.id !== id));
-      toast('ลบออกจากที่บันทึกแล้ว');
+      toast(t('saved.removed'));
     } catch (e2) {
       toast(e2.message);
     }
@@ -48,8 +50,8 @@ export default function Saved() {
   return (
     <div className="page page--tab">
       <div className="header">
-        <h1 className="h1">คำถามที่บันทึกไว้</h1>
-        <p className="sub">แตะเพื่อกลับมาตอบคำถามรอบสอง</p>
+        <h1 className="h1">{t('saved.title')}</h1>
+        <p className="sub">{t('saved.sub')}</p>
       </div>
 
       {status === 'loading' && <Loading />}
@@ -57,11 +59,15 @@ export default function Saved() {
       {status === 'empty' && (
         <EmptyState
           emoji="🔖"
-          title="ยังไม่มีคำถามที่บันทึก"
-          subtitle="กดปุ่มบันทึกที่หน้าหลักเพื่อเก็บคำถามไว้ถามทีหลัง"
+          title={t('saved.emptyTitle')}
+          subtitle={t('saved.emptySub')}
           action={
-            <button className="btn btn--primary btn--sm" style={{ marginTop: 8 }} onClick={() => nav('/app/home')}>
-              ไปหน้าหลัก
+            <button
+              className="btn btn--primary btn--sm"
+              style={{ marginTop: 8 }}
+              onClick={() => nav('/app/home')}
+            >
+              {t('saved.goHome')}
             </button>
           }
         />
@@ -75,7 +81,7 @@ export default function Saved() {
               <div className="ci-meta">
                 <span className="tag">{catLabel(it.category)}</span>
                 <span>{formatDate(it.created_at)}</span>
-                <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="ลบ">
+                <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="delete">
                   <IcTrash size={18} />
                 </button>
               </div>

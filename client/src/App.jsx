@@ -14,7 +14,7 @@ import Profile from './pages/Profile.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <Loading label="กำลังเข้าสู่ระบบ..." />;
+  if (loading) return <Loading />;
   if (!user) return <Navigate to="/" replace />;
   return children;
 }

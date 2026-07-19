@@ -2,16 +2,13 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
+import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
+import LangToggle from '../components/LangToggle.jsx';
 import { IcBack, IcGoogle, IcMail } from '../components/icons.jsx';
 
-const GENDERS = [
-  { v: 'female', l: 'หญิง' },
-  { v: 'male', l: 'ชาย' },
-  { v: 'other', l: 'อื่น ๆ' },
-  { v: 'prefer_not', l: 'ไม่ระบุ' },
-];
+const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
 
 function pwScore(pw) {
   const rules = {
@@ -28,38 +25,39 @@ function pwScore(pw) {
 }
 
 function ProfileFields({ nickname, setNickname, age, setAge, gender, setGender }) {
+  const { t } = useI18n();
   return (
     <>
       <div className="field">
-        <label>ชื่อเล่น</label>
+        <label>{t('signup.nickname')}</label>
         <input
           className="input"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          placeholder="เรียกเราว่า..."
+          placeholder={t('signup.nicknamePh')}
           maxLength={40}
         />
       </div>
       <div className="field">
-        <label>อายุ</label>
+        <label>{t('signup.age')}</label>
         <input
           className="input"
           type="number"
           inputMode="numeric"
           value={age}
           onChange={(e) => setAge(e.target.value)}
-          placeholder="เช่น 25"
+          placeholder={t('signup.agePh')}
           min={1}
           max={120}
         />
       </div>
       <div className="field">
-        <label>เพศ</label>
+        <label>{t('signup.gender')}</label>
         <select className="select" value={gender} onChange={(e) => setGender(e.target.value)}>
-          <option value="">เลือกเพศ</option>
-          {GENDERS.map((g) => (
-            <option key={g.v} value={g.v}>
-              {g.l}
+          <option value="">{t('signup.genderPh')}</option>
+          {GENDER_VALUES.map((g) => (
+            <option key={g} value={g}>
+              {t(`gender.${g}`)}
             </option>
           ))}
         </select>
@@ -72,6 +70,7 @@ export default function Signup() {
   const nav = useNavigate();
   const loc = useLocation();
   const { config, applyAuth } = useAuth();
+  const { t } = useI18n();
   const toast = useToast();
 
   const [step, setStep] = useState('method'); // method | email | otp | profile | gprofile
@@ -89,7 +88,6 @@ export default function Signup() {
 
   const [gCredential, setGCredential] = useState(null);
 
-  // If arriving from Login with a Google account needing profile completion.
   useEffect(() => {
     const g = loc.state?.google;
     if (g?.credential) {
@@ -110,7 +108,7 @@ export default function Signup() {
       setStep('otp');
       setOtp(['', '', '', '']);
       setTimeout(() => otpRefs.current[0]?.focus(), 60);
-      if (d.dev_code) toast(`โหมดพัฒนา: รหัส OTP คือ ${d.dev_code}`);
+      if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
     } catch (e2) {
       setErr(e2.message);
     } finally {
@@ -148,8 +146,8 @@ export default function Signup() {
   const registerEmail = async (e) => {
     e.preventDefault();
     setErr('');
-    if (!nickname.trim()) return setErr('กรุณากรอกชื่อเล่น');
-    if (!pwValid) return setErr('รหัสผ่านยังไม่ตรงตามเงื่อนไข');
+    if (!nickname.trim()) return setErr(t('signup.needNickname'));
+    if (!pwValid) return setErr(t('signup.pwNotValid'));
     setBusy(true);
     try {
       const d = await api.post(
@@ -189,7 +187,7 @@ export default function Signup() {
   const registerGoogle = async (e) => {
     e.preventDefault();
     setErr('');
-    if (!nickname.trim()) return setErr('กรุณากรอกชื่อเล่น');
+    if (!nickname.trim()) return setErr(t('signup.needNickname'));
     setBusy(true);
     try {
       const d = await api.post(
@@ -217,9 +215,13 @@ export default function Signup() {
 
   return (
     <div className="page">
+      <div className="lang-float">
+        <LangToggle />
+      </div>
+
       <button className="link" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={back}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <IcBack size={18} /> กลับ
+          <IcBack size={18} /> {t('common.back')}
         </span>
       </button>
 
@@ -229,8 +231,8 @@ export default function Signup() {
       {step === 'method' && (
         <div className="fade-up">
           <div className="header">
-            <h1 className="h1">สมัครใหม่</h1>
-            <p className="sub">เลือกวิธีสมัครที่สะดวก</p>
+            <h1 className="h1">{t('signup.title')}</h1>
+            <p className="sub">{t('signup.sub')}</p>
           </div>
 
           {config.google_enabled ? (
@@ -238,8 +240,8 @@ export default function Signup() {
               <GoogleButton
                 clientId={config.google_client_id}
                 onCredential={onGoogleCredential}
-                label="สมัครด้วย Google"
-                sub="ไม่ต้องตั้งรหัสผ่านเอง"
+                label={t('google.signupLabel')}
+                sub={t('google.signupSub')}
               />
             </div>
           ) : (
@@ -248,8 +250,8 @@ export default function Signup() {
                 <IcGoogle />
               </span>
               <span>
-                <div className="m-title">สมัครด้วย Google</div>
-                <div className="m-sub">ยังไม่ได้เปิดใช้งาน (ตั้งค่า GOOGLE_CLIENT_ID)</div>
+                <div className="m-title">{t('google.signupLabel')}</div>
+                <div className="m-sub">{t('google.disabledSub')}</div>
               </span>
             </button>
           )}
@@ -259,13 +261,13 @@ export default function Signup() {
               <IcMail size={22} />
             </span>
             <span>
-              <div className="m-title">สมัครด้วยอีเมล</div>
-              <div className="m-sub">รับรหัส OTP ทางอีเมล แล้วตั้งรหัสผ่าน</div>
+              <div className="m-title">{t('signup.emailMethod')}</div>
+              <div className="m-sub">{t('signup.emailMethodSub')}</div>
             </span>
           </button>
 
           <p className="google-note" style={{ marginTop: 18 }}>
-            สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง — Google ดูแลการยืนยันตัวตนให้
+            {t('signup.googleNote')}
           </p>
         </div>
       )}
@@ -274,11 +276,11 @@ export default function Signup() {
       {step === 'email' && (
         <form className="fade-up" onSubmit={requestOtp}>
           <div className="header">
-            <h1 className="h1">กรอกอีเมล</h1>
-            <p className="sub">เราจะส่งรหัส OTP 4 หลักไปที่อีเมลของคุณ</p>
+            <h1 className="h1">{t('signup.emailTitle')}</h1>
+            <p className="sub">{t('signup.emailSub')}</p>
           </div>
           <div className="field">
-            <label>อีเมล</label>
+            <label>{t('login.email')}</label>
             <input
               className="input"
               type="email"
@@ -292,7 +294,7 @@ export default function Signup() {
             />
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy}>
-            {busy ? 'กำลังส่ง...' : 'ส่งรหัส OTP'}
+            {busy ? t('signup.sendingOtp') : t('signup.sendOtp')}
           </button>
         </form>
       )}
@@ -301,9 +303,10 @@ export default function Signup() {
       {step === 'otp' && (
         <form className="fade-up" onSubmit={verifyOtp}>
           <div className="header">
-            <h1 className="h1">ยืนยันรหัส OTP</h1>
+            <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
-              กรอกรหัส 4 หลักที่ส่งไปยัง<br />
+              {t('signup.otpSub')}
+              <br />
               <b style={{ color: 'var(--text)' }}>{email}</b>
             </p>
           </div>
@@ -322,7 +325,7 @@ export default function Signup() {
             ))}
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy || otp.join('').length !== 4}>
-            {busy ? 'กำลังตรวจสอบ...' : 'ยืนยัน'}
+            {busy ? t('signup.verifying') : t('signup.verify')}
           </button>
           <button
             type="button"
@@ -330,7 +333,7 @@ export default function Signup() {
             style={{ marginTop: 16, width: '100%' }}
             onClick={requestOtp}
           >
-            ส่งรหัสอีกครั้ง
+            {t('signup.resend')}
           </button>
         </form>
       )}
@@ -339,8 +342,8 @@ export default function Signup() {
       {step === 'profile' && (
         <form className="fade-up" onSubmit={registerEmail}>
           <div className="header">
-            <h1 className="h1">ตั้งค่าโปรไฟล์</h1>
-            <p className="sub">อีกนิดเดียว แล้วเริ่มคุยกันได้เลย</p>
+            <h1 className="h1">{t('signup.profileTitle')}</h1>
+            <p className="sub">{t('signup.profileSub')}</p>
           </div>
           <ProfileFields
             nickname={nickname}
@@ -351,7 +354,7 @@ export default function Signup() {
             setGender={setGender}
           />
           <div className="field">
-            <label>ตั้งรหัสผ่าน</label>
+            <label>{t('signup.setPassword')}</label>
             <input
               className="input"
               type="password"
@@ -366,15 +369,15 @@ export default function Signup() {
               ))}
             </div>
             <ul className="pw-rules">
-              <li className={rules.len ? 'ok' : ''}>• อย่างน้อย 8 ตัว</li>
-              <li className={rules.upper ? 'ok' : ''}>• พิมพ์ใหญ่ (A-Z)</li>
-              <li className={rules.lower ? 'ok' : ''}>• พิมพ์เล็ก (a-z)</li>
-              <li className={rules.digit ? 'ok' : ''}>• ตัวเลข (0-9)</li>
-              <li className={rules.special ? 'ok' : ''}>• อักขระพิเศษ (!@#..)</li>
+              <li className={rules.len ? 'ok' : ''}>• {t('pw.len')}</li>
+              <li className={rules.upper ? 'ok' : ''}>• {t('pw.upper')}</li>
+              <li className={rules.lower ? 'ok' : ''}>• {t('pw.lower')}</li>
+              <li className={rules.digit ? 'ok' : ''}>• {t('pw.digit')}</li>
+              <li className={rules.special ? 'ok' : ''}>• {t('pw.special')}</li>
             </ul>
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy || !pwValid}>
-            {busy ? 'กำลังสมัคร...' : 'สมัครและเริ่มใช้งาน'}
+            {busy ? t('signup.submitBusy') : t('signup.submit')}
           </button>
         </form>
       )}
@@ -383,8 +386,8 @@ export default function Signup() {
       {step === 'gprofile' && (
         <form className="fade-up" onSubmit={registerGoogle}>
           <div className="header">
-            <h1 className="h1">ตั้งค่าโปรไฟล์</h1>
-            <p className="sub">ยืนยันตัวตนด้วย Google เรียบร้อย — กรอกข้อมูลอีกเล็กน้อย</p>
+            <h1 className="h1">{t('signup.profileTitle')}</h1>
+            <p className="sub">{t('signup.gprofileSub')}</p>
           </div>
           <ProfileFields
             nickname={nickname}
@@ -395,7 +398,7 @@ export default function Signup() {
             setGender={setGender}
           />
           <button className="btn btn--primary" type="submit" disabled={busy}>
-            {busy ? 'กำลังสมัคร...' : 'เริ่มใช้งาน'}
+            {busy ? t('signup.submitBusy') : t('signup.start')}
           </button>
         </form>
       )}

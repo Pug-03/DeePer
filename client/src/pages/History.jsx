@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
+import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash } from '../components/icons.jsx';
@@ -10,6 +11,7 @@ export default function History() {
   const nav = useNavigate();
   const toast = useToast();
   const { user } = useAuth();
+  const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -36,7 +38,7 @@ export default function History() {
     try {
       await api.del(`/history/${id}`);
       setItems((prev) => prev.filter((x) => x.id !== id));
-      toast('ลบออกจากประวัติแล้ว');
+      toast(t('history.removed'));
     } catch (e2) {
       toast(e2.message);
     }
@@ -45,8 +47,8 @@ export default function History() {
   return (
     <div className="page page--tab">
       <div className="header">
-        <h1 className="h1">ประวัติ</h1>
-        <p className="sub">คำถามและคำตอบที่เคยคุยกัน</p>
+        <h1 className="h1">{t('history.title')}</h1>
+        <p className="sub">{t('history.sub')}</p>
       </div>
 
       {status === 'loading' && <Loading />}
@@ -54,11 +56,15 @@ export default function History() {
       {status === 'empty' && (
         <EmptyState
           emoji="📖"
-          title="ยังไม่มีประวัติการตอบ"
-          subtitle="เลือกตอบคำถามที่หน้าหลัก แล้วคำตอบจะมาอยู่ที่นี่"
+          title={t('history.emptyTitle')}
+          subtitle={t('history.emptySub')}
           action={
-            <button className="btn btn--primary btn--sm" style={{ marginTop: 8 }} onClick={() => nav('/app/home')}>
-              เริ่มตอบคำถาม
+            <button
+              className="btn btn--primary btn--sm"
+              style={{ marginTop: 8 }}
+              onClick={() => nav('/app/home')}
+            >
+              {t('history.start')}
             </button>
           }
         />
@@ -78,7 +84,7 @@ export default function History() {
                 <div className="ci-meta">
                   <span className="tag">{catLabel(it.category)}</span>
                   <span>{formatDate(it.created_at)}</span>
-                  <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="ลบ">
+                  <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="delete">
                     <IcTrash size={18} />
                   </button>
                 </div>
@@ -88,7 +94,7 @@ export default function History() {
                     {it.my_answer && (
                       <div className="answer-block" style={{ borderLeftColor: 'var(--red)' }}>
                         <div className="ab-name" style={{ color: 'var(--red-bright)' }}>
-                          {user?.nickname || 'เรา'}
+                          {user?.nickname || t('answer.we')}
                         </div>
                         <div className="ab-text">{it.my_answer}</div>
                       </div>
@@ -98,15 +104,18 @@ export default function History() {
                         className="answer-block"
                         style={{ borderLeftColor: it.partner_color || 'var(--red)' }}
                       >
-                        <div className="ab-name" style={{ color: it.partner_color || 'var(--red-bright)' }}>
-                          {it.partner_name || 'อีกฝ่าย'}
+                        <div
+                          className="ab-name"
+                          style={{ color: it.partner_color || 'var(--red-bright)' }}
+                        >
+                          {it.partner_name || t('answer.partnerDefault')}
                         </div>
                         <div className="ab-text">{it.partner_answer}</div>
                       </div>
                     )}
                     {!it.my_answer && !it.partner_answer && (
                       <p className="faint" style={{ marginTop: 10 }}>
-                        ไม่มีคำตอบที่บันทึกไว้
+                        {t('history.noAnswers')}
                       </p>
                     )}
                   </div>

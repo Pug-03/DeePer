@@ -2,26 +2,23 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
+import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
+import LangToggle from '../components/LangToggle.jsx';
 
-const GENDERS = [
-  { v: '', l: 'ไม่ระบุ' },
-  { v: 'female', l: 'หญิง' },
-  { v: 'male', l: 'ชาย' },
-  { v: 'other', l: 'อื่น ๆ' },
-  { v: 'prefer_not', l: 'ไม่บอก' },
-];
+const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
 
 export default function Profile() {
   const nav = useNavigate();
   const toast = useToast();
   const { user, setUser, logout } = useAuth();
+  const { t } = useI18n();
 
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [age, setAge] = useState(user?.age || '');
   const [gender, setGender] = useState(user?.gender || '');
-  const [partnerName, setPartnerName] = useState(user?.partner_name || 'อีกฝ่าย');
+  const [partnerName, setPartnerName] = useState(user?.partner_name || t('answer.partnerDefault'));
   const [partnerColor, setPartnerColor] = useState(user?.partner_color || '#f43f5e');
   const [busy, setBusy] = useState(false);
 
@@ -36,7 +33,7 @@ export default function Profile() {
         partner_color: partnerColor,
       });
       setUser(d.user);
-      toast('บันทึกข้อมูลแล้ว ✅');
+      toast(t('profile.saved'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -59,20 +56,30 @@ export default function Profile() {
         </div>
         <h1 className="h2">{user?.nickname}</h1>
         <p className="faint">
-          {user?.email || 'บัญชี Google'} {user?.via_google ? '· Google' : ''}
+          {user?.email || t('common.googleAccount')} {user?.via_google ? '· Google' : ''}
         </p>
+      </div>
+
+      {/* Language */}
+      <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
+        <div className="row-between">
+          <h2 className="h2" style={{ fontSize: 17 }}>
+            {t('profile.language')}
+          </h2>
+          <LangToggle />
+        </div>
       </div>
 
       <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
         <h2 className="h2" style={{ marginBottom: 14, fontSize: 17 }}>
-          ข้อมูลของฉัน
+          {t('profile.myInfo')}
         </h2>
         <div className="field">
-          <label>ชื่อเล่น</label>
+          <label>{t('signup.nickname')}</label>
           <input className="input" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={40} />
         </div>
         <div className="field">
-          <label>อายุ</label>
+          <label>{t('signup.age')}</label>
           <input
             className="input"
             type="number"
@@ -82,11 +89,11 @@ export default function Profile() {
           />
         </div>
         <div className="field" style={{ marginBottom: 0 }}>
-          <label>เพศ</label>
+          <label>{t('signup.gender')}</label>
           <select className="select" value={gender} onChange={(e) => setGender(e.target.value)}>
-            {GENDERS.map((g) => (
-              <option key={g.v} value={g.v}>
-                {g.l}
+            {GENDER_VALUES.map((g) => (
+              <option key={g} value={g}>
+                {g ? t(`gender.${g}`) : t('gender.none')}
               </option>
             ))}
           </select>
@@ -95,13 +102,13 @@ export default function Profile() {
 
       <div className="glass" style={{ padding: 18, marginBottom: 18 }}>
         <h2 className="h2" style={{ marginBottom: 6, fontSize: 17 }}>
-          อีกฝ่ายของฉัน
+          {t('profile.partnerSection')}
         </h2>
         <p className="faint" style={{ marginBottom: 14 }}>
-          ตั้งค่าเริ่มต้นสำหรับหน้าตอบคำถาม
+          {t('profile.partnerHint')}
         </p>
         <div className="field">
-          <label>ชื่ออีกฝ่าย</label>
+          <label>{t('answer.partnerName')}</label>
           <input
             className="input"
             value={partnerName}
@@ -109,7 +116,9 @@ export default function Profile() {
             maxLength={30}
           />
         </div>
-        <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>สีประจำตัว</label>
+        <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
+          {t('answer.color')}
+        </label>
         <div className="color-swatches" style={{ marginTop: 8 }}>
           {COLORS.map((c) => (
             <button
@@ -125,10 +134,10 @@ export default function Profile() {
 
       <div className="stack">
         <button className="btn btn--primary" onClick={save} disabled={busy}>
-          {busy ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
+          {busy ? t('profile.saving') : t('profile.save')}
         </button>
         <button className="btn btn--ghost" onClick={doLogout}>
-          ออกจากระบบ
+          {t('profile.logout')}
         </button>
       </div>
     </div>

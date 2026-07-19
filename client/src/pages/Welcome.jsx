@@ -1,22 +1,33 @@
 import { useNavigate } from 'react-router-dom';
+import { useI18n } from '../store/i18n.jsx';
+import LangToggle from '../components/LangToggle.jsx';
 
 export default function Welcome() {
   const nav = useNavigate();
+  const { t } = useI18n();
   return (
     <div className="page">
+      <div className="lang-float">
+        <LangToggle />
+      </div>
+
       <div className="spacer" />
       <div className="center fade-up">
         <div className="brand-mark" style={{ justifyContent: 'center' }}>
           <span className="dot" />
           <span className="brand">DeePer</span>
         </div>
-        <p className="sub" style={{ marginTop: 14, maxWidth: 320, marginInline: 'auto' }}>
-          การ์ดคำถามชวนคุยลึก ๆ<br />
-          สำหรับคู่รัก เพื่อน ๆ และครอบครัว
+        <p className="sub" style={{ marginTop: 14, maxWidth: 340, marginInline: 'auto' }}>
+          {t('welcome.tagline1')}
+          <br />
+          {t('welcome.tagline2')}
         </p>
       </div>
 
-      <div className="deck-hero fade-up" style={{ margin: '36px 0', display: 'grid', placeItems: 'center' }}>
+      <div
+        className="deck-hero fade-up"
+        style={{ margin: '36px 0', display: 'grid', placeItems: 'center' }}
+      >
         <div
           className="glass glass--red"
           style={{
@@ -29,19 +40,17 @@ export default function Welcome() {
             transform: 'rotate(-4deg)',
           }}
         >
-          <p style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.5 }}>
-            “อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”
-          </p>
+          <p style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.5 }}>{t('welcome.sample')}</p>
         </div>
       </div>
 
       <div className="spacer" />
       <div className="stack mt-a">
         <button className="btn btn--primary" onClick={() => nav('/signup')}>
-          สมัครใหม่
+          {t('welcome.signup')}
         </button>
         <button className="btn btn--ghost" onClick={() => nav('/login')}>
-          มีบัญชีอยู่แล้ว
+          {t('welcome.haveAccount')}
         </button>
       </div>
     </div>

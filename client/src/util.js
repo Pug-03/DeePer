@@ -1,7 +1,8 @@
-const CAT_LABEL = { couple: 'คู่รัก', friends: 'เพื่อน ๆ', family: 'ครอบครัว' };
+import { translate } from './i18n.js';
+import { currentLang } from './store/i18n.jsx';
 
 export function catLabel(c) {
-  return CAT_LABEL[c] || c;
+  return translate(currentLang, `cat.${c}`);
 }
 
 // SQLite stores "YYYY-MM-DD HH:MM:SS" in UTC.
@@ -9,12 +10,12 @@ export function formatDate(s) {
   if (!s) return '';
   const d = new Date(s.replace(' ', 'T') + 'Z');
   if (isNaN(d)) return s;
+  const locale = currentLang === 'en' ? 'en-US' : 'th-TH';
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
-  const time = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-  if (sameDay) return `วันนี้ ${time}`;
+  const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  if (sameDay) return `${translate(currentLang, 'date.today')} ${time}`;
   return (
-    d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) +
-    ` ${time}`
+    d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) + ` ${time}`
   );
 }

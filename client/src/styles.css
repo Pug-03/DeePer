@@ -660,6 +660,35 @@ a {
   filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.6));
 }
 
+/* ---------- Language toggle (single translate icon, fixed footprint) ---------- */
+.lang-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-red);
+  background: var(--glass-strong);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  color: var(--red-bright);
+  box-shadow: 0 0 22px -8px rgba(244, 63, 94, 0.55);
+  transition: transform 0.12s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+.lang-btn:active {
+  transform: scale(0.9);
+}
+.lang-btn:hover {
+  color: #fff;
+  box-shadow: var(--glow-red);
+}
+.lang-float {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  right: 16px;
+  z-index: 20;
+}
+
 /* ---------- State views ---------- */
 .state {
   flex: 1;

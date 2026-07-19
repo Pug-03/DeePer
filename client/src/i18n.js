@@ -1,0 +1,336 @@
+// ระบบ 2 ภาษา (ไทย / อังกฤษ) — คำแปลทั้งหมดอยู่ที่นี่
+// ใช้ t('key', { var }) ในคอมโพเนนต์ ผ่าน hook useI18n()
+
+export const LANGS = [
+  { code: 'th', label: 'ไทย', short: 'TH' },
+  { code: 'en', label: 'English', short: 'EN' },
+];
+
+export const STRINGS = {
+  th: {
+    // ทั่วไป
+    'common.back': 'กลับ',
+    'common.or': 'หรือ',
+    'common.cancel': 'ยกเลิก',
+    'common.retry': 'ลองอีกครั้ง',
+    'common.error': 'เกิดข้อผิดพลาด',
+    'common.errorSub': 'ลองใหม่อีกครั้งนะ',
+    'common.loading': 'กำลังโหลด...',
+    'common.googleAccount': 'บัญชี Google',
+    'common.netError': 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต',
+
+    // แบรนด์ / คำโปรย
+    'welcome.tagline1': 'การ์ดคำถามชวนคุยลึก ๆ',
+    'welcome.tagline2': 'สำหรับคู่รัก เพื่อน ๆ และครอบครัว',
+    'welcome.sample': '“อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”',
+    'welcome.signup': 'สมัครใหม่',
+    'welcome.haveAccount': 'มีบัญชีอยู่แล้ว',
+
+    // นำทางล่าง
+    'nav.home': 'หน้าหลัก',
+    'nav.saved': 'บันทึกไว้',
+    'nav.history': 'ประวัติ',
+    'nav.profile': 'โปรไฟล์',
+
+    // Google / ปุ่มวิธีสมัคร
+    'google.disabledTitle': 'เข้าสู่ระบบด้วย Google',
+    'google.disabledSub': 'ยังไม่ได้เปิดใช้งาน (ตั้งค่า GOOGLE_CLIENT_ID)',
+    'google.loginLabel': 'เข้าสู่ระบบด้วย Google',
+    'google.loginSub': 'เลือกบัญชี Google ที่เคยลงทะเบียน',
+    'google.signupLabel': 'สมัครด้วย Google',
+    'google.signupSub': 'ไม่ต้องตั้งรหัสผ่านเอง',
+
+    // เข้าสู่ระบบ
+    'login.title': 'ยินดีต้อนรับกลับมา',
+    'login.sub': 'เข้าสู่ระบบเพื่อคุยกันต่อ',
+    'login.orEmail': 'หรือใช้อีเมล',
+    'login.email': 'อีเมล',
+    'login.password': 'รหัสผ่าน',
+    'login.forgot': 'ลืมรหัสผ่าน?',
+    'login.forgotToast': 'กรุณาติดต่อผู้ดูแลระบบเพื่อรีเซ็ตรหัสผ่าน',
+    'login.submit': 'เข้าสู่ระบบ',
+    'login.submitBusy': 'กำลังเข้าสู่ระบบ...',
+    'login.noAccount': 'ยังไม่มีบัญชี?',
+
+    // สมัครสมาชิก
+    'signup.title': 'สมัครใหม่',
+    'signup.sub': 'เลือกวิธีสมัครที่สะดวก',
+    'signup.emailMethod': 'สมัครด้วยอีเมล',
+    'signup.emailMethodSub': 'รับรหัส OTP ทางอีเมล แล้วตั้งรหัสผ่าน',
+    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง — Google ดูแลการยืนยันตัวตนให้',
+    'signup.emailTitle': 'กรอกอีเมล',
+    'signup.emailSub': 'เราจะส่งรหัส OTP 4 หลักไปที่อีเมลของคุณ',
+    'signup.sendOtp': 'ส่งรหัส OTP',
+    'signup.sendingOtp': 'กำลังส่ง...',
+    'signup.otpTitle': 'ยืนยันรหัส OTP',
+    'signup.otpSub': 'กรอกรหัส 4 หลักที่ส่งไปยัง',
+    'signup.verify': 'ยืนยัน',
+    'signup.verifying': 'กำลังตรวจสอบ...',
+    'signup.resend': 'ส่งรหัสอีกครั้ง',
+    'signup.profileTitle': 'ตั้งค่าโปรไฟล์',
+    'signup.profileSub': 'อีกนิดเดียว แล้วเริ่มคุยกันได้เลย',
+    'signup.gprofileSub': 'ยืนยันตัวตนด้วย Google เรียบร้อย — กรอกข้อมูลอีกเล็กน้อย',
+    'signup.nickname': 'ชื่อเล่น',
+    'signup.nicknamePh': 'เรียกเราว่า...',
+    'signup.age': 'อายุ',
+    'signup.agePh': 'เช่น 25',
+    'signup.gender': 'เพศ',
+    'signup.genderPh': 'เลือกเพศ',
+    'signup.setPassword': 'ตั้งรหัสผ่าน',
+    'signup.submit': 'สมัครและเริ่มใช้งาน',
+    'signup.submitBusy': 'กำลังสมัคร...',
+    'signup.start': 'เริ่มใช้งาน',
+    'signup.needNickname': 'กรุณากรอกชื่อเล่น',
+    'signup.pwNotValid': 'รหัสผ่านยังไม่ตรงตามเงื่อนไข',
+    'signup.devOtp': 'โหมดพัฒนา: รหัส OTP คือ {code}',
+
+    // เพศ
+    'gender.female': 'หญิง',
+    'gender.male': 'ชาย',
+    'gender.other': 'อื่น ๆ',
+    'gender.prefer_not': 'ไม่ระบุ',
+    'gender.none': 'ไม่ระบุ',
+
+    // กฎรหัสผ่าน
+    'pw.len': 'อย่างน้อย 8 ตัว',
+    'pw.upper': 'พิมพ์ใหญ่ (A-Z)',
+    'pw.lower': 'พิมพ์เล็ก (a-z)',
+    'pw.digit': 'ตัวเลข (0-9)',
+    'pw.special': 'อักขระพิเศษ (!@#..)',
+
+    // หมวดคำถาม
+    'cat.couple': 'คู่รัก',
+    'cat.friends': 'เพื่อน ๆ',
+    'cat.family': 'ครอบครัว',
+
+    // หน้าหลัก (การ์ด)
+    'home.addQuestion': 'เพิ่มคำถาม',
+    'home.addPh': 'พิมพ์คำถามของคุณเองสำหรับหมวดนี้...',
+    'home.add': 'เพิ่ม',
+    'home.loading': 'กำลังหยิบคำถามให้...',
+    'home.emptyTitle': 'คำถามในหมวดนี้หมดแล้ว',
+    'home.emptySubAi': 'ให้ AI ช่วยสร้างคำถามใหม่ หรือเปลี่ยนหมวดก็ได้',
+    'home.emptySub': 'ลองเปลี่ยนหมวด หรือเพิ่มคำถามของคุณเอง',
+    'home.restart': 'เริ่มใหม่',
+    'home.genAi': '✨ สร้างด้วย AI',
+    'home.generating': 'กำลังสร้าง...',
+    'home.aSkip': 'ข้าม',
+    'home.aSave': 'บันทึก',
+    'home.aAnswer': 'ตอบเลย',
+    'home.srcAi': 'AI',
+    'home.srcUser': 'ของเรา',
+    'home.saved': 'บันทึกคำถามแล้ว 🔖',
+    'home.aiDone': 'สร้างคำถามใหม่ด้วย AI แล้ว ✨',
+    'home.added': 'เพิ่มคำถามของคุณแล้ว 💬',
+
+    // ตอบคำถาม
+    'answer.notFound': 'ไม่พบคำถาม',
+    'answer.backHome': 'กลับหน้าหลัก',
+    'answer.us': 'ของเรา',
+    'answer.we': 'เรา',
+    'answer.partnerDefault': 'อีกฝ่าย',
+    'answer.myAnswerOf': 'คำตอบของ {name}',
+    'answer.myAnswerPh': 'เขียนความรู้สึกของเรา...',
+    'answer.turnTo': 'ถึงตา {name} →',
+    'answer.partnerPh': 'ส่งเครื่องให้ {name} เขียน...',
+    'answer.partnerName': 'ชื่ออีกฝ่าย',
+    'answer.partnerNamePh': 'ตั้งชื่ออีกฝ่าย',
+    'answer.color': 'สีประจำตัว',
+    'answer.save': 'บันทึกคำตอบ',
+    'answer.saving': 'กำลังบันทึก...',
+    'answer.needOne': 'กรอกคำตอบอย่างน้อยหนึ่งช่องก่อนนะ',
+    'answer.saved': 'บันทึกคำตอบลงประวัติแล้ว ✅',
+
+    // บันทึกไว้
+    'saved.title': 'คำถามที่บันทึกไว้',
+    'saved.sub': 'แตะเพื่อกลับมาตอบคำถามรอบสอง',
+    'saved.emptyTitle': 'ยังไม่มีคำถามที่บันทึก',
+    'saved.emptySub': 'กดปุ่มบันทึกที่หน้าหลักเพื่อเก็บคำถามไว้ถามทีหลัง',
+    'saved.goHome': 'ไปหน้าหลัก',
+    'saved.removed': 'ลบออกจากที่บันทึกแล้ว',
+
+    // ประวัติ
+    'history.title': 'ประวัติ',
+    'history.sub': 'คำถามและคำตอบที่เคยคุยกัน',
+    'history.emptyTitle': 'ยังไม่มีประวัติการตอบ',
+    'history.emptySub': 'เลือกตอบคำถามที่หน้าหลัก แล้วคำตอบจะมาอยู่ที่นี่',
+    'history.start': 'เริ่มตอบคำถาม',
+    'history.noAnswers': 'ไม่มีคำตอบที่บันทึกไว้',
+    'history.removed': 'ลบออกจากประวัติแล้ว',
+
+    // โปรไฟล์
+    'profile.myInfo': 'ข้อมูลของฉัน',
+    'profile.partnerSection': 'อีกฝ่ายของฉัน',
+    'profile.partnerHint': 'ตั้งค่าเริ่มต้นสำหรับหน้าตอบคำถาม',
+    'profile.language': 'ภาษา',
+    'profile.save': 'บันทึกข้อมูล',
+    'profile.saving': 'กำลังบันทึก...',
+    'profile.logout': 'ออกจากระบบ',
+    'profile.saved': 'บันทึกข้อมูลแล้ว ✅',
+
+    // วันที่
+    'date.today': 'วันนี้',
+  },
+
+  en: {
+    'common.back': 'Back',
+    'common.or': 'or',
+    'common.cancel': 'Cancel',
+    'common.retry': 'Try again',
+    'common.error': 'Something went wrong',
+    'common.errorSub': 'Please try again',
+    'common.loading': 'Loading...',
+    'common.googleAccount': 'Google account',
+    'common.netError': 'Can’t reach the server. Please check your connection',
+
+    'welcome.tagline1': 'Deep conversation cards',
+    'welcome.tagline2': 'for couples, friends, and family',
+    'welcome.sample': '“What’s a little thing that makes you smile every day?”',
+    'welcome.signup': 'Sign up',
+    'welcome.haveAccount': 'I already have an account',
+
+    'nav.home': 'Home',
+    'nav.saved': 'Saved',
+    'nav.history': 'History',
+    'nav.profile': 'Profile',
+
+    'google.disabledTitle': 'Sign in with Google',
+    'google.disabledSub': 'Not enabled yet (set GOOGLE_CLIENT_ID)',
+    'google.loginLabel': 'Sign in with Google',
+    'google.loginSub': 'Choose your registered Google account',
+    'google.signupLabel': 'Sign up with Google',
+    'google.signupSub': 'No password needed',
+
+    'login.title': 'Welcome back',
+    'login.sub': 'Log in to keep talking',
+    'login.orEmail': 'or use email',
+    'login.email': 'Email',
+    'login.password': 'Password',
+    'login.forgot': 'Forgot password?',
+    'login.forgotToast': 'Please contact the admin to reset your password',
+    'login.submit': 'Log in',
+    'login.submitBusy': 'Logging in...',
+    'login.noAccount': 'No account yet?',
+
+    'signup.title': 'Sign up',
+    'signup.sub': 'Choose how you’d like to sign up',
+    'signup.emailMethod': 'Sign up with email',
+    'signup.emailMethodSub': 'Get an OTP by email, then set a password',
+    'signup.googleNote': 'Signing up with Google needs no password — Google handles verification',
+    'signup.emailTitle': 'Enter your email',
+    'signup.emailSub': 'We’ll send a 4-digit OTP to your email',
+    'signup.sendOtp': 'Send OTP',
+    'signup.sendingOtp': 'Sending...',
+    'signup.otpTitle': 'Verify OTP',
+    'signup.otpSub': 'Enter the 4-digit code sent to',
+    'signup.verify': 'Verify',
+    'signup.verifying': 'Checking...',
+    'signup.resend': 'Resend code',
+    'signup.profileTitle': 'Set up your profile',
+    'signup.profileSub': 'Almost there — then let’s start talking',
+    'signup.gprofileSub': 'Verified with Google — just a little more info',
+    'signup.nickname': 'Nickname',
+    'signup.nicknamePh': 'Call me...',
+    'signup.age': 'Age',
+    'signup.agePh': 'e.g. 25',
+    'signup.gender': 'Gender',
+    'signup.genderPh': 'Select gender',
+    'signup.setPassword': 'Set a password',
+    'signup.submit': 'Sign up & start',
+    'signup.submitBusy': 'Signing up...',
+    'signup.start': 'Get started',
+    'signup.needNickname': 'Please enter a nickname',
+    'signup.pwNotValid': 'Password doesn’t meet the requirements yet',
+    'signup.devOtp': 'Dev mode: your OTP is {code}',
+
+    'gender.female': 'Female',
+    'gender.male': 'Male',
+    'gender.other': 'Other',
+    'gender.prefer_not': 'Prefer not to say',
+    'gender.none': 'Not specified',
+
+    'pw.len': 'At least 8 chars',
+    'pw.upper': 'Uppercase (A-Z)',
+    'pw.lower': 'Lowercase (a-z)',
+    'pw.digit': 'Number (0-9)',
+    'pw.special': 'Special (!@#..)',
+
+    'cat.couple': 'Couple',
+    'cat.friends': 'Friends',
+    'cat.family': 'Family',
+
+    'home.addQuestion': 'Add question',
+    'home.addPh': 'Write your own question for this category...',
+    'home.add': 'Add',
+    'home.loading': 'Getting a question for you...',
+    'home.emptyTitle': 'No more questions in this category',
+    'home.emptySubAi': 'Let AI create new ones, or switch category',
+    'home.emptySub': 'Try another category, or add your own question',
+    'home.restart': 'Restart',
+    'home.genAi': '✨ Generate with AI',
+    'home.generating': 'Generating...',
+    'home.aSkip': 'Skip',
+    'home.aSave': 'Save',
+    'home.aAnswer': 'Answer',
+    'home.srcAi': 'AI',
+    'home.srcUser': 'Yours',
+    'home.saved': 'Question saved 🔖',
+    'home.aiDone': 'New questions created with AI ✨',
+    'home.added': 'Your question was added 💬',
+
+    'answer.notFound': 'Question not found',
+    'answer.backHome': 'Back to home',
+    'answer.us': 'Us',
+    'answer.we': 'Me',
+    'answer.partnerDefault': 'Partner',
+    'answer.myAnswerOf': '{name}’s answer',
+    'answer.myAnswerPh': 'Write how you feel...',
+    'answer.turnTo': '{name}’s turn →',
+    'answer.partnerPh': 'Hand the device to {name} to write...',
+    'answer.partnerName': 'Partner’s name',
+    'answer.partnerNamePh': 'Name the other person',
+    'answer.color': 'Their color',
+    'answer.save': 'Save answer',
+    'answer.saving': 'Saving...',
+    'answer.needOne': 'Fill in at least one answer first',
+    'answer.saved': 'Answer saved to history ✅',
+
+    'saved.title': 'Saved questions',
+    'saved.sub': 'Tap to come back and answer later',
+    'saved.emptyTitle': 'No saved questions yet',
+    'saved.emptySub': 'Tap the save button on the home page to keep questions for later',
+    'saved.goHome': 'Go to home',
+    'saved.removed': 'Removed from saved',
+
+    'history.title': 'History',
+    'history.sub': 'Questions and answers you’ve shared',
+    'history.emptyTitle': 'No answer history yet',
+    'history.emptySub': 'Answer a question on the home page and it’ll show up here',
+    'history.start': 'Start answering',
+    'history.noAnswers': 'No saved answers',
+    'history.removed': 'Removed from history',
+
+    'profile.myInfo': 'My information',
+    'profile.partnerSection': 'My partner',
+    'profile.partnerHint': 'Default settings for the answer page',
+    'profile.language': 'Language',
+    'profile.save': 'Save changes',
+    'profile.saving': 'Saving...',
+    'profile.logout': 'Log out',
+    'profile.saved': 'Saved ✅',
+
+    'date.today': 'Today',
+  },
+};
+
+export function translate(lang, key, vars) {
+  const table = STRINGS[lang] || STRINGS.th;
+  let s = table[key];
+  if (s == null) s = STRINGS.th[key] ?? key;
+  if (vars) {
+    for (const k of Object.keys(vars)) {
+      s = s.replaceAll(`{${k}}`, String(vars[k]));
+    }
+  }
+  return s;
+}

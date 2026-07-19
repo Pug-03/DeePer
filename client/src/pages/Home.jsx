@@ -2,18 +2,16 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { api } from '../api.js';
+import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
 import { IcX, IcCheck, IcBookmark, IcPlus } from '../components/icons.jsx';
 
-const CATS = [
-  { v: 'couple', l: 'คู่รัก' },
-  { v: 'friends', l: 'เพื่อน ๆ' },
-  { v: 'family', l: 'ครอบครัว' },
-];
+const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
 
 function TopCard({ q, onSkip, onAnswer }) {
+  const { t } = useI18n();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-220, 220], [-14, 14]);
@@ -40,7 +38,8 @@ function TopCard({ q, onSkip, onAnswer }) {
     }
   };
 
-  const srcLabel = q.source === 'ai' ? 'AI' : q.source === 'user' ? 'ของเรา' : 'DeePer';
+  const srcLabel =
+    q.source === 'ai' ? t('home.srcAi') : q.source === 'user' ? t('home.srcUser') : 'DeePer';
 
   return (
     <motion.div
@@ -53,14 +52,16 @@ function TopCard({ q, onSkip, onAnswer }) {
       whileTap={{ cursor: 'grabbing' }}
     >
       <span className="q-source">{srcLabel}</span>
-      <motion.span className="swipe-hint" style={{ opacity: noOp, color: '#fff', left: 22, right: 'auto' }}>
+      <motion.span
+        className="swipe-hint"
+        style={{ opacity: noOp, color: '#fff', left: 22, right: 'auto' }}
+      >
         ✕
       </motion.span>
       <motion.span className="swipe-hint" style={{ opacity: yesOp, color: 'var(--green)' }}>
         ✓
       </motion.span>
       <p className="q-text">{q.text}</p>
-      {/* expose imperative fly via data-* not needed; buttons call parent */}
       <FlyBridge fly={fly} />
     </motion.div>
   );
@@ -83,6 +84,7 @@ FlyBridge.current = null;
 export default function Home() {
   const nav = useNavigate();
   const toast = useToast();
+  const { t } = useI18n();
 
   const [category, setCategory] = useState(() => localStorage.getItem('dt_cat') || 'couple');
   const [deck, setDeck] = useState([]);
@@ -95,34 +97,29 @@ export default function Home() {
   const [newQ, setNewQ] = useState('');
   const seen = useRef(new Set());
 
-  const fetchBatch = useCallback(
-    async (cat, { reset = false } = {}) => {
-      try {
-        if (reset) {
-          seen.current = new Set();
-          setStatus('loading');
-        }
-        const exclude = [...seen.current].join(',');
-        const d = await api.get(`/questions/?category=${cat}&limit=20&exclude=${exclude}`);
-        setAiEnabled(d.ai_enabled);
-        const fresh = d.questions.filter((q) => !seen.current.has(q.id));
-        fresh.forEach((q) => seen.current.add(q.id));
-        setDeck((prev) => (reset ? fresh : [...prev, ...fresh]));
-        if (reset) {
-          setIdx(0);
-          setStatus(fresh.length ? 'ready' : 'empty');
-        } else if (!fresh.length) {
-          // nothing new to append
-        }
-        return fresh.length;
-      } catch (e) {
-        setError(e.message);
-        setStatus('error');
-        return 0;
+  const fetchBatch = useCallback(async (cat, { reset = false } = {}) => {
+    try {
+      if (reset) {
+        seen.current = new Set();
+        setStatus('loading');
       }
-    },
-    [],
-  );
+      const exclude = [...seen.current].join(',');
+      const d = await api.get(`/questions/?category=${cat}&limit=20&exclude=${exclude}`);
+      setAiEnabled(d.ai_enabled);
+      const fresh = d.questions.filter((q) => !seen.current.has(q.id));
+      fresh.forEach((q) => seen.current.add(q.id));
+      setDeck((prev) => (reset ? fresh : [...prev, ...fresh]));
+      if (reset) {
+        setIdx(0);
+        setStatus(fresh.length ? 'ready' : 'empty');
+      }
+      return fresh.length;
+    } catch (e) {
+      setError(e.message);
+      setStatus('error');
+      return 0;
+    }
+  }, []);
 
   useEffect(() => {
     fetchBatch(category, { reset: true });
@@ -131,7 +128,6 @@ export default function Home() {
   const current = deck[idx];
   const remaining = deck.length - idx;
 
-  // Top up when running low.
   useEffect(() => {
     if (status === 'ready' && remaining > 0 && remaining <= 4) {
       fetchBatch(category);
@@ -148,7 +144,6 @@ export default function Home() {
   };
 
   const advance = useCallback(() => setIdx((i) => i + 1), []);
-
   const doSkip = () => FlyBridge.current?.('skip');
   const doAnswer = () => FlyBridge.current?.('yes');
 
@@ -161,7 +156,7 @@ export default function Home() {
     if (!current) return;
     try {
       await api.post('/saved', { question_text: current.text, category });
-      toast('บันทึกคำถามแล้ว 🔖');
+      toast(t('home.saved'));
       advance();
     } catch (e) {
       toast(e.message);
@@ -176,7 +171,7 @@ export default function Home() {
       fresh.forEach((q) => seen.current.add(q.id));
       setDeck((prev) => [...prev, ...fresh]);
       setStatus('ready');
-      toast('สร้างคำถามใหม่ด้วย AI แล้ว ✨');
+      toast(t('home.aiDone'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -195,7 +190,7 @@ export default function Home() {
       setStatus('ready');
       setNewQ('');
       setAdding(false);
-      toast('เพิ่มคำถามของคุณแล้ว 💬');
+      toast(t('home.added'));
     } catch (e2) {
       toast(e2.message);
     }
@@ -209,18 +204,18 @@ export default function Home() {
           <span style={{ fontSize: 22, fontWeight: 700 }}>DeePer</span>
         </div>
         <button className="btn btn--sm btn--ghost" onClick={() => setAdding((a) => !a)}>
-          <IcPlus size={18} /> เพิ่มคำถาม
+          <IcPlus size={18} /> {t('home.addQuestion')}
         </button>
       </div>
 
       <div className="cat-row" style={{ marginBottom: 6 }}>
         {CATS.map((c) => (
           <button
-            key={c.v}
-            className={`pill ${category === c.v ? 'active' : ''}`}
-            onClick={() => switchCat(c.v)}
+            key={c}
+            className={`pill ${category === c ? 'active' : ''}`}
+            onClick={() => switchCat(c)}
           >
-            {c.l}
+            {t(`cat.${c}`)}
           </button>
         ))}
       </div>
@@ -230,23 +225,23 @@ export default function Home() {
           <textarea
             className="textarea"
             style={{ minHeight: 80 }}
-            placeholder="พิมพ์คำถามของคุณเองสำหรับหมวดนี้..."
+            placeholder={t('home.addPh')}
             value={newQ}
             onChange={(e) => setNewQ(e.target.value)}
             maxLength={200}
           />
           <div className="btn-row" style={{ marginTop: 10 }}>
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
-              ยกเลิก
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
-              เพิ่ม
+              {t('home.add')}
             </button>
           </div>
         </form>
       )}
 
-      {status === 'loading' && <Loading label="กำลังหยิบคำถามให้..." />}
+      {status === 'loading' && <Loading label={t('home.loading')} />}
 
       {status === 'error' && (
         <ErrorState message={error} onRetry={() => fetchBatch(category, { reset: true })} />
@@ -255,23 +250,19 @@ export default function Home() {
       {status === 'empty' && (
         <EmptyState
           emoji="🃏"
-          title="คำถามในหมวดนี้หมดแล้ว"
-          subtitle={
-            aiEnabled
-              ? 'ให้ AI ช่วยสร้างคำถามใหม่ หรือเปลี่ยนหมวดก็ได้'
-              : 'ลองเปลี่ยนหมวด หรือเพิ่มคำถามของคุณเอง'
-          }
+          title={t('home.emptyTitle')}
+          subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
           action={
             <div className="btn-row" style={{ marginTop: 10 }}>
               <button
                 className="btn btn--ghost btn--sm"
                 onClick={() => fetchBatch(category, { reset: true })}
               >
-                เริ่มใหม่
+                {t('home.restart')}
               </button>
               {aiEnabled && (
                 <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
-                  {generating ? 'กำลังสร้าง...' : '✨ สร้างด้วย AI'}
+                  {generating ? t('home.generating') : t('home.genAi')}
                 </button>
               )}
             </div>
@@ -282,7 +273,6 @@ export default function Home() {
       {status === 'ready' && current && (
         <>
           <div className="deck">
-            {/* card behind for depth */}
             {deck[idx + 1] && (
               <div
                 className="qcard glass"
@@ -297,20 +287,20 @@ export default function Home() {
           </div>
 
           <div className="actions">
-            <button className="fab fab-md fab--x" onClick={doSkip} aria-label="ข้าม">
+            <button className="fab fab-md fab--x" onClick={doSkip} aria-label={t('home.aSkip')}>
               <IcX size={26} />
             </button>
-            <button className="fab fab-lg fab--save" onClick={save} aria-label="บันทึก">
+            <button className="fab fab-lg fab--save" onClick={save} aria-label={t('home.aSave')}>
               <IcBookmark size={28} />
             </button>
-            <button className="fab fab-md fab--check" onClick={doAnswer} aria-label="ตอบ">
+            <button className="fab fab-md fab--check" onClick={doAnswer} aria-label={t('home.aAnswer')}>
               <IcCheck size={26} />
             </button>
           </div>
           <div className="action-labels">
-            <span>ข้าม</span>
-            <span>บันทึก</span>
-            <span>ตอบเลย</span>
+            <span>{t('home.aSkip')}</span>
+            <span>{t('home.aSave')}</span>
+            <span>{t('home.aAnswer')}</span>
           </div>
         </>
       )}

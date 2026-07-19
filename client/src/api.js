@@ -1,4 +1,8 @@
+import { translate } from './i18n.js';
+import { currentLang } from './store/i18n.jsx';
+
 const TOKEN_KEY = 'deeptalk_token';
+const tt = (key) => translate(currentLang, key);
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -22,7 +26,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
       body: body ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต');
+    throw new Error(tt('common.netError'));
   }
   let data = null;
   try {
@@ -31,7 +35,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     /* no body */
   }
   if (!res.ok) {
-    const err = new Error((data && data.error) || 'เกิดข้อผิดพลาด');
+    const err = new Error((data && data.error) || tt('common.error'));
     err.status = res.status;
     err.data = data;
     throw err;

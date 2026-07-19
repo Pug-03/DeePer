@@ -11,7 +11,7 @@ function loadGis() {
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('โหลด Google Sign-In ไม่สำเร็จ'));
+    s.onerror = () => reject(new Error('Failed to load Google Sign-In'));
     document.head.appendChild(s);
   });
   return gisPromise;
@@ -25,8 +25,8 @@ function loadGis() {
 export default function GoogleButton({
   clientId,
   onCredential,
-  label = 'ดำเนินการต่อด้วย Google',
-  sub = 'ปลอดภัย ไม่ต้องตั้งรหัสผ่าน',
+  label = 'Continue with Google',
+  sub = '',
 }) {
   const cardRef = useRef(null);
   const hitRef = useRef(null);

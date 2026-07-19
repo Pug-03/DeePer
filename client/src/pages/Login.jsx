@@ -2,13 +2,16 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
+import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
+import LangToggle from '../components/LangToggle.jsx';
 import { IcBack, IcGoogle } from '../components/icons.jsx';
 
 export default function Login() {
   const nav = useNavigate();
   const { config, applyAuth } = useAuth();
+  const { t } = useI18n();
   const toast = useToast();
 
   const [email, setEmail] = useState('');
@@ -51,15 +54,19 @@ export default function Login() {
 
   return (
     <div className="page">
+      <div className="lang-float">
+        <LangToggle />
+      </div>
+
       <button className="link" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav('/')}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <IcBack size={18} /> กลับ
+          <IcBack size={18} /> {t('common.back')}
         </span>
       </button>
 
       <div className="header">
-        <h1 className="h1">ยินดีต้อนรับกลับมา</h1>
-        <p className="sub">เข้าสู่ระบบเพื่อคุยกันต่อ</p>
+        <h1 className="h1">{t('login.title')}</h1>
+        <p className="sub">{t('login.sub')}</p>
       </div>
 
       {err && <div className="err-inline">{err}</div>}
@@ -69,10 +76,10 @@ export default function Login() {
           <GoogleButton
             clientId={config.google_client_id}
             onCredential={onGoogle}
-            label="เข้าสู่ระบบด้วย Google"
-            sub="เลือกบัญชี Google ที่เคยลงทะเบียน"
+            label={t('google.loginLabel')}
+            sub={t('google.loginSub')}
           />
-          <div className="divider">หรือ</div>
+          <div className="divider">{t('common.or')}</div>
         </>
       ) : (
         <>
@@ -81,17 +88,17 @@ export default function Login() {
               <IcGoogle />
             </span>
             <span>
-              <div className="m-title">เข้าสู่ระบบด้วย Google</div>
-              <div className="m-sub">ยังไม่ได้เปิดใช้งาน (ตั้งค่า GOOGLE_CLIENT_ID)</div>
+              <div className="m-title">{t('google.disabledTitle')}</div>
+              <div className="m-sub">{t('google.disabledSub')}</div>
             </span>
           </button>
-          <div className="divider">หรือใช้อีเมล</div>
+          <div className="divider">{t('login.orEmail')}</div>
         </>
       )}
 
       <form onSubmit={submit}>
         <div className="field">
-          <label>อีเมล</label>
+          <label>{t('login.email')}</label>
           <input
             className="input"
             type="email"
@@ -104,7 +111,7 @@ export default function Login() {
           />
         </div>
         <div className="field">
-          <label>รหัสผ่าน</label>
+          <label>{t('login.password')}</label>
           <input
             className="input"
             type="password"
@@ -117,23 +124,19 @@ export default function Login() {
         </div>
         <div className="row-between" style={{ marginBottom: 20 }}>
           <span />
-          <button
-            type="button"
-            className="link"
-            onClick={() => toast('กรุณาติดต่อผู้ดูแลระบบเพื่อรีเซ็ตรหัสผ่าน')}
-          >
-            ลืมรหัสผ่าน?
+          <button type="button" className="link" onClick={() => toast(t('login.forgotToast'))}>
+            {t('login.forgot')}
           </button>
         </div>
         <button className="btn btn--primary" type="submit" disabled={busy}>
-          {busy ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+          {busy ? t('login.submitBusy') : t('login.submit')}
         </button>
       </form>
 
       <p className="sub center" style={{ marginTop: 22 }}>
-        ยังไม่มีบัญชี?{' '}
+        {t('login.noAccount')}{' '}
         <button className="link" onClick={() => nav('/signup')}>
-          สมัครใหม่
+          {t('welcome.signup')}
         </button>
       </p>
     </div>
