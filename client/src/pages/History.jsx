@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { Loading, ErrorState, EmptyState, useToast } from '../components/ui.jsx';
+import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash } from '../components/icons.jsx';
 
 export default function History() {
   const nav = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const { user } = useAuth();
   const { t } = useI18n();
   const [items, setItems] = useState([]);
@@ -35,6 +36,8 @@ export default function History() {
 
   const remove = async (e, id) => {
     e.stopPropagation();
+    const ok = await confirm({ message: t('confirm.historyMsg') });
+    if (!ok) return;
     try {
       await api.del(`/history/${id}`);
       setItems((prev) => prev.filter((x) => x.id !== id));

@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './store/auth.jsx';
-import { ToastProvider, Loading } from './components/ui.jsx';
+import { ToastProvider, ConfirmProvider, Loading } from './components/ui.jsx';
 import BottomNav from './components/BottomNav.jsx';
 
 import Welcome from './pages/Welcome.jsx';
@@ -39,26 +39,28 @@ function TabLayout() {
 export default function App() {
   return (
     <ToastProvider>
-      <div className="app-shell">
-        <Routes>
-          <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
-          <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
-          <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
-          <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+      <ConfirmProvider>
+        <div className="app-shell">
+          <Routes>
+            <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
+            <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
+            <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+            <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
 
-          <Route path="/app" element={<Protected><TabLayout /></Protected>}>
-            <Route index element={<Navigate to="home" replace />} />
-            <Route path="home" element={<Home />} />
-            <Route path="saved" element={<Saved />} />
-            <Route path="history" element={<History />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
+            <Route path="/app" element={<Protected><TabLayout /></Protected>}>
+              <Route index element={<Navigate to="home" replace />} />
+              <Route path="home" element={<Home />} />
+              <Route path="saved" element={<Saved />} />
+              <Route path="history" element={<History />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
 
-          <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
+            <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </ConfirmProvider>
     </ToastProvider>
   );
 }

@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
-import { Loading, ErrorState, EmptyState, useToast } from '../components/ui.jsx';
+import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash } from '../components/icons.jsx';
 
 export default function Saved() {
   const nav = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -38,6 +39,8 @@ export default function Saved() {
 
   const remove = async (e, id) => {
     e.stopPropagation();
+    const ok = await confirm({ message: t('confirm.savedMsg') });
+    if (!ok) return;
     try {
       await api.del(`/saved/${id}`);
       setItems((prev) => prev.filter((x) => x.id !== id));

@@ -18,6 +18,10 @@ export const STRINGS = {
     'common.loading': 'กำลังโหลด...',
     'common.googleAccount': 'บัญชี Google',
     'common.netError': 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต',
+    'confirm.deleteTitle': 'ยืนยันการลบ',
+    'confirm.delete': 'ลบ',
+    'confirm.savedMsg': 'ต้องการลบคำถามที่บันทึกไว้นี้จริงหรือไม่?',
+    'confirm.historyMsg': 'ต้องการลบประวัติการตอบนี้จริงหรือไม่? การลบไม่สามารถกู้คืนได้',
 
     // แบรนด์ / คำโปรย
     'welcome.tagline1': 'การ์ดคำถามชวนคุยลึก ๆ',
@@ -191,6 +195,10 @@ export const STRINGS = {
     'common.loading': 'Loading...',
     'common.googleAccount': 'Google account',
     'common.netError': 'Can’t reach the server. Please check your connection',
+    'confirm.deleteTitle': 'Confirm delete',
+    'confirm.delete': 'Delete',
+    'confirm.savedMsg': 'Delete this saved question?',
+    'confirm.historyMsg': 'Delete this answer from your history? This can’t be undone.',
 
     'welcome.tagline1': 'Deep conversation cards',
     'welcome.tagline2': 'for couples, friends, and family',

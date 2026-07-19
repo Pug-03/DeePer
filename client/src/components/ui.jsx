@@ -60,3 +60,51 @@ export function ToastProvider({ children }) {
     </ToastCtx.Provider>
   );
 }
+
+// ---------- Confirm dialog ----------
+// Promise-based: `const ok = await confirm({ title, message, ... })`.
+const ConfirmCtx = createContext(() => Promise.resolve(false));
+export function useConfirm() {
+  return useContext(ConfirmCtx);
+}
+
+export function ConfirmProvider({ children }) {
+  const { t } = useI18n();
+  const [state, setState] = useState(null); // { title, message, confirmText, danger, resolve }
+
+  const confirm = useCallback(
+    (opts = {}) => new Promise((resolve) => setState({ ...opts, resolve })),
+    [],
+  );
+
+  const close = (result) => {
+    state?.resolve(result);
+    setState(null);
+  };
+
+  return (
+    <ConfirmCtx.Provider value={confirm}>
+      {children}
+      {state && (
+        <div className="modal-overlay fade-in" onClick={() => close(false)}>
+          <div className="modal glass glass--red pop-in" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-emoji">{state.emoji || '🗑️'}</div>
+            <h3 className="modal-title">{state.title || t('confirm.deleteTitle')}</h3>
+            {state.message && <p className="modal-msg">{state.message}</p>}
+            <div className="modal-actions">
+              <button className="btn btn--ghost" onClick={() => close(false)}>
+                {state.cancelText || t('common.cancel')}
+              </button>
+              <button
+                className={`btn ${state.danger === false ? 'btn--primary' : 'btn--danger'}`}
+                onClick={() => close(true)}
+              >
+                {state.confirmText || t('confirm.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </ConfirmCtx.Provider>
+  );
+}
