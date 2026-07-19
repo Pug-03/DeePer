@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+.env
+server/deeptalk.db
+server/deeptalk.db-wal
+server/deeptalk.db-shm
+.DS_Store
