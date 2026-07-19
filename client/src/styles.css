@@ -19,6 +19,7 @@
   --shadow-lift: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
   --glow-red: 0 0 40px -6px rgba(244, 63, 94, 0.5);
   --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
 }
 
 * {
@@ -70,7 +71,7 @@ a {
 
 .page {
   flex: 1;
-  padding: 28px 20px calc(24px + var(--safe-b));
+  padding: calc(28px + var(--safe-t)) 20px calc(24px + var(--safe-b));
   display: flex;
   flex-direction: column;
 }
@@ -684,7 +685,7 @@ a {
 }
 .lang-float {
   position: absolute;
-  top: calc(12px + env(safe-area-inset-top, 0px));
+  top: calc(20px + var(--safe-t));
   right: 16px;
   z-index: 20;
 }
