@@ -29,6 +29,7 @@ db.exec(`
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     email       TEXT NOT NULL,
     code        TEXT NOT NULL,
+    purpose     TEXT NOT NULL DEFAULT 'register',
     expires_at  INTEGER NOT NULL,
     consumed    INTEGER NOT NULL DEFAULT 0,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
@@ -67,6 +68,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_saved_user ON saved_questions(user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_history_user ON history(user_id, created_at DESC);
 `);
+
+// Migration: older databases don't have otp_codes.purpose yet (added for
+// the password-reset feature) — add it so existing installs keep working.
+const otpCols = db.prepare(`PRAGMA table_info(otp_codes)`).all();
+if (!otpCols.some((c) => c.name === 'purpose')) {
+  db.exec(`ALTER TABLE otp_codes ADD COLUMN purpose TEXT NOT NULL DEFAULT 'register'`);
+}
 
 // Seed the curated question bank once.
 const count = db.prepare(`SELECT COUNT(*) AS c FROM questions WHERE source = 'bank'`).get();

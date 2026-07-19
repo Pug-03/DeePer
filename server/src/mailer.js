@@ -16,9 +16,14 @@ if (smtpConfigured) {
 
 export const mailerReady = smtpConfigured;
 
-export async function sendOtpEmail(to, code) {
+const SUBJECTS = {
+  register: 'รหัส OTP สำหรับสมัคร DeePer',
+  reset: 'รหัส OTP สำหรับรีเซ็ตรหัสผ่าน DeePer',
+};
+
+export async function sendOtpEmail(to, code, purpose = 'register') {
   const from = process.env.SMTP_FROM || 'DeePer <no-reply@deeper.app>';
-  const subject = 'รหัส OTP สำหรับสมัคร DeePer';
+  const subject = SUBJECTS[purpose] || SUBJECTS.register;
   const text = `รหัสยืนยันของคุณคือ ${code}\nรหัสนี้จะหมดอายุใน 10 นาที`;
 
   if (!transporter) {

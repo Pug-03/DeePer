@@ -6,6 +6,7 @@ import BottomNav from './components/BottomNav.jsx';
 import Welcome from './pages/Welcome.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 import Home from './pages/Home.jsx';
 import Answer from './pages/Answer.jsx';
 import Saved from './pages/Saved.jsx';
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
           <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
           <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+          <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
 
           <Route path="/app" element={<Protected><TabLayout /></Protected>}>
             <Route index element={<Navigate to="home" replace />} />

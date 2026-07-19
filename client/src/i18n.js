@@ -47,7 +47,6 @@ export const STRINGS = {
     'login.email': 'อีเมล',
     'login.password': 'รหัสผ่าน',
     'login.forgot': 'ลืมรหัสผ่าน?',
-    'login.forgotToast': 'กรุณาติดต่อผู้ดูแลระบบเพื่อรีเซ็ตรหัสผ่าน',
     'login.submit': 'เข้าสู่ระบบ',
     'login.submitBusy': 'กำลังเข้าสู่ระบบ...',
     'login.noAccount': 'ยังไม่มีบัญชี?',
@@ -90,6 +89,16 @@ export const STRINGS = {
     'gender.other': 'อื่น ๆ',
     'gender.prefer_not': 'ไม่ระบุ',
     'gender.none': 'ไม่ระบุ',
+
+    // ลืมรหัสผ่าน
+    'forgot.title': 'รีเซ็ตรหัสผ่าน',
+    'forgot.emailSub': 'กรอกอีเมลที่ใช้สมัคร เราจะส่งรหัส OTP ไปยืนยันตัวตน',
+    'forgot.newPasswordTitle': 'ตั้งรหัสผ่านใหม่',
+    'forgot.newPasswordSub': 'ตั้งรหัสผ่านใหม่ให้ปลอดภัยและจำได้ง่าย',
+    'forgot.newPassword': 'รหัสผ่านใหม่',
+    'forgot.submit': 'บันทึกรหัสผ่านใหม่',
+    'forgot.submitBusy': 'กำลังบันทึก...',
+    'forgot.success': 'เปลี่ยนรหัสผ่านสำเร็จ ✅',
 
     // กฎรหัสผ่าน
     'pw.len': 'อย่างน้อย 8 ตัว',
@@ -248,6 +257,16 @@ export const STRINGS = {
     'gender.other': 'Other',
     'gender.prefer_not': 'Prefer not to say',
     'gender.none': 'Not specified',
+
+    // Forgot password
+    'forgot.title': 'Reset password',
+    'forgot.emailSub': 'Enter the email you signed up with — we’ll send an OTP to verify it’s you',
+    'forgot.newPasswordTitle': 'Set a new password',
+    'forgot.newPasswordSub': 'Choose a new password that’s secure and easy to remember',
+    'forgot.newPassword': 'New password',
+    'forgot.submit': 'Save new password',
+    'forgot.submitBusy': 'Saving...',
+    'forgot.success': 'Password changed successfully ✅',
 
     'pw.len': 'At least 8 chars',
     'pw.upper': 'Uppercase (A-Z)',

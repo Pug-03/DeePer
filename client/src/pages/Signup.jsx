@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
@@ -6,23 +6,12 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
+import OtpInput from '../components/OtpInput.jsx';
+import PasswordStrength from '../components/PasswordStrength.jsx';
+import { pwScore } from '../utils/password.js';
 import { IcBack, IcGoogle, IcMail } from '../components/icons.jsx';
 
 const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
-
-function pwScore(pw) {
-  const rules = {
-    len: pw.length >= 8,
-    upper: /[A-Z]/.test(pw),
-    lower: /[a-z]/.test(pw),
-    digit: /[0-9]/.test(pw),
-    special: /[^A-Za-z0-9]/.test(pw),
-  };
-  const passed = [rules.upper, rules.lower, rules.digit, rules.special].filter(Boolean).length;
-  const score = rules.len ? passed : Math.max(0, passed - 1);
-  const valid = rules.len && rules.upper && rules.lower && rules.digit && rules.special;
-  return { rules, score, valid };
-}
 
 function ProfileFields({ nickname, setNickname, age, setAge, gender, setGender }) {
   const { t } = useI18n();
@@ -79,7 +68,7 @@ export default function Signup() {
 
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '']);
-  const otpRefs = useRef([]);
+  const [otpKey, setOtpKey] = useState(0);
 
   const [nickname, setNickname] = useState('');
   const [age, setAge] = useState('');
@@ -107,24 +96,13 @@ export default function Signup() {
       const d = await api.post('/auth/otp/request', { email }, { auth: false });
       setStep('otp');
       setOtp(['', '', '', '']);
-      setTimeout(() => otpRefs.current[0]?.focus(), 60);
+      setOtpKey((k) => k + 1);
       if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
     } catch (e2) {
       setErr(e2.message);
     } finally {
       setBusy(false);
     }
-  };
-
-  const onOtpChange = (i, val) => {
-    const v = val.replace(/\D/g, '').slice(-1);
-    const next = [...otp];
-    next[i] = v;
-    setOtp(next);
-    if (v && i < 3) otpRefs.current[i + 1]?.focus();
-  };
-  const onOtpKey = (i, e) => {
-    if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
   };
 
   const verifyOtp = async (e) => {
@@ -310,19 +288,12 @@ export default function Signup() {
               <b style={{ color: 'var(--text)' }}>{email}</b>
             </p>
           </div>
-          <div className="otp-row" style={{ marginBottom: 24 }}>
-            {otp.map((d, i) => (
-              <input
-                key={i}
-                ref={(el) => (otpRefs.current[i] = el)}
-                className="otp-box"
-                inputMode="numeric"
-                maxLength={1}
-                value={d}
-                onChange={(e) => onOtpChange(i, e.target.value)}
-                onKeyDown={(e) => onOtpKey(i, e)}
-              />
-            ))}
+          <div style={{ marginBottom: 24 }}>
+            <OtpInput
+              key={otpKey}
+              value={otp}
+              onChange={(i, v) => setOtp((prev) => prev.map((d, idx) => (idx === i ? v : d)))}
+            />
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy || otp.join('').length !== 4}>
             {busy ? t('signup.verifying') : t('signup.verify')}
@@ -363,18 +334,7 @@ export default function Signup() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <div className="pw-meter">
-              {[1, 2, 3, 4].map((n) => (
-                <div key={n} className={`pw-seg ${score >= n ? `on-${score}` : ''}`} />
-              ))}
-            </div>
-            <ul className="pw-rules">
-              <li className={rules.len ? 'ok' : ''}>• {t('pw.len')}</li>
-              <li className={rules.upper ? 'ok' : ''}>• {t('pw.upper')}</li>
-              <li className={rules.lower ? 'ok' : ''}>• {t('pw.lower')}</li>
-              <li className={rules.digit ? 'ok' : ''}>• {t('pw.digit')}</li>
-              <li className={rules.special ? 'ok' : ''}>• {t('pw.special')}</li>
-            </ul>
+            <PasswordStrength rules={rules} score={score} />
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy || !pwValid}>
             {busy ? t('signup.submitBusy') : t('signup.submit')}

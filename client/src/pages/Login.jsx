@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import { IcBack, IcGoogle } from '../components/icons.jsx';
@@ -12,7 +11,6 @@ export default function Login() {
   const nav = useNavigate();
   const { config, applyAuth } = useAuth();
   const { t } = useI18n();
-  const toast = useToast();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -124,7 +122,7 @@ export default function Login() {
         </div>
         <div className="row-between" style={{ marginBottom: 20 }}>
           <span />
-          <button type="button" className="link" onClick={() => toast(t('login.forgotToast'))}>
+          <button type="button" className="link" onClick={() => nav('/forgot-password')}>
             {t('login.forgot')}
           </button>
         </div>

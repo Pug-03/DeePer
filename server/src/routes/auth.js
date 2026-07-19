@@ -38,14 +38,12 @@ router.post('/otp/request', async (req, res) => {
 
   const code = genOtp();
   const expires = Date.now() + 10 * 60 * 1000;
-  db.prepare('INSERT INTO otp_codes (email, code, expires_at) VALUES (?, ?, ?)').run(
-    email,
-    code,
-    expires,
-  );
+  db.prepare(
+    `INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?, ?, 'register', ?)`,
+  ).run(email, code, expires);
 
   try {
-    const result = await sendOtpEmail(email, code);
+    const result = await sendOtpEmail(email, code, 'register');
     // In dev (no SMTP) we return the code so the flow is testable end-to-end.
     res.json({ ok: true, dev_code: result.delivered ? undefined : result.devCode });
   } catch (e) {
@@ -63,7 +61,7 @@ router.post('/otp/verify', (req, res) => {
 
   const row = db
     .prepare(
-      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND consumed = 0
+      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'register' AND consumed = 0
        ORDER BY id DESC LIMIT 1`,
     )
     .get(email, code);
@@ -91,7 +89,7 @@ router.post('/register', (req, res) => {
 
   const otp = db
     .prepare(
-      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND consumed = 0
+      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'register' AND consumed = 0
        ORDER BY id DESC LIMIT 1`,
     )
     .get(email, code);
@@ -132,6 +130,88 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
 
   res.json({ token: signToken(user), user: publicUser(user) });
+});
+
+// --- Forgot password — Step 1: request OTP ---
+router.post('/password-reset/request', async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  if (!isEmail(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง' });
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user) return res.status(404).json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้' });
+  if (!user.password_hash)
+    return res
+      .status(400)
+      .json({ error: 'บัญชีนี้สมัครด้วย Google กรุณาเข้าสู่ระบบด้วย Google แทน' });
+
+  const code = genOtp();
+  const expires = Date.now() + 10 * 60 * 1000;
+  db.prepare(
+    `INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?, ?, 'reset', ?)`,
+  ).run(email, code, expires);
+
+  try {
+    const result = await sendOtpEmail(email, code, 'reset');
+    res.json({ ok: true, dev_code: result.delivered ? undefined : result.devCode });
+  } catch (e) {
+    console.error('[password-reset] send failed', e);
+    res.status(500).json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่' });
+  }
+});
+
+// --- Forgot password — Step 2: verify OTP ---
+router.post('/password-reset/verify', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const code = String(req.body.code || '').trim();
+  if (!isEmail(email) || !/^\d{4}$/.test(code))
+    return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง' });
+
+  const row = db
+    .prepare(
+      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'reset' AND consumed = 0
+       ORDER BY id DESC LIMIT 1`,
+    )
+    .get(email, code);
+
+  if (!row) return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง' });
+  if (row.expires_at < Date.now())
+    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว' });
+
+  res.json({ ok: true });
+});
+
+// --- Forgot password — Step 3: set new password (auto-login on success) ---
+router.post('/password-reset/confirm', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const code = String(req.body.code || '').trim();
+  const { password } = req.body;
+
+  if (!isEmail(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง' });
+  if (!validatePassword(password))
+    return res
+      .status(400)
+      .json({ error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ' });
+
+  const otp = db
+    .prepare(
+      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'reset' AND consumed = 0
+       ORDER BY id DESC LIMIT 1`,
+    )
+    .get(email, code);
+  if (!otp || otp.expires_at < Date.now())
+    return res.status(400).json({ error: 'ต้องยืนยัน OTP ก่อนตั้งรหัสผ่านใหม่' });
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user) return res.status(404).json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้' });
+
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(
+    hashPassword(password),
+    user.id,
+  );
+  db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
+
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+  res.json({ token: signToken(updated), user: publicUser(updated) });
 });
 
 // --- Google OAuth (verify ID token from Google Identity Services) ---
