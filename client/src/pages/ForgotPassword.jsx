@@ -103,7 +103,7 @@ export default function ForgotPassword() {
       {err && <div className="err-inline">{err}</div>}
 
       {step === 'email' && (
-        <form className="fade-up" onSubmit={requestOtp}>
+        <form className="stagger" onSubmit={requestOtp}>
           <div className="header">
             <h1 className="h1">{t('forgot.title')}</h1>
             <p className="sub">{t('forgot.emailSub')}</p>
@@ -129,7 +129,7 @@ export default function ForgotPassword() {
       )}
 
       {step === 'otp' && (
-        <form className="fade-up" onSubmit={verifyOtp}>
+        <form className="stagger" onSubmit={verifyOtp}>
           <div className="header">
             <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
@@ -160,7 +160,7 @@ export default function ForgotPassword() {
       )}
 
       {step === 'password' && (
-        <form className="fade-up" onSubmit={confirmReset}>
+        <form className="stagger" onSubmit={confirmReset}>
           <div className="header">
             <h1 className="h1">{t('forgot.newPasswordTitle')}</h1>
             <p className="sub">{t('forgot.newPasswordSub')}</p>

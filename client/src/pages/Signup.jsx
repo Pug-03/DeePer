@@ -207,7 +207,7 @@ export default function Signup() {
 
       {/* Step: choose method */}
       {step === 'method' && (
-        <div className="fade-up">
+        <div className="stagger">
           <div className="header">
             <h1 className="h1">{t('signup.title')}</h1>
             <p className="sub">{t('signup.sub')}</p>
@@ -252,7 +252,7 @@ export default function Signup() {
 
       {/* Step: email entry */}
       {step === 'email' && (
-        <form className="fade-up" onSubmit={requestOtp}>
+        <form className="stagger" onSubmit={requestOtp}>
           <div className="header">
             <h1 className="h1">{t('signup.emailTitle')}</h1>
             <p className="sub">{t('signup.emailSub')}</p>
@@ -279,7 +279,7 @@ export default function Signup() {
 
       {/* Step: OTP */}
       {step === 'otp' && (
-        <form className="fade-up" onSubmit={verifyOtp}>
+        <form className="stagger" onSubmit={verifyOtp}>
           <div className="header">
             <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
@@ -311,7 +311,7 @@ export default function Signup() {
 
       {/* Step: profile + password (email flow) */}
       {step === 'profile' && (
-        <form className="fade-up" onSubmit={registerEmail}>
+        <form className="stagger" onSubmit={registerEmail}>
           <div className="header">
             <h1 className="h1">{t('signup.profileTitle')}</h1>
             <p className="sub">{t('signup.profileSub')}</p>
@@ -344,7 +344,7 @@ export default function Signup() {
 
       {/* Step: Google profile completion */}
       {step === 'gprofile' && (
-        <form className="fade-up" onSubmit={registerGoogle}>
+        <form className="stagger" onSubmit={registerGoogle}>
           <div className="header">
             <h1 className="h1">{t('signup.profileTitle')}</h1>
             <p className="sub">{t('signup.gprofileSub')}</p>

@@ -62,39 +62,40 @@ export default function Login() {
         </span>
       </button>
 
-      <div className="header">
-        <h1 className="h1">{t('login.title')}</h1>
-        <p className="sub">{t('login.sub')}</p>
-      </div>
-
       {err && <div className="err-inline">{err}</div>}
 
-      {config.google_enabled ? (
-        <>
-          <GoogleButton
-            clientId={config.google_client_id}
-            onCredential={onGoogle}
-            label={t('google.loginLabel')}
-            sub={t('google.loginSub')}
-          />
-          <div className="divider">{t('common.or')}</div>
-        </>
-      ) : (
-        <>
-          <button className="method-btn" disabled>
-            <span className="m-ic">
-              <IcGoogle />
-            </span>
-            <span>
-              <div className="m-title">{t('google.disabledTitle')}</div>
-              <div className="m-sub">{t('google.disabledSub')}</div>
-            </span>
-          </button>
-          <div className="divider">{t('login.orEmail')}</div>
-        </>
-      )}
+      {/* one continuous top-to-bottom cascade: title → Google → email → password → button */}
+      <form className="stagger" onSubmit={submit}>
+        <div className="header">
+          <h1 className="h1">{t('login.title')}</h1>
+          <p className="sub">{t('login.sub')}</p>
+        </div>
 
-      <form onSubmit={submit}>
+        {config.google_enabled ? (
+          <>
+            <GoogleButton
+              clientId={config.google_client_id}
+              onCredential={onGoogle}
+              label={t('google.loginLabel')}
+              sub={t('google.loginSub')}
+            />
+            <div className="divider">{t('common.or')}</div>
+          </>
+        ) : (
+          <>
+            <button type="button" className="method-btn" disabled>
+              <span className="m-ic">
+                <IcGoogle />
+              </span>
+              <span>
+                <div className="m-title">{t('google.disabledTitle')}</div>
+                <div className="m-sub">{t('google.disabledSub')}</div>
+              </span>
+            </button>
+            <div className="divider">{t('login.orEmail')}</div>
+          </>
+        )}
+
         <div className="field">
           <label>{t('login.email')}</label>
           <input
@@ -129,14 +130,14 @@ export default function Login() {
         <button className="btn btn--primary" type="submit" disabled={busy}>
           {busy ? t('login.submitBusy') : t('login.submit')}
         </button>
-      </form>
 
-      <p className="sub center" style={{ marginTop: 22 }}>
-        {t('login.noAccount')}{' '}
-        <button className="link" onClick={() => nav('/signup')}>
-          {t('welcome.signup')}
-        </button>
-      </p>
+        <p className="sub center" style={{ marginTop: 22 }}>
+          {t('login.noAccount')}{' '}
+          <button type="button" className="link" onClick={() => nav('/signup')}>
+            {t('welcome.signup')}
+          </button>
+        </p>
+      </form>
     </div>
   );
 }

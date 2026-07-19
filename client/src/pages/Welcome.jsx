@@ -6,7 +6,7 @@ export default function Welcome() {
   const nav = useNavigate();
   const { t } = useI18n();
   return (
-    <div className="page">
+    <div className="page stagger">
       <div className="lang-float">
         <LangToggle />
       </div>
