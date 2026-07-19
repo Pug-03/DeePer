@@ -14,8 +14,8 @@
   --text: #f4f1f2;
   --text-dim: #a8a0a6;
   --text-faint: #6f676d;
-  --radius: 26px;
-  --radius-sm: 16px;
+  --radius: 30px;
+  --radius-sm: 22px;
   --shadow-lift: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
   --glow-red: 0 0 40px -6px rgba(244, 63, 94, 0.5);
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -344,7 +344,7 @@ a {
   width: 44px;
   height: 44px;
   flex: none;
-  border-radius: 12px;
+  border-radius: 15px;
   display: grid;
   place-items: center;
   background: rgba(255, 255, 255, 0.06);
