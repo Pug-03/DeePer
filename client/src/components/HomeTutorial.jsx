@@ -129,7 +129,6 @@ export default function HomeTutorial({ onDone }) {
               <motion.div
                 ref={tipRef}
                 key={id}
-                layout="position"
                 className="tut-tip glass glass--red"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
