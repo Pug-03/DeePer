@@ -24,7 +24,7 @@ export default function Login() {
     try {
       const d = await api.post('/auth/login', { email, password }, { auth: false });
       applyAuth(d.token, d.user);
-      nav('/app/home', { replace: true });
+      nav('/app/welcome', { replace: true, state: { isNew: false } });
     } catch (e2) {
       setErr(e2.message);
     } finally {
@@ -42,7 +42,7 @@ export default function Login() {
           return;
         }
         applyAuth(d.token, d.user);
-        nav('/app/home', { replace: true });
+        nav('/app/welcome', { replace: true, state: { isNew: false } });
       } catch (e2) {
         setErr(e2.message);
       }

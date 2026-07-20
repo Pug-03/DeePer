@@ -87,6 +87,31 @@ export const STRINGS = {
     'signup.pwNotValid': 'รหัสผ่านยังไม่ตรงตามเงื่อนไข',
     'signup.devOtp': 'โหมดพัฒนา: รหัส OTP คือ {code}',
 
+    // หน้าต้อนรับหลังล็อกอิน/สมัคร
+    'postAuth.backTitle': 'ยินดีต้อนรับกลับมา {name}',
+    'postAuth.backSub': 'คิดถึงจัง ไปคุยกันต่อเลย',
+    'postAuth.newTitle': 'ยินดีต้อนรับ {name}',
+    'postAuth.newSub': 'เริ่มต้นบทสนทนาแรกของเรากันเลย',
+    'postAuth.continue': 'เข้าสู่หน้าหลัก',
+    'postAuth.tutAsk': 'อยากให้เราแนะนำวิธีใช้งานเบื้องต้นไหม?',
+    'postAuth.tutYes': 'ต้องการเลย ✨',
+    'postAuth.tutNo': 'ข้าม ไปเลย',
+
+    // สอนการใช้งาน (หน้าหลัก)
+    'tut.skip': 'ข้ามทั้งหมด',
+    'tut.next': 'ถัดไป',
+    'tut.done': 'เข้าใจแล้ว',
+    'tut.catsTitle': 'เลือกหมวดคำถาม',
+    'tut.catsDesc': 'เลือกได้ว่าจะคุยกับคู่รัก เพื่อน ๆ หรือครอบครัว สลับหมวดได้ตลอดเวลา',
+    'tut.deckTitle': 'ปัดการ์ดเพื่อเลือก',
+    'tut.deckDesc': 'ปัดซ้ายเพื่อข้ามคำถามนี้ ปัดขวาเพื่อไปตอบคำถามนี้กันเลย',
+    'tut.actionsTitle': 'หรือใช้ปุ่มด้านล่างนี้',
+    'tut.actionsDesc': 'กดปุ่มด้านล่างแทนการปัดก็ได้',
+    'tut.addTitle': 'เพิ่มคำถามของตัวเอง',
+    'tut.addDesc': 'มีคำถามที่อยากถามเป็นพิเศษไหม? กดตรงนี้เพื่อเพิ่มคำถามของคุณเองได้เลย',
+    'tut.navTitle': 'แถบเมนูด้านล่าง',
+    'tut.navDesc': 'สลับไปมาระหว่างหน้าหลัก บันทึกไว้ ประวัติ และโปรไฟล์ได้ตลอดเวลา',
+
     // เพศ
     'gender.female': 'หญิง',
     'gender.male': 'ชาย',
@@ -259,6 +284,30 @@ export const STRINGS = {
     'signup.needNickname': 'Please enter a nickname',
     'signup.pwNotValid': 'Password doesn’t meet the requirements yet',
     'signup.devOtp': 'Dev mode: your OTP is {code}',
+
+    'postAuth.backTitle': 'Welcome back {name}',
+    'postAuth.backSub': 'Great to see you again — let’s keep talking',
+    'postAuth.newTitle': 'Welcome {name}',
+    'postAuth.newSub': 'Let’s start your first conversation',
+    'postAuth.continue': 'Continue to home',
+    'postAuth.tutAsk': 'Want a quick walkthrough of how it works?',
+    'postAuth.tutYes': 'Yes, show me ✨',
+    'postAuth.tutNo': 'No, skip',
+
+    // Home tutorial
+    'tut.skip': 'Skip all',
+    'tut.next': 'Next',
+    'tut.done': 'Got it',
+    'tut.catsTitle': 'Choose a category',
+    'tut.catsDesc': 'Pick couple, friends, or family — switch anytime',
+    'tut.deckTitle': 'Swipe the card',
+    'tut.deckDesc': 'Swipe left to skip, swipe right to answer this question',
+    'tut.actionsTitle': 'Or use these buttons',
+    'tut.actionsDesc': 'Tap a button below instead of swiping',
+    'tut.addTitle': 'Add your own question',
+    'tut.addDesc': 'Got something specific to ask? Tap here to add your own question',
+    'tut.navTitle': 'Bottom menu',
+    'tut.navDesc': 'Switch between Home, Saved, History, and Profile anytime',
 
     'gender.female': 'Female',
     'gender.male': 'Male',

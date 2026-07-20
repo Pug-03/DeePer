@@ -6,6 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
 import { IcX, IcCheck, IcBookmark, IcPlus } from '../components/icons.jsx';
+import HomeTutorial from '../components/HomeTutorial.jsx';
 
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
@@ -97,7 +98,7 @@ function DeckStack({ current, next, onSkip, onAnswer }) {
   const backOpacity = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
 
   return (
-    <div className="deck">
+    <div className="deck" data-tut="deck">
       {next && (
         <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
           <p className="q-text" style={{ opacity: 0.5 }}>
@@ -130,6 +131,9 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newQ, setNewQ] = useState('');
+  const [showTutorial, setShowTutorial] = useState(
+    () => localStorage.getItem('dt_tutorial_pending') === '1',
+  );
   const seen = useRef(new Set());
 
   const fetchBatch = useCallback(async (cat, { reset = false } = {}) => {
@@ -238,12 +242,16 @@ export default function Home() {
           <span className="dot" />
           <span style={{ fontSize: 22, fontWeight: 700 }}>DeePer</span>
         </div>
-        <button className="btn btn--sm btn--ghost" onClick={() => setAdding((a) => !a)}>
+        <button
+          className="btn btn--sm btn--ghost"
+          data-tut="add"
+          onClick={() => setAdding((a) => !a)}
+        >
           <IcPlus size={18} /> {t('home.addQuestion')}
         </button>
       </div>
 
-      <div className="cat-row" style={{ marginBottom: 6 }}>
+      <div className="cat-row" data-tut="cats" style={{ marginBottom: 6 }}>
         {CATS.map((c) => (
           <button
             key={c}
@@ -309,7 +317,7 @@ export default function Home() {
         <>
           <DeckStack current={current} next={deck[idx + 1]} onSkip={advance} onAnswer={goAnswer} />
 
-          <div className="actions">
+          <div className="actions" data-tut="actions">
             <button className="fab fab-md fab--x" onClick={doSkip} aria-label={t('home.aSkip')}>
               <IcX size={26} />
             </button>
@@ -326,6 +334,15 @@ export default function Home() {
             <span>{t('home.aAnswer')}</span>
           </div>
         </>
+      )}
+
+      {showTutorial && status === 'ready' && current && (
+        <HomeTutorial
+          onDone={() => {
+            localStorage.removeItem('dt_tutorial_pending');
+            setShowTutorial(false);
+          }}
+        />
       )}
     </div>
   );

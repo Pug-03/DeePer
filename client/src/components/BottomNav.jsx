@@ -14,7 +14,7 @@ export default function BottomNav() {
   const nav = useNavigate();
   const { t } = useI18n();
   return (
-    <nav className="bottom-nav glass glass--red">
+    <nav className="bottom-nav glass glass--red" data-tut="nav">
       {TABS.map(({ to, key, Icon }) => {
         const active = pathname === to;
         return (

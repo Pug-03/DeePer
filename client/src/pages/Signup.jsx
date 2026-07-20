@@ -134,7 +134,7 @@ export default function Signup() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
-      nav('/app/home', { replace: true });
+      nav('/app/welcome', { replace: true, state: { isNew: true } });
     } catch (e2) {
       setErr(e2.message);
     } finally {
@@ -154,7 +154,7 @@ export default function Signup() {
           return;
         }
         applyAuth(d.token, d.user);
-        nav('/app/home', { replace: true });
+        nav('/app/welcome', { replace: true, state: { isNew: false } });
       } catch (e2) {
         setErr(e2.message);
       }
@@ -174,7 +174,7 @@ export default function Signup() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
-      nav('/app/home', { replace: true });
+      nav('/app/welcome', { replace: true, state: { isNew: true } });
     } catch (e2) {
       setErr(e2.message);
     } finally {

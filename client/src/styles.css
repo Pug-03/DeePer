@@ -824,6 +824,110 @@ a {
   }
 }
 
+/* ---------- Home tutorial overlay ---------- */
+.tut-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+}
+.tut-spot {
+  position: fixed;
+  border-radius: 20px;
+  box-shadow: 0 0 0 9999px rgba(4, 4, 6, 0.8);
+  border: 1.5px solid var(--red-bright);
+  pointer-events: none;
+  transition:
+    top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tut-skip {
+  position: fixed;
+  top: calc(20px + var(--safe-t));
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--glass-strong);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+}
+.tut-tip {
+  position: fixed;
+  width: calc(100% - 40px);
+  max-width: 340px;
+  padding: 20px;
+  animation: tutPopIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes tutPopIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.9) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
+.tut-tip-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.tut-tip-desc {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+}
+.tut-icon-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 6px;
+  margin: 0 0 16px;
+}
+.tut-icon-row span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  flex: 0 1 64px;
+  min-width: 0;
+  text-align: center;
+}
+.tut-icon-row svg {
+  color: var(--red-bright);
+}
+.tut-tip-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tut-dots {
+  display: flex;
+  gap: 6px;
+}
+.tut-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.tut-dots span.on {
+  background: var(--red-bright);
+  box-shadow: 0 0 8px 1px rgba(244, 63, 94, 0.6);
+}
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;

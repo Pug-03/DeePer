@@ -8,6 +8,7 @@ import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import Home from './pages/Home.jsx';
+import PostAuthWelcome from './pages/PostAuthWelcome.jsx';
 import Answer from './pages/Answer.jsx';
 import Saved from './pages/Saved.jsx';
 import History from './pages/History.jsx';
@@ -56,6 +57,7 @@ export default function App() {
             </Route>
 
             <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
+            <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
