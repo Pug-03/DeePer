@@ -419,6 +419,7 @@ a {
   gap: 10px;
 }
 .pill {
+  position: relative;
   flex: 1;
   min-height: 46px;
   border-radius: 999px;
@@ -427,13 +428,24 @@ a {
   color: var(--text-dim);
   font-weight: 600;
   font-size: 15px;
-  transition: all 0.2s;
+  transition: color 0.2s, border-color 0.2s;
 }
 .pill.active {
   color: #fff;
-  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
   border-color: transparent;
+}
+.pill-bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
   box-shadow: var(--glow-red);
+  z-index: 0;
+}
+.pill-label {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
 }
 
 /* ---------- Question card deck ---------- */

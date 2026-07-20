@@ -264,15 +264,33 @@ export default function Home() {
       </div>
 
       <div className="cat-row" data-tut="cats" style={{ marginBottom: 6 }}>
-        {CATS.map((c) => (
-          <button
-            key={c}
-            className={`pill ${category === c ? 'active' : ''}`}
-            onClick={() => switchCat(c)}
-          >
-            {t(`cat.${c}`)}
-          </button>
-        ))}
+        {CATS.map((c) => {
+          const isActive = category === c;
+          return (
+            <button
+              key={c}
+              className={`pill ${isActive ? 'active' : ''}`}
+              onClick={() => switchCat(c)}
+            >
+              {isActive && (
+                <motion.span
+                  layoutId="cat-pill-bg"
+                  className="pill-bg"
+                  transition={{ type: 'spring', stiffness: 420, damping: 22, mass: 0.9 }}
+                />
+              )}
+              <motion.span
+                key={isActive ? 'on' : 'off'}
+                className="pill-label"
+                initial={isActive ? { scale: 0.82 } : false}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+              >
+                {t(`cat.${c}`)}
+              </motion.span>
+            </button>
+          );
+        })}
       </div>
 
       {adding && (
