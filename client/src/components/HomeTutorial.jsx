@@ -9,7 +9,8 @@ const GAP = 16;
 const EDGE = 16;
 const EASE = [0.16, 1, 0.3, 1];
 const SPOT_TRANSITION = { duration: 0.6, ease: EASE };
-const TIP_TRANSITION = { duration: 0.45, ease: EASE };
+const TIP_TRANSITION = { duration: 0.5, ease: EASE };
+const TIP_CONTENT_TRANSITION = { duration: 0.18, ease: EASE };
 // Matches each target's own corner rounding (.btn, .pill, .qcard, .bottom-nav)
 // so the highlight frame hugs the real shape instead of a generic rounded box.
 // Single controls (add, deck) use their exact real radius; rows of separate
@@ -124,74 +125,80 @@ export default function HomeTutorial({ onDone }) {
             />
           )}
 
-          <AnimatePresence>
-            {spot && (
-              <motion.div
-                ref={tipRef}
-                key={id}
-                className="tut-tip glass glass--red"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={TIP_TRANSITION}
-                style={{ top: tipTop, left: '50%', x: '-50%' }}
-              >
-                <p className="tut-tip-title">{t(`tut.${id}Title`)}</p>
-                <p className="tut-tip-desc">{t(`tut.${id}Desc`)}</p>
-                {id === 'actions' && (
-                  <div className="tut-icon-row">
-                    <span>
-                      <IcX size={16} /> {t('home.aSkip')}
-                    </span>
-                    <span>
-                      <IcBookmark size={16} /> {t('home.aSave')}
-                    </span>
-                    <span>
-                      <IcCheck size={16} /> {t('home.aAnswer')}
-                    </span>
-                  </div>
-                )}
-                {id === 'nav' && (
-                  <div className="tut-icon-row">
-                    <span>
-                      <IcHome size={16} /> {t('nav.home')}
-                    </span>
-                    <span>
-                      <IcBookmark size={16} /> {t('nav.saved')}
-                    </span>
-                    <span>
-                      <IcHistory size={16} /> {t('nav.history')}
-                    </span>
-                    <span>
-                      <IcUser size={16} /> {t('nav.profile')}
-                    </span>
-                  </div>
-                )}
-                <div className="tut-tip-foot">
-                  <div className="tut-dots">
-                    {STEPS.map((s, i) => (
-                      <span key={s} className={i === step ? 'on' : ''} />
-                    ))}
-                  </div>
-                  <div className="tut-actions">
-                    {step > 0 && (
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--sm tut-back-btn"
-                        onClick={back}
-                        aria-label={t('common.back')}
-                      >
-                        <IcBack size={18} />
+          {spot && (
+            <motion.div
+              ref={tipRef}
+              className="tut-tip glass glass--red"
+              initial={{ opacity: 0, y: 16, top: tipTop }}
+              animate={{ opacity: 1, y: 0, top: tipTop }}
+              transition={TIP_TRANSITION}
+              style={{ left: '50%', x: '-50%' }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={TIP_CONTENT_TRANSITION}
+                >
+                  <p className="tut-tip-title">{t(`tut.${id}Title`)}</p>
+                  <p className="tut-tip-desc">{t(`tut.${id}Desc`)}</p>
+                  {id === 'actions' && (
+                    <div className="tut-icon-row">
+                      <span>
+                        <IcX size={16} /> {t('home.aSkip')}
+                      </span>
+                      <span>
+                        <IcBookmark size={16} /> {t('home.aSave')}
+                      </span>
+                      <span>
+                        <IcCheck size={16} /> {t('home.aAnswer')}
+                      </span>
+                    </div>
+                  )}
+                  {id === 'nav' && (
+                    <div className="tut-icon-row">
+                      <span>
+                        <IcHome size={16} /> {t('nav.home')}
+                      </span>
+                      <span>
+                        <IcBookmark size={16} /> {t('nav.saved')}
+                      </span>
+                      <span>
+                        <IcHistory size={16} /> {t('nav.history')}
+                      </span>
+                      <span>
+                        <IcUser size={16} /> {t('nav.profile')}
+                      </span>
+                    </div>
+                  )}
+                  <div className="tut-tip-foot">
+                    <div className="tut-dots">
+                      {STEPS.map((s, i) => (
+                        <span key={s} className={i === step ? 'on' : ''} />
+                      ))}
+                    </div>
+                    <div className="tut-actions">
+                      {step > 0 && (
+                        <button
+                          type="button"
+                          className="btn btn--ghost btn--sm tut-back-btn"
+                          onClick={back}
+                          aria-label={t('common.back')}
+                        >
+                          <IcBack size={18} />
+                        </button>
+                      )}
+                      <button className="btn btn--primary btn--sm" onClick={next}>
+                        {isLast ? t('tut.done') : t('tut.next')}
                       </button>
-                    )}
-                    <button className="btn btn--primary btn--sm" onClick={next}>
-                      {isLast ? t('tut.done') : t('tut.next')}
-                    </button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
