@@ -91,19 +91,19 @@ export default function PostAuthWelcome() {
         {isNew ? t('postAuth.newSub') : t('postAuth.backSub')}
       </motion.p>
 
-      <motion.div style={{ marginTop: 36 }} {...rise(1.38)}>
-        <p className="sub" style={{ marginBottom: 16 }}>
+      <div style={{ marginTop: 36 }}>
+        <motion.p className="sub" style={{ marginBottom: 16 }} {...rise(1.38)}>
           {t('postAuth.tutAsk')}
-        </p>
+        </motion.p>
         <div className="stack">
-          <button className="btn btn--primary" onClick={() => choose(true)}>
+          <motion.button className="btn btn--primary" onClick={() => choose(true)} {...rise(1.53)}>
             {t('postAuth.tutYes')} <IcBook size={18} />
-          </button>
-          <button className="btn btn--ghost" onClick={() => choose(false)}>
+          </motion.button>
+          <motion.button className="btn btn--ghost" onClick={() => choose(false)} {...rise(1.68)}>
             {t('postAuth.tutNo')}
-          </button>
+          </motion.button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
