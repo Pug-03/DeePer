@@ -1,6 +1,13 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useMotionValueEvent, useTransform, animate } from 'framer-motion';
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useMotionValueEvent,
+  useTransform,
+  animate,
+} from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
@@ -10,6 +17,8 @@ import HomeTutorial from '../components/HomeTutorial.jsx';
 
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
+const CARD_SLIDE = 90;
+const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
   const { t } = useI18n();
@@ -91,7 +100,7 @@ function FlyBridge({ fly }) {
 }
 FlyBridge.current = null;
 
-function DeckStack({ current, next, onSkip, onAnswer }) {
+function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
   const progress = useMotionValue(0);
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
   const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
@@ -106,13 +115,31 @@ function DeckStack({ current, next, onSkip, onAnswer }) {
           </p>
         </motion.div>
       )}
-      <TopCard
-        key={current.id}
-        q={current}
-        onSkip={onSkip}
-        onAnswer={onAnswer}
-        onDragProgress={(v) => progress.set(v)}
-      />
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={current.id}
+          initial={enterDir ? { x: enterDir * CARD_SLIDE, opacity: 0, zIndex: 2 } : false}
+          animate={{ x: 0, opacity: 1, zIndex: 2 }}
+          exit={
+            enterDir
+              ? {
+                  opacity: 0,
+                  zIndex: 0,
+                  transition: { opacity: { duration: 0.15 }, zIndex: { duration: 0 } },
+                }
+              : undefined
+          }
+          transition={enterDir ? CARD_SPRING : { duration: 0 }}
+          style={{ position: 'absolute', inset: 0 }}
+        >
+          <TopCard
+            q={current}
+            onSkip={onSkip}
+            onAnswer={onAnswer}
+            onDragProgress={(v) => progress.set(v)}
+          />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
@@ -134,13 +161,15 @@ export default function Home() {
   const [showTutorial, setShowTutorial] = useState(
     () => localStorage.getItem('dt_tutorial_pending') === '1',
   );
+  const [enterDir, setEnterDir] = useState(0);
   const seen = useRef(new Set());
+  const firstLoad = useRef(true);
 
-  const fetchBatch = useCallback(async (cat, { reset = false } = {}) => {
+  const fetchBatch = useCallback(async (cat, { reset = false, silent = false } = {}) => {
     try {
       if (reset) {
         seen.current = new Set();
-        setStatus('loading');
+        if (!silent) setStatus('loading');
       }
       const exclude = [...seen.current].join(',');
       const d = await api.get(`/questions/?category=${cat}&limit=20&exclude=${exclude}`);
@@ -161,11 +190,19 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchBatch(category, { reset: true });
+    fetchBatch(category, { reset: true, silent: !firstLoad.current });
+    firstLoad.current = false;
   }, [category, fetchBatch]);
 
   const current = deck[idx];
   const remaining = deck.length - idx;
+
+  // enterDir only needs to drive the one card-slide transition right after a
+  // category switch — clear it once that card has been rendered so normal
+  // swipe-driven advances go back to their plain (non-sliding) transition.
+  useEffect(() => {
+    if (enterDir !== 0) setEnterDir(0);
+  }, [current?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (status === 'ready' && remaining > 0 && remaining <= 4) {
@@ -178,6 +215,7 @@ export default function Home() {
 
   const switchCat = (v) => {
     if (v === category) return;
+    setEnterDir(CATS.indexOf(v) > CATS.indexOf(category) ? 1 : -1);
     localStorage.setItem('dt_cat', v);
     setCategory(v);
   };
@@ -351,7 +389,13 @@ export default function Home() {
 
       {status === 'ready' && current && (
         <>
-          <DeckStack current={current} next={deck[idx + 1]} onSkip={advance} onAnswer={goAnswer} />
+          <DeckStack
+            current={current}
+            next={deck[idx + 1]}
+            onSkip={advance}
+            onAnswer={goAnswer}
+            enterDir={enterDir}
+          />
 
           <div className="actions" data-tut="actions">
             <button className="fab fab-md fab--x" onClick={doSkip} aria-label={t('home.aSkip')}>
