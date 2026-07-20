@@ -115,17 +115,18 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
           </p>
         </motion.div>
       )}
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={current.id}
-          initial={enterDir ? { x: enterDir * CARD_SLIDE, opacity: 0, zIndex: 2 } : false}
-          animate={{ x: 0, opacity: 1, zIndex: 2 }}
+          initial={enterDir ? { x: -enterDir * CARD_SLIDE, opacity: 0 } : false}
+          animate={{ x: 0, opacity: 1 }}
           exit={
             enterDir
               ? {
                   opacity: 0,
-                  zIndex: 0,
-                  transition: { opacity: { duration: 0.15 }, zIndex: { duration: 0 } },
+                  scale: 0.92,
+                  filter: 'blur(4px)',
+                  transition: { duration: 0.15, ease: 'easeOut' },
                 }
               : undefined
           }
