@@ -16,6 +16,7 @@ const TIP_CONTENT_TRANSITION = { duration: 0.18, ease: EASE };
 // Single controls (add, deck) use their exact real radius; rows of separate
 // round buttons (cats, actions) read best as a full pill wrap around them.
 const STEP_RADIUS = { add: 22, cats: 999, deck: 30, actions: 999, nav: 24 };
+const HIDDEN_STYLE = { position: 'fixed', top: -9999, left: 0, visibility: 'hidden', pointerEvents: 'none' };
 
 function clamp(v, lo, hi) {
   return Math.min(Math.max(v, lo), hi);
@@ -46,6 +47,90 @@ function useTargetRect(selector) {
   return rect;
 }
 
+// Measures every step's tooltip height up front (off-screen, same markup/width
+// as the real tip) so positioning never has to guess using a stale height from
+// whichever step came before — that's what let the tip land on top of the
+// spotlight ring on the taller "actions"/"nav" steps.
+function useStepHeights(t) {
+  const refs = useRef({});
+  const [heights, setHeights] = useState({});
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const next = {};
+      STEPS.forEach((s) => {
+        if (refs.current[s]) next[s] = refs.current[s].offsetHeight;
+      });
+      setHeights(next);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [t]);
+
+  return { heights, refs };
+}
+
+function TipBody({ id, step, isLast, t, onBack, onNext }) {
+  return (
+    <>
+      <p className="tut-tip-title">{t(`tut.${id}Title`)}</p>
+      <p className="tut-tip-desc">{t(`tut.${id}Desc`)}</p>
+      {id === 'actions' && (
+        <div className="tut-icon-row">
+          <span>
+            <IcX size={16} /> {t('home.aSkip')}
+          </span>
+          <span>
+            <IcBookmark size={16} /> {t('home.aSave')}
+          </span>
+          <span>
+            <IcCheck size={16} /> {t('home.aAnswer')}
+          </span>
+        </div>
+      )}
+      {id === 'nav' && (
+        <div className="tut-icon-row">
+          <span>
+            <IcHome size={16} /> {t('nav.home')}
+          </span>
+          <span>
+            <IcBookmark size={16} /> {t('nav.saved')}
+          </span>
+          <span>
+            <IcHistory size={16} /> {t('nav.history')}
+          </span>
+          <span>
+            <IcUser size={16} /> {t('nav.profile')}
+          </span>
+        </div>
+      )}
+      <div className="tut-tip-foot">
+        <div className="tut-dots">
+          {STEPS.map((s, i) => (
+            <span key={s} className={i === step ? 'on' : ''} />
+          ))}
+        </div>
+        <div className="tut-actions">
+          {step > 0 && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm tut-back-btn"
+              onClick={onBack}
+              aria-label={t('common.back')}
+            >
+              <IcBack size={18} />
+            </button>
+          )}
+          <button className="btn btn--primary btn--sm" onClick={onNext}>
+            {isLast ? t('tut.done') : t('tut.next')}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function HomeTutorial({ onDone }) {
   const { t } = useI18n();
   const [step, setStep] = useState(0);
@@ -53,18 +138,8 @@ export default function HomeTutorial({ onDone }) {
   const id = STEPS[step];
   const rect = useTargetRect(`[data-tut="${id}"]`);
   const isLast = step === STEPS.length - 1;
-  const tipRef = useRef(null);
-  const [tipH, setTipH] = useState(150);
-
-  useLayoutEffect(() => {
-    if (tipRef.current) setTipH(tipRef.current.offsetHeight);
-  }, [id, rect]);
-
-  useEffect(() => {
-    const onResize = () => tipRef.current && setTipH(tipRef.current.offsetHeight);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
+  const { heights, refs: measureRefs } = useStepHeights(t);
+  const tipH = heights[id] ?? 150;
 
   const next = () => (isLast ? setClosing(true) : setStep((s) => s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
@@ -100,6 +175,28 @@ export default function HomeTutorial({ onDone }) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45, ease: EASE }}
         >
+          <div aria-hidden="true">
+            {STEPS.map((s, i) => (
+              <div
+                key={s}
+                ref={(el) => {
+                  measureRefs.current[s] = el;
+                }}
+                className="tut-tip glass glass--red"
+                style={HIDDEN_STYLE}
+              >
+                <TipBody
+                  id={s}
+                  step={i}
+                  isLast={i === STEPS.length - 1}
+                  t={t}
+                  onBack={() => {}}
+                  onNext={() => {}}
+                />
+              </div>
+            ))}
+          </div>
+
           {spot && (
             <motion.div
               className="tut-spot"
@@ -127,7 +224,6 @@ export default function HomeTutorial({ onDone }) {
 
           {spot && (
             <motion.div
-              ref={tipRef}
               className="tut-tip glass glass--red"
               initial={{ opacity: 0, y: 16, top: tipTop }}
               animate={{ opacity: 1, y: 0, top: tipTop }}
@@ -142,59 +238,7 @@ export default function HomeTutorial({ onDone }) {
                   exit={{ opacity: 0, y: -8 }}
                   transition={TIP_CONTENT_TRANSITION}
                 >
-                  <p className="tut-tip-title">{t(`tut.${id}Title`)}</p>
-                  <p className="tut-tip-desc">{t(`tut.${id}Desc`)}</p>
-                  {id === 'actions' && (
-                    <div className="tut-icon-row">
-                      <span>
-                        <IcX size={16} /> {t('home.aSkip')}
-                      </span>
-                      <span>
-                        <IcBookmark size={16} /> {t('home.aSave')}
-                      </span>
-                      <span>
-                        <IcCheck size={16} /> {t('home.aAnswer')}
-                      </span>
-                    </div>
-                  )}
-                  {id === 'nav' && (
-                    <div className="tut-icon-row">
-                      <span>
-                        <IcHome size={16} /> {t('nav.home')}
-                      </span>
-                      <span>
-                        <IcBookmark size={16} /> {t('nav.saved')}
-                      </span>
-                      <span>
-                        <IcHistory size={16} /> {t('nav.history')}
-                      </span>
-                      <span>
-                        <IcUser size={16} /> {t('nav.profile')}
-                      </span>
-                    </div>
-                  )}
-                  <div className="tut-tip-foot">
-                    <div className="tut-dots">
-                      {STEPS.map((s, i) => (
-                        <span key={s} className={i === step ? 'on' : ''} />
-                      ))}
-                    </div>
-                    <div className="tut-actions">
-                      {step > 0 && (
-                        <button
-                          type="button"
-                          className="btn btn--ghost btn--sm tut-back-btn"
-                          onClick={back}
-                          aria-label={t('common.back')}
-                        >
-                          <IcBack size={18} />
-                        </button>
-                      )}
-                      <button className="btn btn--primary btn--sm" onClick={next}>
-                        {isLast ? t('tut.done') : t('tut.next')}
-                      </button>
-                    </div>
-                  </div>
+                  <TipBody id={id} step={step} isLast={isLast} t={t} onBack={back} onNext={next} />
                 </motion.div>
               </AnimatePresence>
             </motion.div>
