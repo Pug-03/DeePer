@@ -2,7 +2,7 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { IcCheck } from '../components/icons.jsx';
+import { IcCheck, IcSparkle } from '../components/icons.jsx';
 
 const EASE = [0.16, 1, 0.3, 1];
 const rise = (delay) => ({
@@ -62,7 +62,7 @@ export default function PostAuthWelcome() {
         </p>
         <div className="stack">
           <button className="btn btn--primary" onClick={() => choose(true)}>
-            {t('postAuth.tutYes')}
+            <IcSparkle size={18} /> {t('postAuth.tutYes')}
           </button>
           <button className="btn btn--ghost" onClick={() => choose(false)}>
             {t('postAuth.tutNo')}

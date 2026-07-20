@@ -94,7 +94,7 @@ export const STRINGS = {
     'postAuth.newSub': 'เริ่มต้นบทสนทนาแรกของเรากันเลย',
     'postAuth.continue': 'เข้าสู่หน้าหลัก',
     'postAuth.tutAsk': 'อยากให้เราแนะนำวิธีใช้งานเบื้องต้นไหม?',
-    'postAuth.tutYes': 'ต้องการเลย ✨',
+    'postAuth.tutYes': 'ต้องการเลย',
     'postAuth.tutNo': 'ข้าม ไปเลย',
 
     // สอนการใช้งาน (หน้าหลัก)
@@ -126,7 +126,7 @@ export const STRINGS = {
     'forgot.newPassword': 'รหัสผ่านใหม่',
     'forgot.submit': 'บันทึกรหัสผ่านใหม่',
     'forgot.submitBusy': 'กำลังบันทึก...',
-    'forgot.success': 'เปลี่ยนรหัสผ่านสำเร็จ ✅',
+    'forgot.success': 'เปลี่ยนรหัสผ่านสำเร็จ',
 
     // กฎรหัสผ่าน
     'pw.len': 'อย่างน้อย 8 ตัว',
@@ -149,16 +149,16 @@ export const STRINGS = {
     'home.emptySubAi': 'ให้ AI ช่วยสร้างคำถามใหม่ หรือเปลี่ยนหมวดก็ได้',
     'home.emptySub': 'ลองเปลี่ยนหมวด หรือเพิ่มคำถามของคุณเอง',
     'home.restart': 'เริ่มใหม่',
-    'home.genAi': '✨ สร้างด้วย AI',
+    'home.genAi': 'สร้างด้วย AI',
     'home.generating': 'กำลังสร้าง...',
     'home.aSkip': 'ข้าม',
     'home.aSave': 'บันทึก',
     'home.aAnswer': 'ตอบเลย',
     'home.srcAi': 'AI',
     'home.srcUser': 'ของเรา',
-    'home.saved': 'บันทึกคำถามแล้ว 🔖',
-    'home.aiDone': 'สร้างคำถามใหม่ด้วย AI แล้ว ✨',
-    'home.added': 'เพิ่มคำถามของคุณแล้ว 💬',
+    'home.saved': 'บันทึกคำถามแล้ว',
+    'home.aiDone': 'สร้างคำถามใหม่ด้วย AI แล้ว',
+    'home.added': 'เพิ่มคำถามของคุณแล้ว',
 
     // ตอบคำถาม
     'answer.notFound': 'ไม่พบคำถาม',
@@ -176,7 +176,7 @@ export const STRINGS = {
     'answer.save': 'บันทึกคำตอบ',
     'answer.saving': 'กำลังบันทึก...',
     'answer.needOne': 'กรอกคำตอบอย่างน้อยหนึ่งช่องก่อนนะ',
-    'answer.saved': 'บันทึกคำตอบลงประวัติแล้ว ✅',
+    'answer.saved': 'บันทึกคำตอบลงประวัติแล้ว',
 
     // บันทึกไว้
     'saved.title': 'คำถามที่บันทึกไว้',
@@ -203,7 +203,7 @@ export const STRINGS = {
     'profile.save': 'บันทึกข้อมูล',
     'profile.saving': 'กำลังบันทึก...',
     'profile.logout': 'ออกจากระบบ',
-    'profile.saved': 'บันทึกข้อมูลแล้ว ✅',
+    'profile.saved': 'บันทึกข้อมูลแล้ว',
 
     // วันที่
     'date.today': 'วันนี้',
@@ -290,7 +290,7 @@ export const STRINGS = {
     'postAuth.newSub': 'Let’s start your first conversation',
     'postAuth.continue': 'Continue to home',
     'postAuth.tutAsk': 'Want a quick walkthrough of how it works?',
-    'postAuth.tutYes': 'Yes, show me ✨',
+    'postAuth.tutYes': 'Yes, show me',
     'postAuth.tutNo': 'No, skip',
 
     // Home tutorial
@@ -321,7 +321,7 @@ export const STRINGS = {
     'forgot.newPassword': 'New password',
     'forgot.submit': 'Save new password',
     'forgot.submitBusy': 'Saving...',
-    'forgot.success': 'Password changed successfully ✅',
+    'forgot.success': 'Password changed successfully',
 
     'pw.len': 'At least 8 chars',
     'pw.upper': 'Uppercase (A-Z)',
@@ -341,16 +341,16 @@ export const STRINGS = {
     'home.emptySubAi': 'Let AI create new ones, or switch category',
     'home.emptySub': 'Try another category, or add your own question',
     'home.restart': 'Restart',
-    'home.genAi': '✨ Generate with AI',
+    'home.genAi': 'Generate with AI',
     'home.generating': 'Generating...',
     'home.aSkip': 'Skip',
     'home.aSave': 'Save',
     'home.aAnswer': 'Answer',
     'home.srcAi': 'AI',
     'home.srcUser': 'Yours',
-    'home.saved': 'Question saved 🔖',
-    'home.aiDone': 'New questions created with AI ✨',
-    'home.added': 'Your question was added 💬',
+    'home.saved': 'Question saved',
+    'home.aiDone': 'New questions created with AI',
+    'home.added': 'Your question was added',
 
     'answer.notFound': 'Question not found',
     'answer.backHome': 'Back to home',
@@ -367,7 +367,7 @@ export const STRINGS = {
     'answer.save': 'Save answer',
     'answer.saving': 'Saving...',
     'answer.needOne': 'Fill in at least one answer first',
-    'answer.saved': 'Answer saved to history ✅',
+    'answer.saved': 'Answer saved to history',
 
     'saved.title': 'Saved questions',
     'saved.sub': 'Tap to come back and answer later',
@@ -391,7 +391,7 @@ export const STRINGS = {
     'profile.save': 'Save changes',
     'profile.saving': 'Saving...',
     'profile.logout': 'Log out',
-    'profile.saved': 'Saved ✅',
+    'profile.saved': 'Saved',
 
     'date.today': 'Today',
   },

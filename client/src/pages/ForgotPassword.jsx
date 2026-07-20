@@ -8,7 +8,7 @@ import LangToggle from '../components/LangToggle.jsx';
 import OtpInput from '../components/OtpInput.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
-import { IcBack } from '../components/icons.jsx';
+import { IcBack, IcCheck } from '../components/icons.jsx';
 
 export default function ForgotPassword() {
   const nav = useNavigate();
@@ -72,7 +72,11 @@ export default function ForgotPassword() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
-      toast(t('forgot.success'));
+      toast(
+        <>
+          <IcCheck size={16} /> {t('forgot.success')}
+        </>,
+      );
       nav('/app/home', { replace: true });
     } catch (e2) {
       setErr(e2.message);

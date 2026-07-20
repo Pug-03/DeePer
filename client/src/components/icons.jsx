@@ -70,6 +70,43 @@ export const IcTranslate = (p) => (
     <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z" />
   </svg>
 );
+export const IcSparkle = (p) => (
+  <svg width={p.size || 24} height={p.size || 24} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2.5l1.8 5.7L19.5 10l-5.7 1.8L12 17.5l-1.8-5.7L4.5 10l5.7-1.8L12 2.5Z" />
+    <path d="M19 14l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6Z" />
+  </svg>
+);
+export const IcAlertCircle = (p) => (
+  <svg {...S(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5v6" />
+    <path d="M12 16.5h.01" />
+  </svg>
+);
+export const IcSeedling = (p) => (
+  <svg {...S(p)}>
+    <path d="M12 21v-8.5" />
+    <path d="M12 12.5c0-4 3-7 7-7 0 4-3 7-7 7Z" />
+    <path d="M12 12.5c0-3.5-2.7-6.3-6-6.3 0 3.48 2.7 6.3 6 6.3Z" />
+  </svg>
+);
+export const IcCards = (p) => (
+  <svg {...S(p)}>
+    <rect x="3" y="8" width="13" height="13" rx="2.4" />
+    <path d="M7.5 8V5.4A2.4 2.4 0 0 1 9.9 3H19a2.4 2.4 0 0 1 2.4 2.4V15a2.4 2.4 0 0 1-2.4 2.4h-3" />
+  </svg>
+);
+export const IcBook = (p) => (
+  <svg {...S(p)}>
+    <path d="M12 7c-2-2-5-2-8-2v14c3 0 6 0 8 2 2-2 5-2 8-2V5c-3 0-6 0-8 2Z" />
+    <path d="M12 7v14" />
+  </svg>
+);
+export const IcChat = (p) => (
+  <svg {...S(p)}>
+    <path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.8a8.3 8.3 0 0 1-.9-3.7A8.4 8.4 0 0 1 12.5 3.1H13a8.4 8.4 0 0 1 8 8.4Z" />
+  </svg>
+);
 export const IcGoogle = (p) => (
   <svg width={p.size || 22} height={p.size || 22} viewBox="0 0 24 24">
     <path

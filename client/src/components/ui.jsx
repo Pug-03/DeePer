@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { useI18n } from '../store/i18n.jsx';
+import { IcAlertCircle, IcSeedling, IcTrash } from './icons.jsx';
 
 // ---------- Loading / Empty / Error state views ----------
 export function Loading({ label }) {
@@ -16,7 +17,9 @@ export function ErrorState({ message, onRetry }) {
   const { t } = useI18n();
   return (
     <div className="state fade-up">
-      <div className="s-emoji">😢</div>
+      <div className="s-icon">
+        <IcAlertCircle size={44} />
+      </div>
       <p className="h2">{t('common.error')}</p>
       <p className="sub">{message || t('common.errorSub')}</p>
       {onRetry && (
@@ -28,10 +31,10 @@ export function ErrorState({ message, onRetry }) {
   );
 }
 
-export function EmptyState({ emoji = '🌱', title, subtitle, action }) {
+export function EmptyState({ icon = <IcSeedling size={44} />, title, subtitle, action }) {
   return (
     <div className="state fade-up">
-      <div className="s-emoji">{emoji}</div>
+      <div className="s-icon">{icon}</div>
       <p className="h2">{title}</p>
       {subtitle && <p className="sub">{subtitle}</p>}
       {action}
@@ -88,7 +91,7 @@ export function ConfirmProvider({ children }) {
       {state && (
         <div className="modal-overlay fade-in" onClick={() => close(false)}>
           <div className="modal glass glass--red pop-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-emoji">{state.emoji || '🗑️'}</div>
+            <div className="modal-icon">{state.icon || <IcTrash size={36} />}</div>
             <h3 className="modal-title">{state.title || t('confirm.deleteTitle')}</h3>
             {state.message && <p className="modal-msg">{state.message}</p>}
             <div className="modal-actions">

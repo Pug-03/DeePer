@@ -4,7 +4,7 @@ import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
-import { IcTrash } from '../components/icons.jsx';
+import { IcTrash, IcBookmark } from '../components/icons.jsx';
 
 export default function Saved() {
   const nav = useNavigate();
@@ -61,7 +61,7 @@ export default function Saved() {
       {status === 'error' && <ErrorState message={error} onRetry={load} />}
       {status === 'empty' && (
         <EmptyState
-          emoji="🔖"
+          icon={<IcBookmark size={44} />}
           title={t('saved.emptyTitle')}
           subtitle={t('saved.emptySub')}
           action={

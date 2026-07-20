@@ -5,7 +5,7 @@ import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
-import { IcX, IcCheck, IcBookmark, IcPlus } from '../components/icons.jsx';
+import { IcX, IcCheck, IcBookmark, IcPlus, IcCards, IcSparkle, IcChat } from '../components/icons.jsx';
 import HomeTutorial from '../components/HomeTutorial.jsx';
 
 const CATS = ['couple', 'friends', 'family'];
@@ -66,10 +66,10 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
         className="swipe-hint"
         style={{ opacity: noOp, color: '#fff', left: 22, right: 'auto' }}
       >
-        ✕
+        <IcX size={34} sw={3} />
       </motion.span>
       <motion.span className="swipe-hint" style={{ opacity: yesOp, color: 'var(--green)' }}>
-        ✓
+        <IcCheck size={34} sw={3} />
       </motion.span>
       <p className="q-text">{q.text}</p>
       <FlyBridge fly={fly} />
@@ -195,7 +195,11 @@ export default function Home() {
     if (!current) return;
     try {
       await api.post('/saved', { question_text: current.text, category });
-      toast(t('home.saved'));
+      toast(
+        <>
+          <IcBookmark size={16} /> {t('home.saved')}
+        </>,
+      );
       advance();
     } catch (e) {
       toast(e.message);
@@ -210,7 +214,11 @@ export default function Home() {
       fresh.forEach((q) => seen.current.add(q.id));
       setDeck((prev) => [...prev, ...fresh]);
       setStatus('ready');
-      toast(t('home.aiDone'));
+      toast(
+        <>
+          <IcSparkle size={16} /> {t('home.aiDone')}
+        </>,
+      );
     } catch (e) {
       toast(e.message);
     } finally {
@@ -229,7 +237,11 @@ export default function Home() {
       setStatus('ready');
       setNewQ('');
       setAdding(false);
-      toast(t('home.added'));
+      toast(
+        <>
+          <IcChat size={16} /> {t('home.added')}
+        </>,
+      );
     } catch (e2) {
       toast(e2.message);
     }
@@ -292,7 +304,7 @@ export default function Home() {
 
       {status === 'empty' && (
         <EmptyState
-          emoji="🃏"
+          icon={<IcCards size={44} />}
           title={t('home.emptyTitle')}
           subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
           action={
@@ -305,7 +317,13 @@ export default function Home() {
               </button>
               {aiEnabled && (
                 <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
-                  {generating ? t('home.generating') : t('home.genAi')}
+                  {generating ? (
+                    t('home.generating')
+                  ) : (
+                    <>
+                      <IcSparkle size={16} /> {t('home.genAi')}
+                    </>
+                  )}
                 </button>
               )}
             </div>

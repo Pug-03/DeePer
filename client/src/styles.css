@@ -480,8 +480,7 @@ a {
   position: absolute;
   top: 22px;
   right: 22px;
-  font-size: 40px;
-  font-weight: 800;
+  display: flex;
   opacity: 0;
   pointer-events: none;
 }
@@ -735,8 +734,15 @@ a {
   padding: 30px;
   color: var(--text-dim);
 }
-.state .s-emoji {
-  font-size: 46px;
+.state .s-icon {
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--glass-strong);
+  border: 1px solid var(--border);
+  color: var(--red-bright);
 }
 .spinner {
   width: 40px;
@@ -771,9 +777,16 @@ a {
   padding: 28px 24px 22px;
   text-align: center;
 }
-.modal-emoji {
-  font-size: 40px;
-  margin-bottom: 8px;
+.modal-icon {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--glass-strong);
+  border: 1px solid var(--border);
+  color: var(--red-bright);
 }
 .modal-title {
   font-size: 20px;
@@ -920,6 +933,9 @@ a {
   bottom: calc(96px + var(--safe-b));
   transform: translateX(-50%);
   z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 12px 20px;
   border-radius: 14px;
   font-size: 14px;
@@ -930,6 +946,10 @@ a {
   box-shadow: var(--shadow-lift);
   max-width: 88%;
   text-align: center;
+}
+.toast svg {
+  flex-shrink: 0;
+  color: var(--red-bright);
 }
 .err-inline {
   color: #fca5b4;

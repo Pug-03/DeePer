@@ -4,7 +4,7 @@ import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
-import { IcBack } from '../components/icons.jsx';
+import { IcBack, IcCheck } from '../components/icons.jsx';
 
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
 
@@ -61,7 +61,11 @@ export default function Answer() {
         partner_color: partnerColor,
         saved_id: savedId,
       });
-      toast(t('answer.saved'));
+      toast(
+        <>
+          <IcCheck size={16} /> {t('answer.saved')}
+        </>,
+      );
       nav('/app/home', { replace: true });
     } catch (e) {
       toast(e.message);

@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
+import { IcCheck } from '../components/icons.jsx';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -33,7 +34,11 @@ export default function Profile() {
         partner_color: partnerColor,
       });
       setUser(d.user);
-      toast(t('profile.saved'));
+      toast(
+        <>
+          <IcCheck size={16} /> {t('profile.saved')}
+        </>,
+      );
     } catch (e) {
       toast(e.message);
     } finally {
