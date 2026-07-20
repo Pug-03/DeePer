@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, useMotionValue, useMotionValueEvent, useTransform, animate } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
@@ -10,13 +10,22 @@ import { IcX, IcCheck, IcBookmark, IcPlus } from '../components/icons.jsx';
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
 
-function TopCard({ q, onSkip, onAnswer }) {
+function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
   const { t } = useI18n();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-220, 220], [-14, 14]);
   const noOp = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
   const yesOp = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
+
+  // Mirror this card's live drag offset up to the deck so the card behind it
+  // can rise/scale in sync. A fresh TopCard always starts at rest, so reset
+  // the mirrored value on mount rather than trusting the outgoing card's
+  // in-flight fly-out animation to have finished settling it.
+  useLayoutEffect(() => {
+    onDragProgress?.(0);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useMotionValueEvent(x, 'change', (v) => onDragProgress?.(v));
 
   const fly = (dir) => {
     if (dir === 'skip') {
@@ -80,6 +89,32 @@ function FlyBridge({ fly }) {
   return null;
 }
 FlyBridge.current = null;
+
+function DeckStack({ current, next, onSkip, onAnswer }) {
+  const progress = useMotionValue(0);
+  const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
+  const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
+  const backOpacity = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
+
+  return (
+    <div className="deck">
+      {next && (
+        <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
+          <p className="q-text" style={{ opacity: 0.5 }}>
+            {next.text}
+          </p>
+        </motion.div>
+      )}
+      <TopCard
+        key={current.id}
+        q={current}
+        onSkip={onSkip}
+        onAnswer={onAnswer}
+        onDragProgress={(v) => progress.set(v)}
+      />
+    </div>
+  );
+}
 
 export default function Home() {
   const nav = useNavigate();
@@ -272,19 +307,7 @@ export default function Home() {
 
       {status === 'ready' && current && (
         <>
-          <div className="deck">
-            {deck[idx + 1] && (
-              <div
-                className="qcard glass"
-                style={{ transform: 'scale(0.94) translateY(14px)', opacity: 0.6 }}
-              >
-                <p className="q-text" style={{ opacity: 0.5 }}>
-                  {deck[idx + 1].text}
-                </p>
-              </div>
-            )}
-            <TopCard key={current.id} q={current} onSkip={advance} onAnswer={goAnswer} />
-          </div>
+          <DeckStack current={current} next={deck[idx + 1]} onSkip={advance} onAnswer={goAnswer} />
 
           <div className="actions">
             <button className="fab fab-md fab--x" onClick={doSkip} aria-label={t('home.aSkip')}>
