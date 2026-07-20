@@ -62,7 +62,7 @@ a {
 
 /* ---------- App shell ---------- */
 .app-shell {
-  height: 100dvh;
+  min-height: 100dvh;
   max-width: 560px;
   margin: 0 auto;
   position: relative;
