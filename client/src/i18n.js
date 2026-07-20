@@ -98,7 +98,6 @@ export const STRINGS = {
     'postAuth.tutNo': 'ข้าม ไปเลย',
 
     // สอนการใช้งาน (หน้าหลัก)
-    'tut.skip': 'ข้ามทั้งหมด',
     'tut.next': 'ถัดไป',
     'tut.done': 'เข้าใจแล้ว',
     'tut.catsTitle': 'เลือกหมวดคำถาม',
@@ -295,7 +294,6 @@ export const STRINGS = {
     'postAuth.tutNo': 'No, skip',
 
     // Home tutorial
-    'tut.skip': 'Skip all',
     'tut.next': 'Next',
     'tut.done': 'Got it',
     'tut.catsTitle': 'Choose a category',

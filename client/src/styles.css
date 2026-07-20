@@ -842,21 +842,6 @@ a {
     width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
     height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.tut-skip {
-  position: fixed;
-  top: calc(20px + var(--safe-t));
-  right: 16px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--glass-strong);
-  color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 600;
-}
 .tut-tip {
   position: fixed;
   width: calc(100% - 40px);

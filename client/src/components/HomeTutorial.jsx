@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useI18n } from '../store/i18n.jsx';
-import { IcX, IcBookmark, IcCheck, IcHome, IcHistory, IcUser } from './icons.jsx';
+import { IcBookmark, IcCheck, IcHome, IcHistory, IcUser, IcX } from './icons.jsx';
 
 const STEPS = ['cats', 'deck', 'actions', 'add', 'nav'];
 const PAD = 10;
@@ -77,10 +77,6 @@ export default function HomeTutorial({ onDone }) {
           style={{ top: spot.top, left: spot.left, width: spot.width, height: spot.height }}
         />
       )}
-
-      <button className="tut-skip" onClick={onDone}>
-        <IcX size={14} /> {t('tut.skip')}
-      </button>
 
       {spot && (
         <div
