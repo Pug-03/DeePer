@@ -40,7 +40,9 @@ export default function Welcome() {
             transform: 'rotate(-4deg)',
           }}
         >
-          <p style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.5 }}>{t('welcome.sample')}</p>
+          <p style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.5, textWrap: 'balance' }}>
+            {t('welcome.sample')}
+          </p>
         </div>
       </div>
 
