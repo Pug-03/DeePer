@@ -6,6 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import OtpInput from '../components/OtpInput.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
 import { IcBack, IcCheck } from '../components/icons.jsx';
@@ -169,19 +170,15 @@ export default function ForgotPassword() {
             <h1 className="h1">{t('forgot.newPasswordTitle')}</h1>
             <p className="sub">{t('forgot.newPasswordSub')}</p>
           </div>
-          <div className="field">
-            <label>{t('forgot.newPassword')}</label>
-            <input
-              className="input"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoFocus
-            />
+          <PasswordField
+            label={t('forgot.newPassword')}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoFocus
+          >
             <PasswordStrength rules={rules} score={score} />
-          </div>
+          </PasswordField>
           <button className="btn btn--primary" type="submit" disabled={busy || !pwValid}>
             {busy ? t('forgot.submitBusy') : t('forgot.submit')}
           </button>

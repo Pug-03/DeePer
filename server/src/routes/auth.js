@@ -293,4 +293,19 @@ router.patch('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(updated) });
 });
 
+// --- Delete account ---
+router.delete('/me', requireAuth, (req, res) => {
+  const u = req.user;
+  const password = String(req.body.password || '');
+
+  if (u.password_hash) {
+    if (!password) return res.status(400).json({ error: 'กรุณากรอกรหัสผ่าน' });
+    if (!verifyPassword(password, u.password_hash))
+      return res.status(401).json({ error: 'รหัสผ่านไม่ถูกต้อง' });
+  }
+
+  db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
+  res.json({ ok: true });
+});
+
 export default router;

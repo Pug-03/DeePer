@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import { IcBack, IcGoogle } from '../components/icons.jsx';
 
 export default function Login() {
@@ -109,18 +110,13 @@ export default function Login() {
             required
           />
         </div>
-        <div className="field">
-          <label>{t('login.password')}</label>
-          <input
-            className="input"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        <PasswordField
+          label={t('login.password')}
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
         <div className="row-between" style={{ marginBottom: 20 }}>
           <span />
           <button type="button" className="link" onClick={() => nav('/forgot-password')}>

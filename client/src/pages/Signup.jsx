@@ -7,6 +7,7 @@ import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import OtpInput from '../components/OtpInput.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
 import { IcBack, IcGoogle, IcMail } from '../components/icons.jsx';
@@ -324,18 +325,14 @@ export default function Signup() {
             gender={gender}
             setGender={setGender}
           />
-          <div className="field">
-            <label>{t('signup.setPassword')}</label>
-            <input
-              className="input"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+          <PasswordField
+            label={t('signup.setPassword')}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          >
             <PasswordStrength rules={rules} score={score} />
-          </div>
+          </PasswordField>
           <button className="btn btn--primary" type="submit" disabled={busy || !pwValid}>
             {busy ? t('signup.submitBusy') : t('signup.submit')}
           </button>

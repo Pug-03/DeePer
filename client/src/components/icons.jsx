@@ -107,6 +107,19 @@ export const IcChat = (p) => (
     <path d="M21 11.5a8.4 8.4 0 0 1-8.4 8.4 8.3 8.3 0 0 1-3.8-.9L3 21l1.9-5.8a8.3 8.3 0 0 1-.9-3.7A8.4 8.4 0 0 1 12.5 3.1H13a8.4 8.4 0 0 1 8 8.4Z" />
   </svg>
 );
+export const IcEye = (p) => (
+  <svg {...S(p)}>
+    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3.2" />
+  </svg>
+);
+export const IcEyeOff = (p) => (
+  <svg {...S(p)}>
+    <path d="M3 3l18 18" />
+    <path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-3.2 4.15M6.6 6.6C4 8.3 2 12 2 12s3.6 7 10 7c1.3 0 2.5-.24 3.6-.68" />
+    <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2" />
+  </svg>
+);
 export const IcGoogle = (p) => (
   <svg width={p.size || 22} height={p.size || 22} viewBox="0 0 24 24">
     <path
