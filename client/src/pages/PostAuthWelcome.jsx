@@ -2,7 +2,6 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { IcBook } from '../components/icons.jsx';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CIRCLE_DURATION = 0.9;
@@ -97,7 +96,7 @@ export default function PostAuthWelcome() {
         </motion.p>
         <div className="stack">
           <motion.button className="btn btn--primary" onClick={() => choose(true)} {...rise(1.53)}>
-            {t('postAuth.tutYes')} <IcBook size={18} />
+            {t('postAuth.tutYes')}
           </motion.button>
           <motion.button className="btn btn--ghost" onClick={() => choose(false)} {...rise(1.68)}>
             {t('postAuth.tutNo')}
