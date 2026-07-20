@@ -102,7 +102,15 @@ export default function HomeTutorial({ onDone }) {
           {spot && (
             <motion.div
               className="tut-spot"
-              initial={{ opacity: 0, scale: 0.94 }}
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                top: spot.top,
+                left: spot.left,
+                width: spot.width,
+                height: spot.height,
+                borderRadius: spotRadius,
+              }}
               animate={{
                 opacity: 1,
                 scale: 1,
