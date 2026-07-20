@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
-import { IcBookmark, IcCheck, IcHome, IcHistory, IcUser, IcX } from './icons.jsx';
+import { IcBack, IcBookmark, IcCheck, IcHome, IcHistory, IcUser, IcX } from './icons.jsx';
 
 const STEPS = ['add', 'cats', 'deck', 'actions', 'nav'];
 const PAD = 10;
@@ -66,6 +66,7 @@ export default function HomeTutorial({ onDone }) {
   }, []);
 
   const next = () => (isLast ? setClosing(true) : setStep((s) => s + 1));
+  const back = () => setStep((s) => Math.max(0, s - 1));
 
   const baseRadius = STEP_RADIUS[id] ?? 20;
   // Outsetting a rounded rect by PAD flattens its curve unless the radius
@@ -165,9 +166,21 @@ export default function HomeTutorial({ onDone }) {
                       <span key={s} className={i === step ? 'on' : ''} />
                     ))}
                   </div>
-                  <button className="btn btn--primary btn--sm" onClick={next}>
-                    {isLast ? t('tut.done') : t('tut.next')}
-                  </button>
+                  <div className="tut-actions">
+                    {step > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm tut-back-btn"
+                        onClick={back}
+                        aria-label={t('common.back')}
+                      >
+                        <IcBack size={18} />
+                      </button>
+                    )}
+                    <button className="btn btn--primary btn--sm" onClick={next}>
+                      {isLast ? t('tut.done') : t('tut.next')}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             )}

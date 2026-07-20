@@ -936,6 +936,16 @@ a {
   justify-content: space-between;
   gap: 12px;
 }
+.tut-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tut-back-btn {
+  width: 46px;
+  padding: 0;
+  flex: none;
+}
 .tut-dots {
   display: flex;
   gap: 6px;
