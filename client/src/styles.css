@@ -62,12 +62,13 @@ a {
 
 /* ---------- App shell ---------- */
 .app-shell {
-  min-height: 100dvh;
+  height: 100dvh;
   max-width: 560px;
   margin: 0 auto;
   position: relative;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .page {
@@ -456,6 +457,11 @@ a {
   display: grid;
   place-items: center;
   margin: 8px 0 20px;
+}
+@media (max-height: 720px) {
+  .deck {
+    min-height: 300px;
+  }
 }
 .qcard {
   position: absolute;
