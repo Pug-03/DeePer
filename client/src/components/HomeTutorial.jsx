@@ -2,10 +2,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useI18n } from '../store/i18n.jsx';
 import { IcBookmark, IcCheck, IcHome, IcHistory, IcUser, IcX } from './icons.jsx';
 
-const STEPS = ['cats', 'deck', 'actions', 'add', 'nav'];
+const STEPS = ['add', 'cats', 'deck', 'actions', 'nav'];
 const PAD = 10;
 const GAP = 16;
 const EDGE = 16;
+// Matches each target's own corner rounding (.btn, .pill, .qcard, .bottom-nav)
+// so the highlight frame hugs the real shape instead of a generic rounded box.
+// Single controls (add, deck) use their exact real radius; rows of separate
+// round buttons (cats, actions) read best as a full pill wrap around them.
+const STEP_RADIUS = { add: 22, cats: 999, deck: 30, actions: 999, nav: 24 };
 
 function clamp(v, lo, hi) {
   return Math.min(Math.max(v, lo), hi);
@@ -15,6 +20,9 @@ function useTargetRect(selector) {
   const [rect, setRect] = useState(null);
 
   useEffect(() => {
+    const target = document.querySelector(selector);
+    target?.scrollIntoView({ block: 'center', behavior: 'instant' });
+
     const measure = () => {
       const el = document.querySelector(selector);
       setRect(el ? el.getBoundingClientRect() : null);
@@ -54,6 +62,12 @@ export default function HomeTutorial({ onDone }) {
 
   const next = () => (isLast ? onDone() : setStep((s) => s + 1));
 
+  const baseRadius = STEP_RADIUS[id] ?? 20;
+  // Outsetting a rounded rect by PAD flattens its curve unless the radius
+  // grows by the same amount — so the frame keeps the target's true shape
+  // instead of looking like a plain rounded box once padded out.
+  const spotRadius = baseRadius >= 500 ? baseRadius : baseRadius + PAD;
+
   const spot = rect && {
     top: rect.top - PAD,
     left: rect.left - PAD,
@@ -74,7 +88,13 @@ export default function HomeTutorial({ onDone }) {
       {spot && (
         <div
           className="tut-spot"
-          style={{ top: spot.top, left: spot.left, width: spot.width, height: spot.height }}
+          style={{
+            top: spot.top,
+            left: spot.left,
+            width: spot.width,
+            height: spot.height,
+            borderRadius: spotRadius,
+          }}
         />
       )}
 
