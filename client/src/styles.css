@@ -68,7 +68,6 @@ a {
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .page {
