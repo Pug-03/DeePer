@@ -125,7 +125,7 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
         <motion.div
           key={current.id}
           initial={enterDir ? { x: `${-enterDir * 100}%` } : REST_BEHIND}
-          animate={enterDir ? { x: '0%' } : { scale: 1, y: 0, opacity: 1 }}
+          animate={{ x: '0%', scale: 1, y: 0, opacity: 1 }}
           exit={enterDir ? { x: `${enterDir * 100}%` } : undefined}
           transition={enterDir ? CARD_SPRING : RISE_SPRING}
           style={{ position: 'absolute', inset: 0 }}
