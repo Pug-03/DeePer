@@ -546,10 +546,6 @@ a {
 .fab:active {
   transform: scale(0.9);
 }
-.fab-lg {
-  width: 72px;
-  height: 72px;
-}
 .fab-md {
   width: 60px;
   height: 60px;

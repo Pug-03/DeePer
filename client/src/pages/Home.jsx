@@ -405,12 +405,12 @@ export default function Home() {
               <IcX size={26} />
             </button>
             <button
-              className="fab fab-lg fab--save"
+              className="fab fab-md fab--save"
               data-tut="actionSave"
               onClick={save}
               aria-label={t('home.aSave')}
             >
-              <IcBookmark size={28} />
+              <IcBookmark size={26} />
             </button>
             <button
               className="fab fab-md fab--check"
