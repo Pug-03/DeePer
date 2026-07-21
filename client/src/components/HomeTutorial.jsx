@@ -63,12 +63,30 @@ function useTargetRect(selector) {
     const target = document.querySelector(selector);
     target?.scrollIntoView({ block: 'center', behavior: 'instant' });
 
+    const sameRect = (a, b) =>
+      a && b && a.top === b.top && a.left === b.left && a.width === b.width && a.height === b.height;
+
+    let id;
+    let prev = null;
+    let stableFrames = 0;
+    const start = performance.now();
+
     const measure = () => {
       const el = document.querySelector(selector);
-      setRect(el ? el.getBoundingClientRect() : null);
+      const next = el ? el.getBoundingClientRect() : null;
+      setRect(next);
+
+      // A target can still be mid-entrance-animation (e.g. the home page's
+      // stagger-in) when this first runs — keep re-measuring every frame
+      // until its position holds still, instead of freezing the spotlight
+      // at a stale, still-animating position. Time-capped as a safety net.
+      stableFrames = sameRect(prev, next) ? stableFrames + 1 : 0;
+      prev = next;
+      if (stableFrames < 4 && performance.now() - start < 1500) {
+        id = requestAnimationFrame(measure);
+      }
     };
     measure();
-    const id = requestAnimationFrame(measure);
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
     return () => {

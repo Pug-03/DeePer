@@ -288,145 +288,147 @@ export default function Home() {
   };
 
   return (
-    <div className="page page--tab">
-      <div className="row-between" style={{ marginBottom: 16 }}>
-        <div className="brand-mark">
-          <span className="dot" />
-          <span style={{ fontSize: 22, fontWeight: 700 }}>DeePer</span>
+    <>
+      <div className="page page--tab stagger">
+        <div className="row-between" style={{ marginBottom: 16 }}>
+          <div className="brand-mark">
+            <span className="dot" />
+            <span style={{ fontSize: 22, fontWeight: 700 }}>DeePer</span>
+          </div>
+          <button
+            className="btn btn--sm btn--ghost"
+            data-tut="add"
+            onClick={() => setAdding((a) => !a)}
+          >
+            <IcPlus size={18} /> {t('home.addQuestion')}
+          </button>
         </div>
-        <button
-          className="btn btn--sm btn--ghost"
-          data-tut="add"
-          onClick={() => setAdding((a) => !a)}
-        >
-          <IcPlus size={18} /> {t('home.addQuestion')}
-        </button>
-      </div>
 
-      <div className="cat-row" data-tut="cats" style={{ marginBottom: 6 }}>
-        {CATS.map((c) => {
-          const isActive = category === c;
-          return (
-            <button
-              key={c}
-              className={`pill ${isActive ? 'active' : ''}`}
-              onClick={() => switchCat(c)}
-            >
-              {isActive && (
-                <motion.span
-                  layoutId="cat-pill-bg"
-                  className="pill-bg"
-                  transition={{ type: 'spring', stiffness: 420, damping: 22, mass: 0.9 }}
-                />
-              )}
-              <motion.span
-                key={isActive ? 'on' : 'off'}
-                className="pill-label"
-                initial={isActive ? { scale: 0.82 } : false}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 380, damping: 14 }}
-              >
-                {t(`cat.${c}`)}
-              </motion.span>
-            </button>
-          );
-        })}
-      </div>
-
-      {adding && (
-        <form className="glass fade-up" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
-          <textarea
-            className="textarea"
-            style={{ minHeight: 80 }}
-            placeholder={t('home.addPh')}
-            value={newQ}
-            onChange={(e) => setNewQ(e.target.value)}
-            maxLength={200}
-          />
-          <div className="btn-row" style={{ marginTop: 10 }}>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
-              {t('common.cancel')}
-            </button>
-            <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
-              {t('home.add')}
-            </button>
-          </div>
-        </form>
-      )}
-
-      {status === 'loading' && <Loading label={t('home.loading')} />}
-
-      {status === 'error' && (
-        <ErrorState message={error} onRetry={() => fetchBatch(category, { reset: true })} />
-      )}
-
-      {status === 'empty' && (
-        <EmptyState
-          icon={<IcCards size={44} />}
-          title={t('home.emptyTitle')}
-          subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
-          action={
-            <div className="btn-row" style={{ marginTop: 10 }}>
+        <div className="cat-row" data-tut="cats" style={{ marginBottom: 6 }}>
+          {CATS.map((c) => {
+            const isActive = category === c;
+            return (
               <button
-                className="btn btn--ghost btn--sm"
-                onClick={() => fetchBatch(category, { reset: true })}
+                key={c}
+                className={`pill ${isActive ? 'active' : ''}`}
+                onClick={() => switchCat(c)}
               >
-                {t('home.restart')}
+                {isActive && (
+                  <motion.span
+                    layoutId="cat-pill-bg"
+                    className="pill-bg"
+                    transition={{ type: 'spring', stiffness: 420, damping: 22, mass: 0.9 }}
+                  />
+                )}
+                <motion.span
+                  key={isActive ? 'on' : 'off'}
+                  className="pill-label"
+                  initial={isActive ? { scale: 0.82 } : false}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+                >
+                  {t(`cat.${c}`)}
+                </motion.span>
               </button>
-              {aiEnabled && (
-                <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
-                  {generating ? (
-                    t('home.generating')
-                  ) : (
-                    <>
-                      <IcSparkle size={16} /> {t('home.genAi')}
-                    </>
-                  )}
-                </button>
-              )}
+            );
+          })}
+        </div>
+
+        {adding && (
+          <form className="glass fade-up" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
+            <textarea
+              className="textarea"
+              style={{ minHeight: 80 }}
+              placeholder={t('home.addPh')}
+              value={newQ}
+              onChange={(e) => setNewQ(e.target.value)}
+              maxLength={200}
+            />
+            <div className="btn-row" style={{ marginTop: 10 }}>
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
+                {t('common.cancel')}
+              </button>
+              <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
+                {t('home.add')}
+              </button>
             </div>
-          }
-        />
-      )}
+          </form>
+        )}
 
-      {status === 'ready' && current && (
-        <>
-          <DeckStack
-            current={current}
-            next={deck[idx + 1]}
-            onSkip={advance}
-            onAnswer={goAnswer}
-            enterDir={enterDir}
+        {status === 'loading' && <Loading label={t('home.loading')} />}
+
+        {status === 'error' && (
+          <ErrorState message={error} onRetry={() => fetchBatch(category, { reset: true })} />
+        )}
+
+        {status === 'empty' && (
+          <EmptyState
+            icon={<IcCards size={44} />}
+            title={t('home.emptyTitle')}
+            subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
+            action={
+              <div className="btn-row" style={{ marginTop: 10 }}>
+                <button
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => fetchBatch(category, { reset: true })}
+                >
+                  {t('home.restart')}
+                </button>
+                {aiEnabled && (
+                  <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
+                    {generating ? (
+                      t('home.generating')
+                    ) : (
+                      <>
+                        <IcSparkle size={16} /> {t('home.genAi')}
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            }
           />
+        )}
 
-          <div className="actions">
-            <button
-              className="fab fab-md fab--x"
-              data-tut="actionSkip"
-              onClick={doSkip}
-              aria-label={t('home.aSkip')}
-            >
-              <IcX size={26} />
-            </button>
-            <button
-              className="fab fab-md fab--save"
-              data-tut="actionSave"
-              onClick={save}
-              aria-label={t('home.aSave')}
-            >
-              <IcBookmark size={26} />
-            </button>
-            <button
-              className="fab fab-md fab--check"
-              data-tut="actionAnswer"
-              onClick={doAnswer}
-              aria-label={t('home.aAnswer')}
-            >
-              <IcCheck size={26} />
-            </button>
-          </div>
-        </>
-      )}
+        {status === 'ready' && current && (
+          <>
+            <DeckStack
+              current={current}
+              next={deck[idx + 1]}
+              onSkip={advance}
+              onAnswer={goAnswer}
+              enterDir={enterDir}
+            />
+
+            <div className="actions">
+              <button
+                className="fab fab-md fab--x"
+                data-tut="actionSkip"
+                onClick={doSkip}
+                aria-label={t('home.aSkip')}
+              >
+                <IcX size={26} />
+              </button>
+              <button
+                className="fab fab-md fab--save"
+                data-tut="actionSave"
+                onClick={save}
+                aria-label={t('home.aSave')}
+              >
+                <IcBookmark size={26} />
+              </button>
+              <button
+                className="fab fab-md fab--check"
+                data-tut="actionAnswer"
+                onClick={doAnswer}
+                aria-label={t('home.aAnswer')}
+              >
+                <IcCheck size={26} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
 
       {showTutorial && status === 'ready' && current && (
         <HomeTutorial
@@ -436,6 +438,6 @@ export default function Home() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
