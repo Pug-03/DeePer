@@ -17,7 +17,6 @@ import HomeTutorial from '../components/HomeTutorial.jsx';
 
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
-const CARD_SLIDE = 90;
 const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 
 function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
@@ -115,21 +114,12 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
           </p>
         </motion.div>
       )}
-      <AnimatePresence initial={false} mode="wait">
+      <AnimatePresence initial={false}>
         <motion.div
           key={current.id}
-          initial={enterDir ? { x: -enterDir * CARD_SLIDE, opacity: 0 } : false}
-          animate={{ x: 0, opacity: 1 }}
-          exit={
-            enterDir
-              ? {
-                  opacity: 0,
-                  scale: 0.92,
-                  filter: 'blur(4px)',
-                  transition: { duration: 0.15, ease: 'easeOut' },
-                }
-              : undefined
-          }
+          initial={enterDir ? { x: `${-enterDir * 100}%` } : false}
+          animate={{ x: '0%' }}
+          exit={enterDir ? { x: `${enterDir * 100}%` } : undefined}
           transition={enterDir ? CARD_SPRING : { duration: 0 }}
           style={{ position: 'absolute', inset: 0 }}
         >
