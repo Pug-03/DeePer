@@ -39,6 +39,18 @@ const STEP_RADIUS = {
   navProfile: 16,
 };
 const HIDDEN_STYLE = { position: 'fixed', top: -9999, left: 0, visibility: 'hidden', pointerEvents: 'none' };
+// Steps that read as one connected set (the three action buttons, the four
+// bottom-nav tabs) share a single tip height/position — using each step's own
+// exact height would make the box visibly grow/shrink/jump as you hit Next.
+const STEP_GROUP = {
+  actionSkip: 'actions',
+  actionSave: 'actions',
+  actionAnswer: 'actions',
+  navHome: 'nav',
+  navSaved: 'nav',
+  navHistory: 'nav',
+  navProfile: 'nav',
+};
 
 function clamp(v, lo, hi) {
   return Math.min(Math.max(v, lo), hi);
@@ -82,6 +94,15 @@ function useStepHeights(t) {
       const next = {};
       STEPS.forEach((s) => {
         if (refs.current[s]) next[s] = refs.current[s].offsetHeight;
+      });
+      const groupMax = {};
+      STEPS.forEach((s) => {
+        const g = STEP_GROUP[s];
+        if (g && next[s] != null) groupMax[g] = Math.max(groupMax[g] ?? 0, next[s]);
+      });
+      STEPS.forEach((s) => {
+        const g = STEP_GROUP[s];
+        if (g) next[s] = groupMax[g];
       });
       setHeights(next);
     };
@@ -221,11 +242,12 @@ export default function HomeTutorial({ onDone }) {
               initial={{ opacity: 0, y: 16, top: tipTop }}
               animate={{ opacity: 1, y: 0, top: tipTop }}
               transition={TIP_TRANSITION}
-              style={{ left: '50%', x: '-50%' }}
+              style={{ left: '50%', x: '-50%', height: tipH }}
             >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={id}
+                  className="tut-tip-inner"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}

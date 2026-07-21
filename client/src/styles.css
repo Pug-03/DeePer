@@ -892,6 +892,17 @@ a {
   width: calc(100% - 40px);
   max-width: 340px;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+/* Wraps TipBody inside the real (non-measuring) tip — stretched to fill the
+   fixed tip height so tut-tip-foot's auto margin below can pin it to the
+   bottom instead of sitting right under the desc text. */
+.tut-tip-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 .tut-tip-title {
   font-size: 17px;
@@ -909,6 +920,8 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
 }
 .tut-actions {
   display: flex;
