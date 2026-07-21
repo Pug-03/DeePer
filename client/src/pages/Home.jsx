@@ -18,6 +18,12 @@ import HomeTutorial from '../components/HomeTutorial.jsx';
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
 const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
+const FLY_EASE = [0.16, 1, 0.3, 1];
+// Matches the resting look of the "next" preview card behind the deck
+// (see backScale/backY/backOpacity below) so promoting it to the top card
+// reads as a continuous rise instead of an instant pop into place.
+const REST_BEHIND = { scale: 0.94, y: 14, opacity: 0.6 };
+const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 
 function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
   const { t } = useI18n();
@@ -38,11 +44,12 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
 
   const fly = (dir) => {
     if (dir === 'skip') {
-      animate(y, 600, { duration: 0.32 });
-      animate(x, -60, { duration: 0.32 });
+      animate(y, 600, { duration: 0.36, ease: FLY_EASE });
+      animate(x, -80, { duration: 0.36, ease: FLY_EASE });
       setTimeout(onSkip, 240);
     } else {
-      animate(x, 480, { duration: 0.32 });
+      animate(x, 520, { duration: 0.36, ease: FLY_EASE });
+      animate(y, -20, { duration: 0.36, ease: FLY_EASE });
       setTimeout(onAnswer, 240);
     }
   };
@@ -117,10 +124,10 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
       <AnimatePresence initial={false}>
         <motion.div
           key={current.id}
-          initial={enterDir ? { x: `${-enterDir * 100}%` } : false}
-          animate={{ x: '0%' }}
+          initial={enterDir ? { x: `${-enterDir * 100}%` } : REST_BEHIND}
+          animate={enterDir ? { x: '0%' } : { scale: 1, y: 0, opacity: 1 }}
           exit={enterDir ? { x: `${enterDir * 100}%` } : undefined}
-          transition={enterDir ? CARD_SPRING : { duration: 0 }}
+          transition={enterDir ? CARD_SPRING : RISE_SPRING}
           style={{ position: 'absolute', inset: 0 }}
         >
           <TopCard
