@@ -59,6 +59,11 @@ const rise = (delay) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   transition: { duration: 0.6, delay, ease: EASE },
+  // A no-op onUpdate forces this off Framer's hardware-accelerated (WAAPI)
+  // animation path onto its main-thread one — WAAPI hands off to a plain
+  // inline style right as a delayed opacity+transform tween completes, and
+  // that handoff drops one frame back to the pre-animation value, flashing.
+  onUpdate: () => {},
 });
 
 export default function PostAuthWelcome() {
@@ -95,12 +100,20 @@ export default function PostAuthWelcome() {
           {t('postAuth.tutAsk')}
         </motion.p>
         <div className="stack">
-          <motion.button className="btn btn--primary" onClick={() => choose(true)} {...rise(1.53)}>
-            {t('postAuth.tutYes')}
-          </motion.button>
-          <motion.button className="btn btn--ghost" onClick={() => choose(false)} {...rise(1.68)}>
-            {t('postAuth.tutNo')}
-          </motion.button>
+          {/* Rise-in animates opacity/transform on a plain wrapper, not the
+              button itself — .btn has its own CSS transition on those same
+              properties (for the press/disabled states) that would otherwise
+              race Framer Motion's per-frame animation and make it stutter. */}
+          <motion.div {...rise(1.53)}>
+            <button className="btn btn--primary" onClick={() => choose(true)}>
+              {t('postAuth.tutYes')}
+            </button>
+          </motion.div>
+          <motion.div {...rise(1.68)}>
+            <button className="btn btn--ghost" onClick={() => choose(false)}>
+              {t('postAuth.tutNo')}
+            </button>
+          </motion.div>
         </div>
       </div>
     </div>
