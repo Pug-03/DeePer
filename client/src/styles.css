@@ -566,19 +566,6 @@ a {
   color: #fff;
   box-shadow: var(--glow-red);
 }
-.action-labels {
-  display: flex;
-  justify-content: center;
-  gap: 26px;
-  margin-top: 10px;
-  color: var(--text-faint);
-  font-size: 12px;
-}
-.action-labels span {
-  width: 72px;
-  text-align: center;
-}
-
 /* ---------- Lists (saved / history) ---------- */
 .list {
   display: flex;

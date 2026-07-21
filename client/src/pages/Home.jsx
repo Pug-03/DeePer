@@ -425,11 +425,6 @@ export default function Home() {
               <IcCheck size={26} />
             </button>
           </div>
-          <div className="action-labels">
-            <span>{t('home.aSkip')}</span>
-            <span>{t('home.aSave')}</span>
-            <span>{t('home.aAnswer')}</span>
-          </div>
         </>
       )}
 
