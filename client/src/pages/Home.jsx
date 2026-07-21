@@ -19,6 +19,10 @@ const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
 const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 const FLY_EASE = [0.16, 1, 0.3, 1];
+// The outgoing card's slide is a spring (bouncy, exact), but its fade should
+// feel soft rather than snap to the spring's precision — ease it out on its
+// own timing instead of tying opacity to the same physics as the slide.
+const CARD_EXIT_TRANSITION = { ...CARD_SPRING, opacity: { duration: 0.32, ease: FLY_EASE } };
 // Matches the resting look of the "next" preview card behind the deck
 // (see backScale/backY/backOpacity below) so promoting it to the top card
 // reads as a continuous rise instead of an instant pop into place.
@@ -126,8 +130,8 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
           key={current.id}
           initial={enterDir ? { x: `${-enterDir * 100}%` } : REST_BEHIND}
           animate={{ x: '0%', scale: 1, y: 0, opacity: 1 }}
-          exit={enterDir ? { x: `${enterDir * 100}%` } : undefined}
-          transition={enterDir ? CARD_SPRING : RISE_SPRING}
+          exit={enterDir ? { x: `${enterDir * 100}%`, opacity: 0 } : undefined}
+          transition={enterDir ? CARD_EXIT_TRANSITION : RISE_SPRING}
           style={{ position: 'absolute', inset: 0 }}
         >
           <TopCard
