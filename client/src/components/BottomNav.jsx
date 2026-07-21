@@ -3,10 +3,10 @@ import { IcHome, IcBookmark, IcHistory, IcUser } from './icons.jsx';
 import { useI18n } from '../store/i18n.jsx';
 
 const TABS = [
-  { to: '/app/home', key: 'nav.home', Icon: IcHome },
-  { to: '/app/saved', key: 'nav.saved', Icon: IcBookmark },
-  { to: '/app/history', key: 'nav.history', Icon: IcHistory },
-  { to: '/app/profile', key: 'nav.profile', Icon: IcUser },
+  { to: '/app/home', key: 'nav.home', Icon: IcHome, tut: 'navHome' },
+  { to: '/app/saved', key: 'nav.saved', Icon: IcBookmark, tut: 'navSaved' },
+  { to: '/app/history', key: 'nav.history', Icon: IcHistory, tut: 'navHistory' },
+  { to: '/app/profile', key: 'nav.profile', Icon: IcUser, tut: 'navProfile' },
 ];
 
 export default function BottomNav() {
@@ -14,13 +14,14 @@ export default function BottomNav() {
   const nav = useNavigate();
   const { t } = useI18n();
   return (
-    <nav className="bottom-nav glass glass--red" data-tut="nav">
-      {TABS.map(({ to, key, Icon }) => {
+    <nav className="bottom-nav glass glass--red">
+      {TABS.map(({ to, key, Icon, tut }) => {
         const active = pathname === to;
         return (
           <button
             key={to}
             className={`nav-item ${active ? 'active' : ''}`}
+            data-tut={tut}
             onClick={() => nav(to)}
             aria-label={t(key)}
           >

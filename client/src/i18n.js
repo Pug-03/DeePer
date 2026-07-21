@@ -106,12 +106,25 @@ export const STRINGS = {
     'tut.catsDesc': 'เลือกได้ว่าจะคุยกับคู่รัก เพื่อน ๆ หรือครอบครัว สลับหมวดได้ตลอดเวลา',
     'tut.deckTitle': 'ปัดการ์ดเพื่อเลือก',
     'tut.deckDesc': 'ปัดซ้ายเพื่อข้ามคำถามนี้ ปัดขวาเพื่อไปตอบคำถามนี้กันเลย',
-    'tut.actionsTitle': 'หรือใช้ปุ่มด้านล่างนี้',
-    'tut.actionsDesc': 'กดปุ่มด้านล่างแทนการปัดก็ได้',
+    'tut.actionSkipTitle': 'ปุ่มข้าม (กากบาท)',
+    'tut.actionSkipDesc':
+      'ไม่อยากตอบคำถามนี้? กดข้ามไปคำถามถัดไปได้เลย เหมือนกับการปัดซ้าย คำถามนี้จะไม่ถูกเก็บไว้ที่ไหน',
+    'tut.actionSaveTitle': 'ปุ่มบันทึก',
+    'tut.actionSaveDesc':
+      'เก็บคำถามนี้ไว้ก่อน ยังไม่ต้องตอบตอนนี้ก็ได้ คำถามที่บันทึกจะไปอยู่ในแท็บ “บันทึกไว้” ด้านล่าง กลับมาเปิดดูและตอบซ้ำได้ทุกเมื่อ',
+    'tut.actionAnswerTitle': 'ปุ่มตอบเลย (ติ๊กถูก)',
+    'tut.actionAnswerDesc':
+      'ไปตอบคำถามนี้ทันที เหมือนกับการปัดขวา พอตอบและกดบันทึกคำตอบแล้ว คำตอบจะไปอยู่ในแท็บ “ประวัติ” ให้กลับมาดูย้อนหลังได้',
     'tut.addTitle': 'เพิ่มคำถามของตัวเอง',
     'tut.addDesc': 'มีคำถามที่อยากถามเป็นพิเศษไหม? กดตรงนี้เพื่อเพิ่มคำถามของคุณเองได้เลย',
-    'tut.navTitle': 'แถบเมนูด้านล่าง',
-    'tut.navDesc': 'สลับไปมาระหว่างหน้าหลัก บันทึกไว้ ประวัติ และโปรไฟล์ได้ตลอดเวลา',
+    'tut.navHomeTitle': 'หน้าหลัก',
+    'tut.navHomeDesc': 'กลับมาที่นี่เพื่อดูการ์ดคำถามใหม่ ๆ ได้ตลอด สลับหมวดคู่รัก เพื่อน ๆ หรือครอบครัวได้จากด้านบน',
+    'tut.navSavedTitle': 'บันทึกไว้',
+    'tut.navSavedDesc': 'คำถามที่คุณกดปุ่มบันทึกไว้จะมารวมกันที่นี่ แตะคำถามไหนก็กลับไปตอบได้ทันที',
+    'tut.navHistoryTitle': 'ประวัติ',
+    'tut.navHistoryDesc': 'คำถามและคำตอบที่เคยตอบไปแล้วทั้งหมดจะถูกเก็บไว้ที่นี่ ย้อนกลับมาอ่านได้เสมอ',
+    'tut.navProfileTitle': 'โปรไฟล์',
+    'tut.navProfileDesc': 'แก้ไขข้อมูลของคุณและอีกฝ่าย เปลี่ยนภาษา หรือออกจากระบบได้จากหน้านี้',
 
     // เพศ
     'gender.female': 'หญิง',
@@ -310,12 +323,28 @@ export const STRINGS = {
     'tut.catsDesc': 'Pick couple, friends, or family — switch anytime',
     'tut.deckTitle': 'Swipe the card',
     'tut.deckDesc': 'Swipe left to skip, swipe right to answer this question',
-    'tut.actionsTitle': 'Or use these buttons',
-    'tut.actionsDesc': 'Tap a button below instead of swiping',
+    'tut.actionSkipTitle': 'Skip button (X)',
+    'tut.actionSkipDesc':
+      'Not into this question? Skip to the next one — same as swiping left. It won’t be saved anywhere.',
+    'tut.actionSaveTitle': 'Save button',
+    'tut.actionSaveDesc':
+      'Keep this question for later without answering now. It’ll show up under the “Saved” tab below — come back and answer it anytime.',
+    'tut.actionAnswerTitle': 'Answer button (✓)',
+    'tut.actionAnswerDesc':
+      'Go answer this question right away — same as swiping right. Once you save your answer, it’ll appear in the “History” tab so you can look back on it later.',
     'tut.addTitle': 'Add your own question',
     'tut.addDesc': 'Got something specific to ask? Tap here to add your own question',
-    'tut.navTitle': 'Bottom menu',
-    'tut.navDesc': 'Switch between Home, Saved, History, and Profile anytime',
+    'tut.navHomeTitle': 'Home',
+    'tut.navHomeDesc':
+      'Come back here anytime for new question cards. Switch between Couple, Friends, or Family from the top.',
+    'tut.navSavedTitle': 'Saved',
+    'tut.navSavedDesc': 'Questions you tapped Save on land here — tap any of them to go answer it.',
+    'tut.navHistoryTitle': 'History',
+    'tut.navHistoryDesc':
+      'Every question you’ve answered, along with the answers, is kept here so you can look back anytime.',
+    'tut.navProfileTitle': 'Profile',
+    'tut.navProfileDesc':
+      'Edit your info and your partner’s, change the language, or log out from this page.',
 
     'gender.female': 'Female',
     'gender.male': 'Male',

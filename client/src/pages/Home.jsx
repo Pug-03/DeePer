@@ -395,14 +395,29 @@ export default function Home() {
             enterDir={enterDir}
           />
 
-          <div className="actions" data-tut="actions">
-            <button className="fab fab-md fab--x" onClick={doSkip} aria-label={t('home.aSkip')}>
+          <div className="actions">
+            <button
+              className="fab fab-md fab--x"
+              data-tut="actionSkip"
+              onClick={doSkip}
+              aria-label={t('home.aSkip')}
+            >
               <IcX size={26} />
             </button>
-            <button className="fab fab-lg fab--save" onClick={save} aria-label={t('home.aSave')}>
+            <button
+              className="fab fab-lg fab--save"
+              data-tut="actionSave"
+              onClick={save}
+              aria-label={t('home.aSave')}
+            >
               <IcBookmark size={28} />
             </button>
-            <button className="fab fab-md fab--check" onClick={doAnswer} aria-label={t('home.aAnswer')}>
+            <button
+              className="fab fab-md fab--check"
+              data-tut="actionAnswer"
+              onClick={doAnswer}
+              aria-label={t('home.aAnswer')}
+            >
               <IcCheck size={26} />
             </button>
           </div>

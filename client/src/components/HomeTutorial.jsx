@@ -1,9 +1,20 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
-import { IcBack, IcBookmark, IcCheck, IcHome, IcHistory, IcUser, IcX } from './icons.jsx';
+import { IcBack } from './icons.jsx';
 
-const STEPS = ['add', 'cats', 'deck', 'actions', 'nav'];
+const STEPS = [
+  'add',
+  'cats',
+  'deck',
+  'actionSkip',
+  'actionSave',
+  'actionAnswer',
+  'navHome',
+  'navSaved',
+  'navHistory',
+  'navProfile',
+];
 const PAD = 10;
 const GAP = 16;
 const EDGE = 16;
@@ -15,7 +26,18 @@ const TIP_CONTENT_TRANSITION = { duration: 0.18, ease: EASE };
 // so the highlight frame hugs the real shape instead of a generic rounded box.
 // Single controls (add, deck) use their exact real radius; rows of separate
 // round buttons (cats, actions) read best as a full pill wrap around them.
-const STEP_RADIUS = { add: 22, cats: 999, deck: 30, actions: 999, nav: 24 };
+const STEP_RADIUS = {
+  add: 22,
+  cats: 999,
+  deck: 30,
+  actionSkip: 999,
+  actionSave: 999,
+  actionAnswer: 999,
+  navHome: 16,
+  navSaved: 16,
+  navHistory: 16,
+  navProfile: 16,
+};
 const HIDDEN_STYLE = { position: 'fixed', top: -9999, left: 0, visibility: 'hidden', pointerEvents: 'none' };
 
 function clamp(v, lo, hi) {
@@ -50,7 +72,7 @@ function useTargetRect(selector) {
 // Measures every step's tooltip height up front (off-screen, same markup/width
 // as the real tip) so positioning never has to guess using a stale height from
 // whichever step came before — that's what let the tip land on top of the
-// spotlight ring on the taller "actions"/"nav" steps.
+// spotlight ring on steps with a taller tip.
 function useStepHeights(t) {
   const refs = useRef({});
   const [heights, setHeights] = useState({});
@@ -76,35 +98,6 @@ function TipBody({ id, step, isLast, t, onBack, onNext }) {
     <>
       <p className="tut-tip-title">{t(`tut.${id}Title`)}</p>
       <p className="tut-tip-desc">{t(`tut.${id}Desc`)}</p>
-      {id === 'actions' && (
-        <div className="tut-icon-row">
-          <span>
-            <IcX size={16} /> {t('home.aSkip')}
-          </span>
-          <span>
-            <IcBookmark size={16} /> {t('home.aSave')}
-          </span>
-          <span>
-            <IcCheck size={16} /> {t('home.aAnswer')}
-          </span>
-        </div>
-      )}
-      {id === 'nav' && (
-        <div className="tut-icon-row">
-          <span>
-            <IcHome size={16} /> {t('nav.home')}
-          </span>
-          <span>
-            <IcBookmark size={16} /> {t('nav.saved')}
-          </span>
-          <span>
-            <IcHistory size={16} /> {t('nav.history')}
-          </span>
-          <span>
-            <IcUser size={16} /> {t('nav.profile')}
-          </span>
-        </div>
-      )}
       <div className="tut-tip-foot">
         <div className="tut-dots">
           {STEPS.map((s, i) => (
