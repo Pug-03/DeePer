@@ -21,8 +21,12 @@ router.get('/saved', (req, res) => {
 router.post('/saved', (req, res) => {
   const text = String(req.body.question_text || '').trim();
   const category = req.body.category;
-  if (!text) return res.status(400).json({ error: 'ไม่มีคำถามให้บันทึก' });
-  if (!CATEGORIES.includes(category)) return res.status(400).json({ error: 'หมวดไม่ถูกต้อง' });
+  if (!text)
+    return res
+      .status(400)
+      .json({ error: 'ไม่มีคำถามให้บันทึก', error_code: 'QUESTION_TEXT_REQUIRED' });
+  if (!CATEGORIES.includes(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
 
   // Avoid duplicate saves of the same question.
   const exists = db
@@ -71,8 +75,12 @@ router.post('/history', (req, res) => {
   } = req.body;
 
   const text = String(question_text || '').trim();
-  if (!text) return res.status(400).json({ error: 'ไม่มีคำถาม' });
-  if (!CATEGORIES.includes(category)) return res.status(400).json({ error: 'หมวดไม่ถูกต้อง' });
+  if (!text)
+    return res
+      .status(400)
+      .json({ error: 'ไม่มีคำถาม', error_code: 'QUESTION_TEXT_REQUIRED' });
+  if (!CATEGORIES.includes(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
 
   const info = db
     .prepare(

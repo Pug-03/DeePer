@@ -12,7 +12,8 @@ const validCategory = (c) => CATEGORIES.includes(c);
 // `exclude` (comma-separated ids) lets the client avoid repeats within a session.
 router.get('/', requireAuth, (req, res) => {
   const category = req.query.category;
-  if (!validCategory(category)) return res.status(400).json({ error: 'หมวดไม่ถูกต้อง' });
+  if (!validCategory(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
 
   const limit = Math.min(Number(req.query.limit) || 20, 50);
   const exclude = String(req.query.exclude || '')
@@ -36,9 +37,13 @@ router.get('/', requireAuth, (req, res) => {
 // Live AI top-up — generate fresh questions, persist them, return them.
 router.post('/generate', requireAuth, async (req, res) => {
   const category = req.body.category;
-  if (!validCategory(category)) return res.status(400).json({ error: 'หมวดไม่ถูกต้อง' });
+  if (!validCategory(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
   if (!aiReady)
-    return res.status(503).json({ error: 'ยังไม่ได้เปิดใช้งานการสร้างคำถามด้วย AI' });
+    return res.status(503).json({
+      error: 'ยังไม่ได้เปิดใช้งานการสร้างคำถามด้วย AI',
+      error_code: 'AI_DISABLED',
+    });
 
   const count = Math.min(Number(req.body.count) || 6, 10);
 
@@ -51,7 +56,10 @@ router.post('/generate', requireAuth, async (req, res) => {
   try {
     const generated = await generateQuestions(category, count, recent);
     if (!generated.length)
-      return res.status(502).json({ error: 'AI ไม่ได้สร้างคำถามใหม่ กรุณาลองอีกครั้ง' });
+      return res.status(502).json({
+        error: 'AI ไม่ได้สร้างคำถามใหม่ กรุณาลองอีกครั้ง',
+        error_code: 'AI_GENERATE_EMPTY',
+      });
 
     const insert = db.prepare(
       `INSERT INTO questions (category, text, source) VALUES (?, ?, 'ai')`,
@@ -64,7 +72,10 @@ router.post('/generate', requireAuth, async (req, res) => {
     res.json({ questions: out });
   } catch (e) {
     console.error('[ai] generate failed', e);
-    res.status(502).json({ error: e.message || 'สร้างคำถามด้วย AI ไม่สำเร็จ' });
+    res.status(502).json({
+      error: e.message || 'สร้างคำถามด้วย AI ไม่สำเร็จ',
+      error_code: e.code || 'AI_GENERATE_FAILED',
+    });
   }
 });
 
@@ -72,8 +83,12 @@ router.post('/generate', requireAuth, async (req, res) => {
 router.post('/', requireAuth, (req, res) => {
   const category = req.body.category;
   const text = String(req.body.text || '').trim();
-  if (!validCategory(category)) return res.status(400).json({ error: 'หมวดไม่ถูกต้อง' });
-  if (text.length < 3) return res.status(400).json({ error: 'คำถามสั้นเกินไป' });
+  if (!validCategory(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
+  if (text.length < 3)
+    return res
+      .status(400)
+      .json({ error: 'คำถามสั้นเกินไป', error_code: 'QUESTION_TOO_SHORT' });
 
   const info = db
     .prepare(`INSERT INTO questions (category, text, source, user_id) VALUES (?, ?, 'user', ?)`)

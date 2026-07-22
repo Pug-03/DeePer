@@ -25,6 +25,39 @@ export const STRINGS = {
     'confirm.savedMsg': 'ต้องการลบคำถามที่บันทึกไว้นี้จริงหรือไม่?',
     'confirm.historyMsg': 'ต้องการลบประวัติการตอบนี้จริงหรือไม่? การลบไม่สามารถกู้คืนได้',
 
+    // ข้อความผิดพลาดจากเซิร์ฟเวอร์ (ให้ตรงกับ error_code ที่ server ส่งมา — ดู api.js)
+    'err.INVALID_EMAIL': 'อีเมลไม่ถูกต้อง',
+    'err.EMAIL_TAKEN': 'อีเมลนี้มีบัญชีอยู่แล้ว',
+    'err.OTP_SEND_FAILED': 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่',
+    'err.INVALID_INPUT': 'ข้อมูลไม่ถูกต้อง',
+    'err.OTP_INVALID': 'รหัส OTP ไม่ถูกต้อง',
+    'err.OTP_EXPIRED': 'รหัส OTP หมดอายุแล้ว',
+    'err.NICKNAME_REQUIRED': 'กรุณากรอกชื่อเล่น',
+    'err.PASSWORD_WEAK': 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
+    'err.OTP_NOT_VERIFIED': 'ต้องยืนยัน OTP ก่อนสมัคร',
+    'err.EMAIL_PASSWORD_REQUIRED': 'กรุณากรอกอีเมลและรหัสผ่าน',
+    'err.LOGIN_INVALID': 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+    'err.EMAIL_NOT_FOUND': 'ไม่พบบัญชีที่ใช้อีเมลนี้',
+    'err.ACCOUNT_IS_GOOGLE': 'บัญชีนี้สมัครด้วย Google กรุณาเข้าสู่ระบบด้วย Google แทน',
+    'err.OTP_NOT_VERIFIED_RESET': 'ต้องยืนยัน OTP ก่อนตั้งรหัสผ่านใหม่',
+    'err.GOOGLE_DISABLED': 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google',
+    'err.GOOGLE_CREDENTIAL_MISSING': 'ไม่พบข้อมูลรับรองจาก Google',
+    'err.GOOGLE_AUTH_FAILED': 'ยืนยันตัวตนกับ Google ไม่สำเร็จ',
+    'err.PASSWORD_REQUIRED': 'กรุณากรอกรหัสผ่าน',
+    'err.PASSWORD_INCORRECT': 'รหัสผ่านไม่ถูกต้อง',
+    'err.AUTH_REQUIRED': 'ต้องเข้าสู่ระบบก่อน',
+    'err.USER_NOT_FOUND': 'ไม่พบบัญชีผู้ใช้',
+    'err.SESSION_EXPIRED': 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่',
+    'err.INVALID_CATEGORY': 'หมวดไม่ถูกต้อง',
+    'err.AI_DISABLED': 'ยังไม่ได้เปิดใช้งานการสร้างคำถามด้วย AI',
+    'err.QUESTION_TOO_SHORT': 'คำถามสั้นเกินไป',
+    'err.AI_GENERATE_EMPTY': 'AI ไม่ได้สร้างคำถามใหม่ กรุณาลองอีกครั้ง',
+    'err.AI_GENERATE_FAILED': 'สร้างคำถามด้วย AI ไม่สำเร็จ',
+    'err.AI_NOT_READY': 'AI ยังไม่พร้อมใช้งาน (ไม่ได้ตั้งค่า ANTHROPIC_API_KEY)',
+    'err.AI_RESPONSE_INVALID': 'AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง',
+    'err.AI_RESPONSE_UNREADABLE': 'ไม่สามารถอ่านคำตอบจาก AI ได้',
+    'err.QUESTION_TEXT_REQUIRED': 'ไม่มีคำถามให้บันทึก',
+
     // แบรนด์ / คำโปรย
     'welcome.tagline1': 'การ์ดคำถามชวนคุยลึก ๆ',
     'welcome.tagline2': 'สำหรับคู่รัก เพื่อน ๆ และครอบครัว',
@@ -247,6 +280,40 @@ export const STRINGS = {
     'confirm.savedMsg': 'Delete this saved question?',
     'confirm.historyMsg': 'Delete this answer from your history? This can’t be undone.',
 
+    // Server error messages (must match the error_code the server sends — see api.js)
+    'err.INVALID_EMAIL': 'Invalid email address',
+    'err.EMAIL_TAKEN': 'This email already has an account',
+    'err.OTP_SEND_FAILED': 'Failed to send the OTP. Please try again',
+    'err.INVALID_INPUT': 'Invalid input',
+    'err.OTP_INVALID': 'Invalid OTP code',
+    'err.OTP_EXPIRED': 'This OTP code has expired',
+    'err.NICKNAME_REQUIRED': 'Please enter a nickname',
+    'err.PASSWORD_WEAK':
+      'Password must be at least 8 characters, with an uppercase letter, lowercase letter, number, and special character',
+    'err.OTP_NOT_VERIFIED': 'Please verify the OTP before signing up',
+    'err.EMAIL_PASSWORD_REQUIRED': 'Please enter your email and password',
+    'err.LOGIN_INVALID': 'Incorrect email or password',
+    'err.EMAIL_NOT_FOUND': 'No account found with this email',
+    'err.ACCOUNT_IS_GOOGLE': 'This account signed up with Google — please log in with Google instead',
+    'err.OTP_NOT_VERIFIED_RESET': 'Please verify the OTP before setting a new password',
+    'err.GOOGLE_DISABLED': 'Google sign-in isn’t enabled yet',
+    'err.GOOGLE_CREDENTIAL_MISSING': 'Missing credentials from Google',
+    'err.GOOGLE_AUTH_FAILED': 'Google verification failed',
+    'err.PASSWORD_REQUIRED': 'Please enter your password',
+    'err.PASSWORD_INCORRECT': 'Incorrect password',
+    'err.AUTH_REQUIRED': 'Please log in first',
+    'err.USER_NOT_FOUND': 'Account not found',
+    'err.SESSION_EXPIRED': 'Your session has expired. Please log in again',
+    'err.INVALID_CATEGORY': 'Invalid category',
+    'err.AI_DISABLED': 'AI question generation isn’t enabled yet',
+    'err.QUESTION_TOO_SHORT': 'This question is too short',
+    'err.AI_GENERATE_EMPTY': 'AI didn’t generate any new questions. Please try again',
+    'err.AI_GENERATE_FAILED': 'Failed to generate questions with AI',
+    'err.AI_NOT_READY': 'AI isn’t ready yet (ANTHROPIC_API_KEY not configured)',
+    'err.AI_RESPONSE_INVALID': 'AI replied in an unexpected format',
+    'err.AI_RESPONSE_UNREADABLE': 'Couldn’t read the AI’s response',
+    'err.QUESTION_TEXT_REQUIRED': 'No question text provided',
+
     'welcome.tagline1': 'Deep conversation cards',
     'welcome.tagline2': 'for couples, friends, and family',
     'welcome.sample': '“What’s a little thing that makes you smile every day?”',
@@ -452,4 +519,13 @@ export function translate(lang, key, vars) {
     }
   }
   return s;
+}
+
+// The server sends error_code alongside its (Thai) error message so the
+// client can show it in the user's chosen language. Unmapped codes fall
+// back to whatever raw message the server sent, rather than a literal key.
+export function translateError(lang, code, fallback) {
+  const key = `err.${code}`;
+  if (!code || (STRINGS.en[key] == null && STRINGS.th[key] == null)) return fallback;
+  return translate(lang, key);
 }

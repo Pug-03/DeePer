@@ -1,4 +1,4 @@
-import { translate } from './i18n.js';
+import { translate, translateError } from './i18n.js';
 import { currentLang } from './store/i18n.jsx';
 
 const TOKEN_KEY = 'deeptalk_token';
@@ -35,7 +35,8 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     /* no body */
   }
   if (!res.ok) {
-    const err = new Error((data && data.error) || tt('common.error'));
+    const raw = (data && data.error) || tt('common.error');
+    const err = new Error(translateError(currentLang, data && data.error_code, raw));
     err.status = res.status;
     err.data = data;
     throw err;

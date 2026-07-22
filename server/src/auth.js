@@ -47,14 +47,18 @@ export function publicUser(u) {
 export function requireAuth(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'ต้องเข้าสู่ระบบก่อน' });
+  if (!token)
+    return res.status(401).json({ error: 'ต้องเข้าสู่ระบบก่อน', error_code: 'AUTH_REQUIRED' });
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.uid);
-    if (!user) return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้' });
+    if (!user)
+      return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้', error_code: 'USER_NOT_FOUND' });
     req.user = user;
     next();
   } catch {
-    return res.status(401).json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่' });
+    return res
+      .status(401)
+      .json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', error_code: 'SESSION_EXPIRED' });
   }
 }

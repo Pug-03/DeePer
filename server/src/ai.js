@@ -14,8 +14,14 @@ const AUDIENCE_HINT = {
   family: 'สมาชิกในครอบครัว',
 };
 
+function aiError(message, code) {
+  const err = new Error(message);
+  err.code = code;
+  return err;
+}
+
 export async function generateQuestions(category, count = 6, avoid = []) {
-  if (!client) throw new Error('AI ยังไม่พร้อมใช้งาน (ไม่ได้ตั้งค่า ANTHROPIC_API_KEY)');
+  if (!client) throw aiError('AI ยังไม่พร้อมใช้งาน (ไม่ได้ตั้งค่า ANTHROPIC_API_KEY)', 'AI_NOT_READY');
 
   const label = CATEGORY_LABELS[category] || category;
   const audience = AUDIENCE_HINT[category] || label;
@@ -41,13 +47,13 @@ export async function generateQuestions(category, count = 6, avoid = []) {
   const textBlock = resp.content.find((b) => b.type === 'text');
   const raw = textBlock ? textBlock.text : '';
   const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง');
+  if (!match) throw aiError('AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง', 'AI_RESPONSE_INVALID');
 
   let parsed;
   try {
     parsed = JSON.parse(match[0]);
   } catch {
-    throw new Error('ไม่สามารถอ่านคำตอบจาก AI ได้');
+    throw aiError('ไม่สามารถอ่านคำตอบจาก AI ได้', 'AI_RESPONSE_UNREADABLE');
   }
 
   const questions = Array.isArray(parsed.questions) ? parsed.questions : [];

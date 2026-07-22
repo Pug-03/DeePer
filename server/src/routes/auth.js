@@ -31,10 +31,14 @@ router.get('/config', (_req, res) => {
 // --- Step 1: request OTP for email signup ---
 router.post('/otp/request', async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
-  if (!isEmail(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง' });
+  if (!isEmail(email))
+    return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) return res.status(409).json({ error: 'อีเมลนี้มีบัญชีอยู่แล้ว' });
+  if (existing)
+    return res
+      .status(409)
+      .json({ error: 'อีเมลนี้มีบัญชีอยู่แล้ว', error_code: 'EMAIL_TAKEN' });
 
   const code = genOtp();
   const expires = Date.now() + 10 * 60 * 1000;
@@ -48,7 +52,9 @@ router.post('/otp/request', async (req, res) => {
     res.json({ ok: true, dev_code: result.delivered ? undefined : result.devCode });
   } catch (e) {
     console.error('[otp] send failed', e);
-    res.status(500).json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่' });
+    res
+      .status(500)
+      .json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่', error_code: 'OTP_SEND_FAILED' });
   }
 });
 
@@ -57,7 +63,7 @@ router.post('/otp/verify', (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   if (!isEmail(email) || !/^\d{4}$/.test(code))
-    return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง' });
+    return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', error_code: 'INVALID_INPUT' });
 
   const row = db
     .prepare(
@@ -66,9 +72,10 @@ router.post('/otp/verify', (req, res) => {
     )
     .get(email, code);
 
-  if (!row) return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง' });
+  if (!row)
+    return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง', error_code: 'OTP_INVALID' });
   if (row.expires_at < Date.now())
-    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว' });
+    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว', error_code: 'OTP_EXPIRED' });
 
   res.json({ ok: true });
 });
@@ -79,13 +86,17 @@ router.post('/register', (req, res) => {
   const code = String(req.body.code || '').trim();
   const { nickname, age, gender, password } = req.body;
 
-  if (!isEmail(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง' });
+  if (!isEmail(email))
+    return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
   if (!nickname || String(nickname).trim().length < 1)
-    return res.status(400).json({ error: 'กรุณากรอกชื่อเล่น' });
-  if (!validatePassword(password))
     return res
       .status(400)
-      .json({ error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ' });
+      .json({ error: 'กรุณากรอกชื่อเล่น', error_code: 'NICKNAME_REQUIRED' });
+  if (!validatePassword(password))
+    return res.status(400).json({
+      error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
+      error_code: 'PASSWORD_WEAK',
+    });
 
   const otp = db
     .prepare(
@@ -94,10 +105,15 @@ router.post('/register', (req, res) => {
     )
     .get(email, code);
   if (!otp || otp.expires_at < Date.now())
-    return res.status(400).json({ error: 'ต้องยืนยัน OTP ก่อนสมัคร' });
+    return res
+      .status(400)
+      .json({ error: 'ต้องยืนยัน OTP ก่อนสมัคร', error_code: 'OTP_NOT_VERIFIED' });
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) return res.status(409).json({ error: 'อีเมลนี้มีบัญชีอยู่แล้ว' });
+  if (existing)
+    return res
+      .status(409)
+      .json({ error: 'อีเมลนี้มีบัญชีอยู่แล้ว', error_code: 'EMAIL_TAKEN' });
 
   const info = db
     .prepare(
@@ -123,11 +139,15 @@ router.post('/login', (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   if (!isEmail(email) || !password)
-    return res.status(400).json({ error: 'กรุณากรอกอีเมลและรหัสผ่าน' });
+    return res
+      .status(400)
+      .json({ error: 'กรุณากรอกอีเมลและรหัสผ่าน', error_code: 'EMAIL_PASSWORD_REQUIRED' });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   if (!user || !verifyPassword(password, user.password_hash))
-    return res.status(401).json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
+    return res
+      .status(401)
+      .json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', error_code: 'LOGIN_INVALID' });
 
   res.json({ token: signToken(user), user: publicUser(user) });
 });
@@ -135,14 +155,19 @@ router.post('/login', (req, res) => {
 // --- Forgot password — Step 1: request OTP ---
 router.post('/password-reset/request', async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
-  if (!isEmail(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง' });
+  if (!isEmail(email))
+    return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user) return res.status(404).json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้' });
-  if (!user.password_hash)
+  if (!user)
     return res
-      .status(400)
-      .json({ error: 'บัญชีนี้สมัครด้วย Google กรุณาเข้าสู่ระบบด้วย Google แทน' });
+      .status(404)
+      .json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้', error_code: 'EMAIL_NOT_FOUND' });
+  if (!user.password_hash)
+    return res.status(400).json({
+      error: 'บัญชีนี้สมัครด้วย Google กรุณาเข้าสู่ระบบด้วย Google แทน',
+      error_code: 'ACCOUNT_IS_GOOGLE',
+    });
 
   const code = genOtp();
   const expires = Date.now() + 10 * 60 * 1000;
@@ -155,7 +180,9 @@ router.post('/password-reset/request', async (req, res) => {
     res.json({ ok: true, dev_code: result.delivered ? undefined : result.devCode });
   } catch (e) {
     console.error('[password-reset] send failed', e);
-    res.status(500).json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่' });
+    res
+      .status(500)
+      .json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่', error_code: 'OTP_SEND_FAILED' });
   }
 });
 
@@ -164,7 +191,7 @@ router.post('/password-reset/verify', (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   if (!isEmail(email) || !/^\d{4}$/.test(code))
-    return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง' });
+    return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', error_code: 'INVALID_INPUT' });
 
   const row = db
     .prepare(
@@ -173,9 +200,10 @@ router.post('/password-reset/verify', (req, res) => {
     )
     .get(email, code);
 
-  if (!row) return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง' });
+  if (!row)
+    return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง', error_code: 'OTP_INVALID' });
   if (row.expires_at < Date.now())
-    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว' });
+    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว', error_code: 'OTP_EXPIRED' });
 
   res.json({ ok: true });
 });
@@ -186,11 +214,13 @@ router.post('/password-reset/confirm', (req, res) => {
   const code = String(req.body.code || '').trim();
   const { password } = req.body;
 
-  if (!isEmail(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง' });
+  if (!isEmail(email))
+    return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
   if (!validatePassword(password))
-    return res
-      .status(400)
-      .json({ error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ' });
+    return res.status(400).json({
+      error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
+      error_code: 'PASSWORD_WEAK',
+    });
 
   const otp = db
     .prepare(
@@ -199,10 +229,15 @@ router.post('/password-reset/confirm', (req, res) => {
     )
     .get(email, code);
   if (!otp || otp.expires_at < Date.now())
-    return res.status(400).json({ error: 'ต้องยืนยัน OTP ก่อนตั้งรหัสผ่านใหม่' });
+    return res
+      .status(400)
+      .json({ error: 'ต้องยืนยัน OTP ก่อนตั้งรหัสผ่านใหม่', error_code: 'OTP_NOT_VERIFIED_RESET' });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user) return res.status(404).json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้' });
+  if (!user)
+    return res
+      .status(404)
+      .json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้', error_code: 'EMAIL_NOT_FOUND' });
 
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(
     hashPassword(password),
@@ -217,10 +252,16 @@ router.post('/password-reset/confirm', (req, res) => {
 // --- Google OAuth (verify ID token from Google Identity Services) ---
 router.post('/google', async (req, res) => {
   if (!googleClient)
-    return res.status(503).json({ error: 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google' });
+    return res.status(503).json({
+      error: 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google',
+      error_code: 'GOOGLE_DISABLED',
+    });
 
   const credential = req.body.credential;
-  if (!credential) return res.status(400).json({ error: 'ไม่พบข้อมูลรับรองจาก Google' });
+  if (!credential)
+    return res
+      .status(400)
+      .json({ error: 'ไม่พบข้อมูลรับรองจาก Google', error_code: 'GOOGLE_CREDENTIAL_MISSING' });
 
   let payload;
   try {
@@ -230,7 +271,9 @@ router.post('/google', async (req, res) => {
     });
     payload = ticket.getPayload();
   } catch {
-    return res.status(401).json({ error: 'ยืนยันตัวตนกับ Google ไม่สำเร็จ' });
+    return res
+      .status(401)
+      .json({ error: 'ยืนยันตัวตนกับ Google ไม่สำเร็จ', error_code: 'GOOGLE_AUTH_FAILED' });
   }
 
   const sub = payload.sub;
@@ -299,9 +342,14 @@ router.delete('/me', requireAuth, (req, res) => {
   const password = String(req.body.password || '');
 
   if (u.password_hash) {
-    if (!password) return res.status(400).json({ error: 'กรุณากรอกรหัสผ่าน' });
+    if (!password)
+      return res
+        .status(400)
+        .json({ error: 'กรุณากรอกรหัสผ่าน', error_code: 'PASSWORD_REQUIRED' });
     if (!verifyPassword(password, u.password_hash))
-      return res.status(401).json({ error: 'รหัสผ่านไม่ถูกต้อง' });
+      return res
+        .status(401)
+        .json({ error: 'รหัสผ่านไม่ถูกต้อง', error_code: 'PASSWORD_INCORRECT' });
   }
 
   db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
