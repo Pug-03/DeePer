@@ -29,7 +29,7 @@ const CARD_EXIT_TRANSITION = { ...CARD_SPRING, opacity: { duration: 0.32, ease: 
 const REST_BEHIND = { scale: 0.94, y: 14, opacity: 0.6 };
 const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 
-function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
+function TopCard({ q, onSkip, onAnswer, onDragProgress, flyRegistry }) {
   const { t } = useI18n();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -57,6 +57,19 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
       setTimeout(onAnswer, 240);
     }
   };
+
+  // Lets the parent's action buttons (and keyboard shortcuts) trigger the
+  // same fly animation as a swipe. Re-registers every render so it's always
+  // this card's latest fly closure — guarded by q.id so a still-exiting
+  // card's delayed cleanup can never clobber a newer card's registration
+  // (AnimatePresence keeps the outgoing card mounted for its exit animation,
+  // so both can briefly coexist).
+  useEffect(() => {
+    flyRegistry.current = { id: q.id, fly };
+    return () => {
+      if (flyRegistry.current?.id === q.id) flyRegistry.current = null;
+    };
+  }); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onDragEnd = (_e, info) => {
     if (info.offset.x < -SWIPE_THRESHOLD) fly('skip');
@@ -91,26 +104,11 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress }) {
         <IcCheck size={34} sw={3} />
       </motion.span>
       <p className="q-text">{q.text}</p>
-      <FlyBridge fly={fly} />
     </motion.div>
   );
 }
 
-// Lets the parent's action buttons trigger the same fly animation as swipes.
-function FlyBridge({ fly }) {
-  const ref = useRef(fly);
-  ref.current = fly;
-  useEffect(() => {
-    FlyBridge.current = (dir) => ref.current(dir);
-    return () => {
-      FlyBridge.current = null;
-    };
-  });
-  return null;
-}
-FlyBridge.current = null;
-
-function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
+function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
   const progress = useMotionValue(0);
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
   const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
@@ -139,6 +137,7 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir }) {
             onSkip={onSkip}
             onAnswer={onAnswer}
             onDragProgress={(v) => progress.set(v)}
+            flyRegistry={flyRegistry}
           />
         </motion.div>
       </AnimatePresence>
@@ -166,6 +165,7 @@ export default function Home() {
   const [enterDir, setEnterDir] = useState(0);
   const seen = useRef(new Set());
   const firstLoad = useRef(true);
+  const flyRegistry = useRef(null);
 
   const fetchBatch = useCallback(async (cat, { reset = false, silent = false } = {}) => {
     try {
@@ -223,8 +223,12 @@ export default function Home() {
   };
 
   const advance = useCallback(() => setIdx((i) => i + 1), []);
-  const doSkip = () => FlyBridge.current?.('skip');
-  const doAnswer = () => FlyBridge.current?.('yes');
+  const doSkip = () => {
+    if (flyRegistry.current?.id === current?.id) flyRegistry.current.fly('skip');
+  };
+  const doAnswer = () => {
+    if (flyRegistry.current?.id === current?.id) flyRegistry.current.fly('yes');
+  };
 
   const goAnswer = () => {
     if (!current) return;
@@ -245,6 +249,33 @@ export default function Home() {
       toast(e.message);
     }
   };
+
+  // Desktop keyboard shortcuts for the card deck: ←/→ mirror the swipe
+  // gestures (skip/answer), ↑ mirrors the save button. Kept in a ref so the
+  // listener is attached once instead of re-subscribing on every render.
+  const keyStateRef = useRef();
+  keyStateRef.current = { status, current, showTutorial, doSkip, doAnswer, save };
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const { status, current, showTutorial, doSkip, doAnswer, save } = keyStateRef.current;
+      if (status !== 'ready' || !current || showTutorial) return;
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        doSkip();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        doAnswer();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        save();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const generateAi = async () => {
     setGenerating(true);
@@ -398,6 +429,7 @@ export default function Home() {
               onSkip={advance}
               onAnswer={goAnswer}
               enterDir={enterDir}
+              flyRegistry={flyRegistry}
             />
 
             <div className="actions">
