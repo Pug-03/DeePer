@@ -118,6 +118,15 @@ a {
 .stagger > .list {
   animation: none;
 }
+/* Same problem for .deck: it's a page-level stagger item, but it always
+   contains a "next" preview card sitting behind at its own fixed resting
+   look (scaled down, dimmed) plus the current card, which already animates
+   itself in via its own spring on mount. Letting the page stagger also
+   fade/rise the whole .deck container flashes that behind card into view
+   as the container fades in, on top of the current card's own entrance. */
+.stagger > .deck {
+  animation: none;
+}
 
 /* ---------- Glass surfaces ---------- */
 .glass {

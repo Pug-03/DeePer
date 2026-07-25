@@ -136,10 +136,22 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
   return (
     <div className="deck" data-tut="deck">
       {next && (
-        <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
-          <p className="q-text" style={{ opacity: 0.5 }}>
-            {next.text}
-          </p>
+        // Outer wrapper fades in once on mount (opacity multiplies with the
+        // inner style-bound one below), so the peek card materializes softly
+        // instead of popping straight to its dim resting look the instant
+        // the deck first renders. Since this only plays on mount (not on
+        // every re-render), swipe-driven updates below aren't affected.
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.45, ease: FLY_EASE }}
+          style={{ position: 'absolute', inset: 0 }}
+        >
+          <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
+            <p className="q-text" style={{ opacity: 0.5 }}>
+              {next.text}
+            </p>
+          </motion.div>
         </motion.div>
       )}
       <AnimatePresence initial={false}>
