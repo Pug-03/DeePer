@@ -27,6 +27,7 @@ const CARD_EXIT_TRANSITION = { ...CARD_SPRING, opacity: { duration: 0.32, ease: 
 // (see backScale/backY/backOpacity below) so promoting it to the top card
 // reads as a continuous rise instead of an instant pop into place.
 const REST_BEHIND = { scale: 0.94, y: 14, opacity: 0.6 };
+const CARD_REST = { x: '0%', scale: 1, y: 0, opacity: 1 };
 const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 
 function TopCard({ q, onSkip, onAnswer, onDragProgress, flyRegistry }) {
@@ -41,12 +42,23 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress, flyRegistry }) {
   // can rise/scale in sync. A fresh TopCard always starts at rest, so reset
   // the mirrored value on mount rather than trusting the outgoing card's
   // in-flight fly-out animation to have finished settling it.
+  const flying = useRef(false);
   useLayoutEffect(() => {
+    flying.current = false;
     onDragProgress?.(0);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useMotionValueEvent(x, 'change', (v) => onDragProgress?.(v));
+  useMotionValueEvent(x, 'change', (v) => {
+    if (!flying.current) onDragProgress?.(v);
+  });
 
   const fly = (dir) => {
+    // The fly-out overshoots well past the swipe threshold, so once a swipe
+    // is confirmed, snap the card behind straight to its fully-risen look
+    // and stop following x — otherwise it sits fully grown while this card
+    // finishes flying off, then (once this card unmounts) the promoted card
+    // would restart its rise from scratch, reading as a double-bounce.
+    flying.current = true;
+    onDragProgress?.(SWIPE_THRESHOLD);
     if (dir === 'skip') {
       animate(y, 600, { duration: 0.36, ease: FLY_EASE });
       animate(x, -80, { duration: 0.36, ease: FLY_EASE });
@@ -114,6 +126,13 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
   const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
   const backOpacity = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
 
+  // If the outgoing card actually flew away (a real swipe, as opposed to the
+  // save button or the very first card), the card behind has already risen
+  // to CARD_REST by now via the mirrored progress above — mount it there
+  // directly instead of replaying the rise, so the swap reads as one
+  // continuous motion rather than a shrink back to REST_BEHIND and regrow.
+  const seamless = !enterDir && Math.abs(progress.get()) >= SWIPE_THRESHOLD;
+
   return (
     <div className="deck" data-tut="deck">
       {next && (
@@ -126,10 +145,10 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
       <AnimatePresence initial={false}>
         <motion.div
           key={current.id}
-          initial={enterDir ? { x: `${-enterDir * 100}%` } : REST_BEHIND}
-          animate={{ x: '0%', scale: 1, y: 0, opacity: 1 }}
+          initial={enterDir ? { x: `${-enterDir * 100}%` } : seamless ? CARD_REST : REST_BEHIND}
+          animate={CARD_REST}
           exit={enterDir ? { x: `${enterDir * 100}%`, opacity: 0 } : undefined}
-          transition={enterDir ? CARD_EXIT_TRANSITION : RISE_SPRING}
+          transition={enterDir ? CARD_EXIT_TRANSITION : seamless ? { duration: 0 } : RISE_SPRING}
           style={{ position: 'absolute', inset: 0 }}
         >
           <TopCard
