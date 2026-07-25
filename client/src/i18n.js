@@ -267,7 +267,7 @@ export const STRINGS = {
     'profile.deleteAccount': 'ลบบัญชี',
     'profile.deleteTitle': 'ลบบัญชีถาวร',
     'profile.deleteMsg': 'การลบบัญชีจะลบข้อมูลทั้งหมดของคุณอย่างถาวรและไม่สามารถกู้คืนได้',
-    'profile.deleteConfirm': 'ยืนยันลบบัญชี',
+    'profile.deleteConfirm': 'ลบบัญชี',
     'profile.deleting': 'กำลังลบ...',
 
     // วันที่
@@ -524,7 +524,7 @@ export const STRINGS = {
     'profile.deleteAccount': 'Delete account',
     'profile.deleteTitle': 'Delete account permanently',
     'profile.deleteMsg': 'Deleting your account permanently erases all your data. This can’t be undone.',
-    'profile.deleteConfirm': 'Confirm deletion',
+    'profile.deleteConfirm': 'Delete account',
     'profile.deleting': 'Deleting...',
 
     'date.today': 'Today',

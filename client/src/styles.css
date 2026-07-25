@@ -858,6 +858,9 @@ a {
 }
 .modal-actions .btn {
   flex: 1;
+  padding: 0 12px;
+  font-size: 15px;
+  white-space: nowrap;
 }
 .btn--danger {
   background: linear-gradient(120deg, #ef4444, #b91c1c);
