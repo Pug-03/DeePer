@@ -542,6 +542,28 @@ a {
   opacity: 0;
   pointer-events: none;
 }
+.tap-burst {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #eab308;
+  filter: drop-shadow(0 0 20px rgba(234, 179, 8, 0.65));
+  pointer-events: none;
+}
+.genie-fly {
+  position: fixed;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  border-radius: 26px;
+  background: var(--glass-strong);
+  border: 1px solid rgba(234, 179, 8, 0.5);
+  color: #eab308;
+  box-shadow: 0 12px 30px -8px rgba(234, 179, 8, 0.55);
+  pointer-events: none;
+  transform-origin: center center;
+}
 
 /* ---------- Action buttons under deck ---------- */
 .actions {

@@ -30,13 +30,38 @@ const REST_BEHIND = { scale: 0.94, y: 14, opacity: 0.6 };
 const CARD_REST = { x: '0%', scale: 1, y: 0, opacity: 1 };
 const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 
-function TopCard({ q, onSkip, onAnswer, onDragProgress, flyRegistry }) {
+// A second tap within this window counts as a double-tap; slow enough for a
+// deliberate double-tap, tight enough that two separate taps don't merge.
+const DOUBLE_TAP_MS = 300;
+
+function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry }) {
   const { t } = useI18n();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-220, 220], [-14, 14]);
   const noOp = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
   const yesOp = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
+
+  // Double-tap-to-save, mirroring the "double-tap to like" gesture from
+  // photo/video feeds — here it saves the question instead. onTap (rather
+  // than onClick) is framer-motion's tap gesture, so it only fires for a
+  // real tap and not at the end of a drag/swipe.
+  const [burst, setBurst] = useState(false);
+  const lastTap = useRef(0);
+  const burstTimer = useRef(null);
+  useEffect(() => () => clearTimeout(burstTimer.current), []);
+  const handleTap = () => {
+    const now = Date.now();
+    if (now - lastTap.current < DOUBLE_TAP_MS) {
+      lastTap.current = 0;
+      onSave?.();
+      setBurst(true);
+      clearTimeout(burstTimer.current);
+      burstTimer.current = setTimeout(() => setBurst(false), 450);
+    } else {
+      lastTap.current = now;
+    }
+  };
 
   // Mirror this card's live drag offset up to the deck so the card behind it
   // can rise/scale in sync. A fresh TopCard always starts at rest, so reset
@@ -103,6 +128,7 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress, flyRegistry }) {
       dragElastic={0.7}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       onDragEnd={onDragEnd}
+      onTap={handleTap}
       whileTap={{ cursor: 'grabbing' }}
     >
       <span className="q-source">{srcLabel}</span>
@@ -116,11 +142,24 @@ function TopCard({ q, onSkip, onAnswer, onDragProgress, flyRegistry }) {
         <IcCheck size={34} sw={3} />
       </motion.span>
       <p className="q-text">{q.text}</p>
+      <AnimatePresence>
+        {burst && (
+          <motion.div
+            className="tap-burst"
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 1.25, opacity: 0 }}
+            transition={{ duration: 0.28, ease: FLY_EASE }}
+          >
+            <IcBookmark size={72} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
+function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegistry }) {
   const progress = useMotionValue(0);
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
   const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
@@ -170,6 +209,7 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
             q={current}
             onSkip={onSkip}
             onAnswer={onAnswer}
+            onSave={onSave}
             onDragProgress={(v) => progress.set(v)}
             flyRegistry={flyRegistry}
           />
@@ -197,6 +237,7 @@ export default function Home() {
     () => localStorage.getItem('dt_tutorial_pending') === '1',
   );
   const [enterDir, setEnterDir] = useState(0);
+  const [genie, setGenie] = useState(null);
   const seen = useRef(new Set());
   const firstLoad = useRef(true);
   const flyRegistry = useRef(null);
@@ -269,15 +310,21 @@ export default function Home() {
     nav('/app/answer', { state: { question: { text: current.text, category } } });
   };
 
+  // Flies a card-shaped ghost from the deck down into the bottom nav's
+  // Saved icon, genie-minimize style, instead of a toast — the nav icon
+  // itself is the confirmation.
+  const launchGenie = () => {
+    const fromEl = document.querySelector('[data-tut="deck"]');
+    const toEl = document.querySelector('[data-tut="navSaved"]');
+    if (!fromEl || !toEl) return;
+    setGenie({ id: Date.now(), from: fromEl.getBoundingClientRect(), to: toEl.getBoundingClientRect() });
+  };
+
   const save = async () => {
     if (!current) return;
     try {
       await api.post('/saved', { question_text: current.text, category });
-      toast(
-        <>
-          <IcBookmark size={16} /> {t('home.saved')}
-        </>,
-      );
+      launchGenie();
       advance();
     } catch (e) {
       toast(e.message);
@@ -350,6 +397,14 @@ export default function Home() {
     } catch (e2) {
       toast(e2.message);
     }
+  };
+
+  // Card center → nav icon center, in viewport px, for the genie-fly overlay.
+  const genieMove = genie && {
+    dx: genie.to.left + genie.to.width / 2 - (genie.from.left + genie.from.width / 2),
+    dy: genie.to.top + genie.to.height / 2 - (genie.from.top + genie.from.height / 2),
+    sx: genie.to.width / genie.from.width,
+    sy: genie.to.height / genie.from.height,
   };
 
   return (
@@ -462,6 +517,7 @@ export default function Home() {
               next={deck[idx + 1]}
               onSkip={advance}
               onAnswer={goAnswer}
+              onSave={save}
               enterDir={enterDir}
               flyRegistry={flyRegistry}
             />
@@ -504,6 +560,33 @@ export default function Home() {
           }}
         />
       )}
+
+      <AnimatePresence>
+        {genie && (
+          <motion.div
+            key={genie.id}
+            className="genie-fly"
+            style={{
+              left: genie.from.left,
+              top: genie.from.top,
+              width: genie.from.width,
+              height: genie.from.height,
+            }}
+            initial={{ x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1 }}
+            animate={{
+              x: [0, genieMove.dx * 0.3, genieMove.dx],
+              y: [0, genieMove.dy * 0.55, genieMove.dy],
+              scaleX: [1, 0.5, genieMove.sx],
+              scaleY: [1, 1.3, genieMove.sy],
+              opacity: [1, 1, 0],
+            }}
+            transition={{ duration: 0.55, times: [0, 0.55, 1], ease: [0.6, 0, 0.4, 1] }}
+            onAnimationComplete={() => setGenie(null)}
+          >
+            <IcBookmark size={30} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

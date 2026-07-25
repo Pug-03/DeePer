@@ -213,7 +213,6 @@ export const STRINGS = {
     'home.aAnswer': 'ตอบเลย',
     'home.srcAi': 'AI',
     'home.srcUser': 'ของเรา',
-    'home.saved': 'บันทึกคำถามแล้ว',
     'home.aiDone': 'สร้างคำถามใหม่ด้วย AI แล้ว',
     'home.added': 'เพิ่มคำถามของคุณแล้ว',
 
@@ -474,7 +473,6 @@ export const STRINGS = {
     'home.aAnswer': 'Answer',
     'home.srcAi': 'AI',
     'home.srcUser': 'Yours',
-    'home.saved': 'Question saved',
     'home.aiDone': 'New questions created with AI',
     'home.added': 'Your question was added',
 
