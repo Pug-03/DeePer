@@ -59,6 +59,7 @@ function ProfileFields({
           onChange={(e) => setNickname(e.target.value)}
           placeholder={t('signup.nicknamePh')}
           maxLength={40}
+          required
         />
       </div>
       <div className="field">
@@ -72,12 +73,20 @@ function ProfileFields({
           placeholder={t('signup.agePh')}
           min={1}
           max={120}
+          required
         />
       </div>
       <div className="field">
         <label>{t('signup.gender')}</label>
-        <select className="select" value={gender} onChange={(e) => setGender(e.target.value)}>
-          <option value="">{t('signup.genderPh')}</option>
+        <select
+          className="select"
+          value={gender}
+          onChange={(e) => setGender(e.target.value)}
+          required
+        >
+          <option value="" disabled>
+            {t('signup.genderPh')}
+          </option>
           {GENDER_VALUES.map((g) => (
             <option key={g} value={g}>
               {t(`gender.${g}`)}
@@ -189,6 +198,8 @@ export default function Signup() {
     e.preventDefault();
     setErr('');
     if (!nickname.trim()) return setErr(t('signup.needNickname'));
+    if (!age) return setErr(t('signup.needAge'));
+    if (!gender) return setErr(t('signup.needGender'));
     if (!pwValid) return setErr(t('signup.pwNotValid'));
     setBusy(true);
     try {
@@ -231,6 +242,8 @@ export default function Signup() {
     e.preventDefault();
     setErr('');
     if (!nickname.trim()) return setErr(t('signup.needNickname'));
+    if (!age) return setErr(t('signup.needAge'));
+    if (!gender) return setErr(t('signup.needGender'));
     setBusy(true);
     try {
       const d = await api.post(

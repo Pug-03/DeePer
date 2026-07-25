@@ -33,6 +33,8 @@ export const STRINGS = {
     'err.OTP_INVALID': 'รหัส OTP ไม่ถูกต้อง',
     'err.OTP_EXPIRED': 'รหัส OTP หมดอายุแล้ว',
     'err.NICKNAME_REQUIRED': 'กรุณากรอกชื่อเล่น',
+    'err.AGE_REQUIRED': 'กรุณากรอกอายุ',
+    'err.GENDER_REQUIRED': 'กรุณาเลือกเพศ',
     'err.PASSWORD_WEAK': 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
     'err.OTP_NOT_VERIFIED': 'ต้องยืนยัน OTP ก่อนสมัคร',
     'err.EMAIL_PASSWORD_REQUIRED': 'กรุณากรอกอีเมลและรหัสผ่าน',
@@ -123,6 +125,8 @@ export const STRINGS = {
     'signup.submitBusy': 'กำลังสมัคร...',
     'signup.start': 'เริ่มใช้งาน',
     'signup.needNickname': 'กรุณากรอกชื่อเล่น',
+    'signup.needAge': 'กรุณากรอกอายุ',
+    'signup.needGender': 'กรุณาเลือกเพศ',
     'signup.pwNotValid': 'รหัสผ่านยังไม่ตรงตามเงื่อนไข',
     'signup.devOtp': 'โหมดพัฒนา: รหัส OTP คือ {code}',
 
@@ -294,6 +298,8 @@ export const STRINGS = {
     'err.OTP_INVALID': 'Invalid OTP code',
     'err.OTP_EXPIRED': 'This OTP code has expired',
     'err.NICKNAME_REQUIRED': 'Please enter a nickname',
+    'err.AGE_REQUIRED': 'Please enter your age',
+    'err.GENDER_REQUIRED': 'Please select your gender',
     'err.PASSWORD_WEAK':
       'Password must be at least 8 characters, with an uppercase letter, lowercase letter, number, and special character',
     'err.OTP_NOT_VERIFIED': 'Please verify the OTP before signing up',
@@ -381,6 +387,8 @@ export const STRINGS = {
     'signup.submitBusy': 'Signing up...',
     'signup.start': 'Get started',
     'signup.needNickname': 'Please enter a nickname',
+    'signup.needAge': 'Please enter your age',
+    'signup.needGender': 'Please select your gender',
     'signup.pwNotValid': 'Password doesn’t meet the requirements yet',
     'signup.devOtp': 'Dev mode: your OTP is {code}',
 

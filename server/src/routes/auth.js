@@ -110,6 +110,10 @@ router.post('/register', (req, res) => {
     return res
       .status(400)
       .json({ error: 'กรุณากรอกชื่อเล่น', error_code: 'NICKNAME_REQUIRED' });
+  if (age == null || age === '' || Number.isNaN(Number(age)))
+    return res.status(400).json({ error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' });
+  if (!gender)
+    return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
   if (!validatePassword(password))
     return res.status(400).json({
       error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
@@ -317,6 +321,10 @@ router.post('/google', async (req, res) => {
         suggested_nickname: payload.given_name || payload.name || '',
       });
     }
+    if (age == null || age === '' || Number.isNaN(Number(age)))
+      return res.status(400).json({ error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' });
+    if (!gender)
+      return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
     const info = db
       .prepare(
         `INSERT INTO users (email, google_sub, nickname, age, gender)
