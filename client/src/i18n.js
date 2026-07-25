@@ -24,6 +24,7 @@ export const STRINGS = {
     'confirm.delete': 'ลบ',
     'confirm.savedMsg': 'ต้องการลบคำถามที่บันทึกไว้นี้จริงหรือไม่?',
     'confirm.historyMsg': 'ต้องการลบประวัติการตอบนี้จริงหรือไม่? การลบไม่สามารถกู้คืนได้',
+    'confirm.avatarMsg': 'ต้องการลบรูปโปรไฟล์นี้จริงหรือไม่?',
 
     // ข้อความผิดพลาดจากเซิร์ฟเวอร์ (ให้ตรงกับ error_code ที่ server ส่งมา — ดู api.js)
     'err.INVALID_EMAIL': 'อีเมลไม่ถูกต้อง',
@@ -289,6 +290,7 @@ export const STRINGS = {
     'confirm.delete': 'Delete',
     'confirm.savedMsg': 'Delete this saved question?',
     'confirm.historyMsg': 'Delete this answer from your history? This can’t be undone.',
+    'confirm.avatarMsg': 'Remove your profile photo?',
 
     // Server error messages (must match the error_code the server sends — see api.js)
     'err.INVALID_EMAIL': 'Invalid email address',

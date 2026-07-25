@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { useToast } from '../components/ui.jsx';
+import { useToast, useConfirm } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import { IcCamera, IcCheck, IcTrash } from '../components/icons.jsx';
@@ -15,6 +15,7 @@ const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa'
 export default function Profile() {
   const nav = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const { user, setUser, logout } = useAuth();
   const { t } = useI18n();
 
@@ -83,6 +84,8 @@ export default function Profile() {
   };
 
   const removeAvatar = async () => {
+    const ok = await confirm({ message: t('confirm.avatarMsg') });
+    if (!ok) return;
     setAvatarBusy(true);
     try {
       const d = await api.del('/auth/me/avatar');
