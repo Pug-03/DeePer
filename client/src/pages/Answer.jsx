@@ -33,7 +33,7 @@ export default function Answer() {
 
   if (!q) {
     return (
-      <div className="page">
+      <div className="page stagger">
         <p className="sub">{t('answer.notFound')}</p>
         <button className="btn btn--ghost" onClick={() => nav('/app/home')}>
           {t('answer.backHome')}
@@ -75,7 +75,7 @@ export default function Answer() {
   };
 
   return (
-    <div className="page">
+    <div className="page stagger">
       <button className="link" style={{ alignSelf: 'flex-start', marginBottom: 14 }} onClick={() => nav(-1)}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={18} /> {t('common.back')}

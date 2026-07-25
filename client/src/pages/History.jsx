@@ -48,7 +48,7 @@ export default function History() {
   };
 
   return (
-    <div className="page page--tab">
+    <div className="page page--tab stagger">
       <div className="header">
         <h1 className="h1">{t('history.title')}</h1>
         <p className="sub">{t('history.sub')}</p>
@@ -74,13 +74,13 @@ export default function History() {
       )}
 
       {status === 'ready' && (
-        <div className="list">
+        <div className="list stagger">
           {items.map((it) => {
             const isOpen = open === it.id;
             return (
               <div
                 key={it.id}
-                className="card-item glass fade-up"
+                className="card-item glass"
                 onClick={() => setOpen(isOpen ? null : it.id)}
               >
                 <p className="ci-q">{it.question_text}</p>

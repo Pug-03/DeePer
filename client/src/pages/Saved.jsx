@@ -51,7 +51,7 @@ export default function Saved() {
   };
 
   return (
-    <div className="page page--tab">
+    <div className="page page--tab stagger">
       <div className="header">
         <h1 className="h1">{t('saved.title')}</h1>
         <p className="sub">{t('saved.sub')}</p>
@@ -77,9 +77,9 @@ export default function Saved() {
       )}
 
       {status === 'ready' && (
-        <div className="list">
+        <div className="list stagger">
           {items.map((it) => (
-            <div key={it.id} className="card-item glass fade-up" onClick={() => answer(it)}>
+            <div key={it.id} className="card-item glass" onClick={() => answer(it)}>
               <p className="ci-q">{it.question_text}</p>
               <div className="ci-meta">
                 <span className="tag">{catLabel(it.category)}</span>

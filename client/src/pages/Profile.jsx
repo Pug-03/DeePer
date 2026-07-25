@@ -123,7 +123,7 @@ export default function Profile() {
   const initial = (user?.nickname || '?').trim().charAt(0).toUpperCase();
 
   return (
-    <div className="page page--tab">
+    <div className="page page--tab stagger">
       <div className="center" style={{ marginBottom: 22 }}>
         <div className="avatar-edit" style={{ margin: '0 auto 12px' }}>
           <div

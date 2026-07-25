@@ -110,6 +110,14 @@ a {
 .stagger > *:nth-child(8) { animation-delay: 0.89s; }
 .stagger > *:nth-child(9) { animation-delay: 1.01s; }
 .stagger > *:nth-child(n + 10) { animation-delay: 1.13s; }
+/* .list is itself a `.stagger` container for its own cards (see below), so
+   when it's also a direct child of an outer `.stagger` (page header + list),
+   skip animating it as a block — otherwise the panel would rise in as one
+   step while its cards independently cascade inside it at the same time,
+   reading as two overlapping motions instead of one continuous cascade. */
+.stagger > .list {
+  animation: none;
+}
 
 /* ---------- Glass surfaces ---------- */
 .glass {
