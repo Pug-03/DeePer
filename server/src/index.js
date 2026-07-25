@@ -16,6 +16,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '256kb' }));
 
+const uploadsDir = join(__dirname, '..', 'uploads');
+fs.mkdirSync(join(uploadsDir, 'avatars'), { recursive: true });
+app.use('/uploads', express.static(uploadsDir));
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);

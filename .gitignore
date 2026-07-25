@@ -5,4 +5,5 @@ dist/
 server/deeptalk.db
 server/deeptalk.db-wal
 server/deeptalk.db-shm
+server/uploads/
 .DS_Store

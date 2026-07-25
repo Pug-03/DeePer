@@ -57,6 +57,9 @@ export const STRINGS = {
     'err.AI_RESPONSE_INVALID': 'AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง',
     'err.AI_RESPONSE_UNREADABLE': 'ไม่สามารถอ่านคำตอบจาก AI ได้',
     'err.QUESTION_TEXT_REQUIRED': 'ไม่มีคำถามให้บันทึก',
+    'err.AVATAR_TOO_LARGE': 'ไฟล์รูปใหญ่เกินไป (สูงสุด 5MB)',
+    'err.AVATAR_TYPE_INVALID': 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP',
+    'err.AVATAR_UPLOAD_FAILED': 'อัปโหลดรูปไม่สำเร็จ',
 
     // แบรนด์ / คำโปรย
     'welcome.tagline1': 'การ์ดคำถามชวนคุยลึก ๆ',
@@ -244,6 +247,8 @@ export const STRINGS = {
     'history.removed': 'ลบออกจากประวัติแล้ว',
 
     // โปรไฟล์
+    'profile.changePhoto': 'เปลี่ยนรูปโปรไฟล์',
+    'profile.removePhoto': 'ลบรูปโปรไฟล์',
     'profile.myInfo': 'ข้อมูลของฉัน',
     'profile.partnerSection': 'อีกฝ่ายของฉัน',
     'profile.partnerHint': 'ตั้งค่าเริ่มต้นสำหรับหน้าตอบคำถาม',
@@ -313,6 +318,9 @@ export const STRINGS = {
     'err.AI_RESPONSE_INVALID': 'AI replied in an unexpected format',
     'err.AI_RESPONSE_UNREADABLE': 'Couldn’t read the AI’s response',
     'err.QUESTION_TEXT_REQUIRED': 'No question text provided',
+    'err.AVATAR_TOO_LARGE': 'The image is too large (5MB max)',
+    'err.AVATAR_TYPE_INVALID': 'Only JPG, PNG, or WEBP images are supported',
+    'err.AVATAR_UPLOAD_FAILED': 'Failed to upload the image',
 
     'welcome.tagline1': 'Deep conversation cards',
     'welcome.tagline2': 'for couples, friends, and family',
@@ -490,6 +498,8 @@ export const STRINGS = {
     'history.noAnswers': 'No saved answers',
     'history.removed': 'Removed from history',
 
+    'profile.changePhoto': 'Change profile photo',
+    'profile.removePhoto': 'Remove photo',
     'profile.myInfo': 'My information',
     'profile.partnerSection': 'My partner',
     'profile.partnerHint': 'Default settings for the answer page',

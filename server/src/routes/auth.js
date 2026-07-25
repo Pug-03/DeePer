@@ -1,5 +1,9 @@
 import { Router } from 'express';
 import { OAuth2Client } from 'google-auth-library';
+import multer from 'multer';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, basename } from 'node:path';
 import { db } from '../db.js';
 import { sendOtpEmail, mailerReady } from '../mailer.js';
 import {
@@ -15,6 +19,20 @@ const router = Router();
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const AVATAR_DIR = join(__dirname, '..', '..', 'uploads', 'avatars');
+const avatarPath = (avatarUrl) => join(AVATAR_DIR, basename(avatarUrl));
+
+const AVATAR_MIME_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: AVATAR_DIR,
+    filename: (req, file, cb) => cb(null, `${req.user.id}-${Date.now()}${AVATAR_MIME_EXT[file.mimetype]}`),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, !!AVATAR_MIME_EXT[file.mimetype]),
+});
 
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits
@@ -336,6 +354,46 @@ router.patch('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(updated) });
 });
 
+// --- Upload profile picture ---
+router.post('/me/avatar', requireAuth, (req, res) => {
+  avatarUpload.single('avatar')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE')
+        return res
+          .status(400)
+          .json({ error: 'ไฟล์รูปใหญ่เกินไป (สูงสุด 5MB)', error_code: 'AVATAR_TOO_LARGE' });
+      return res
+        .status(400)
+        .json({ error: 'อัปโหลดรูปไม่สำเร็จ', error_code: 'AVATAR_UPLOAD_FAILED' });
+    }
+    if (!req.file)
+      return res.status(400).json({
+        error: 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP',
+        error_code: 'AVATAR_TYPE_INVALID',
+      });
+
+    const u = req.user;
+    const oldAvatarUrl = u.avatar_url;
+    const avatar_url = `/uploads/avatars/${req.file.filename}`;
+    db.prepare('UPDATE users SET avatar_url = ? WHERE id = ?').run(avatar_url, u.id);
+    if (oldAvatarUrl) fs.unlink(avatarPath(oldAvatarUrl), () => {});
+
+    const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    res.json({ user: publicUser(updated) });
+  });
+});
+
+// --- Remove profile picture ---
+router.delete('/me/avatar', requireAuth, (req, res) => {
+  const u = req.user;
+  if (u.avatar_url) {
+    fs.unlink(avatarPath(u.avatar_url), () => {});
+    db.prepare('UPDATE users SET avatar_url = NULL WHERE id = ?').run(u.id);
+  }
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  res.json({ user: publicUser(updated) });
+});
+
 // --- Delete account ---
 router.delete('/me', requireAuth, (req, res) => {
   const u = req.user;
@@ -352,6 +410,7 @@ router.delete('/me', requireAuth, (req, res) => {
         .json({ error: 'รหัสผ่านไม่ถูกต้อง', error_code: 'PASSWORD_INCORRECT' });
   }
 
+  if (u.avatar_url) fs.unlink(avatarPath(u.avatar_url), () => {});
   db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
   res.json({ ok: true });
 });

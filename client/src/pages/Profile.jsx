@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
@@ -6,7 +6,10 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import PasswordField from '../components/PasswordField.jsx';
-import { IcCheck, IcTrash } from '../components/icons.jsx';
+import { IcCamera, IcCheck, IcTrash } from '../components/icons.jsx';
+
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -23,6 +26,8 @@ export default function Profile() {
   const [partnerName, setPartnerName] = useState(user?.partner_name || t('answer.partnerDefault'));
   const [partnerColor, setPartnerColor] = useState(user?.partner_color || '#f43f5e');
   const [busy, setBusy] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [showDelete, setShowDelete] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
@@ -49,6 +54,45 @@ export default function Profile() {
       toast(e.message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const pickAvatar = () => fileInputRef.current?.click();
+
+  const onAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!AVATAR_TYPES.includes(file.type)) {
+      toast(t('err.AVATAR_TYPE_INVALID'));
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast(t('err.AVATAR_TOO_LARGE'));
+      return;
+    }
+    setAvatarBusy(true);
+    try {
+      const form = new FormData();
+      form.append('avatar', file);
+      const d = await api.upload('/auth/me/avatar', form);
+      setUser(d.user);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setAvatarBusy(false);
+    }
+  };
+
+  const removeAvatar = async () => {
+    setAvatarBusy(true);
+    try {
+      const d = await api.del('/auth/me/avatar');
+      setUser(d.user);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setAvatarBusy(false);
     }
   };
 
@@ -83,9 +127,39 @@ export default function Profile() {
   return (
     <div className="page page--tab">
       <div className="center" style={{ marginBottom: 22 }}>
-        <div className="avatar" style={{ margin: '0 auto 12px' }}>
-          {initial}
+        <div className="avatar-edit" style={{ margin: '0 auto 12px' }}>
+          <div
+            className="avatar"
+            style={
+              user?.avatar_url
+                ? { backgroundImage: `url(${user.avatar_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : undefined
+            }
+          >
+            {!user?.avatar_url && initial}
+          </div>
+          <button
+            type="button"
+            className="avatar-edit__btn"
+            onClick={pickAvatar}
+            disabled={avatarBusy}
+            aria-label={t('profile.changePhoto')}
+          >
+            <IcCamera size={16} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            onChange={onAvatarChange}
+          />
         </div>
+        {user?.avatar_url && (
+          <button className="link-btn" onClick={removeAvatar} disabled={avatarBusy}>
+            {t('profile.removePhoto')}
+          </button>
+        )}
         <h1 className="h2">{user?.nickname}</h1>
         <p className="faint">
           {user?.email || t('common.googleAccount')} {user?.via_google ? '· Google' : ''}

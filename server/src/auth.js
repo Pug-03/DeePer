@@ -39,6 +39,7 @@ export function publicUser(u) {
     gender: u.gender,
     partner_name: u.partner_name,
     partner_color: u.partner_color,
+    avatar_url: u.avatar_url,
     has_password: !!u.password_hash,
     via_google: !!u.google_sub,
   };

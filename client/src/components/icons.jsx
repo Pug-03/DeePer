@@ -120,6 +120,12 @@ export const IcEyeOff = (p) => (
     <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2" />
   </svg>
 );
+export const IcCamera = (p) => (
+  <svg {...S(p)}>
+    <path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+    <circle cx="12" cy="14" r="3.5" />
+  </svg>
+);
 export const IcGoogle = (p) => (
   <svg width={p.size || 22} height={p.size || 22} viewBox="0 0 24 24">
     <path

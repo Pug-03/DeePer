@@ -76,6 +76,13 @@ if (!otpCols.some((c) => c.name === 'purpose')) {
   db.exec(`ALTER TABLE otp_codes ADD COLUMN purpose TEXT NOT NULL DEFAULT 'register'`);
 }
 
+// Migration: older databases don't have users.avatar_url yet (added for
+// the profile picture feature) — add it so existing installs keep working.
+const userCols = db.prepare(`PRAGMA table_info(users)`).all();
+if (!userCols.some((c) => c.name === 'avatar_url')) {
+  db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT`);
+}
+
 // Seed the curated question bank once.
 const count = db.prepare(`SELECT COUNT(*) AS c FROM questions WHERE source = 'bank'`).get();
 if (count.c === 0) {

@@ -44,9 +44,36 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   return data;
 }
 
+async function upload(path, formData) {
+  const headers = {};
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let res;
+  try {
+    res = await fetch(`/api${path}`, { method: 'POST', headers, body: formData });
+  } catch {
+    throw new Error(tt('common.netError'));
+  }
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    /* no body */
+  }
+  if (!res.ok) {
+    const raw = (data && data.error) || tt('common.error');
+    const err = new Error(translateError(currentLang, data && data.error_code, raw));
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
 export const api = {
   get: (p, opts) => request(p, { ...opts, method: 'GET' }),
   post: (p, body, opts) => request(p, { ...opts, method: 'POST', body }),
   patch: (p, body, opts) => request(p, { ...opts, method: 'PATCH', body }),
   del: (p, opts) => request(p, { ...opts, method: 'DELETE' }),
+  upload,
 };
