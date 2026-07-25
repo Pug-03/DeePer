@@ -1,10 +1,42 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, useInView } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash, IcBookmark } from '../components/icons.jsx';
+
+// Same top-to-bottom cascade the page-load stagger uses, but driven by
+// scroll position instead of a mount-time CSS animation: each card pops in
+// (scale + fade) as it enters the viewport, and replays every time it does
+// (once: false) — so scrolling back up to re-reveal a card plays it again,
+// same as scrolling down into a fresh one below the fold.
+function SavedItem({ it, index, onAnswer, onRemove }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { amount: 0.4, once: false });
+  const delay = Math.min(index * 0.04, 0.24);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="card-item glass"
+      onClick={() => onAnswer(it)}
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.7, opacity: 0 }}
+      transition={{ duration: 0.15, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <p className="ci-q">{it.question_text}</p>
+      <div className="ci-meta">
+        <span className="tag">{catLabel(it.category)}</span>
+        <span>{formatDate(it.created_at)}</span>
+        <button className="icon-del" onClick={(e) => onRemove(e, it.id)} aria-label="delete">
+          <IcTrash size={18} />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Saved() {
   const nav = useNavigate();
@@ -77,18 +109,9 @@ export default function Saved() {
       )}
 
       {status === 'ready' && (
-        <div className="list stagger">
-          {items.map((it) => (
-            <div key={it.id} className="card-item glass" onClick={() => answer(it)}>
-              <p className="ci-q">{it.question_text}</p>
-              <div className="ci-meta">
-                <span className="tag">{catLabel(it.category)}</span>
-                <span>{formatDate(it.created_at)}</span>
-                <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="delete">
-                  <IcTrash size={18} />
-                </button>
-              </div>
-            </div>
+        <div className="list">
+          {items.map((it, index) => (
+            <SavedItem key={it.id} it={it} index={index} onAnswer={answer} onRemove={remove} />
           ))}
         </div>
       )}
