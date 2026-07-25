@@ -137,14 +137,17 @@ function DeckStack({ current, next, onSkip, onAnswer, enterDir, flyRegistry }) {
     <div className="deck" data-tut="deck">
       {next && (
         // Outer wrapper fades in once on mount (opacity multiplies with the
-        // inner style-bound one below), so the peek card materializes softly
-        // instead of popping straight to its dim resting look the instant
-        // the deck first renders. Since this only plays on mount (not on
-        // every re-render), swipe-driven updates below aren't affected.
+        // inner style-bound one below). Delayed to start only once the
+        // current card's own rise (RISE_SPRING, settles in ~0.3s) has
+        // essentially finished — fading it in from t=0 still overlapped
+        // visually with that rise the whole time, which read as the same
+        // flash even smoothed out. Starting after avoids any window where
+        // both cards are visible together. Since this only plays on mount
+        // (not on every re-render), swipe-driven updates aren't affected.
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, ease: FLY_EASE }}
+          transition={{ duration: 0.3, delay: 0.32, ease: FLY_EASE }}
           style={{ position: 'absolute', inset: 0 }}
         >
           <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
