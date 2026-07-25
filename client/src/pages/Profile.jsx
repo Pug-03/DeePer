@@ -7,9 +7,7 @@ import { useToast } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import { IcCamera, IcCheck, IcTrash } from '../components/icons.jsx';
-
-const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
-const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];

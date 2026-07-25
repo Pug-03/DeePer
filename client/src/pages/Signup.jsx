@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
@@ -10,14 +10,47 @@ import OtpInput from '../components/OtpInput.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
-import { IcBack, IcGoogle, IcMail } from '../components/icons.jsx';
+import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
+import { IcBack, IcCamera, IcGoogle, IcMail } from '../components/icons.jsx';
 
 const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
 
-function ProfileFields({ nickname, setNickname, age, setAge, gender, setGender }) {
+function ProfileFields({
+  nickname,
+  setNickname,
+  age,
+  setAge,
+  gender,
+  setGender,
+  avatarPreview,
+  onPickAvatar,
+  onAvatarChange,
+  avatarInputRef,
+}) {
   const { t } = useI18n();
   return (
     <>
+      <div className="center" style={{ marginBottom: 18 }}>
+        <button
+          type="button"
+          className="avatar-picker"
+          onClick={onPickAvatar}
+          style={avatarPreview ? { backgroundImage: `url(${avatarPreview})` } : undefined}
+          aria-label={t('signup.addPhoto')}
+        >
+          {!avatarPreview && <IcCamera size={24} />}
+        </button>
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          hidden
+          onChange={onAvatarChange}
+        />
+        <p className="faint" style={{ marginTop: 8, fontSize: 13 }}>
+          {t('signup.addPhoto')}
+        </p>
+      </div>
       <div className="field">
         <label>{t('signup.nickname')}</label>
         <input
@@ -59,7 +92,7 @@ function ProfileFields({ nickname, setNickname, age, setAge, gender, setGender }
 export default function Signup() {
   const nav = useNavigate();
   const loc = useLocation();
-  const { config, applyAuth } = useAuth();
+  const { config, applyAuth, setUser } = useAuth();
   const { t } = useI18n();
   const toast = useToast();
 
@@ -77,6 +110,36 @@ export default function Signup() {
   const [password, setPassword] = useState('');
 
   const [gCredential, setGCredential] = useState(null);
+
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const avatarInputRef = useRef(null);
+
+  const onPickAvatar = () => avatarInputRef.current?.click();
+
+  const onAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!AVATAR_TYPES.includes(file.type)) return toast(t('err.AVATAR_TYPE_INVALID'));
+    if (file.size > AVATAR_MAX_BYTES) return toast(t('err.AVATAR_TOO_LARGE'));
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  // Best-effort: the account already exists by this point, so a failed
+  // avatar upload shouldn't block finishing signup.
+  const uploadAvatarIfAny = async () => {
+    if (!avatarFile) return;
+    try {
+      const form = new FormData();
+      form.append('avatar', avatarFile);
+      const d = await api.upload('/auth/me/avatar', form);
+      setUser(d.user);
+    } catch {
+      /* ignore — user can set a photo later from their profile */
+    }
+  };
 
   useEffect(() => {
     const g = loc.state?.google;
@@ -135,6 +198,7 @@ export default function Signup() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
+      await uploadAvatarIfAny();
       nav('/app/welcome', { replace: true, state: { isNew: true } });
     } catch (e2) {
       setErr(e2.message);
@@ -175,6 +239,7 @@ export default function Signup() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
+      await uploadAvatarIfAny();
       nav('/app/welcome', { replace: true, state: { isNew: true } });
     } catch (e2) {
       setErr(e2.message);
@@ -324,6 +389,10 @@ export default function Signup() {
             setAge={setAge}
             gender={gender}
             setGender={setGender}
+            avatarPreview={avatarPreview}
+            onPickAvatar={onPickAvatar}
+            onAvatarChange={onAvatarChange}
+            avatarInputRef={avatarInputRef}
           />
           <PasswordField
             label={t('signup.setPassword')}
@@ -353,6 +422,10 @@ export default function Signup() {
             setAge={setAge}
             gender={gender}
             setGender={setGender}
+            avatarPreview={avatarPreview}
+            onPickAvatar={onPickAvatar}
+            onAvatarChange={onAvatarChange}
+            avatarInputRef={avatarInputRef}
           />
           <button className="btn btn--primary" type="submit" disabled={busy}>
             {busy ? t('signup.submitBusy') : t('signup.start')}

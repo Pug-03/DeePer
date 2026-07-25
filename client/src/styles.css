@@ -1024,6 +1024,19 @@ a {
   background: linear-gradient(135deg, var(--red), var(--red-deep));
   box-shadow: var(--glow-red);
 }
+.avatar-picker {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--border-red);
+  background-color: var(--glass);
+  background-size: cover;
+  background-position: center;
+  color: var(--text-dim);
+  cursor: pointer;
+}
 .avatar-edit {
   position: relative;
   width: 76px;
