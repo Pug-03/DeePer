@@ -13,6 +13,7 @@ import Answer from './pages/Answer.jsx';
 import Saved from './pages/Saved.jsx';
 import History from './pages/History.jsx';
 import Profile from './pages/Profile.jsx';
+import AccountSettings from './pages/AccountSettings.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -57,6 +58,7 @@ export default function App() {
             </Route>
 
             <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
+            <Route path="/app/profile/settings" element={<Protected><AccountSettings /></Protected>} />
             <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

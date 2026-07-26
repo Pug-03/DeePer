@@ -5,8 +5,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
-import PasswordField from '../components/PasswordField.jsx';
-import { IcCamera, IcCheck, IcTrash } from '../components/icons.jsx';
+import { IcCamera, IcCheck, IcSettings } from '../components/icons.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
@@ -16,7 +15,7 @@ export default function Profile() {
   const nav = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
-  const { user, setUser, logout } = useAuth();
+  const { user, setUser } = useAuth();
   const { t } = useI18n();
 
   const [nickname, setNickname] = useState(user?.nickname || '');
@@ -27,11 +26,6 @@ export default function Profile() {
   const [busy, setBusy] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileInputRef = useRef(null);
-
-  const [showDelete, setShowDelete] = useState(false);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [deleteErr, setDeleteErr] = useState('');
-  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const save = async () => {
     setBusy(true);
@@ -94,32 +88,6 @@ export default function Profile() {
       toast(err.message);
     } finally {
       setAvatarBusy(false);
-    }
-  };
-
-  const doLogout = () => {
-    logout();
-    nav('/', { replace: true });
-  };
-
-  const openDelete = () => {
-    setDeletePassword('');
-    setDeleteErr('');
-    setShowDelete(true);
-  };
-
-  const confirmDelete = async (e) => {
-    e.preventDefault();
-    setDeleteErr('');
-    setDeleteBusy(true);
-    try {
-      await api.del('/auth/me', { body: { password: deletePassword } });
-      logout();
-      nav('/', { replace: true });
-    } catch (e2) {
-      setDeleteErr(e2.message);
-    } finally {
-      setDeleteBusy(false);
     }
   };
 
@@ -239,72 +207,13 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="stack">
-        <button className="btn btn--primary" onClick={save} disabled={busy}>
-          {busy ? t('profile.saving') : t('profile.save')}
-        </button>
-        <button className="btn btn--ghost" onClick={doLogout}>
-          {t('profile.logout')}
-        </button>
-      </div>
+      <button className="btn btn--primary" onClick={save} disabled={busy} style={{ marginBottom: 14 }}>
+        {busy ? t('profile.saving') : t('profile.save')}
+      </button>
 
-      <div className="glass" style={{ padding: 18, marginTop: 18, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
-        <h2 className="h2" style={{ marginBottom: 6, fontSize: 17 }}>
-          {t('profile.dangerZone')}
-        </h2>
-        <p className="faint" style={{ marginBottom: 14 }}>
-          {t('profile.deleteMsg')}
-        </p>
-        <button className="btn btn--danger" onClick={openDelete}>
-          <IcTrash size={18} /> {t('profile.deleteAccount')}
-        </button>
-      </div>
-
-      {showDelete && (
-        <div className="modal-overlay fade-in" onClick={() => !deleteBusy && setShowDelete(false)}>
-          <form
-            className="modal glass glass--red pop-in"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={confirmDelete}
-          >
-            <div className="modal-icon">
-              <IcTrash size={32} />
-            </div>
-            <h3 className="modal-title">{t('profile.deleteTitle')}</h3>
-            <p className="modal-msg">{t('profile.deleteMsg')}</p>
-
-            {user?.has_password && (
-              <PasswordField
-                label={t('login.password')}
-                autoComplete="current-password"
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                autoFocus
-                required
-              />
-            )}
-            {deleteErr && <div className="err-inline">{deleteErr}</div>}
-
-            <div className="modal-actions" style={{ marginTop: deleteErr ? 14 : 6 }}>
-              <button
-                type="button"
-                className="btn btn--ghost"
-                onClick={() => setShowDelete(false)}
-                disabled={deleteBusy}
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                type="submit"
-                className="btn btn--danger"
-                disabled={deleteBusy || (user?.has_password && !deletePassword)}
-              >
-                {deleteBusy ? t('profile.deleting') : t('profile.deleteConfirm')}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <button className="btn btn--ghost" onClick={() => nav('/app/profile/settings')}>
+        <IcSettings size={18} /> {t('profile.accountSettings')}
+      </button>
     </div>
   );
 }

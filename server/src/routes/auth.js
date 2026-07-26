@@ -362,6 +362,35 @@ router.patch('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(updated) });
 });
 
+// --- Change / set password. Accounts created via Google have no
+// password_hash yet, so current_password isn't required for them — this
+// doubles as the "add a password" flow that also unlocks email login.
+router.post('/me/password', requireAuth, (req, res) => {
+  const u = req.user;
+  const currentPassword = String(req.body.current_password || '');
+  const newPassword = req.body.new_password;
+
+  if (u.password_hash) {
+    if (!currentPassword)
+      return res
+        .status(400)
+        .json({ error: 'กรุณากรอกรหัสผ่าน', error_code: 'PASSWORD_REQUIRED' });
+    if (!verifyPassword(currentPassword, u.password_hash))
+      return res
+        .status(401)
+        .json({ error: 'รหัสผ่านไม่ถูกต้อง', error_code: 'PASSWORD_INCORRECT' });
+  }
+  if (!validatePassword(newPassword))
+    return res.status(400).json({
+      error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
+      error_code: 'PASSWORD_WEAK',
+    });
+
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(newPassword), u.id);
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  res.json({ user: publicUser(updated) });
+});
+
 // --- Upload profile picture ---
 router.post('/me/avatar', requireAuth, (req, res) => {
   avatarUpload.single('avatar')(req, res, (err) => {
