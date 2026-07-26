@@ -5,7 +5,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
-import { IcCamera, IcCheck, IcSettings } from '../components/icons.jsx';
+import { IcCamera, IcCheck, IcSettings, IcTrash } from '../components/icons.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
@@ -95,10 +95,10 @@ export default function Profile() {
 
   return (
     <div className="page page--tab stagger">
-      <div className="center" style={{ marginBottom: 22 }}>
-        <div className="avatar-edit" style={{ margin: '0 auto 12px' }}>
+      <div className="profile-header" style={{ marginBottom: 22 }}>
+        <div className="avatar-edit avatar-edit--lg">
           <div
-            className="avatar"
+            className="avatar avatar--lg"
             style={
               user?.avatar_url
                 ? { backgroundImage: `url(${user.avatar_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
@@ -124,15 +124,19 @@ export default function Profile() {
             onChange={onAvatarChange}
           />
         </div>
-        {user?.avatar_url && (
-          <button className="link-btn" onClick={removeAvatar} disabled={avatarBusy}>
-            {t('profile.removePhoto')}
-          </button>
-        )}
-        <h1 className="h2">{user?.nickname}</h1>
-        <p className="faint">
-          {user?.email || t('common.googleAccount')} {user?.via_google ? '· Google' : ''}
-        </p>
+        <div className="profile-header-info">
+          <h1 className="h2">{user?.nickname}</h1>
+          <p className="faint" style={{ margin: '4px 0 0' }}>
+            {user?.email || t('common.googleAccount')} {user?.via_google ? '· Google' : ''}
+          </p>
+          {user?.avatar_url && (
+            <button className="link-btn" style={{ marginTop: 8 }} onClick={removeAvatar} disabled={avatarBusy}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <IcTrash size={13} /> {t('profile.removePhoto')}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Language */}
@@ -143,6 +147,15 @@ export default function Profile() {
           </h2>
           <LangToggle />
         </div>
+      </div>
+
+      <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
+        <p className="faint" style={{ margin: '0 0 12px' }}>
+          {t('support.teaser')}
+        </p>
+        <button className="btn btn--primary" onClick={() => nav('/app/profile/support')}>
+          {t('support.cta')}
+        </button>
       </div>
 
       <div className="glass" style={{ padding: 18, marginBottom: 14 }}>

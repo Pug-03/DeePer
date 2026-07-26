@@ -126,6 +126,34 @@ export const IcCamera = (p) => (
     <circle cx="12" cy="14" r="3.5" />
   </svg>
 );
+export const IcBank = (p) => (
+  <svg {...S({ ...p, sw: 1.8 })}>
+    <path d="M12 3 2 9h20L12 3Z" />
+    <path d="M4 9v9M9 9v9M15 9v9M20 9v9" />
+    <path d="M2 21h20" />
+  </svg>
+);
+export const IcWallet = (p) => (
+  <svg {...S({ ...p, sw: 1.8 })}>
+    <path d="M20 7H4a1 1 0 0 0-1 1v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z" />
+    <path d="M3 9V6a2 2 0 0 1 2-2h11" />
+    <path d="M17 13h.01" />
+  </svg>
+);
+export const IcQrCode = (p) => (
+  <svg {...S({ ...p, sw: 1.8 })}>
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+    <path d="M14 15h3v3h-3zM19 19h2M14 19h1M19 15h2" />
+  </svg>
+);
+export const IcCopy = (p) => (
+  <svg {...S({ ...p, sw: 1.8 })}>
+    <rect x="9" y="9" width="12" height="12" rx="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+);
 export const IcSettings = (p) => (
   <svg {...S({ ...p, sw: 1.8 })}>
     <circle cx="12" cy="12" r="3" />
