@@ -112,6 +112,7 @@ export default function Signup() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpKey, setOtpKey] = useState(0);
+  const [otpStatus, setOtpStatus] = useState('idle'); // idle | error | success
 
   const [nickname, setNickname] = useState('');
   const [age, setAge] = useState('');
@@ -170,6 +171,7 @@ export default function Signup() {
       setStep('otp');
       setOtp(['', '', '', '']);
       setOtpKey((k) => k + 1);
+      setOtpStatus('idle');
       if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
     } catch (e2) {
       setErr(e2.message);
@@ -186,9 +188,17 @@ export default function Signup() {
     setBusy(true);
     try {
       await api.post('/auth/otp/verify', { email, code }, { auth: false });
-      setStep('profile');
+      setOtpStatus('success');
+      setTimeout(() => setStep('profile'), 550);
     } catch (e2) {
       setErr(e2.message);
+      setOtpStatus('error');
+      setTimeout(() => {
+        setOtp(['', '', '', '']);
+        setOtpKey((k) => k + 1);
+        setOtpStatus('idle');
+        setErr('');
+      }, 700);
     } finally {
       setBusy(false);
     }
@@ -263,6 +273,7 @@ export default function Signup() {
 
   const back = () => {
     setErr('');
+    setOtpStatus('idle');
     if (step === 'method') nav('/');
     else if (step === 'otp') setStep('email');
     else if (step === 'profile') setStep('otp');
@@ -282,7 +293,7 @@ export default function Signup() {
         </span>
       </button>
 
-      {err && <div className="err-inline">{err}</div>}
+      {err && !(step === 'otp' && otpStatus === 'error') && <div className="err-inline">{err}</div>}
 
       {/* Step: choose method */}
       {step === 'method' && (
@@ -360,6 +371,7 @@ export default function Signup() {
       {step === 'otp' && (
         <form className="stagger" onSubmit={verifyOtp}>
           <div className="header">
+            <p className="eyebrow">{t('signup.otpEyebrow')}</p>
             <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
               {t('signup.otpSub')}
@@ -372,9 +384,17 @@ export default function Signup() {
               key={otpKey}
               value={otp}
               onChange={(i, v) => setOtp((prev) => prev.map((d, idx) => (idx === i ? v : d)))}
+              status={otpStatus}
+              statusText={
+                otpStatus === 'error' ? err : otpStatus === 'success' ? t('signup.otpVerified') : t('signup.otpHint')
+              }
             />
           </div>
-          <button className="btn btn--primary" type="submit" disabled={busy || otp.join('').length !== 4}>
+          <button
+            className="btn btn--primary"
+            type="submit"
+            disabled={busy || otpStatus !== 'idle' || otp.join('').length !== 4}
+          >
             {busy ? t('signup.verifying') : t('signup.verify')}
           </button>
           <button

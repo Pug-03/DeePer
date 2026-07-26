@@ -324,10 +324,22 @@ a {
 }
 
 /* ---------- OTP boxes ---------- */
+.eyebrow {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  margin: 0 0 6px;
+}
 .otp-row {
   display: flex;
   gap: 12px;
   justify-content: center;
+}
+.otp-box-wrap {
+  position: relative;
+  display: inline-flex;
 }
 .otp-box {
   width: 60px;
@@ -340,11 +352,72 @@ a {
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 24px -6px rgba(0, 0, 0, 0);
+  transition: border-color 0.25s, box-shadow 0.25s, color 0.2s, background 0.25s;
 }
 .otp-box:focus {
   border-color: var(--red);
   box-shadow: var(--glow-red);
+}
+.otp-box:disabled {
+  opacity: 1;
+}
+.otp-row--error .otp-box {
+  border-color: var(--red);
+  color: var(--red-bright);
+  box-shadow: 0 0 24px -6px rgba(244, 63, 94, 0.6);
+}
+.otp-row--success .otp-box {
+  border-color: var(--green);
+  background: rgba(52, 211, 153, 0.08);
+  box-shadow: 0 0 24px -6px rgba(52, 211, 153, 0.55);
+  color: transparent;
+}
+.otp-box-check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.otp-row--success .otp-box-check {
+  opacity: 1;
+  transform: scale(1);
+}
+.otp-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--text-faint);
+  transition: color 0.2s;
+}
+.otp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.otp-status--error {
+  color: var(--red-bright);
+}
+.otp-status--error .otp-status-dot {
+  background: var(--red-bright);
+}
+.otp-status--success {
+  color: var(--green);
+}
+.otp-status--success .otp-status-dot {
+  background: var(--green);
 }
 
 /* ---------- Password strength ---------- */

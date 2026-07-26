@@ -24,6 +24,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpKey, setOtpKey] = useState(0);
+  const [otpStatus, setOtpStatus] = useState('idle'); // idle | error | success
   const [password, setPassword] = useState('');
 
   const { rules, score, valid: pwValid } = pwScore(password);
@@ -37,6 +38,7 @@ export default function ForgotPassword() {
       setStep('otp');
       setOtp(['', '', '', '']);
       setOtpKey((k) => k + 1);
+      setOtpStatus('idle');
       if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
     } catch (e2) {
       setErr(e2.message);
@@ -53,9 +55,17 @@ export default function ForgotPassword() {
     setBusy(true);
     try {
       await api.post('/auth/password-reset/verify', { email, code }, { auth: false });
-      setStep('password');
+      setOtpStatus('success');
+      setTimeout(() => setStep('password'), 550);
     } catch (e2) {
       setErr(e2.message);
+      setOtpStatus('error');
+      setTimeout(() => {
+        setOtp(['', '', '', '']);
+        setOtpKey((k) => k + 1);
+        setOtpStatus('idle');
+        setErr('');
+      }, 700);
     } finally {
       setBusy(false);
     }
@@ -88,6 +98,7 @@ export default function ForgotPassword() {
 
   const back = () => {
     setErr('');
+    setOtpStatus('idle');
     if (step === 'email') nav('/login');
     else if (step === 'otp') setStep('email');
     else setStep('otp');
@@ -105,7 +116,7 @@ export default function ForgotPassword() {
         </span>
       </button>
 
-      {err && <div className="err-inline">{err}</div>}
+      {err && !(step === 'otp' && otpStatus === 'error') && <div className="err-inline">{err}</div>}
 
       {step === 'email' && (
         <form className="stagger" onSubmit={requestOtp}>
@@ -136,6 +147,7 @@ export default function ForgotPassword() {
       {step === 'otp' && (
         <form className="stagger" onSubmit={verifyOtp}>
           <div className="header">
+            <p className="eyebrow">{t('signup.otpEyebrow')}</p>
             <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
               {t('signup.otpSub')}
@@ -148,9 +160,17 @@ export default function ForgotPassword() {
               key={otpKey}
               value={otp}
               onChange={(i, v) => setOtp((prev) => prev.map((d, idx) => (idx === i ? v : d)))}
+              status={otpStatus}
+              statusText={
+                otpStatus === 'error' ? err : otpStatus === 'success' ? t('signup.otpVerified') : t('signup.otpHint')
+              }
             />
           </div>
-          <button className="btn btn--primary" type="submit" disabled={busy || otp.join('').length !== 4}>
+          <button
+            className="btn btn--primary"
+            type="submit"
+            disabled={busy || otpStatus !== 'idle' || otp.join('').length !== 4}
+          >
             {busy ? t('signup.verifying') : t('signup.verify')}
           </button>
           <button
