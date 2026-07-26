@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   motion,
@@ -310,14 +310,24 @@ export default function Home() {
     nav('/app/answer', { state: { question: { text: current.text, category } } });
   };
 
-  // Flies a card-shaped ghost from the deck down into the bottom nav's
-  // Saved icon, genie-minimize style, instead of a toast — the nav icon
-  // itself is the confirmation.
+  // Flies the actual card (its real text, in its own glass--red look) down
+  // into the bottom nav's Saved icon, genie-minimize style, instead of a
+  // toast — the nav icon itself is the confirmation.
   const launchGenie = () => {
     const fromEl = document.querySelector('[data-tut="deck"]');
-    const toEl = document.querySelector('[data-tut="navSaved"]');
-    if (!fromEl || !toEl) return;
-    setGenie({ id: Date.now(), from: fromEl.getBoundingClientRect(), to: toEl.getBoundingClientRect() });
+    // Target the <svg> glyph itself, not its wrapping .nav-ic span — a span
+    // around an inline-replaced element (the svg) picks up the usual
+    // few-px baseline gap below it, which throws off getBoundingClientRect
+    // just enough that the funnel visibly overshoots past the real icon.
+    // The svg's own rect has no such slop.
+    const toEl = document.querySelector('[data-tut="navSaved"] .nav-ic svg');
+    if (!fromEl || !toEl || !current) return;
+    setGenie({
+      id: Date.now(),
+      text: current.text,
+      from: fromEl.getBoundingClientRect(),
+      to: toEl.getBoundingClientRect(),
+    });
   };
 
   const save = async () => {
@@ -399,13 +409,81 @@ export default function Home() {
     }
   };
 
-  // Card center → nav icon center, in viewport px, for the genie-fly overlay.
-  const genieMove = genie && {
-    dx: genie.to.left + genie.to.width / 2 - (genie.from.left + genie.from.width / 2),
-    dy: genie.to.top + genie.to.height / 2 - (genie.from.top + genie.from.height / 2),
-    sx: genie.to.width / genie.from.width,
-    sy: genie.to.height / genie.from.height,
-  };
+  // True macOS-genie shape (not just scale/translate): a fixed "stage" box
+  // spans from the card down to the nav icon, and a clip-path polygon warps
+  // the card's own rectangle into a narrowing funnel. The bottom edge is
+  // pulled toward the icon first (fast), the top edge only catches up near
+  // the end (slow-then-snap) — same lag order the real genie uses — and the
+  // sides curve in past a straight taper (a "waist") rather than a flat
+  // trapezoid, which is what actually reads as liquid instead of geometric.
+  // Memoized on `genie` itself (not recomputed every render): save() calls
+  // advance() right after launchGenie(), which re-renders Home repeatedly
+  // while the genie is mid-flight. Recomputing this inline on every render
+  // handed framer-motion a new `frames` array reference each time, which it
+  // read as a brand new animation target and restarted from scratch — so
+  // the shape kept snapping back near the start instead of ever finishing
+  // its run down to the icon.
+  const genieStage = useMemo(() => genie && (() => {
+    const { from, to } = genie;
+    const left = Math.min(from.left, to.left) - 24;
+    const top = from.top;
+    const right = Math.max(from.left + from.width, to.left + to.width) + 24;
+    const bottom = to.top + to.height;
+    const width = right - left;
+    const height = bottom - top;
+    const pctX = (x) => ((x - left) / width) * 100;
+    const pctY = (y) => ((y - top) / height) * 100;
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const cardCx = from.left + from.width / 2;
+    const cardW = from.width;
+    const cardT = from.top;
+    const cardB = from.top + from.height;
+    const iconCx = to.left + to.width / 2;
+    const iconW = to.width;
+    const iconT = to.top;
+    const iconB = to.top + to.height;
+
+    const SIDE_STEPS = 8; // vertical samples per side — higher = smoother waist curve
+    const waistPx = Math.min(cardW, 220) * 0.22;
+
+    const shapeAt = (p) => {
+      const eBottom = Math.pow(p, 0.55); // leads the pull
+      const eTop = Math.pow(p, 2.4); // lags, then snaps shut at the end
+      const topY = lerp(cardT, iconT, eTop);
+      const botY = lerp(cardB, iconB, eBottom);
+      const topCx = lerp(cardCx, iconCx, eTop);
+      const botCx = lerp(cardCx, iconCx, eBottom);
+      const topW = lerp(cardW, iconW, eTop);
+      const botW = lerp(cardW, iconW, eBottom);
+      const pinch = 4 * p * (1 - p) * waistPx; // peaks mid-pull, gone at rest/landed
+
+      const leftPts = [];
+      const rightPts = [];
+      for (let i = 0; i <= SIDE_STEPS; i++) {
+        const f = i / SIDE_STEPS;
+        const y = lerp(topY, botY, f);
+        const cx = lerp(topCx, botCx, f);
+        const halfW = Math.max(lerp(topW, botW, f) - pinch * Math.sin(f * Math.PI), 2) / 2;
+        leftPts.push(`${pctX(cx - halfW)}% ${pctY(y)}%`);
+        rightPts.push(`${pctX(cx + halfW)}% ${pctY(y)}%`);
+      }
+      return `polygon(${leftPts.join(', ')}, ${rightPts.reverse().join(', ')})`;
+    };
+
+    return {
+      left,
+      top,
+      width,
+      height,
+      frames: [0, 0.25, 0.5, 0.75, 1].map(shapeAt),
+      // Where the card's own text sits, in stage-relative coordinates — the
+      // text stays put here while the clip-path mask above it narrows and
+      // slides away, so it reads as the card's content being consumed by
+      // the funnel rather than a separate label riding along with it.
+      textBox: { left: from.left - left, top: from.top - top, width: from.width, height: from.height },
+    };
+  })(), [genie]);
 
   return (
     <>
@@ -562,28 +640,34 @@ export default function Home() {
       )}
 
       <AnimatePresence>
-        {genie && (
+        {genie && genieStage && (
           <motion.div
             key={genie.id}
-            className="genie-fly"
+            className="genie-fly glass glass--red"
             style={{
-              left: genie.from.left,
-              top: genie.from.top,
-              width: genie.from.width,
-              height: genie.from.height,
+              left: genieStage.left,
+              top: genieStage.top,
+              width: genieStage.width,
+              height: genieStage.height,
             }}
-            initial={{ x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1 }}
+            initial={{ clipPath: genieStage.frames[0], opacity: 1 }}
             animate={{
-              x: [0, genieMove.dx * 0.3, genieMove.dx],
-              y: [0, genieMove.dy * 0.55, genieMove.dy],
-              scaleX: [1, 0.5, genieMove.sx],
-              scaleY: [1, 1.3, genieMove.sy],
-              opacity: [1, 1, 0],
+              clipPath: genieStage.frames,
+              opacity: [1, 1, 1, 0.9, 0],
             }}
-            transition={{ duration: 0.55, times: [0, 0.55, 1], ease: [0.6, 0, 0.4, 1] }}
+            transition={{ duration: 0.62, ease: 'easeInOut' }}
             onAnimationComplete={() => setGenie(null)}
           >
-            <IcBookmark size={30} />
+            <div className="genie-fly-textbox" style={genieStage.textBox}>
+              <motion.p
+                className="genie-fly-text"
+                initial={{ opacity: 1 }}
+                animate={{ opacity: [1, 1, 0] }}
+                transition={{ duration: 0.62, times: [0, 0.72, 1], ease: 'easeIn' }}
+              >
+                {genie.text}
+              </motion.p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
