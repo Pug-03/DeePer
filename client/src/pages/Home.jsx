@@ -19,6 +19,12 @@ const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
 const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 const FLY_EASE = [0.16, 1, 0.3, 1];
+// How long the skip/answer fly-out animation takes, and how long to wait
+// before actually advancing — kept at roughly the same ~2/3 ratio as
+// before so the card is safely off-screen (not just started moving) by
+// the time it unmounts.
+const FLY_DURATION = 0.9;
+const FLY_UNMOUNT_DELAY = 600;
 // The outgoing card's slide is a spring (bouncy, exact), but its fade should
 // feel soft rather than snap to the spring's precision — ease it out on its
 // own timing instead of tying opacity to the same physics as the slide.
@@ -82,13 +88,13 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, sav
     flying.current = true;
     onDragProgress?.(SWIPE_THRESHOLD);
     if (dir === 'skip') {
-      animate(y, 600, { duration: 0.36, ease: FLY_EASE });
-      animate(x, -80, { duration: 0.36, ease: FLY_EASE });
-      setTimeout(onSkip, 240);
+      animate(y, 600, { duration: FLY_DURATION, ease: FLY_EASE });
+      animate(x, -80, { duration: FLY_DURATION, ease: FLY_EASE });
+      setTimeout(onSkip, FLY_UNMOUNT_DELAY);
     } else {
-      animate(x, 520, { duration: 0.36, ease: FLY_EASE });
-      animate(y, -20, { duration: 0.36, ease: FLY_EASE });
-      setTimeout(onAnswer, 240);
+      animate(x, 520, { duration: FLY_DURATION, ease: FLY_EASE });
+      animate(y, -20, { duration: FLY_DURATION, ease: FLY_EASE });
+      setTimeout(onAnswer, FLY_UNMOUNT_DELAY);
     }
   };
 
