@@ -133,13 +133,6 @@ export const IcBank = (p) => (
     <path d="M2 21h20" />
   </svg>
 );
-export const IcWallet = (p) => (
-  <svg {...S({ ...p, sw: 1.8 })}>
-    <path d="M20 7H4a1 1 0 0 0-1 1v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2Z" />
-    <path d="M3 9V6a2 2 0 0 1 2-2h11" />
-    <path d="M17 13h.01" />
-  </svg>
-);
 export const IcQrCode = (p) => (
   <svg {...S({ ...p, sw: 1.8 })}>
     <rect x="3" y="3" width="7" height="7" rx="1" />

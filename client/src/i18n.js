@@ -290,9 +290,7 @@ export const STRINGS = {
     'support.cta': 'สนับสนุนเรา',
     'support.title': 'ขอบคุณที่อยากสนับสนุนเรา',
     'support.msg': 'แอปนี้ทำและดูแลฟรีไม่มีค่าใช้จ่าย เลือกช่องทางที่สะดวกด้านล่างได้เลย',
-    'support.chooseMethod': 'เลือกช่องทาง',
     'support.bank': 'บัญชีธนาคาร',
-    'support.trueMoney': 'TrueMoney',
     'support.promptPay': 'พร้อมเพย์',
     'support.qrComingSoon': 'จะเพิ่ม QR เร็วๆ นี้',
 
@@ -573,9 +571,7 @@ export const STRINGS = {
     'support.cta': 'Support us',
     'support.title': 'Thanks for wanting to support us',
     'support.msg': 'This app is made and run for free. Pick whichever channel is easiest for you below.',
-    'support.chooseMethod': 'Choose a channel',
     'support.bank': 'Bank account',
-    'support.trueMoney': 'TrueMoney',
     'support.promptPay': 'PromptPay',
     'support.qrComingSoon': 'QR code coming soon',
 

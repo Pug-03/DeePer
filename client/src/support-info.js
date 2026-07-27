@@ -1,19 +1,11 @@
-// Donation / support details shown in the "support us" modal.
-// Placeholder values — replace with the real account details.
-// promptPay.qrImage should point to a static image (e.g. under client/public/)
-// generated from a banking/TrueMoney app; leave it null to show a
-// "coming soon" placeholder instead of a broken image.
+// Donation / support details shown on the "support us" page.
 export const SUPPORT_INFO = {
   bank: {
-    bankName: 'ชื่อธนาคาร',
-    accountName: 'ชื่อ-นามสกุล',
-    accountNumber: 'xxx-x-xxxxx-x',
-  },
-  trueMoney: {
-    phone: '0xx-xxx-xxxx',
+    bankName: 'ธนาคารกรุงไทย',
+    accountName: 'ณฐพร ไทรทับทิม',
+    accountNumber: '753-0-65491-8',
   },
   promptPay: {
-    id: '0xx-xxx-xxxx',
-    qrImage: null,
+    qrImage: '/promptpay-qr.jpg',
   },
 };

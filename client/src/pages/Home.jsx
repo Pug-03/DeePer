@@ -311,16 +311,16 @@ export default function Home() {
   };
 
   // Flies the actual card (its real text, in its own glass--red look) down
-  // into the bottom nav's Saved icon, genie-minimize style, instead of a
-  // toast — the nav icon itself is the confirmation.
+  // into the yellow save FAB, genie-minimize style, instead of a toast —
+  // the button itself is the confirmation.
   const launchGenie = () => {
     const fromEl = document.querySelector('[data-tut="deck"]');
-    // Target the <svg> glyph itself, not its wrapping .nav-ic span — a span
-    // around an inline-replaced element (the svg) picks up the usual
-    // few-px baseline gap below it, which throws off getBoundingClientRect
-    // just enough that the funnel visibly overshoots past the real icon.
-    // The svg's own rect has no such slop.
-    const toEl = document.querySelector('[data-tut="navSaved"] .nav-ic svg');
+    // Target the <svg> glyph itself, not the wrapping button — a wrapper
+    // around an inline-replaced element (the svg) picks up the usual few-px
+    // padding/baseline slop that throws off getBoundingClientRect just
+    // enough that the funnel visibly overshoots past the real icon. The
+    // svg's own rect has no such slop.
+    const toEl = document.querySelector('[data-tut="actionSave"] svg');
     if (!fromEl || !toEl || !current) return;
     setGenie({
       id: Date.now(),

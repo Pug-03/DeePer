@@ -1013,6 +1013,9 @@ a {
   margin-bottom: 0;
 }
 .support-method-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13.5px;
   font-weight: 700;
   color: var(--text-dim);
@@ -1033,9 +1036,13 @@ a {
   font-size: 14px;
   line-height: 1.4;
 }
+.support-value-text span {
+  display: block;
+}
 .support-value-text b {
   display: block;
   font-size: 15px;
+  margin-top: 2px;
 }
 .copy-btn {
   flex-shrink: 0;
@@ -1055,7 +1062,7 @@ a {
 }
 .support-qr {
   width: 100%;
-  max-width: 200px;
+  max-width: 280px;
   aspect-ratio: 1;
   display: block;
   margin: 0 auto;
@@ -1065,7 +1072,7 @@ a {
 }
 .support-qr-placeholder {
   width: 100%;
-  max-width: 200px;
+  max-width: 280px;
   aspect-ratio: 1;
   margin: 0 auto;
   display: flex;
