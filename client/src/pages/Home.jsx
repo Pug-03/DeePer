@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   motion,
@@ -34,7 +34,7 @@ const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 // deliberate double-tap, tight enough that two separate taps don't merge.
 const DOUBLE_TAP_MS = 300;
 
-function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry }) {
+function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, saved }) {
   const { t } = useI18n();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -45,19 +45,16 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry }) {
   // Double-tap-to-save, mirroring the "double-tap to like" gesture from
   // photo/video feeds — here it saves the question instead. onTap (rather
   // than onClick) is framer-motion's tap gesture, so it only fires for a
-  // real tap and not at the end of a drag/swipe.
-  const [burst, setBurst] = useState(false);
+  // real tap and not at the end of a drag/swipe. The confirmation itself
+  // (blur + saved icon) is driven by the `saved` prop from Home, so it
+  // looks the same whether triggered by a double-tap, the save button, or
+  // the keyboard shortcut.
   const lastTap = useRef(0);
-  const burstTimer = useRef(null);
-  useEffect(() => () => clearTimeout(burstTimer.current), []);
   const handleTap = () => {
     const now = Date.now();
     if (now - lastTap.current < DOUBLE_TAP_MS) {
       lastTap.current = 0;
       onSave?.();
-      setBurst(true);
-      clearTimeout(burstTimer.current);
-      burstTimer.current = setTimeout(() => setBurst(false), 450);
     } else {
       lastTap.current = now;
     }
@@ -142,32 +139,44 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry }) {
         <IcCheck size={34} sw={3} />
       </motion.span>
       <p className="q-text">{q.text}</p>
-      <AnimatePresence>
-        {burst && (
+      {saved && (
+        // Plain conditional mount, not a framer-motion opacity tween — animating
+        // opacity on an element with backdrop-filter makes the browser
+        // recompute the blur every frame, which showed up as the text behind
+        // it flickering during the fade-in. A straight show/hide has no such
+        // per-frame recompute.
+        <div className="card-saved-overlay">
           <motion.div
-            className="tap-burst"
-            initial={{ scale: 0.4, opacity: 0 }}
+            initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 1.25, opacity: 0 }}
-            transition={{ duration: 0.28, ease: FLY_EASE }}
+            transition={{ type: 'spring', stiffness: 420, damping: 20 }}
           >
-            <IcBookmark size={72} />
+            <IcBookmark size={64} />
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </motion.div>
   );
 }
 
-function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegistry }) {
+function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegistry, saved }) {
   const progress = useMotionValue(0);
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
   const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
   const backOpacity = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
 
-  // If the outgoing card actually flew away (a real swipe, as opposed to the
-  // save button or the very first card), the card behind has already risen
-  // to CARD_REST by now via the mirrored progress above — mount it there
+  // A save has no drag to drive `progress`, so fake the same continuous
+  // rise a swipe gets for free: ease it up to the threshold over the save
+  // flash so the card behind has already grown into place by the time
+  // advance() swaps it in, instead of sitting frozen at REST_BEHIND the
+  // whole time and then popping through a fresh spring.
+  useEffect(() => {
+    if (saved) animate(progress, SWIPE_THRESHOLD, { duration: 0.4, ease: FLY_EASE });
+  }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // If the outgoing card actually flew away (a real swipe) or the save-flash
+  // effect above already eased it up, the card behind has already risen to
+  // CARD_REST by now via the mirrored progress above — mount it there
   // directly instead of replaying the rise, so the swap reads as one
   // continuous motion rather than a shrink back to REST_BEHIND and regrow.
   const seamless = !enterDir && Math.abs(progress.get()) >= SWIPE_THRESHOLD;
@@ -201,7 +210,17 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
           key={current.id}
           initial={enterDir ? { x: `${-enterDir * 100}%` } : seamless ? CARD_REST : REST_BEHIND}
           animate={CARD_REST}
-          exit={enterDir ? { x: `${enterDir * 100}%`, opacity: 0 } : undefined}
+          // Swipes fly the card off-canvas via its own motion values before
+          // this unmounts, so this fallback exit never actually shows for
+          // them — it only matters for the save path, where the card is
+          // still sitting in place (behind its blur overlay) when it's
+          // removed. Without it the card behind popped straight to
+          // CARD_REST the instant the outgoing one vanished, no crossfade.
+          exit={
+            enterDir
+              ? { x: `${enterDir * 100}%`, opacity: 0 }
+              : { opacity: 0, scale: 0.94, transition: { duration: 0.2, ease: FLY_EASE } }
+          }
           transition={enterDir ? CARD_EXIT_TRANSITION : seamless ? { duration: 0 } : RISE_SPRING}
           style={{ position: 'absolute', inset: 0 }}
         >
@@ -212,6 +231,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
             onSave={onSave}
             onDragProgress={(v) => progress.set(v)}
             flyRegistry={flyRegistry}
+            saved={saved}
           />
         </motion.div>
       </AnimatePresence>
@@ -237,7 +257,7 @@ export default function Home() {
     () => localStorage.getItem('dt_tutorial_pending') === '1',
   );
   const [enterDir, setEnterDir] = useState(0);
-  const [genie, setGenie] = useState(null);
+  const [saveFlash, setSaveFlash] = useState(false);
   const seen = useRef(new Set());
   const firstLoad = useRef(true);
   const flyRegistry = useRef(null);
@@ -310,32 +330,18 @@ export default function Home() {
     nav('/app/answer', { state: { question: { text: current.text, category } } });
   };
 
-  // Flies the actual card (its real text, in its own glass--red look) down
-  // into the yellow save FAB, genie-minimize style, instead of a toast —
-  // the button itself is the confirmation.
-  const launchGenie = () => {
-    const fromEl = document.querySelector('[data-tut="deck"]');
-    // Target the <svg> glyph itself, not the wrapping button — a wrapper
-    // around an inline-replaced element (the svg) picks up the usual few-px
-    // padding/baseline slop that throws off getBoundingClientRect just
-    // enough that the funnel visibly overshoots past the real icon. The
-    // svg's own rect has no such slop.
-    const toEl = document.querySelector('[data-tut="actionSave"] svg');
-    if (!fromEl || !toEl || !current) return;
-    setGenie({
-      id: Date.now(),
-      text: current.text,
-      from: fromEl.getBoundingClientRect(),
-      to: toEl.getBoundingClientRect(),
-    });
-  };
-
+  // Confirmation is a blur-and-icon flash on the card itself instead of a
+  // toast: blur it in, hold briefly so the icon reads, then advance past it.
+  const SAVE_FLASH_MS = 520;
   const save = async () => {
-    if (!current) return;
+    if (!current || saveFlash) return;
     try {
       await api.post('/saved', { question_text: current.text, category });
-      launchGenie();
-      advance();
+      setSaveFlash(true);
+      setTimeout(() => {
+        setSaveFlash(false);
+        advance();
+      }, SAVE_FLASH_MS);
     } catch (e) {
       toast(e.message);
     }
@@ -408,82 +414,6 @@ export default function Home() {
       toast(e2.message);
     }
   };
-
-  // True macOS-genie shape (not just scale/translate): a fixed "stage" box
-  // spans from the card down to the nav icon, and a clip-path polygon warps
-  // the card's own rectangle into a narrowing funnel. The bottom edge is
-  // pulled toward the icon first (fast), the top edge only catches up near
-  // the end (slow-then-snap) — same lag order the real genie uses — and the
-  // sides curve in past a straight taper (a "waist") rather than a flat
-  // trapezoid, which is what actually reads as liquid instead of geometric.
-  // Memoized on `genie` itself (not recomputed every render): save() calls
-  // advance() right after launchGenie(), which re-renders Home repeatedly
-  // while the genie is mid-flight. Recomputing this inline on every render
-  // handed framer-motion a new `frames` array reference each time, which it
-  // read as a brand new animation target and restarted from scratch — so
-  // the shape kept snapping back near the start instead of ever finishing
-  // its run down to the icon.
-  const genieStage = useMemo(() => genie && (() => {
-    const { from, to } = genie;
-    const left = Math.min(from.left, to.left) - 24;
-    const top = from.top;
-    const right = Math.max(from.left + from.width, to.left + to.width) + 24;
-    const bottom = to.top + to.height;
-    const width = right - left;
-    const height = bottom - top;
-    const pctX = (x) => ((x - left) / width) * 100;
-    const pctY = (y) => ((y - top) / height) * 100;
-    const lerp = (a, b, t) => a + (b - a) * t;
-
-    const cardCx = from.left + from.width / 2;
-    const cardW = from.width;
-    const cardT = from.top;
-    const cardB = from.top + from.height;
-    const iconCx = to.left + to.width / 2;
-    const iconW = to.width;
-    const iconT = to.top;
-    const iconB = to.top + to.height;
-
-    const SIDE_STEPS = 8; // vertical samples per side — higher = smoother waist curve
-    const waistPx = Math.min(cardW, 220) * 0.22;
-
-    const shapeAt = (p) => {
-      const eBottom = Math.pow(p, 0.55); // leads the pull
-      const eTop = Math.pow(p, 2.4); // lags, then snaps shut at the end
-      const topY = lerp(cardT, iconT, eTop);
-      const botY = lerp(cardB, iconB, eBottom);
-      const topCx = lerp(cardCx, iconCx, eTop);
-      const botCx = lerp(cardCx, iconCx, eBottom);
-      const topW = lerp(cardW, iconW, eTop);
-      const botW = lerp(cardW, iconW, eBottom);
-      const pinch = 4 * p * (1 - p) * waistPx; // peaks mid-pull, gone at rest/landed
-
-      const leftPts = [];
-      const rightPts = [];
-      for (let i = 0; i <= SIDE_STEPS; i++) {
-        const f = i / SIDE_STEPS;
-        const y = lerp(topY, botY, f);
-        const cx = lerp(topCx, botCx, f);
-        const halfW = Math.max(lerp(topW, botW, f) - pinch * Math.sin(f * Math.PI), 2) / 2;
-        leftPts.push(`${pctX(cx - halfW)}% ${pctY(y)}%`);
-        rightPts.push(`${pctX(cx + halfW)}% ${pctY(y)}%`);
-      }
-      return `polygon(${leftPts.join(', ')}, ${rightPts.reverse().join(', ')})`;
-    };
-
-    return {
-      left,
-      top,
-      width,
-      height,
-      frames: [0, 0.25, 0.5, 0.75, 1].map(shapeAt),
-      // Where the card's own text sits, in stage-relative coordinates — the
-      // text stays put here while the clip-path mask above it narrows and
-      // slides away, so it reads as the card's content being consumed by
-      // the funnel rather than a separate label riding along with it.
-      textBox: { left: from.left - left, top: from.top - top, width: from.width, height: from.height },
-    };
-  })(), [genie]);
 
   return (
     <>
@@ -598,6 +528,7 @@ export default function Home() {
               onSave={save}
               enterDir={enterDir}
               flyRegistry={flyRegistry}
+              saved={saveFlash}
             />
 
             <div className="actions">
@@ -638,39 +569,6 @@ export default function Home() {
           }}
         />
       )}
-
-      <AnimatePresence>
-        {genie && genieStage && (
-          <motion.div
-            key={genie.id}
-            className="genie-fly glass glass--red"
-            style={{
-              left: genieStage.left,
-              top: genieStage.top,
-              width: genieStage.width,
-              height: genieStage.height,
-            }}
-            initial={{ clipPath: genieStage.frames[0], opacity: 1 }}
-            animate={{
-              clipPath: genieStage.frames,
-              opacity: [1, 1, 1, 0.9, 0],
-            }}
-            transition={{ duration: 0.62, ease: 'easeInOut' }}
-            onAnimationComplete={() => setGenie(null)}
-          >
-            <div className="genie-fly-textbox" style={genieStage.textBox}>
-              <motion.p
-                className="genie-fly-text"
-                initial={{ opacity: 1 }}
-                animate={{ opacity: [1, 1, 0] }}
-                transition={{ duration: 0.62, times: [0, 0.72, 1], ease: 'easeIn' }}
-              >
-                {genie.text}
-              </motion.p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

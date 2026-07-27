@@ -624,38 +624,18 @@ a {
   opacity: 0;
   pointer-events: none;
 }
-.tap-burst {
+.card-saved-overlay {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
+  border-radius: var(--radius);
+  border: 2px solid #eab308;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #eab308;
-  filter: drop-shadow(0 0 20px rgba(234, 179, 8, 0.65));
   pointer-events: none;
-}
-.genie-fly {
-  position: fixed;
-  z-index: 55;
-  pointer-events: none;
-  /* Real card look (same glass + red glow as .qcard) — the clip-path
-     polygon carves the visible silhouette out of it, so the actual card
-     appears to get squeezed down into the nav icon rather than a generic
-     shape standing in for it. */
-}
-.genie-fly-textbox {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 34px 28px;
-}
-.genie-fly-text {
-  font-size: 25px;
-  font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: -0.2px;
-  color: var(--text);
 }
 
 /* ---------- Action buttons under deck ---------- */
@@ -847,8 +827,7 @@ a {
 .nav-ic {
   /* Without this, the bare <span> only wraps the <svg> as inline content,
      which leaves the usual few-px inline-baseline gap below a replaced
-     element — so this box (the genie-fly landing target) reads taller
-     than the actual glyph and the funnel lands visibly low/off-center. */
+     element, so the glyph sits slightly off-center within its box. */
   display: flex;
   align-items: center;
   justify-content: center;
