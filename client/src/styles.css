@@ -33,6 +33,16 @@ body,
   height: 100%;
 }
 
+html {
+  /* The rubber-band overscroll area beyond the document paints the html
+     element's background, not the body's — without this it flashes the
+     browser's default white during a bounce, even with overscroll-behavior
+     set below (that stops the bounce from chaining/triggering pull-to-
+     refresh, but some browsers still play a brief elastic overshoot). */
+  background: var(--bg-0);
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   font-family: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
@@ -43,7 +53,7 @@ body {
     linear-gradient(180deg, var(--bg-1), var(--bg-0));
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
 }
 
 button {
