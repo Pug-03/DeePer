@@ -559,11 +559,14 @@ a {
 
 /* ---------- Category pills ---------- */
 .cat-row {
+  position: relative;
   display: flex;
   gap: 10px;
+  touch-action: none;
 }
 .pill {
   position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 46px;
   border-radius: 999px;
@@ -577,14 +580,19 @@ a {
 .pill.active {
   color: #fff;
   border-color: transparent;
+  background: transparent;
 }
 .pill-bg {
-  position: absolute;
-  inset: 0;
   border-radius: 999px;
   background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
   box-shadow: var(--glow-red);
   z-index: 0;
+}
+.pill-bg--elastic {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
 }
 .pill-label {
   position: relative;

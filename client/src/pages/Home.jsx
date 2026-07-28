@@ -295,6 +295,103 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   );
 }
 
+// Elastic "liquid" tab indicator: instead of one spring animating the whole
+// pill box, the edge in the direction of travel races ahead on a snappy
+// spring while the trailing edge lags on a much softer one. That asymmetry
+// is what makes the capsule visibly stretch across whatever it's passing
+// over before catching up and snapping to width at the target, the same
+// feel as iOS/Instagram segmented-control tab bars — a plain shared-layout
+// spring moves the box as a rigid unit and never produces that stretch.
+function CatTabs({ category, onSwitch }) {
+  const { t } = useI18n();
+  const rowRef = useRef(null);
+  const pillRefs = useRef({});
+  const mountedRef = useRef(false);
+  const leftX = useMotionValue(0);
+  const rightX = useMotionValue(0);
+  const width = useTransform([leftX, rightX], ([l, r]) => Math.max(r - l, 0));
+
+  const moveTo = (cat, animated) => {
+    const rowEl = rowRef.current;
+    const pillEl = pillRefs.current[cat];
+    if (!rowEl || !pillEl) return;
+    const rowRect = rowEl.getBoundingClientRect();
+    const pillRect = pillEl.getBoundingClientRect();
+    const targetLeft = pillRect.left - rowRect.left;
+    const targetRight = pillRect.right - rowRect.left;
+    if (!animated) {
+      leftX.set(targetLeft);
+      rightX.set(targetRight);
+      return;
+    }
+    const movingRight = targetLeft > leftX.get();
+    const LEAD = { type: 'spring', stiffness: 700, damping: 40, mass: 0.6 };
+    const LAG = { type: 'spring', stiffness: 170, damping: 26, mass: 1 };
+    animate(leftX, targetLeft, movingRight ? LAG : LEAD);
+    animate(rightX, targetRight, movingRight ? LEAD : LAG);
+  };
+
+  useLayoutEffect(() => {
+    moveTo(category, false);
+    mountedRef.current = true;
+    // Pill widths depend on the webfont, which can still be loading at
+    // first paint — snap (no animation) to the correct spot once it's in,
+    // otherwise the indicator can start from a slightly wrong position.
+    const reposition = () => moveTo(category, false);
+    window.addEventListener('resize', reposition);
+    document.fonts?.ready?.then(reposition);
+    return () => window.removeEventListener('resize', reposition);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (mountedRef.current) moveTo(category, true);
+  }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Press-and-drag across the pill row, not just tap-per-pill — pointer
+  // capture keeps targeting the pill the press started on, so this looks
+  // up whatever's actually under the finger by coordinate instead of
+  // trusting the event's own target.
+  const dragSwitch = (clientX, clientY) => {
+    const pillEl = document.elementFromPoint(clientX, clientY)?.closest('[data-cat]');
+    if (pillEl) onSwitch(pillEl.dataset.cat);
+  };
+
+  return (
+    <div
+      className="cat-row"
+      data-tut="cats"
+      style={{ marginBottom: 6 }}
+      ref={rowRef}
+      onPointerDown={(e) => dragSwitch(e.clientX, e.clientY)}
+      onPointerMove={(e) => e.buttons === 1 && dragSwitch(e.clientX, e.clientY)}
+    >
+      <motion.span className="pill-bg pill-bg--elastic" style={{ left: leftX, width }} />
+      {CATS.map((c) => {
+        const isActive = category === c;
+        return (
+          <button
+            key={c}
+            ref={(el) => (pillRefs.current[c] = el)}
+            data-cat={c}
+            className={`pill ${isActive ? 'active' : ''}`}
+            onClick={() => onSwitch(c)}
+          >
+            <motion.span
+              key={isActive ? 'on' : 'off'}
+              className="pill-label"
+              initial={isActive ? { scale: 0.82 } : false}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+            >
+              {t(`cat.${c}`)}
+            </motion.span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Home() {
   const nav = useNavigate();
   const toast = useToast();
@@ -488,35 +585,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="cat-row" data-tut="cats" style={{ marginBottom: 6 }}>
-          {CATS.map((c) => {
-            const isActive = category === c;
-            return (
-              <button
-                key={c}
-                className={`pill ${isActive ? 'active' : ''}`}
-                onClick={() => switchCat(c)}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="cat-pill-bg"
-                    className="pill-bg"
-                    transition={{ type: 'spring', stiffness: 420, damping: 22, mass: 0.9 }}
-                  />
-                )}
-                <motion.span
-                  key={isActive ? 'on' : 'off'}
-                  className="pill-label"
-                  initial={isActive ? { scale: 0.82 } : false}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 14 }}
-                >
-                  {t(`cat.${c}`)}
-                </motion.span>
-              </button>
-            );
-          })}
-        </div>
+        <CatTabs category={category} onSwitch={switchCat} />
 
         {adding && (
           <form className="glass fade-up" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
