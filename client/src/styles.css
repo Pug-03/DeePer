@@ -160,6 +160,17 @@ a {
   border-color: var(--border-red);
   box-shadow: var(--shadow-lift), var(--glow-red);
 }
+/* Fades in on top of a plain .glass card instead of baking the red
+   border/glow into the card's own class, so it can ease in as its own
+   animation rather than appearing the instant the card mounts. */
+.qcard-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-red);
+  box-shadow: var(--glow-red);
+  pointer-events: none;
+}
 
 /* ---------- Typography ---------- */
 .brand {

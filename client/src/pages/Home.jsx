@@ -40,7 +40,7 @@ const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 // deliberate double-tap, tight enough that two separate taps don't merge.
 const DOUBLE_TAP_MS = 300;
 
-function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, saved }) {
+function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, flyRegistry, saved, seamless }) {
   const { t } = useI18n();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -80,13 +80,12 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, sav
   });
 
   const fly = (dir) => {
-    // The fly-out overshoots well past the swipe threshold, so once a swipe
-    // is confirmed, snap the card behind straight to its fully-risen look
-    // and stop following x — otherwise it sits fully grown while this card
-    // finishes flying off, then (once this card unmounts) the promoted card
-    // would restart its rise from scratch, reading as a double-bounce.
+    // Stop following x — from here the card behind's reveal replays as its
+    // own fixed animation (see onFlyProgress in DeckStack) instead of
+    // continuing to mirror wherever the drag left it, so a swipe and a
+    // button tap both play the exact same reveal.
     flying.current = true;
-    onDragProgress?.(SWIPE_THRESHOLD);
+    onFlyProgress?.();
     if (dir === 'skip') {
       animate(y, 600, { duration: FLY_DURATION, ease: FLY_EASE });
       animate(x, -80, { duration: FLY_DURATION, ease: FLY_EASE });
@@ -125,7 +124,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, sav
 
   return (
     <motion.div
-      className="qcard glass glass--red"
+      className="qcard glass"
       style={{ x, y, rotate }}
       drag
       dragElastic={0.7}
@@ -134,6 +133,19 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, sav
       onTap={handleTap}
       whileTap={{ cursor: 'grabbing' }}
     >
+      {/* The red border/glow used to be a static class, so it snapped in
+          instantly the moment a new card became top. When this promotion is
+          seamless, the preview card behind already faded its own glow in
+          during the reveal (see backGlow in DeckStack) — starting this one
+          over from 0 would flash it off and re-fade, undoing that. Only
+          category-switch/first-load mounts (not seamless, no preview to
+          hand off from) get their own fresh 0.45s fade-in. */}
+      <motion.div
+        className="qcard-glow"
+        initial={{ opacity: seamless ? 1 : 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: seamless ? 0 : 0.45, ease: FLY_EASE }}
+      />
       <span className="q-source">{srcLabel}</span>
       <motion.span
         className="swipe-hint"
@@ -166,18 +178,31 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, flyRegistry, sav
 }
 
 function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegistry, saved }) {
+  // Split in two: `progress` drives scale, `reveal` drives y/opacity. During
+  // a real drag both track the finger together, same as one value would.
+  // But animating scale on a backdrop-filter card forces the browser to
+  // resample the blur at every intermediate size — genuinely expensive, and
+  // visibly janky once it runs for the fly/save duration instead of a single
+  // per-frame drag update. y/opacity don't have that cost, so on a
+  // button/keyboard-triggered fly or save (no drag to follow), only `reveal`
+  // eases smoothly; `progress` jumps straight to its end value.
   const progress = useMotionValue(0);
+  const reveal = useMotionValue(0);
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
-  const backY = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
-  const backOpacity = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
+  const backY = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
+  const backOpacity = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
+  // The preview card behind is plain (no red glow) at rest, so fading its
+  // glow in from fully-hidden as it rises — same `reveal` value, same
+  // timing — is what actually reads as "the red edge gradually appears"
+  // during the swipe/save reveal, instead of it only showing up later once
+  // the card is formally promoted.
+  const backGlow = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0, 1]);
 
-  // A save has no drag to drive `progress`, so fake the same continuous
-  // rise a swipe gets for free: ease it up to the threshold over the save
-  // flash so the card behind has already grown into place by the time
-  // advance() swaps it in, instead of sitting frozen at REST_BEHIND the
-  // whole time and then popping through a fresh spring.
   useEffect(() => {
-    if (saved) animate(progress, SWIPE_THRESHOLD, { duration: 0.4, ease: FLY_EASE });
+    if (saved) {
+      progress.set(SWIPE_THRESHOLD);
+      animate(reveal, SWIPE_THRESHOLD, { duration: 0.4, ease: FLY_EASE });
+    }
   }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // If the outgoing card actually flew away (a real swipe) or the save-flash
@@ -205,6 +230,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
           style={{ position: 'absolute', inset: 0 }}
         >
           <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
+            <motion.div className="qcard-glow" style={{ opacity: backGlow }} />
             <p className="q-text" style={{ opacity: 0.5 }}>
               {next.text}
             </p>
@@ -235,9 +261,33 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
             onSkip={onSkip}
             onAnswer={onAnswer}
             onSave={onSave}
-            onDragProgress={(v) => progress.set(v)}
+            onDragProgress={(v) => {
+              progress.set(v);
+              reveal.set(v);
+            }}
+            onFlyProgress={() => {
+              // Reset first: a real drag may have already carried `reveal`
+              // partway (or all the way, elastic-damped) toward the
+              // threshold, so animating from wherever it happened to be
+              // made the reveal's visible length depend on how far the
+              // user had dragged — sometimes a full smooth rise, sometimes
+              // already there and invisible. Restarting from 0 makes every
+              // fly (swipe or button) play the identical reveal.
+              // Also: this has to finish by FLY_UNMOUNT_DELAY, not
+              // FLY_DURATION — the real TopCard takes over (fully revealed,
+              // instantly, since seamless) the moment onSkip/onAnswer fires
+              // at FLY_UNMOUNT_DELAY, which is well before the front card's
+              // own FLY_DURATION fly-out completes. Using FLY_DURATION here
+              // left this only 2/3 done at that handoff, so it visibly
+              // jumped the rest of the way the instant the real card
+              // mounted — reads as "rises for a bit, then snaps".
+              progress.set(SWIPE_THRESHOLD);
+              reveal.set(0);
+              animate(reveal, SWIPE_THRESHOLD, { duration: FLY_UNMOUNT_DELAY / 1000, ease: FLY_EASE });
+            }}
             flyRegistry={flyRegistry}
             saved={saved}
+            seamless={seamless}
           />
         </motion.div>
       </AnimatePresence>
