@@ -33,38 +33,56 @@ export default function Support() {
         <p className="sub">{t('support.msg')}</p>
       </div>
 
-      <div className="glass" style={{ padding: 18 }}>
-        <div className="support-method">
-          <p className="support-method-title">
-            <IcBank size={16} />
-            {t('support.bank')}
-          </p>
-          <div className="support-value">
-            <div className="support-value-text">
-              <span>{bank.bankName}</span>
-              <span>{bank.accountName}</span>
-              <b>{bank.accountNumber}</b>
-            </div>
-            <button
-              type="button"
-              className="copy-btn"
-              onClick={() => copy(bank.accountNumber)}
-              aria-label={t('common.copy')}
-            >
-              <IcCopy size={18} />
-            </button>
+      <div className="glass support-card">
+        <div className="support-head">
+          <span className="support-head-ic">
+            <IcBank size={18} />
+          </span>
+          <span className="support-head-title">{t('support.bank')}</span>
+        </div>
+
+        <div className="support-rows">
+          <div className="support-row">
+            <span className="support-row-label">{t('support.bankLabel')}</span>
+            <span className="support-row-value">{bank.bankName}</span>
+          </div>
+          <div className="support-row">
+            <span className="support-row-label">{t('support.nameLabel')}</span>
+            <span className="support-row-value">{bank.accountName}</span>
           </div>
         </div>
 
-        <div className="support-method">
-          <p className="support-method-title">
-            <IcQrCode size={16} />
-            {t('support.promptPay')}
-          </p>
+        <div className="acct-field">
+          <div className="acct-field-main">
+            <span className="acct-field-label">{t('support.accountNo')}</span>
+            <b className="acct-number">{bank.accountNumber}</b>
+          </div>
+          <button
+            type="button"
+            className="copy-btn"
+            onClick={() => copy(bank.accountNumber)}
+            aria-label={t('common.copy')}
+          >
+            <IcCopy size={18} />
+          </button>
+        </div>
+      </div>
+
+      <div className="glass support-card support-card--qr">
+        <div className="support-head">
+          <span className="support-head-ic">
+            <IcQrCode size={18} />
+          </span>
+          <span className="support-head-title">{t('support.promptPay')}</span>
+        </div>
+        <div className="qr-frame">
           {promptPay.qrImage ? (
-            <img className="support-qr" src={promptPay.qrImage} alt={t('support.promptPay')} />
+            <img className="qr-img" src={promptPay.qrImage} alt={t('support.promptPay')} />
           ) : (
-            <div className="support-qr-placeholder">{t('support.qrComingSoon')}</div>
+            <div className="qr-empty">
+              <IcQrCode size={40} />
+              <span>{t('support.qrComingSoon')}</span>
+            </div>
           )}
         </div>
       </div>

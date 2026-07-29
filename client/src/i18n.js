@@ -291,6 +291,9 @@ export const STRINGS = {
     'support.title': 'ขอบคุณที่อยากสนับสนุนเรา',
     'support.msg': 'แอปนี้ทำและดูแลฟรีไม่มีค่าใช้จ่าย เลือกช่องทางที่สะดวกด้านล่างได้เลย',
     'support.bank': 'บัญชีธนาคาร',
+    'support.bankLabel': 'ธนาคาร',
+    'support.nameLabel': 'ชื่อบัญชี',
+    'support.accountNo': 'เลขที่บัญชี',
     'support.promptPay': 'พร้อมเพย์',
     'support.qrComingSoon': 'จะเพิ่ม QR เร็วๆ นี้',
 
@@ -572,6 +575,9 @@ export const STRINGS = {
     'support.title': 'Thanks for wanting to support us',
     'support.msg': 'This app is made and run for free. Pick whichever channel is easiest for you below.',
     'support.bank': 'Bank account',
+    'support.bankLabel': 'Bank',
+    'support.nameLabel': 'Account name',
+    'support.accountNo': 'Account number',
     'support.promptPay': 'PromptPay',
     'support.qrComingSoon': 'QR code coming soon',
 
