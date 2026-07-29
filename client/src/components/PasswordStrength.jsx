@@ -10,7 +10,6 @@ export default function PasswordStrength({ rules, score }) {
         ))}
       </div>
       <ul className="pw-rules">
-        <li className={rules.len ? 'ok' : ''}>• {t('pw.len')}</li>
         <li className={rules.upper ? 'ok' : ''}>• {t('pw.upper')}</li>
         <li className={rules.lower ? 'ok' : ''}>• {t('pw.lower')}</li>
         <li className={rules.digit ? 'ok' : ''}>• {t('pw.digit')}</li>

@@ -18,9 +18,9 @@ export function signToken(user) {
   return jwt.sign({ uid: user.id }, JWT_SECRET, { expiresIn: TOKEN_TTL });
 }
 
-// Password rule: >= 8 chars, upper + lower + digit + special
+// Password rule: upper + lower + digit + special
 export function validatePassword(pw) {
-  if (typeof pw !== 'string' || pw.length < 8) return false;
+  if (typeof pw !== 'string') return false;
   return (
     /[A-Z]/.test(pw) &&
     /[a-z]/.test(pw) &&
