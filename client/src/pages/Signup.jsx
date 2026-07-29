@@ -110,6 +110,7 @@ export default function Signup() {
   const [err, setErr] = useState('');
 
   const [email, setEmail] = useState('');
+  const emailRef = useRef(null);
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpKey, setOtpKey] = useState(0);
   const [otpStatus, setOtpStatus] = useState('idle'); // idle | error | success
@@ -360,9 +361,13 @@ export default function Signup() {
             <h1 className="h1">{t('signup.emailTitle')}</h1>
             <p className="sub">{t('signup.emailSub')}</p>
           </div>
-          <div className="field">
+          {/* Focus only once the entrance animation settles: autoFocus during
+              the staggerRise transform would drag the text caret up from below
+              with the field. */}
+          <div className="field" onAnimationEnd={() => emailRef.current?.focus()}>
             <label>{t('login.email')}</label>
             <input
+              ref={emailRef}
               className="input"
               type="email"
               inputMode="email"
@@ -371,7 +376,6 @@ export default function Signup() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoFocus
             />
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy}>
