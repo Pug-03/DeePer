@@ -1258,7 +1258,7 @@ a {
    cleanly (set `qrImage` in support-info.js to fill it). */
 .qr-frame {
   width: 100%;
-  max-width: 232px;
+  max-width: 300px;
   aspect-ratio: 1;
   margin: 4px auto 0;
 }
@@ -1267,8 +1267,8 @@ a {
   height: 100%;
   object-fit: contain;
   background: #fff;
-  /* white quiet-zone around the code so scanners read it reliably */
-  padding: 10px;
+  /* small quiet-zone; the QR already carries its own white margin */
+  padding: 6px;
   border-radius: var(--radius-sm);
 }
 .qr-empty {

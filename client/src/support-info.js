@@ -6,10 +6,8 @@ export const SUPPORT_INFO = {
     accountNumber: '753-0-65491-8',
   },
   promptPay: {
-    // To show the PromptPay QR: drop the image file into `client/public/`
-    // (e.g. client/public/promptpay-qr.jpg) and set the path here, starting
-    // with "/". While this is empty, the card shows a placeholder slot.
-    //   qrImage: '/promptpay-qr.jpg',
-    qrImage: '',
+    // QR image lives in client/public/. Set to '' to fall back to the
+    // placeholder slot.
+    qrImage: '/promptpay-qr.png',
   },
 };
