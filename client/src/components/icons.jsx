@@ -122,8 +122,8 @@ export const IcEyeOff = (p) => (
 );
 export const IcCamera = (p) => (
   <svg {...S(p)}>
-    <path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
-    <circle cx="12" cy="14" r="3.5" />
+    <path d="M3 9a2 2 0 0 1 2-2h2l1.5-2.5h7L17 7h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    <circle cx="12" cy="12.8" r="3.3" />
   </svg>
 );
 export const IcBank = (p) => (
