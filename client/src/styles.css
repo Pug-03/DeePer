@@ -534,23 +534,54 @@ a {
   margin: 4px 0 10px;
 }
 .pw-seg {
+  position: relative;
   flex: 1;
   height: 5px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.1);
-  transition: background 0.25s;
+}
+/* Colored fill that sweeps in from the left — the bar "runs" up as the score
+   climbs — staggered across the four bars so the fill visibly travels left to
+   right. The color ramps red -> dark orange -> yellow -> green as the score
+   rises, and every lit bar recolors together when the level changes. */
+.pw-seg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--seg, transparent);
+  box-shadow: 0 0 9px -1px var(--seg, transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.pw-seg:nth-child(2)::before {
+  transition-delay: 0.07s;
+}
+.pw-seg:nth-child(3)::before {
+  transition-delay: 0.14s;
+}
+.pw-seg:nth-child(4)::before {
+  transition-delay: 0.21s;
 }
 .pw-seg.on-1 {
-  background: #ef4444;
+  --seg: #ef4444;
 }
 .pw-seg.on-2 {
-  background: #f59e0b;
+  --seg: #ea580c;
 }
 .pw-seg.on-3 {
-  background: #eab308;
+  --seg: #eab308;
 }
 .pw-seg.on-4 {
-  background: var(--green);
+  --seg: var(--green);
+}
+.pw-seg.on-1::before,
+.pw-seg.on-2::before,
+.pw-seg.on-3::before,
+.pw-seg.on-4::before {
+  transform: scaleX(1);
 }
 .pw-rules {
   list-style: none;
