@@ -414,10 +414,62 @@ a {
 .otp-box:disabled {
   opacity: 1;
 }
+.otp-row--error {
+  /* Quick left-right shudder on a wrong code. Runs on the whole row so the
+     boxes shake together as one unit. */
+  animation: otp-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
 .otp-row--error .otp-box {
   border-color: var(--red);
   color: var(--red-bright);
   box-shadow: 0 0 24px -6px rgba(244, 63, 94, 0.6);
+  /* Red glow blinks a couple of times over the ~700ms the error state is
+     held, then settles back to the steady red before the row auto-clears. */
+  animation: otp-error-blink 0.7s ease both;
+}
+@keyframes otp-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-9px);
+  }
+  30% {
+    transform: translateX(9px);
+  }
+  45% {
+    transform: translateX(-7px);
+  }
+  60% {
+    transform: translateX(7px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  90% {
+    transform: translateX(4px);
+  }
+}
+@keyframes otp-error-blink {
+  0% {
+    border-color: var(--red);
+    box-shadow: 0 0 24px -6px rgba(244, 63, 94, 0.6);
+  }
+  20%,
+  60% {
+    border-color: var(--red-bright);
+    box-shadow: 0 0 36px 0 rgba(244, 63, 94, 1);
+  }
+  40%,
+  80% {
+    border-color: rgba(244, 63, 94, 0.45);
+    box-shadow: 0 0 10px -8px rgba(244, 63, 94, 0.2);
+  }
+  100% {
+    border-color: var(--red);
+    box-shadow: 0 0 24px -6px rgba(244, 63, 94, 0.6);
+  }
 }
 .otp-row--success .otp-box {
   border-color: var(--green);

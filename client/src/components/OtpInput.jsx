@@ -39,7 +39,7 @@ export default function OtpInput({ value, onChange, autoFocus = true, status = '
               maxLength={1}
               value={d}
               disabled={status !== 'idle'}
-              style={{ transitionDelay: status !== 'idle' ? `${i * 180}ms` : '0ms' }}
+              style={{ transitionDelay: status === 'success' ? `${i * 180}ms` : '0ms' }}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
             />
