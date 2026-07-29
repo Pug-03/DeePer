@@ -3,12 +3,12 @@
 :root {
   --bg-0: #08080a;
   --bg-1: #0f0e12;
-  /* Dark crimson used at the very bottom of the backdrop (and as the html
-     base + PWA theme color) so the iOS standalone bottom safe-area continues
-     the red glow to the screen edge instead of falling back to a black band.
-     Kept clearly red (not near-black) because on a phone a #1x0x0x tint still
-     reads as plain black. */
-  --bg-bottom: #1c0810;
+  /* The single opaque base color for every edge the fixed backdrop can't own:
+     the html canvas, the iOS bottom safe-area, the keyboard-open gap, and the
+     overscroll region. The page backdrop (body::before) fades to this exact
+     color at its bottom, so any exposed edge is seamless with the page — never
+     a white flash nor a mismatched dark band. Subtle warm-dark, not cold. */
+  --bg-bottom: #120a0e;
   --glass: rgba(24, 20, 26, 0.55);
   --glass-strong: rgba(30, 24, 30, 0.72);
   --border: rgba(255, 255, 255, 0.09);
@@ -40,15 +40,16 @@ body,
 }
 
 html {
-  /* The real root background paints the FULL screen on an iOS standalone PWA —
-     including the bottom safe-area (home indicator), which the fixed backdrop
-     layer below does NOT reliably reach. So the red glow lives here too (not
-     just on body::before): a bottom-anchored red radial over a base that ends
-     in --bg-bottom, so the safe-area strip and the rubber-band overscroll
-     region continue the red to the physical edge instead of a black band. */
-  background:
-    radial-gradient(1400px 820px at 50% 120%, rgba(220, 38, 70, 0.30), transparent 62%),
-    linear-gradient(180deg, var(--bg-0) 42%, var(--bg-bottom) 100%);
+  /* One flat opaque color for the whole root canvas — nothing decorative. The
+     html background is what iOS paints across every region the fixed backdrop
+     layer can't own: the bottom safe-area, the gap that opens when the
+     keyboard appears and scrolls the page, and the rubber-band overscroll.
+     Because body::before fades to this exact color at its bottom, those
+     regions read as a seamless continuation of the page — never a white flash,
+     never a mismatched band. (A gradient here is what caused both: transparent
+     stops let white show through on keyboard-scroll, and its edge never lined
+     up with the page, so other screens showed a stray band.) */
+  background: var(--bg-bottom);
   overscroll-behavior: none;
 }
 
@@ -62,11 +63,9 @@ body {
   overscroll-behavior: none;
 }
 
-/* Full-bleed red-glow backdrop. A position:fixed / inset:0 layer is anchored
-   to the viewport, and with viewport-fit=cover that viewport spans the whole
-   screen edge-to-edge — including the iOS standalone bottom safe-area (home
-   indicator). This is the reliable way to fill every edge on iOS PWAs, where
-   a plain body/html background leaves a black band. z-index:-1 keeps it
+/* The decorative page backdrop: a fixed viewport-sized layer with the red glow
+   at the top, fading down to --bg-bottom — the exact flat color html carries —
+   so the page and every edge html owns meet seamlessly. z-index:-1 keeps it
    behind all app content. */
 body::before {
   content: '';
@@ -76,8 +75,7 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(1200px 700px at 50% -10%, rgba(244, 63, 94, 0.16), transparent 60%),
-    radial-gradient(1400px 820px at 50% 120%, rgba(220, 38, 70, 0.30), transparent 62%),
-    linear-gradient(180deg, var(--bg-1) 42%, var(--bg-bottom) 100%);
+    linear-gradient(180deg, var(--bg-1), var(--bg-bottom));
 }
 
 button {
