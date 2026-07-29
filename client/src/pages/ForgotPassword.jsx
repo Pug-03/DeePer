@@ -50,13 +50,26 @@ export default function ForgotPassword() {
   const verifyOtp = async (e) => {
     e.preventDefault();
     const code = otp.join('');
-    if (code.length !== 4) return;
+    if (code.length !== 4) {
+      // Incomplete: flag it (shake + red blink + message) but keep the digits
+      // they've typed so far — no clear/remount, just prompt them to finish.
+      setErr(t('signup.otpIncomplete'));
+      setOtpStatus('error');
+      setTimeout(() => {
+        setOtpStatus('idle');
+        setErr('');
+      }, 700);
+      return;
+    }
     setErr('');
     setBusy(true);
     try {
       await api.post('/auth/password-reset/verify', { email, code }, { auth: false });
       setOtpStatus('success');
-      setTimeout(() => setStep('password'), 550);
+      // Wait for the staggered checkmarks to finish before leaving: the last
+      // box starts at 3 * 180ms and its spring runs ~0.6s (~1140ms total),
+      // plus a beat to let it settle.
+      setTimeout(() => setStep('password'), 1300);
     } catch (e2) {
       setErr(e2.message);
       setOtpStatus('error');
@@ -169,7 +182,7 @@ export default function ForgotPassword() {
           <button
             className="btn btn--primary"
             type="submit"
-            disabled={busy || otpStatus !== 'idle' || otp.join('').length !== 4}
+            disabled={busy || otpStatus !== 'idle'}
           >
             {busy ? t('signup.verifying') : t('signup.verify')}
           </button>
