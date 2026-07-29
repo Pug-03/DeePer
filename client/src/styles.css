@@ -399,6 +399,11 @@ a {
   text-align: center;
   font-size: 30px;
   font-weight: 700;
+  line-height: 1;
+  /* Nudge the digit down to optically centre it: IBM Plex Sans Thai reserves
+     extra space below the baseline for Thai tone marks, so a plain single-line
+     input renders the numeral sitting high in the box. */
+  padding: 8px 0 0;
   color: var(--text);
   background: rgba(255, 255, 255, 0.05);
   border: 1.5px solid var(--border);
