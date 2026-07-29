@@ -3,6 +3,12 @@
 :root {
   --bg-0: #08080a;
   --bg-1: #0f0e12;
+  /* Dark crimson used at the very bottom of the backdrop (and as the html
+     base + PWA theme color) so the iOS standalone bottom safe-area continues
+     the red glow to the screen edge instead of falling back to a black band.
+     Kept clearly red (not near-black) because on a phone a #1x0x0x tint still
+     reads as plain black. */
+  --bg-bottom: #1c0810;
   --glass: rgba(24, 20, 26, 0.55);
   --glass-strong: rgba(30, 24, 30, 0.72);
   --border: rgba(255, 255, 255, 0.09);
@@ -34,26 +40,44 @@ body,
 }
 
 html {
-  /* The rubber-band overscroll area beyond the document paints the html
-     element's background, not the body's — without this it flashes the
-     browser's default white during a bounce, even with overscroll-behavior
-     set below (that stops the bounce from chaining/triggering pull-to-
-     refresh, but some browsers still play a brief elastic overshoot). */
-  background: var(--bg-0);
+  /* The real root background paints the FULL screen on an iOS standalone PWA —
+     including the bottom safe-area (home indicator), which the fixed backdrop
+     layer below does NOT reliably reach. So the red glow lives here too (not
+     just on body::before): a bottom-anchored red radial over a base that ends
+     in --bg-bottom, so the safe-area strip and the rubber-band overscroll
+     region continue the red to the physical edge instead of a black band. */
+  background:
+    radial-gradient(1400px 820px at 50% 120%, rgba(220, 38, 70, 0.30), transparent 62%),
+    linear-gradient(180deg, var(--bg-0) 42%, var(--bg-bottom) 100%);
   overscroll-behavior: none;
 }
 
 body {
   margin: 0;
+  min-height: 100dvh;
   font-family: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(1200px 700px at 50% -10%, rgba(244, 63, 94, 0.16), transparent 60%),
-    radial-gradient(900px 600px at 100% 110%, rgba(190, 18, 60, 0.14), transparent 55%),
-    linear-gradient(180deg, var(--bg-1), var(--bg-0));
-  background-attachment: fixed;
+  background: transparent;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+}
+
+/* Full-bleed red-glow backdrop. A position:fixed / inset:0 layer is anchored
+   to the viewport, and with viewport-fit=cover that viewport spans the whole
+   screen edge-to-edge — including the iOS standalone bottom safe-area (home
+   indicator). This is the reliable way to fill every edge on iOS PWAs, where
+   a plain body/html background leaves a black band. z-index:-1 keeps it
+   behind all app content. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(244, 63, 94, 0.16), transparent 60%),
+    radial-gradient(1400px 820px at 50% 120%, rgba(220, 38, 70, 0.30), transparent 62%),
+    linear-gradient(180deg, var(--bg-1) 42%, var(--bg-bottom) 100%);
 }
 
 button {
@@ -251,10 +275,10 @@ a {
 .btn--primary {
   background: linear-gradient(120deg, var(--red), var(--red-deep));
   border: none;
-  box-shadow: 0 12px 30px -8px rgba(244, 63, 94, 0.6);
+  box-shadow: 0 16px 26px -16px rgba(244, 63, 94, 0.55);
 }
 .btn--primary:active {
-  box-shadow: 0 6px 18px -8px rgba(244, 63, 94, 0.7);
+  box-shadow: 0 10px 18px -16px rgba(244, 63, 94, 0.6);
 }
 .btn--ghost {
   background: rgba(255, 255, 255, 0.04);
