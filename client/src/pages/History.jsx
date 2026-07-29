@@ -5,7 +5,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import { catLabel, formatDate } from '../util.js';
-import { IcTrash, IcBook } from '../components/icons.jsx';
+import { IcTrash, IcHistory } from '../components/icons.jsx';
 
 export default function History() {
   const nav = useNavigate();
@@ -58,7 +58,7 @@ export default function History() {
       {status === 'error' && <ErrorState message={error} onRetry={load} />}
       {status === 'empty' && (
         <EmptyState
-          icon={<IcBook size={44} />}
+          icon={<IcHistory size={44} />}
           title={t('history.emptyTitle')}
           subtitle={t('history.emptySub')}
           action={
