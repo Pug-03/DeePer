@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { IcBack } from './icons.jsx';
@@ -59,7 +59,12 @@ function clamp(v, lo, hi) {
 function useTargetRect(selector) {
   const [rect, setRect] = useState(null);
 
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the first measurement for a new step
+  // lands before the browser paints — otherwise the spotlight briefly paints
+  // at the PREVIOUS step's position/size while already shaped for the new
+  // one (useEffect runs after paint), a one-frame glitch that's invisible
+  // tapping slowly but visibly flashes/jumps when advancing steps quickly.
+  useLayoutEffect(() => {
     const target = document.querySelector(selector);
     target?.scrollIntoView({ block: 'center', behavior: 'instant' });
 
