@@ -65,13 +65,15 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS support_proofs (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    display_name  TEXT NOT NULL,
-    transfer_at   TEXT NOT NULL,
-    slip_path     TEXT NOT NULL,
-    notified      INTEGER NOT NULL DEFAULT 0,
-    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    display_name   TEXT NOT NULL,
+    transfer_date  TEXT NOT NULL,
+    transfer_time  TEXT NOT NULL,
+    amount         REAL NOT NULL,
+    slip_path      TEXT NOT NULL,
+    notified       INTEGER NOT NULL DEFAULT 0,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   CREATE TABLE IF NOT EXISTS app_meta (
@@ -97,6 +99,34 @@ if (!otpCols.some((c) => c.name === 'purpose')) {
 const userCols = db.prepare(`PRAGMA table_info(users)`).all();
 if (!userCols.some((c) => c.name === 'avatar_url')) {
   db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT`);
+}
+
+// Migration: older databases stored a single transfer_at column — split it
+// into transfer_date + transfer_time, backfill existing rows from it, add
+// the new amount column, then drop transfer_at entirely. Dropping it (rather
+// than just leaving it) matters: its NOT NULL constraint can't be lifted by
+// ALTER ... ADD COLUMN, and new inserts stop supplying it, so it would start
+// rejecting every submission if left in place.
+// The two steps are guarded independently (not one combined check) so this
+// stays correct however far a given database already got through this
+// migration — including this project's own dev DB, which had already picked
+// up the new columns via --watch auto-restart before the drop step existed.
+const proofCols = db.prepare(`PRAGMA table_info(support_proofs)`).all();
+if (proofCols.length) {
+  if (!proofCols.some((c) => c.name === 'transfer_date')) {
+    db.exec(`ALTER TABLE support_proofs ADD COLUMN transfer_date TEXT`);
+    db.exec(`ALTER TABLE support_proofs ADD COLUMN transfer_time TEXT`);
+    db.exec(`ALTER TABLE support_proofs ADD COLUMN amount REAL`);
+  }
+  if (proofCols.some((c) => c.name === 'transfer_at')) {
+    db.exec(`
+      UPDATE support_proofs
+      SET transfer_date = substr(transfer_at, 1, 10),
+          transfer_time = substr(transfer_at, 12, 5)
+      WHERE transfer_date IS NULL
+    `);
+    db.exec(`ALTER TABLE support_proofs DROP COLUMN transfer_at`);
+  }
 }
 
 // Seed the curated question bank once.

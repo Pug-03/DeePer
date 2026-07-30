@@ -39,9 +39,10 @@ export async function runSupportDigest({ force = false } = {}) {
     return { sent: false, reason: 'no_recipient' };
   }
 
-  const lines = rows.map(
-    (r, i) => `${i + 1}. ${r.display_name}\n     โอนเมื่อ: ${r.transfer_at}\n     ส่งเมื่อ: ${r.created_at}`,
-  );
+  const lines = rows.map((r, i) => {
+    const amount = r.amount != null ? `${r.amount} บาท` : 'ไม่ระบุ';
+    return `${i + 1}. ${r.display_name}\n     จำนวนเงิน: ${amount}\n     โอนเมื่อ: ${r.transfer_date} ${r.transfer_time}\n     ส่งเมื่อ: ${r.created_at}`;
+  });
   const text =
     `มีผู้สนับสนุน ${rows.length} รายในรอบนี้ (สลิปแนบมาในอีเมล):\n\n` +
     `${lines.join('\n\n')}\n\n— DeePer`;

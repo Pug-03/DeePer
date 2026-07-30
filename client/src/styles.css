@@ -1326,9 +1326,21 @@ a {
   object-fit: contain;
   background: #fff;
 }
-/* Dark-themed native date/time picker. iOS gives datetime-local an intrinsic
-   content width that overflows the field, so pin it to the container width and
-   drop the native appearance. */
+/* Date + time side by side; each field shrinks evenly instead of overflowing
+   the card on narrow screens. */
+.support-proof-form .field-row {
+  display: flex;
+  gap: 10px;
+}
+.support-proof-form .field-row .field {
+  flex: 1;
+  min-width: 0;
+}
+/* Dark-themed native date/time pickers. iOS gives date/time/datetime-local an
+   intrinsic content width that overflows the field, so pin each to its
+   container width and drop the native appearance. */
+.support-proof-form input[type='date'],
+.support-proof-form input[type='time'],
 .support-proof-form input[type='datetime-local'] {
   color-scheme: dark;
   width: 100%;
@@ -1336,6 +1348,16 @@ a {
   min-width: 0;
   -webkit-appearance: none;
   appearance: none;
+}
+/* Number input's spinner arrows aren't worth the width they take on a money
+   field — hide them, same look as every other .input. */
+.support-proof-form input[type='number']::-webkit-outer-spin-button,
+.support-proof-form input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.support-proof-form input[type='number'] {
+  appearance: textfield;
 }
 .support-proof-note {
   margin: 14px 0 0;

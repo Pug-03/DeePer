@@ -13,7 +13,9 @@ export default function Support() {
 
   const [slipFile, setSlipFile] = useState(null);
   const [slipPreview, setSlipPreview] = useState('');
-  const [transferAt, setTransferAt] = useState('');
+  const [transferDate, setTransferDate] = useState('');
+  const [transferTime, setTransferTime] = useState('');
+  const [amount, setAmount] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -36,7 +38,7 @@ export default function Support() {
     setSlipFile(f);
   };
 
-  const canSubmit = slipFile && transferAt && displayName.trim();
+  const canSubmit = slipFile && transferDate && transferTime && amount && displayName.trim();
 
   const submitProof = async (e) => {
     e.preventDefault();
@@ -45,14 +47,18 @@ export default function Support() {
     try {
       const fd = new FormData();
       fd.append('slip', slipFile);
-      fd.append('transfer_at', transferAt);
+      fd.append('transfer_date', transferDate);
+      fd.append('transfer_time', transferTime);
+      fd.append('amount', amount);
       fd.append('display_name', displayName.trim());
       await api.upload('/support/proof', fd);
       toast(t('support.proofSuccess'));
       if (slipPreview) URL.revokeObjectURL(slipPreview);
       setSlipFile(null);
       setSlipPreview('');
-      setTransferAt('');
+      setTransferDate('');
+      setTransferTime('');
+      setAmount('');
       setDisplayName('');
     } catch (e2) {
       toast(e2.message);
@@ -147,13 +153,40 @@ export default function Support() {
             )}
           </label>
 
+          <div className="field-row">
+            <div className="field">
+              <label>{t('support.proofDate')}</label>
+              <input
+                className="input"
+                type="date"
+                value={transferDate}
+                onChange={(e) => setTransferDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="field">
+              <label>{t('support.proofTime')}</label>
+              <input
+                className="input"
+                type="time"
+                value={transferTime}
+                onChange={(e) => setTransferTime(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
           <div className="field">
-            <label>{t('support.proofDateTime')}</label>
+            <label>{t('support.proofAmount')}</label>
             <input
               className="input"
-              type="datetime-local"
-              value={transferAt}
-              onChange={(e) => setTransferAt(e.target.value)}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              placeholder={t('support.proofAmountPh')}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
               required
             />
           </div>
