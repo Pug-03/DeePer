@@ -154,6 +154,13 @@ export const IcShare = (p) => (
     <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
   </svg>
 );
+export const IcDownload = (p) => (
+  <svg {...S(p)}>
+    <path d="M12 3v12" />
+    <path d="M8 11l4 4 4-4" />
+    <path d="M5 21h14" />
+  </svg>
+);
 export const IcSettings = (p) => (
   <svg {...S({ ...p, sw: 1.8 })}>
     <circle cx="12" cy="12" r="3" />

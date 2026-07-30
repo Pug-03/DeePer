@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   motion,
@@ -12,10 +13,25 @@ import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
-import { IcX, IcCheck, IcBookmark, IcPlus, IcCards, IcSparkle, IcChat, IcShare } from '../components/icons.jsx';
+import {
+  IcX,
+  IcCheck,
+  IcBookmark,
+  IcPlus,
+  IcCards,
+  IcSparkle,
+  IcChat,
+  IcShare,
+  IcDownload,
+} from '../components/icons.jsx';
 import HomeTutorial from '../components/HomeTutorial.jsx';
 import { catLabel } from '../util.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
+
+// Web Share API only exists on (most) mobile browsers — desktop gets just the
+// "save to device" option in the sheet instead of a share button that can't
+// do anything there.
+const canShareFiles = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
@@ -86,9 +102,26 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   // disarmed on pointerup/cancel/leave — and, importantly, on the drag
   // actually starting, so beginning a real swipe never fires it: the timer
   // alone can't tell a held-still finger from the first instant of a drag.
+  //
+  // The hold itself only renders the image and opens a sheet with explicit
+  // choices (share to another app / save to device) — it doesn't fire
+  // navigator.share() directly. A website can't deep-link straight into one
+  // specific app (Instagram, LINE, ...) with a file; the OS share sheet is
+  // the only thing that can actually hand the image to them, and only in
+  // response to a real click on that sheet's own button, which is also a
+  // safer bet for browsers that require a direct user gesture to allow it.
   const pressTimer = useRef(null);
   const [sharing, setSharing] = useState(false);
   const [shareFlash, setShareFlash] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareBlob, setShareBlob] = useState(null);
+  const [sharePreviewUrl, setSharePreviewUrl] = useState('');
+  // Mirrors sharePreviewUrl so the unmount-cleanup effect below (which only
+  // runs once, with an empty dependency array) can always revoke whichever
+  // URL is actually live at that point — reading the state value directly
+  // there would close over its value from the very first render instead.
+  const sharePreviewUrlRef = useRef('');
+
   const clearPressTimer = () => {
     if (pressTimer.current) {
       clearTimeout(pressTimer.current);
@@ -99,10 +132,10 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     clearPressTimer();
     pressTimer.current = setTimeout(() => {
       pressTimer.current = null;
-      shareCard();
+      openShareSheet();
     }, LONG_PRESS_MS);
   };
-  const shareCard = async () => {
+  const openShareSheet = async () => {
     if (sharing) return;
     longPressFired.current = true;
     navigator.vibrate?.(15);
@@ -110,32 +143,63 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     try {
       const blob = await renderShareCard({ text: q.text, categoryLabel: catLabel(q.category) });
       if (!blob) throw new Error('render failed');
-      const file = new File([blob], 'deeper-question.png', { type: 'image/png' });
-      const shareData = { files: [file], title: 'DeePer', text: t('home.shareCaption') };
-      if (navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-        setShareFlash(true);
-        setTimeout(() => setShareFlash(false), 900);
-      } else if (navigator.share) {
-        // Some browsers support navigator.share but not file sharing —
-        // still worth sharing a link back to the app rather than nothing.
-        await navigator.share({ title: 'DeePer', text: t('home.shareCaption'), url: window.location.origin });
-        setShareFlash(true);
-        setTimeout(() => setShareFlash(false), 900);
-      } else {
-        downloadBlob(blob, 'deeper-question.png');
-        toast(t('home.shareSaved'));
-      }
-    } catch (e) {
-      if (e?.name !== 'AbortError') toast(t('home.shareFailed'));
+      if (sharePreviewUrlRef.current) URL.revokeObjectURL(sharePreviewUrlRef.current);
+      const url = URL.createObjectURL(blob);
+      sharePreviewUrlRef.current = url;
+      setSharePreviewUrl(url);
+      setShareBlob(blob);
+      setShareOpen(true);
+    } catch {
+      toast(t('home.shareFailed'));
     } finally {
       setSharing(false);
     }
   };
-  // If the card unmounts mid-hold (e.g. a keyboard shortcut fires skip/answer
-  // while the finger is still down), don't let the pending timer go on to
-  // call setState on an unmounted card.
-  useEffect(() => clearPressTimer, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const closeShareSheet = () => {
+    setShareOpen(false);
+    if (sharePreviewUrlRef.current) {
+      URL.revokeObjectURL(sharePreviewUrlRef.current);
+      sharePreviewUrlRef.current = '';
+    }
+    setSharePreviewUrl('');
+    setShareBlob(null);
+  };
+  const shareToApps = async () => {
+    if (!shareBlob) return;
+    try {
+      const file = new File([shareBlob], 'deeper-question.png', { type: 'image/png' });
+      const shareData = { files: [file], title: 'DeePer', text: t('home.shareCaption') };
+      if (navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Falls back to a link-only share when the browser supports
+        // navigator.share but not attaching files.
+        await navigator.share({ title: 'DeePer', text: t('home.shareCaption'), url: window.location.origin });
+      }
+      setShareFlash(true);
+      setTimeout(() => setShareFlash(false), 900);
+    } catch (e) {
+      if (e?.name !== 'AbortError') toast(t('home.shareFailed'));
+    } finally {
+      closeShareSheet();
+    }
+  };
+  const saveToDevice = () => {
+    if (!shareBlob) return;
+    downloadBlob(shareBlob, 'deeper-question.png');
+    toast(t('home.shareSaved'));
+    closeShareSheet();
+  };
+  // If the card unmounts mid-hold (or with the sheet still open — e.g. a
+  // keyboard shortcut fires skip/answer), don't leave a pending timer or a
+  // dangling object URL behind.
+  useEffect(
+    () => () => {
+      clearPressTimer();
+      if (sharePreviewUrlRef.current) URL.revokeObjectURL(sharePreviewUrlRef.current);
+    },
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   // Mirror this card's live drag offset up to the deck so the card behind it
   // can rise/scale in sync. A fresh TopCard always starts at rest, so reset
@@ -194,73 +258,131 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     q.source === 'ai' ? t('home.srcAi') : q.source === 'user' ? t('home.srcUser') : 'DeePer';
 
   return (
-    <motion.div
-      className="qcard glass"
-      style={{ x, y, rotate }}
-      drag
-      dragElastic={0.7}
-      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-      onDragStart={clearPressTimer}
-      onDragEnd={onDragEnd}
-      onTap={handleTap}
-      onPointerDown={startPressTimer}
-      onPointerUp={clearPressTimer}
-      onPointerCancel={clearPressTimer}
-      onPointerLeave={clearPressTimer}
-      whileTap={{ scale: 0.985, cursor: 'grabbing' }}
-    >
-      {/* The red border/glow used to be a static class, so it snapped in
-          instantly the moment a new card became top. When this promotion is
-          seamless, the preview card behind already faded its own glow in
-          during the reveal (see backGlow in DeckStack) — starting this one
-          over from 0 would flash it off and re-fade, undoing that. Only
-          category-switch/first-load mounts (not seamless, no preview to
-          hand off from) get their own fresh 0.45s fade-in. */}
+    <>
       <motion.div
-        className="qcard-glow"
-        initial={{ opacity: seamless ? 1 : 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: seamless ? 0 : 0.45, ease: FLY_EASE }}
-      />
-      <span className="q-source">{srcLabel}</span>
-      <motion.span
-        className="swipe-hint"
-        style={{ opacity: noOp, color: '#fff', left: 22, right: 'auto' }}
+        className="qcard glass"
+        style={{ x, y, rotate }}
+        drag
+        dragElastic={0.7}
+        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        onDragStart={clearPressTimer}
+        onDragEnd={onDragEnd}
+        onTap={handleTap}
+        onPointerDown={startPressTimer}
+        onPointerUp={clearPressTimer}
+        onPointerCancel={clearPressTimer}
+        onPointerLeave={clearPressTimer}
+        whileTap={{ scale: 0.985, cursor: 'grabbing' }}
       >
-        <IcX size={34} sw={3} />
-      </motion.span>
-      <motion.span className="swipe-hint" style={{ opacity: yesOp, color: 'var(--green)' }}>
-        <IcCheck size={34} sw={3} />
-      </motion.span>
-      <p className="q-text">{q.text}</p>
-      {saved && (
-        // Plain conditional mount, not a framer-motion opacity tween — animating
-        // opacity on an element with backdrop-filter makes the browser
-        // recompute the blur every frame, which showed up as the text behind
-        // it flickering during the fade-in. A straight show/hide has no such
-        // per-frame recompute.
-        <div className="card-saved-overlay">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 20 }}
-          >
-            <IcBookmark size={64} />
-          </motion.div>
-        </div>
+        {/* The red border/glow used to be a static class, so it snapped in
+            instantly the moment a new card became top. When this promotion is
+            seamless, the preview card behind already faded its own glow in
+            during the reveal (see backGlow in DeckStack) — starting this one
+            over from 0 would flash it off and re-fade, undoing that. Only
+            category-switch/first-load mounts (not seamless, no preview to
+            hand off from) get their own fresh 0.45s fade-in. */}
+        <motion.div
+          className="qcard-glow"
+          initial={{ opacity: seamless ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: seamless ? 0 : 0.45, ease: FLY_EASE }}
+        />
+        <span className="q-source">{srcLabel}</span>
+        <motion.span
+          className="swipe-hint"
+          style={{ opacity: noOp, color: '#fff', left: 22, right: 'auto' }}
+        >
+          <IcX size={34} sw={3} />
+        </motion.span>
+        <motion.span className="swipe-hint" style={{ opacity: yesOp, color: 'var(--green)' }}>
+          <IcCheck size={34} sw={3} />
+        </motion.span>
+        <p className="q-text">{q.text}</p>
+        {saved && (
+          // Plain conditional mount, not a framer-motion opacity tween — animating
+          // opacity on an element with backdrop-filter makes the browser
+          // recompute the blur every frame, which showed up as the text behind
+          // it flickering during the fade-in. A straight show/hide has no such
+          // per-frame recompute.
+          <div className="card-saved-overlay">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+            >
+              <IcBookmark size={64} />
+            </motion.div>
+          </div>
+        )}
+        {shareFlash && (
+          <div className="card-share-overlay">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+            >
+              <IcShare size={64} />
+            </motion.div>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Portaled to <body>: the card above is transformed (x/y/rotate via
+          drag), which would make a position:fixed sheet nested inside it
+          anchor to the card's own box instead of the viewport. */}
+      {createPortal(
+        <AnimatePresence>
+          {shareOpen && (
+            <motion.div
+              className="share-sheet-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={closeShareSheet}
+            >
+              <motion.div
+                className="share-sheet glass glass--red"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 340, damping: 32 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {sharePreviewUrl && <img className="share-sheet-preview" src={sharePreviewUrl} alt="" />}
+                <p className="share-sheet-title">{t('home.shareSheetTitle')}</p>
+
+                {canShareFiles && (
+                  <button type="button" className="share-sheet-btn" onClick={shareToApps}>
+                    <span className="share-sheet-btn-ic">
+                      <IcShare size={22} />
+                    </span>
+                    <span className="share-sheet-btn-text">
+                      <span className="share-sheet-btn-label">{t('home.shareToApps')}</span>
+                      <span className="share-sheet-btn-sub">{t('home.shareToAppsSub')}</span>
+                    </span>
+                  </button>
+                )}
+                <button type="button" className="share-sheet-btn" onClick={saveToDevice}>
+                  <span className="share-sheet-btn-ic">
+                    <IcDownload size={22} />
+                  </span>
+                  <span className="share-sheet-btn-text">
+                    <span className="share-sheet-btn-label">{t('home.saveToDevice')}</span>
+                    <span className="share-sheet-btn-sub">{t('home.saveToDeviceSub')}</span>
+                  </span>
+                </button>
+
+                <button type="button" className="btn btn--ghost share-sheet-cancel" onClick={closeShareSheet}>
+                  {t('common.cancel')}
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
       )}
-      {shareFlash && (
-        <div className="card-share-overlay">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 20 }}
-          >
-            <IcShare size={64} />
-          </motion.div>
-        </div>
-      )}
-    </motion.div>
+    </>
   );
 }
 

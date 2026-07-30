@@ -224,6 +224,11 @@ export const STRINGS = {
     'home.shareCaption': 'คำถามจาก DeePer — การ์ดคำถามชวนคุยลึก ๆ',
     'home.shareSaved': 'บันทึกรูปการ์ดไว้แล้ว นำไปแชร์ได้เลย',
     'home.shareFailed': 'แชร์ไม่สำเร็จ ลองอีกครั้งนะ',
+    'home.shareSheetTitle': 'แชร์การ์ดนี้',
+    'home.shareToApps': 'แชร์ไปแอปอื่น',
+    'home.shareToAppsSub': 'เลือก Instagram, LINE หรือแอปอื่นจากเมนูที่เปิดขึ้นมา',
+    'home.saveToDevice': 'บันทึกลงเครื่อง',
+    'home.saveToDeviceSub': 'เก็บรูปไว้ในเครื่อง แล้วแชร์เองภายหลังได้',
 
     // ตอบคำถาม
     'answer.notFound': 'ไม่พบคำถาม',
@@ -529,6 +534,11 @@ export const STRINGS = {
     'home.shareCaption': 'A question card from DeePer — deep-conversation cards',
     'home.shareSaved': 'Saved the card image — share it however you like',
     'home.shareFailed': "Couldn't share that — try again",
+    'home.shareSheetTitle': 'Share this card',
+    'home.shareToApps': 'Share to other apps',
+    'home.shareToAppsSub': 'Pick Instagram, LINE, or another app from the menu that opens',
+    'home.saveToDevice': 'Save to device',
+    'home.saveToDeviceSub': 'Keep the image on your device and share it later',
 
     'answer.notFound': 'Question not found',
     'answer.backHome': 'Back to home',
