@@ -779,6 +779,21 @@ a {
   color: #eab308;
   pointer-events: none;
 }
+/* Same treatment as .card-saved-overlay (long-press-to-share confirmation),
+   in the brand red instead of the save flow's yellow. */
+.card-share-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+  border: 2px solid var(--red-bright);
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--red-bright);
+  pointer-events: none;
+}
 
 /* ---------- Action buttons under deck ---------- */
 .actions {

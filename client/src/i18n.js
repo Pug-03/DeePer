@@ -221,6 +221,9 @@ export const STRINGS = {
     'home.srcUser': 'ของเรา',
     'home.aiDone': 'สร้างคำถามใหม่ด้วย AI แล้ว',
     'home.added': 'เพิ่มคำถามของคุณแล้ว',
+    'home.shareCaption': 'คำถามจาก DeePer — การ์ดคำถามชวนคุยลึก ๆ',
+    'home.shareSaved': 'บันทึกรูปการ์ดไว้แล้ว นำไปแชร์ได้เลย',
+    'home.shareFailed': 'แชร์ไม่สำเร็จ ลองอีกครั้งนะ',
 
     // ตอบคำถาม
     'answer.notFound': 'ไม่พบคำถาม',
@@ -523,6 +526,9 @@ export const STRINGS = {
     'home.srcUser': 'Yours',
     'home.aiDone': 'New questions created with AI',
     'home.added': 'Your question was added',
+    'home.shareCaption': 'A question card from DeePer — deep-conversation cards',
+    'home.shareSaved': 'Saved the card image — share it however you like',
+    'home.shareFailed': "Couldn't share that — try again",
 
     'answer.notFound': 'Question not found',
     'answer.backHome': 'Back to home',

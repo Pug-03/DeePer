@@ -12,8 +12,10 @@ import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
-import { IcX, IcCheck, IcBookmark, IcPlus, IcCards, IcSparkle, IcChat } from '../components/icons.jsx';
+import { IcX, IcCheck, IcBookmark, IcPlus, IcCards, IcSparkle, IcChat, IcShare } from '../components/icons.jsx';
 import HomeTutorial from '../components/HomeTutorial.jsx';
+import { catLabel } from '../util.js';
+import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 
 const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
@@ -39,9 +41,13 @@ const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 // A second tap within this window counts as a double-tap; slow enough for a
 // deliberate double-tap, tight enough that two separate taps don't merge.
 const DOUBLE_TAP_MS = 300;
+// How long a press has to hold still before it counts as "press and hold to
+// share" rather than the start of a swipe or a tap.
+const LONG_PRESS_MS = 550;
 
 function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, flyRegistry, saved, seamless }) {
   const { t } = useI18n();
+  const toast = useToast();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-220, 220], [-14, 14]);
@@ -56,7 +62,16 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   // looks the same whether triggered by a double-tap, the save button, or
   // the keyboard shortcut.
   const lastTap = useRef(0);
+  // Framer's onTap still fires on the pointer-up that ends a long-press (it
+  // only cares about position, not hold duration) — set whenever the share
+  // gesture fires, so the very next tap is swallowed instead of being read
+  // as one half of a double-tap-to-save.
+  const longPressFired = useRef(false);
   const handleTap = () => {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
     const now = Date.now();
     if (now - lastTap.current < DOUBLE_TAP_MS) {
       lastTap.current = 0;
@@ -65,6 +80,62 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       lastTap.current = now;
     }
   };
+
+  // Press-and-hold to share, mirroring how Instagram/TikTok posts long-press
+  // for actions beyond a tap. A plain setTimeout armed on pointerdown and
+  // disarmed on pointerup/cancel/leave — and, importantly, on the drag
+  // actually starting, so beginning a real swipe never fires it: the timer
+  // alone can't tell a held-still finger from the first instant of a drag.
+  const pressTimer = useRef(null);
+  const [sharing, setSharing] = useState(false);
+  const [shareFlash, setShareFlash] = useState(false);
+  const clearPressTimer = () => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
+  const startPressTimer = () => {
+    clearPressTimer();
+    pressTimer.current = setTimeout(() => {
+      pressTimer.current = null;
+      shareCard();
+    }, LONG_PRESS_MS);
+  };
+  const shareCard = async () => {
+    if (sharing) return;
+    longPressFired.current = true;
+    navigator.vibrate?.(15);
+    setSharing(true);
+    try {
+      const blob = await renderShareCard({ text: q.text, categoryLabel: catLabel(q.category) });
+      if (!blob) throw new Error('render failed');
+      const file = new File([blob], 'deeper-question.png', { type: 'image/png' });
+      const shareData = { files: [file], title: 'DeePer', text: t('home.shareCaption') };
+      if (navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        setShareFlash(true);
+        setTimeout(() => setShareFlash(false), 900);
+      } else if (navigator.share) {
+        // Some browsers support navigator.share but not file sharing —
+        // still worth sharing a link back to the app rather than nothing.
+        await navigator.share({ title: 'DeePer', text: t('home.shareCaption'), url: window.location.origin });
+        setShareFlash(true);
+        setTimeout(() => setShareFlash(false), 900);
+      } else {
+        downloadBlob(blob, 'deeper-question.png');
+        toast(t('home.shareSaved'));
+      }
+    } catch (e) {
+      if (e?.name !== 'AbortError') toast(t('home.shareFailed'));
+    } finally {
+      setSharing(false);
+    }
+  };
+  // If the card unmounts mid-hold (e.g. a keyboard shortcut fires skip/answer
+  // while the finger is still down), don't let the pending timer go on to
+  // call setState on an unmounted card.
+  useEffect(() => clearPressTimer, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Mirror this card's live drag offset up to the deck so the card behind it
   // can rise/scale in sync. A fresh TopCard always starts at rest, so reset
@@ -129,9 +200,14 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       drag
       dragElastic={0.7}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+      onDragStart={clearPressTimer}
       onDragEnd={onDragEnd}
       onTap={handleTap}
-      whileTap={{ cursor: 'grabbing' }}
+      onPointerDown={startPressTimer}
+      onPointerUp={clearPressTimer}
+      onPointerCancel={clearPressTimer}
+      onPointerLeave={clearPressTimer}
+      whileTap={{ scale: 0.985, cursor: 'grabbing' }}
     >
       {/* The red border/glow used to be a static class, so it snapped in
           instantly the moment a new card became top. When this promotion is
@@ -170,6 +246,17 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
             transition={{ type: 'spring', stiffness: 420, damping: 20 }}
           >
             <IcBookmark size={64} />
+          </motion.div>
+        </div>
+      )}
+      {shareFlash && (
+        <div className="card-share-overlay">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+          >
+            <IcShare size={64} />
           </motion.div>
         </div>
       )}
