@@ -2,7 +2,7 @@
 export const SUPPORT_INFO = {
   bank: {
     bankName: 'ธนาคารกรุงไทย',
-    accountName: 'ณฐพร ไทรทับทิม',
+    accountName: 'นายณฐพร ไทรทับทิม',
     accountNumber: '753-0-65491-8',
   },
   promptPay: {

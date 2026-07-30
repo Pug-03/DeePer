@@ -1,13 +1,21 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
-import { IcBack, IcBank, IcQrCode, IcCopy } from '../components/icons.jsx';
+import { IcBack, IcBank, IcQrCode, IcCopy, IcChat, IcCamera } from '../components/icons.jsx';
 import { SUPPORT_INFO } from '../support-info.js';
 
 export default function Support() {
   const nav = useNavigate();
   const { t } = useI18n();
   const toast = useToast();
+
+  const [slipFile, setSlipFile] = useState(null);
+  const [slipPreview, setSlipPreview] = useState('');
+  const [transferAt, setTransferAt] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [busy, setBusy] = useState(false);
 
   const copy = async (text) => {
     try {
@@ -16,6 +24,41 @@ export default function Support() {
       /* clipboard API unavailable — still show the confirmation */
     }
     toast(t('common.copied'));
+  };
+
+  const onSlip = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setSlipPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(f);
+    });
+    setSlipFile(f);
+  };
+
+  const canSubmit = slipFile && transferAt && displayName.trim();
+
+  const submitProof = async (e) => {
+    e.preventDefault();
+    if (!canSubmit || busy) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('slip', slipFile);
+      fd.append('transfer_at', transferAt);
+      fd.append('display_name', displayName.trim());
+      await api.upload('/support/proof', fd);
+      toast(t('support.proofSuccess'));
+      if (slipPreview) URL.revokeObjectURL(slipPreview);
+      setSlipFile(null);
+      setSlipPreview('');
+      setTransferAt('');
+      setDisplayName('');
+    } catch (e2) {
+      toast(e2.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const { bank, promptPay } = SUPPORT_INFO;
@@ -68,23 +111,72 @@ export default function Support() {
         </div>
       </div>
 
-      <div className="glass support-card support-card--qr">
+      {promptPay.qrImage && (
+        <div className="glass support-card support-card--qr">
+          <div className="support-head">
+            <span className="support-head-ic">
+              <IcQrCode size={18} />
+            </span>
+            <span className="support-head-title">{t('support.promptPay')}</span>
+          </div>
+          <div className="qr-frame">
+            <img className="qr-img" src={promptPay.qrImage} alt={t('support.promptPay')} />
+          </div>
+        </div>
+      )}
+
+      <div className="glass support-card">
         <div className="support-head">
           <span className="support-head-ic">
-            <IcQrCode size={18} />
+            <IcChat size={18} />
           </span>
-          <span className="support-head-title">{t('support.promptPay')}</span>
+          <span className="support-head-title">{t('support.proofTitle')}</span>
         </div>
-        <div className="qr-frame">
-          {promptPay.qrImage ? (
-            <img className="qr-img" src={promptPay.qrImage} alt={t('support.promptPay')} />
-          ) : (
-            <div className="qr-empty">
-              <IcQrCode size={40} />
-              <span>{t('support.qrComingSoon')}</span>
-            </div>
-          )}
-        </div>
+        <p className="support-proof-desc">{t('support.proofDesc')}</p>
+
+        <form className="support-proof-form" onSubmit={submitProof}>
+          <label className="slip-drop">
+            <input type="file" accept="image/*" hidden onChange={onSlip} />
+            {slipPreview ? (
+              <img className="slip-preview" src={slipPreview} alt={t('support.proofSlip')} />
+            ) : (
+              <span className="slip-drop-cta">
+                <IcCamera size={22} />
+                {t('support.proofAttach')}
+              </span>
+            )}
+          </label>
+
+          <div className="field">
+            <label>{t('support.proofDateTime')}</label>
+            <input
+              className="input"
+              type="datetime-local"
+              value={transferAt}
+              onChange={(e) => setTransferAt(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="field">
+            <label>{t('support.proofName')}</label>
+            <input
+              className="input"
+              type="text"
+              maxLength={80}
+              placeholder={t('support.proofNamePh')}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              required
+            />
+          </div>
+
+          <button className="btn btn--primary" type="submit" disabled={!canSubmit || busy}>
+            {busy ? t('support.proofSubmitting') : t('support.proofSubmit')}
+          </button>
+        </form>
+
+        <p className="support-proof-note">{t('support.proofUpdate')}</p>
       </div>
     </div>
   );

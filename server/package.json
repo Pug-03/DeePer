@@ -6,7 +6,9 @@
   "description": "DeePer backend — auth, questions, saved, history",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --watch src/index.js",
+    "proofs": "node src/list-proofs.js",
+    "digest": "node src/send-digest.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

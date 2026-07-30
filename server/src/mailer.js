@@ -39,3 +39,20 @@ export async function sendOtpEmail(to, code, purpose = 'register') {
   await transporter.sendMail({ from, to, subject, text });
   return { delivered: true };
 }
+
+// Generic sender (used by the support digest). Falls back to console when SMTP
+// isn't configured so the rest of the flow still works in development.
+export async function sendMail({ to, subject, text, html, attachments }) {
+  const from = process.env.SMTP_FROM || 'DeePer <no-reply@deeper.app>';
+  if (!transporter) {
+    console.log(`\n========== [DeePer mail — dev fallback] ==========`);
+    console.log(`  ส่งถึง: ${to}`);
+    console.log(`  หัวข้อ: ${subject}`);
+    if (text) console.log(`\n${text}`);
+    console.log(`  (โหมดพัฒนา — ตั้งค่า SMTP_* เพื่อส่งอีเมลจริง)`);
+    console.log(`====================================================\n`);
+    return { delivered: false };
+  }
+  await transporter.sendMail({ from, to, subject, text, html, attachments });
+  return { delivered: true };
+}
