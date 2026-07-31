@@ -350,6 +350,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
                 onClick={(e) => e.stopPropagation()}
               >
                 {sharePreviewUrl && <img className="share-sheet-preview" src={sharePreviewUrl} alt="" />}
+                <p className="share-sheet-hint">{t('home.shareLongPressHint')}</p>
                 <p className="share-sheet-title">{t('home.shareSheetTitle')}</p>
 
                 {canShareFiles && (

@@ -817,14 +817,25 @@ a {
   text-align: center;
 }
 .share-sheet-preview {
-  width: 108px;
-  height: 192px;
+  width: 200px;
+  height: 356px;
+  max-height: 46vh;
   object-fit: cover;
-  border-radius: 16px;
-  margin: 0 auto 14px;
+  border-radius: 20px;
+  margin: 0 auto 10px;
   display: block;
   border: 1px solid var(--border-red);
   box-shadow: var(--glow-red);
+  /* Bigger and left untouched by any tap/select styling — the whole point is
+     that this real <img> is easy to press-and-hold for the browser's own
+     native "Save Image" menu, which works everywhere with zero JS needed
+     (unlike a programmatic download, which iOS Safari often just opens
+     instead of actually saving). */
+}
+.share-sheet-hint {
+  font-size: 12.5px;
+  color: var(--text-faint);
+  margin: 0 0 16px;
 }
 .share-sheet-title {
   font-size: 17px;
