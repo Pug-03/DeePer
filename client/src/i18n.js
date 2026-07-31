@@ -230,6 +230,7 @@ export const STRINGS = {
     'home.shareToAppsSub': 'เลือก Instagram, LINE หรือแอปอื่นจากเมนูที่เปิดขึ้นมา',
     'home.saveToDevice': 'บันทึกลงเครื่อง',
     'home.saveToDeviceSub': 'เก็บรูปไว้ในเครื่อง แล้วแชร์เองภายหลังได้',
+    'home.saveToDeviceSubShare': 'เลือก "บันทึกรูปภาพ" จากเมนูที่เปิดขึ้นมา เพื่อเก็บเป็นรูปในเครื่อง',
 
     // ตอบคำถาม
     'answer.notFound': 'ไม่พบคำถาม',
@@ -541,6 +542,7 @@ export const STRINGS = {
     'home.shareToAppsSub': 'Pick Instagram, LINE, or another app from the menu that opens',
     'home.saveToDevice': 'Save to device',
     'home.saveToDeviceSub': 'Keep the image on your device and share it later',
+    'home.saveToDeviceSubShare': 'Pick "Save Image" from the menu that opens to add it to your photos',
 
     'answer.notFound': 'Question not found',
     'answer.backHome': 'Back to home',

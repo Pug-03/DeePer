@@ -184,8 +184,29 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       closeShareSheet();
     }
   };
-  const saveToDevice = () => {
+  const saveToDevice = async () => {
     if (!shareBlob) return;
+    // On iOS/Android, an <a download> blob link never reaches the Photos
+    // library — Safari in particular just drops it in Files as a generic
+    // file, which is exactly the "downloads but as a file, not a photo"
+    // complaint this replaced. The OS share sheet's own "Save Image" entry
+    // is the only thing on those platforms that actually writes a real photo
+    // to the camera roll, so route through navigator.share first and only
+    // fall back to the blob-download link where file sharing isn't there at
+    // all (desktop), where a plain download is the normal, expected outcome.
+    const file = new File([shareBlob], 'deeper-question.png', { type: 'image/png' });
+    if (canShareFiles && navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        setShareFlash(true);
+        setTimeout(() => setShareFlash(false), 900);
+      } catch (e) {
+        if (e?.name !== 'AbortError') toast(t('home.shareFailed'));
+      } finally {
+        closeShareSheet();
+      }
+      return;
+    }
     downloadBlob(shareBlob, 'deeper-question.png');
     toast(t('home.shareSaved'));
     closeShareSheet();
@@ -370,7 +391,9 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
                   </span>
                   <span className="share-sheet-btn-text">
                     <span className="share-sheet-btn-label">{t('home.saveToDevice')}</span>
-                    <span className="share-sheet-btn-sub">{t('home.saveToDeviceSub')}</span>
+                    <span className="share-sheet-btn-sub">
+                      {t(canShareFiles ? 'home.saveToDeviceSubShare' : 'home.saveToDeviceSub')}
+                    </span>
                   </span>
                 </button>
 
