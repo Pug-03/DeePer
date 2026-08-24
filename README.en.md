@@ -59,6 +59,36 @@ npm run dev:client      # http://localhost:5173  ← open this in the browser
 
 The Vite dev server proxies `/api` and `/uploads` to the backend on port 4000 automatically.
 
+### 🍎 Running on macOS (Terminal)
+
+Check you have Node 22+ (install with `brew install node` if not):
+
+```bash
+node -v
+```
+
+Then open two Terminal windows (or tabs) in the project folder:
+
+```bash
+# one-time setup
+cd ~/Desktop/Code/Dee_Per
+npm run install:all
+```
+
+**Window 1 — server**
+```bash
+cd ~/Desktop/Code/Dee_Per
+npm run dev:server
+```
+
+**Window 2 — client**
+```bash
+cd ~/Desktop/Code/Dee_Per
+npm run dev:client
+```
+
+Open **http://localhost:5173** in your browser.
+
 ### 🔑 Testing OTP without SMTP
 
 When you sign up by email, the OTP code is printed to the server console and (in dev mode) also shown

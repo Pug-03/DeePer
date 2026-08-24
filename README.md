@@ -58,6 +58,36 @@ npm run dev:client      # http://localhost:5173  ← เปิดอันนี
 
 Vite dev server จะ proxy `/api` และ `/uploads` ไปที่เซิร์ฟเวอร์พอร์ต 4000 ให้อัตโนมัติ
 
+### 🍎 รันบน Mac (Terminal)
+
+เช็คก่อนว่ามี Node 22+ ไหม (ถ้าไม่มีให้ `brew install node`):
+
+```bash
+node -v
+```
+
+จากนั้นเปิด Terminal 2 หน้าต่าง (หรือ 2 แท็บ) ที่โฟลเดอร์โปรเจกต์:
+
+```bash
+# ครั้งแรกครั้งเดียว
+cd ~/Desktop/Code/Dee_Per
+npm run install:all
+```
+
+**หน้าต่างที่ 1 — เซิร์ฟเวอร์**
+```bash
+cd ~/Desktop/Code/Dee_Per
+npm run dev:server
+```
+
+**หน้าต่างที่ 2 — client**
+```bash
+cd ~/Desktop/Code/Dee_Per
+npm run dev:client
+```
+
+เปิดเบราว์เซอร์ที่ **http://localhost:5173**
+
 ### 🔑 ทดสอบ OTP โดยไม่ตั้งค่า SMTP
 
 ตอนสมัครด้วยอีเมล ระบบจะพิมพ์รหัส OTP ลงใน console ของเซิร์ฟเวอร์ และ (ในโหมดพัฒนา) เด้ง toast บอกรหัสบนหน้าจอด้วย
