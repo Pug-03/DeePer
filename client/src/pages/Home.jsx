@@ -60,6 +60,13 @@ const DOUBLE_TAP_MS = 300;
 // How long a press has to hold still before it counts as "press and hold to
 // share" rather than the start of a swipe or a tap.
 const LONG_PRESS_MS = 550;
+// How far the pointer can drift during that hold before it's treated as the
+// start of a real swipe instead of jitter. A trackpad click (unlike a touch)
+// physically depresses under finger pressure, which nudges the cursor a few
+// pixels — framer-motion's drag gesture picks that up as movement, so without
+// this tolerance onDragStart cancels the long-press timer almost instantly
+// and press-and-hold-to-share never fires at all on a MacBook trackpad.
+const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
 
 function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, flyRegistry, saved, seamless }) {
   const { t } = useI18n();
@@ -111,6 +118,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   // response to a real click on that sheet's own button, which is also a
   // safer bet for browsers that require a direct user gesture to allow it.
   const pressTimer = useRef(null);
+  const pressStart = useRef({ x: 0, y: 0 });
   const [sharing, setSharing] = useState(false);
   const [shareFlash, setShareFlash] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -128,12 +136,19 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       pressTimer.current = null;
     }
   };
-  const startPressTimer = () => {
+  const startPressTimer = (e) => {
+    pressStart.current = { x: e.clientX, y: e.clientY };
     clearPressTimer();
     pressTimer.current = setTimeout(() => {
       pressTimer.current = null;
       openShareSheet();
     }, LONG_PRESS_MS);
+  };
+  const handlePressMove = (e) => {
+    if (!pressTimer.current) return;
+    const dx = e.clientX - pressStart.current.x;
+    const dy = e.clientY - pressStart.current.y;
+    if (Math.hypot(dx, dy) > LONG_PRESS_MOVE_TOLERANCE_PX) clearPressTimer();
   };
   const openShareSheet = async () => {
     if (sharing) return;
@@ -286,10 +301,10 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
         drag
         dragElastic={0.7}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        onDragStart={clearPressTimer}
         onDragEnd={onDragEnd}
         onTap={handleTap}
         onPointerDown={startPressTimer}
+        onPointerMove={handlePressMove}
         onPointerUp={clearPressTimer}
         onPointerCancel={clearPressTimer}
         onPointerLeave={clearPressTimer}

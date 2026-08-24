@@ -28,13 +28,26 @@ function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
+// Splits into grapheme clusters rather than raw code points — a Thai vowel
+// or tone mark is a separate code point that has to stay glued to the
+// consonant before it. Iterating with `for...of` (code points) can split
+// a run right between the two, leaving the mark orphaned at the start of
+// the next chunk, which renders detached/misplaced instead of attached to
+// its base character.
+function graphemes(str) {
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    return Array.from(new Intl.Segmenter('th', { granularity: 'grapheme' }).segment(str), (s) => s.segment);
+  }
+  return Array.from(str);
+}
+
 // Breaks a single run that's wider than the card by itself into
 // character-level chunks — the fallback path below for Thai text (which
 // often has no spaces between words at all, unlike English).
 function splitToFit(ctx, run, maxWidth) {
   const chunks = [];
   let chunk = '';
-  for (const ch of run) {
+  for (const ch of graphemes(run)) {
     const attempt = chunk + ch;
     if (ctx.measureText(attempt).width <= maxWidth || !chunk) {
       chunk = attempt;
