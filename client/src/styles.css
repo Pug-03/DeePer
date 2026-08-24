@@ -1666,6 +1666,7 @@ a {
   color: #fff;
   background: linear-gradient(135deg, var(--red), var(--red-deep));
   box-shadow: var(--glow-red);
+  border: 2px solid var(--bg-1);
 }
 .avatar-picker {
   width: 76px;
