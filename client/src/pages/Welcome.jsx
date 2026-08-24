@@ -17,11 +17,6 @@ export default function Welcome() {
           <span className="dot" />
           <span className="brand">DeePer</span>
         </div>
-        <p className="sub" style={{ marginTop: 14, maxWidth: 340, marginInline: 'auto' }}>
-          {t('welcome.tagline1')}
-          <br />
-          {t('welcome.tagline2')}
-        </p>
       </div>
 
       <div

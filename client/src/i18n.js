@@ -68,8 +68,6 @@ export const STRINGS = {
     'err.AVATAR_UPLOAD_FAILED': 'อัปโหลดรูปไม่สำเร็จ',
 
     // แบรนด์ / คำโปรย
-    'welcome.tagline1': 'การ์ดคำถามชวนคุยลึก ๆ',
-    'welcome.tagline2': 'สำหรับคู่รัก เพื่อน ๆ และครอบครัว',
     'welcome.sample': '“อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”',
     'welcome.signup': 'สมัครใหม่',
     'welcome.haveAccount': 'มีบัญชีอยู่แล้ว',
@@ -385,8 +383,6 @@ export const STRINGS = {
     'err.AVATAR_TYPE_INVALID': 'Only JPG, PNG, or WEBP images are supported',
     'err.AVATAR_UPLOAD_FAILED': 'Failed to upload the image',
 
-    'welcome.tagline1': 'Deep conversation cards',
-    'welcome.tagline2': 'for couples, friends, and family',
     'welcome.sample': '“What’s a little thing that makes you smile every day?”',
     'welcome.signup': 'Sign up',
     'welcome.haveAccount': 'I already have an account',
