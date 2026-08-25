@@ -11,7 +11,7 @@ import {
 } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
-import { useToast } from '../components/ui.jsx';
+import { useToast, useConfirm } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
 import {
   IcX,
@@ -643,6 +643,7 @@ function CatTabs({ category, onSwitch }) {
 export default function Home() {
   const nav = useNavigate();
   const toast = useToast();
+  const confirmDlg = useConfirm();
   const { t } = useI18n();
 
   const [category, setCategory] = useState(() => localStorage.getItem('dt_cat') || 'couple');
@@ -654,6 +655,7 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [adding, setAdding] = useState(false);
   const [newQ, setNewQ] = useState('');
+  const [addCat, setAddCat] = useState(() => localStorage.getItem('dt_cat') || 'couple');
   const [showTutorial, setShowTutorial] = useState(
     () => localStorage.getItem('dt_tutorial_pending') === '1',
   );
@@ -800,17 +802,32 @@ export default function Home() {
     const text = newQ.trim();
     if (text.length < 3) return;
     try {
-      const d = await api.post('/questions', { category, text });
-      seen.current.add(d.question.id);
-      setDeck((prev) => [...prev, d.question]);
-      setStatus('ready');
+      const d = await api.post('/questions', { category: addCat, text });
       setNewQ('');
       setAdding(false);
-      toast(
-        <>
-          <IcChat size={16} /> {t('home.added')}
-        </>,
-      );
+      // No more swiping to reach a just-typed question: ask straight away
+      // whether to jump into answering it now, or park it in Saved (the
+      // existing "answer it later" list) instead.
+      const answerNow = await confirmDlg({
+        icon: <IcChat size={36} />,
+        title: t('home.addedTitle'),
+        message: t('home.addedMsg'),
+        confirmText: t('home.answerNow'),
+        cancelText: t('home.saveForLater'),
+        danger: false,
+      });
+      if (answerNow) {
+        nav('/app/answer', {
+          state: { question: { text: d.question.text, category: d.question.category } },
+        });
+      } else {
+        await api.post('/saved', { question_text: d.question.text, category: d.question.category });
+        toast(
+          <>
+            <IcBookmark size={16} /> {t('home.savedForLater')}
+          </>,
+        );
+      }
     } catch (e2) {
       toast(e2.message);
     }
@@ -827,7 +844,13 @@ export default function Home() {
           <button
             className="btn btn--sm btn--ghost"
             data-tut="add"
-            onClick={() => setAdding((a) => !a)}
+            onClick={() =>
+              setAdding((a) => {
+                const next = !a;
+                if (next) setAddCat(category);
+                return next;
+              })
+            }
           >
             <IcPlus size={18} /> {t('home.addQuestion')}
           </button>
@@ -837,6 +860,16 @@ export default function Home() {
 
         {adding && (
           <form className="glass fade-up" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
+            <div className="field">
+              <label>{t('home.addCatLabel')}</label>
+              <select className="select" value={addCat} onChange={(e) => setAddCat(e.target.value)}>
+                {CATS.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`cat.${c}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
             <textarea
               className="textarea"
               style={{ minHeight: 80 }}
