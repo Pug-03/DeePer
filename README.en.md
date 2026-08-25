@@ -118,6 +118,7 @@ Copy `server/.env.example` to `server/.env` and fill in:
 | `JWT_SECRET` | Secret for signing tokens (**must** be set in production — the server refuses to start with the default if `NODE_ENV=production`) |
 | `NODE_ENV` | Set to `production` on deploy — enforces a real `JWT_SECRET` and hides OTP codes from API responses even if SMTP isn't configured |
 | `CORS_ORIGIN` | Comma-separated list of client origins allowed to call the API — unset allows any origin |
+| `TRUST_PROXY` | Set to `true` when deployed behind a reverse proxy (Render/Railway/Fly.io/nginx, etc.) — otherwise the login/OTP rate limiter sees every visitor as the same IP |
 | `GOOGLE_CLIENT_ID` | Enables Google sign-in/sign-up (create a **Web** OAuth client in Google Cloud Console) |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / … | Send real OTP emails |
 | `ANTHROPIC_API_KEY` | Enables the "generate questions with AI" button (model `claude-opus-4-8`) |

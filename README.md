@@ -115,6 +115,7 @@ npm start               # เซิร์ฟเวอร์เสิร์ฟท
 | `JWT_SECRET` | ความลับสำหรับเซ็น token (**ต้อง**ตั้งค่าจริงตอน deploy — ถ้า `NODE_ENV=production` แล้วไม่ตั้ง เซิร์ฟเวอร์จะไม่ยอมสตาร์ท) |
 | `NODE_ENV` | ตั้งเป็น `production` ตอน deploy จริง — บังคับตั้ง `JWT_SECRET` เอง และซ่อนรหัส OTP ออกจาก response แม้ยังไม่ได้ตั้งค่า SMTP |
 | `CORS_ORIGIN` | โดเมนของ client ที่อนุญาตให้เรียก API (คั่นด้วย `,`) — ไม่ตั้งค่า = อนุญาตทุกโดเมน |
+| `TRUST_PROXY` | ตั้งเป็น `true` ถ้า deploy หลัง reverse proxy (Render/Railway/Fly.io/nginx ฯลฯ) ไม่งั้นระบบกันสแปม login/OTP จะเห็น IP ผู้ใช้ทุกคนเป็นค่าเดียว |
 | `GOOGLE_CLIENT_ID` | เปิดปุ่มเข้าสู่ระบบ/สมัครด้วย Google (สร้างที่ Google Cloud Console, ประเภท Web) |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / … | ส่งอีเมล OTP จริง |
 | `ANTHROPIC_API_KEY` | เปิดปุ่ม "สร้างคำถามด้วย AI" (โมเดล `claude-opus-4-8`) |
