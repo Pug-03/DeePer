@@ -660,6 +660,11 @@ export default function Home() {
   );
   const [enterDir, setEnterDir] = useState(0);
   const [saveFlash, setSaveFlash] = useState(false);
+  // True while the "answer now / save for later" confirm dialog from addOwn
+  // is open — it renders as a plain overlay with no focus trap, so the
+  // keyboard shortcuts below need this to know not to act on the swipe
+  // card hidden underneath it.
+  const [dialogOpen, setDialogOpen] = useState(false);
   const seen = useRef(new Set());
   const firstLoad = useRef(true);
   const flyRegistry = useRef(null);
@@ -753,11 +758,11 @@ export default function Home() {
   // gestures (skip/answer), ↑ mirrors the save button. Kept in a ref so the
   // listener is attached once instead of re-subscribing on every render.
   const keyStateRef = useRef();
-  keyStateRef.current = { status, current, showTutorial, doSkip, doAnswer, save };
+  keyStateRef.current = { status, current, showTutorial, dialogOpen, doSkip, doAnswer, save };
   useEffect(() => {
     const onKeyDown = (e) => {
-      const { status, current, showTutorial, doSkip, doAnswer, save } = keyStateRef.current;
-      if (status !== 'ready' || !current || showTutorial) return;
+      const { status, current, showTutorial, dialogOpen, doSkip, doAnswer, save } = keyStateRef.current;
+      if (status !== 'ready' || !current || showTutorial || dialogOpen) return;
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
@@ -802,11 +807,17 @@ export default function Home() {
     if (text.length < 3) return;
     try {
       const d = await api.post('/questions', { category: addCat, text });
+      // Not inserted into the deck, but still worth excluding from future
+      // top-up fetches for this category — otherwise it can resurface as a
+      // fresh swipe card later this session even though the user already
+      // answered/saved it just now via the dialog below.
+      seen.current.add(d.question.id);
       setNewQ('');
       setAdding(false);
       // No more swiping to reach a just-typed question: ask straight away
       // whether to jump into answering it now, or park it in Saved (the
       // existing "answer it later" list) instead.
+      setDialogOpen(true);
       const answerNow = await confirmDlg({
         icon: <IcChat size={36} />,
         title: t('home.addedTitle'),
@@ -814,7 +825,7 @@ export default function Home() {
         confirmText: t('home.answerNow'),
         cancelText: t('home.saveForLater'),
         danger: false,
-      });
+      }).finally(() => setDialogOpen(false));
       if (answerNow) {
         nav('/app/answer', {
           state: { question: { text: d.question.text, category: d.question.category } },
