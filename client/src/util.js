@@ -1,6 +1,8 @@
 import { translate } from './i18n.js';
 import { currentLang } from './store/i18n.jsx';
 
+export const CATS = ['couple', 'friends', 'family'];
+
 export function catLabel(c) {
   return translate(currentLang, `cat.${c}`);
 }

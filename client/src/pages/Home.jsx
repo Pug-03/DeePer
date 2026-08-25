@@ -25,7 +25,7 @@ import {
   IcDownload,
 } from '../components/icons.jsx';
 import HomeTutorial from '../components/HomeTutorial.jsx';
-import { catLabel } from '../util.js';
+import { catLabel, CATS } from '../util.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 
 // Web Share API only exists on (most) mobile browsers — desktop gets just the
@@ -33,7 +33,6 @@ import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 // do anything there.
 const canShareFiles = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
-const CATS = ['couple', 'friends', 'family'];
 const SWIPE_THRESHOLD = 110;
 const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 const FLY_EASE = [0.16, 1, 0.3, 1];

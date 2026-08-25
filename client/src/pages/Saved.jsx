@@ -4,6 +4,7 @@ import { motion, useInView } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
+import CatFilter from '../components/CatFilter.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash, IcBookmark } from '../components/icons.jsx';
 
@@ -46,6 +47,7 @@ export default function Saved() {
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [catFilter, setCatFilter] = useState('all');
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -82,6 +84,8 @@ export default function Saved() {
     }
   };
 
+  const filtered = catFilter === 'all' ? items : items.filter((it) => it.category === catFilter);
+
   return (
     <div className="page page--tab stagger">
       <div className="header">
@@ -109,11 +113,20 @@ export default function Saved() {
       )}
 
       {status === 'ready' && (
-        <div className="list">
-          {items.map((it, index) => (
-            <SavedItem key={it.id} it={it} index={index} onAnswer={answer} onRemove={remove} />
-          ))}
-        </div>
+        <>
+          <CatFilter value={catFilter} onChange={setCatFilter} />
+          {filtered.length === 0 ? (
+            <p className="sub" style={{ marginTop: 24, textAlign: 'center' }}>
+              {t('saved.emptyFilter')}
+            </p>
+          ) : (
+            <div className="list">
+              {filtered.map((it, index) => (
+                <SavedItem key={it.id} it={it} index={index} onAnswer={answer} onRemove={remove} />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

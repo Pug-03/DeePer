@@ -713,6 +713,24 @@ a {
   display: inline-block;
 }
 
+/* Plain (non-elastic) filter row, e.g. the category filter on Saved/History
+   — same pill look as the home category tabs, but each pill carries its own
+   active background instead of a shared sliding indicator element. */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.filter-row .pill {
+  flex: 0 1 auto;
+  padding: 0 16px;
+}
+.filter-row .pill.active {
+  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
+  box-shadow: var(--glow-red);
+}
+
 /* ---------- Question card deck ---------- */
 .deck {
   position: relative;

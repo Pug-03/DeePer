@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
+import CatFilter from '../components/CatFilter.jsx';
 import { catLabel, formatDate } from '../util.js';
 import { IcTrash, IcHistory } from '../components/icons.jsx';
 
@@ -17,6 +18,7 @@ export default function History() {
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [open, setOpen] = useState(null);
+  const [catFilter, setCatFilter] = useState('all');
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -47,6 +49,8 @@ export default function History() {
     }
   };
 
+  const filtered = catFilter === 'all' ? items : items.filter((it) => it.category === catFilter);
+
   return (
     <div className="page page--tab stagger">
       <div className="header">
@@ -73,9 +77,17 @@ export default function History() {
         />
       )}
 
-      {status === 'ready' && (
+      {status === 'ready' && <CatFilter value={catFilter} onChange={setCatFilter} />}
+
+      {status === 'ready' && filtered.length === 0 && (
+        <p className="sub" style={{ marginTop: 24, textAlign: 'center' }}>
+          {t('history.emptyFilter')}
+        </p>
+      )}
+
+      {status === 'ready' && filtered.length > 0 && (
         <div className="list stagger">
-          {items.map((it) => {
+          {filtered.map((it) => {
             const isOpen = open === it.id;
             return (
               <div

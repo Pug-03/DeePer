@@ -197,6 +197,7 @@ export const STRINGS = {
     'pw.special': 'อักขระพิเศษ (!@#..)',
 
     // หมวดคำถาม
+    'cat.all': 'ทั้งหมด',
     'cat.couple': 'คู่รัก',
     'cat.friends': 'เพื่อน ๆ',
     'cat.family': 'ครอบครัว',
@@ -260,6 +261,7 @@ export const STRINGS = {
     'saved.emptySub': 'กดปุ่มบันทึกที่หน้าหลักเพื่อเก็บคำถามไว้ถามทีหลัง',
     'saved.goHome': 'ไปหน้าหลัก',
     'saved.removed': 'ลบออกจากที่บันทึกแล้ว',
+    'saved.emptyFilter': 'ยังไม่มีคำถามที่บันทึกไว้ในหมวดนี้',
 
     // ประวัติ
     'history.title': 'ประวัติ',
@@ -269,6 +271,7 @@ export const STRINGS = {
     'history.start': 'เริ่มตอบคำถาม',
     'history.noAnswers': 'ไม่มีคำตอบที่บันทึกไว้',
     'history.removed': 'ลบออกจากประวัติแล้ว',
+    'history.emptyFilter': 'ยังไม่มีประวัติการตอบในหมวดนี้',
 
     // โปรไฟล์
     'profile.changePhoto': 'เปลี่ยนรูปโปรไฟล์',
@@ -513,6 +516,7 @@ export const STRINGS = {
     'pw.digit': 'Number (0-9)',
     'pw.special': 'Special (!@#..)',
 
+    'cat.all': 'All',
     'cat.couple': 'Couple',
     'cat.friends': 'Friends',
     'cat.family': 'Family',
@@ -573,6 +577,7 @@ export const STRINGS = {
     'saved.emptySub': 'Tap the save button on the home page to keep questions for later',
     'saved.goHome': 'Go to home',
     'saved.removed': 'Removed from saved',
+    'saved.emptyFilter': 'No saved questions in this category yet',
 
     'history.title': 'History',
     'history.sub': 'Questions and answers you’ve shared',
@@ -581,6 +586,7 @@ export const STRINGS = {
     'history.start': 'Start answering',
     'history.noAnswers': 'No saved answers',
     'history.removed': 'Removed from history',
+    'history.emptyFilter': 'No answer history in this category yet',
 
     'profile.changePhoto': 'Change profile photo',
     'profile.removePhoto': 'Remove photo',
