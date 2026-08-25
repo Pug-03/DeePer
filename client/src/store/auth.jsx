@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { api, getToken, setToken } from '../api.js';
+import { api, getToken, setToken, setSessionExpiredHandler } from '../api.js';
 
 const AuthContext = createContext(null);
 
@@ -34,6 +34,14 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   }, []);
+
+  // Any request anywhere that comes back with an invalid/expired token
+  // routes through this so the user lands back on Login instead of being
+  // stuck on a page that can no longer load anything — see api.js.
+  useEffect(() => {
+    setSessionExpiredHandler(logout);
+    return () => setSessionExpiredHandler(null);
+  }, [logout]);
 
   const refreshUser = useCallback(async () => {
     const d = await api.get('/auth/me');

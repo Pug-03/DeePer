@@ -5,6 +5,13 @@ import { db } from './db.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const TOKEN_TTL = '30d';
 
+// The default secret is fine for local dev, but forging any user's login
+// token is trivial if it's ever left in place in production — refuse to
+// start rather than run silently insecure.
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'dev-secret-change-me') {
+  throw new Error('JWT_SECRET must be set in production — refusing to start with the default dev secret');
+}
+
 export function hashPassword(plain) {
   return bcrypt.hashSync(plain, 10);
 }

@@ -33,7 +33,12 @@ export async function sendOtpEmail(to, code, purpose = 'register') {
     console.log(`  รหัส OTP: ${code}`);
     console.log(`  (โหมดพัฒนา — ตั้งค่า SMTP_* เพื่อส่งอีเมลจริง)`);
     console.log(`====================================\n`);
-    return { delivered: false, devCode: code };
+    // The code still prints to the server console above regardless — this
+    // field is only for the client to surface it inline during local dev.
+    // Never ship it in a response in production: if SMTP is ever left
+    // unconfigured there, this is the difference between "OTP flow is
+    // broken" and "anyone can read anyone's OTP straight off the API".
+    return { delivered: false, devCode: process.env.NODE_ENV === 'production' ? undefined : code };
   }
 
   await transporter.sendMail({ from, to, subject, text });

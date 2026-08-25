@@ -15,7 +15,15 @@ import { startSupportDigestScheduler } from './support-digest.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-app.use(cors());
+// Auth is Bearer-token based (no cookies), so an open CORS policy can't be
+// used to ride a browser's existing session — but it's still tightened
+// here whenever the deployer bothers to set CORS_ORIGIN. Left wide open by
+// default so the app keeps working out of the box with zero config.
+const corsOrigins = String(process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
 app.use(express.json({ limit: '256kb' }));
 
 const uploadsDir = join(__dirname, '..', 'uploads');

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { OAuth2Client } from 'google-auth-library';
 import multer from 'multer';
 import fs from 'node:fs';
@@ -37,6 +38,18 @@ const avatarUpload = multer({
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits
 
+// Guards the account-takeover-shaped endpoints — OTP request/verify, login,
+// password reset. 10 requests / 15 min per IP is loose enough for a real
+// user retrying a typo, but caps an attacker well short of exhausting the
+// 10,000 possible 4-digit OTP codes within their 10-minute expiry window.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'พยายามมากเกินไป กรุณาลองใหม่ภายหลัง', error_code: 'RATE_LIMITED' },
+});
+
 // --- Config for the client (which auth methods are live) ---
 router.get('/config', (_req, res) => {
   res.json({
@@ -47,7 +60,7 @@ router.get('/config', (_req, res) => {
 });
 
 // --- Step 1: request OTP for email signup ---
-router.post('/otp/request', async (req, res) => {
+router.post('/otp/request', authLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -77,7 +90,7 @@ router.post('/otp/request', async (req, res) => {
 });
 
 // --- Step 2: verify OTP ---
-router.post('/otp/verify', (req, res) => {
+router.post('/otp/verify', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   if (!isEmail(email) || !/^\d{4}$/.test(code))
@@ -99,7 +112,7 @@ router.post('/otp/verify', (req, res) => {
 });
 
 // --- Step 3: complete email signup ---
-router.post('/register', (req, res) => {
+router.post('/register', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { nickname, age, gender, password } = req.body;
@@ -157,7 +170,7 @@ router.post('/register', (req, res) => {
 });
 
 // --- Email + password login ---
-router.post('/login', (req, res) => {
+router.post('/login', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   if (!isEmail(email) || !password)
@@ -175,7 +188,7 @@ router.post('/login', (req, res) => {
 });
 
 // --- Forgot password — Step 1: request OTP ---
-router.post('/password-reset/request', async (req, res) => {
+router.post('/password-reset/request', authLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -209,7 +222,7 @@ router.post('/password-reset/request', async (req, res) => {
 });
 
 // --- Forgot password — Step 2: verify OTP ---
-router.post('/password-reset/verify', (req, res) => {
+router.post('/password-reset/verify', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   if (!isEmail(email) || !/^\d{4}$/.test(code))
@@ -231,7 +244,7 @@ router.post('/password-reset/verify', (req, res) => {
 });
 
 // --- Forgot password — Step 3: set new password (auto-login on success) ---
-router.post('/password-reset/confirm', (req, res) => {
+router.post('/password-reset/confirm', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { password } = req.body;

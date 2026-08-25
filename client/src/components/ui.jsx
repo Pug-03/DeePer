@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { useI18n } from '../store/i18n.jsx';
 import { IcAlertCircle, IcSeedling, IcTrash } from './icons.jsx';
 
@@ -74,6 +74,8 @@ export function useConfirm() {
 export function ConfirmProvider({ children }) {
   const { t } = useI18n();
   const [state, setState] = useState(null); // { title, message, confirmText, danger, resolve }
+  const modalRef = useRef(null);
+  const cancelBtnRef = useRef(null);
 
   const confirm = useCallback(
     (opts = {}) => new Promise((resolve) => setState({ ...opts, resolve })),
@@ -85,17 +87,56 @@ export function ConfirmProvider({ children }) {
     setState(null);
   };
 
+  // Every useConfirm() caller in the app shares this one dialog, so fixing
+  // keyboard behavior here (focus on open, Escape to dismiss, Tab trapped
+  // between the two buttons) covers all of them at once — including the
+  // add-question dialog on Home, where arrow-key deck shortcuts underneath
+  // used to leak through because nothing here ever took focus.
+  useEffect(() => {
+    if (!state) return;
+    cancelBtnRef.current?.focus();
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        close(false);
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusables = modalRef.current?.querySelectorAll('button');
+      if (!focusables?.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <ConfirmCtx.Provider value={confirm}>
       {children}
       {state && (
         <div className="modal-overlay fade-in" onClick={() => close(false)}>
-          <div className="modal glass glass--red pop-in" onClick={(e) => e.stopPropagation()}>
+          <div
+            ref={modalRef}
+            className="modal glass glass--red pop-in"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-icon">{state.icon || <IcTrash size={36} />}</div>
-            <h3 className="modal-title">{state.title || t('confirm.deleteTitle')}</h3>
+            <h3 className="modal-title" id="confirm-modal-title">
+              {state.title || t('confirm.deleteTitle')}
+            </h3>
             {state.message && <p className="modal-msg">{state.message}</p>}
             <div className="modal-actions">
-              <button className="btn btn--ghost" onClick={() => close(false)}>
+              <button ref={cancelBtnRef} className="btn btn--ghost" onClick={() => close(false)}>
                 {state.cancelText || t('common.cancel')}
               </button>
               <button
