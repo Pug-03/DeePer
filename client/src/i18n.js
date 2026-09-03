@@ -411,7 +411,7 @@ export const STRINGS = {
     'welcome.about.eyebrow': 'About the app',
     'welcome.about.title': 'What is DeePer',
     'welcome.about.body':
-      'DeePer is a deep-conversation card game — open one app together and take turns answering. Couples, close friends, or family, all on the same device. No separate downloads, just pick up your phone and start talking a little deeper.',
+      'DeePer is a deep-conversation card game. Open one app together and take turns answering. Couples, close friends, or family, all on the same device. No separate downloads, just pick up your phone and start talking a little deeper.',
     'welcome.stats.eyebrow': 'By the numbers',
     'welcome.stats.label': 'people using DeePer',
     'welcome.team.eyebrow': 'Developers',
