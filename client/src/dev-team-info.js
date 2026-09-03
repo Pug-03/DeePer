@@ -10,7 +10,7 @@ export const DEV_TEAM = [
   {
     nameTh: 'ณฐพร ไทรทับทิม',
     nameEn: 'Nathaporn Saituptim',
-    roleTh: 'เจ้าของโปรเจกต์ ผู้พัฒนาหลัก (ดูแลทุกส่วน — เจ้าของและพัฒนาทั้งหมด)',
+    roleTh: 'เจ้าของโปรเจกต์ ผู้พัฒนาหลัก (ดูแลทุกส่วน เจ้าของและพัฒนาทั้งหมด)',
     roleEn: 'Project owner and lead developer who builds every part of DeePer',
     link: '',
     avatar: nathapornPhoto,

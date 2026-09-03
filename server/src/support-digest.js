@@ -56,7 +56,7 @@ export async function runSupportDigest({ force = false } = {}) {
 
   await sendMail({
     to: DIGEST_TO,
-    subject: `DeePer — สรุปผู้สนับสนุน ${rows.length} ราย`,
+    subject: `สรุปผู้สนับสนุน DeePer ${rows.length} ราย`,
     text,
     attachments,
   });
