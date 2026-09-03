@@ -1506,24 +1506,24 @@ a {
   flex-direction: column;
   gap: 36px;
 }
-.landing-card {
-  padding: 24px;
-}
-/* A thin centered rule between blocks — breaks up what would otherwise read
-   as three identical stacked cards, without adding another boxed surface. */
+/* A thin centered rule between blocks — frames every section top and bottom
+   instead of boxing it, so About / Stats / Supporters all read as one
+   unified set (see .landing-section) rather than mismatched blocks. */
 .landing-divider {
   width: 72px;
   height: 1px;
   align-self: center;
   background: linear-gradient(90deg, transparent, var(--border-red), transparent);
 }
-/* Deliberately bare (no .glass) — sitting directly on the page backdrop
-   between the two card blocks is what visually separates "About" and
-   "Supporters" from each other instead of all three reading as one repeated
-   card pattern. */
-.stat-card {
+/* Shared treatment for every below-the-fold block: bare (no .glass), sitting
+   directly on the page backdrop, eyebrow label centered above its content. */
+.landing-section {
   text-align: center;
   padding: 4px 20px;
+}
+.landing-section .sub {
+  max-width: 34ch;
+  margin: 8px auto 0;
 }
 .stat-number {
   margin-top: 4px;
@@ -1545,6 +1545,7 @@ a {
    off hard against the card's padding. */
 .supporters-marquee {
   overflow: hidden;
+  margin-top: 16px;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
@@ -1604,6 +1605,7 @@ a {
   align-items: center;
   gap: 10px;
   text-align: center;
+  margin-top: 16px;
   padding: 26px 18px;
   border: 1.5px dashed var(--border-red);
   border-radius: var(--radius-sm);

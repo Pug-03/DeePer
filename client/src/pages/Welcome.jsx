@@ -152,17 +152,17 @@ export default function Welcome() {
       </div>
 
       <div className="landing-more">
-        <Reveal className="glass landing-card">
+        <div className="landing-divider" />
+
+        <Reveal className="landing-section">
           <p className="eyebrow">{t('welcome.about.eyebrow')}</p>
           <h2 className="h2">{t('welcome.about.title')}</h2>
-          <p className="sub" style={{ marginTop: 8 }}>
-            {t('welcome.about.body')}
-          </p>
+          <p className="sub">{t('welcome.about.body')}</p>
         </Reveal>
 
         <div className="landing-divider" />
 
-        <Reveal className="stat-card" delay={0.08}>
+        <Reveal className="landing-section" delay={0.08}>
           <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
           <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
           <div className="stat-label">{t('welcome.stats.label')}</div>
@@ -170,16 +170,10 @@ export default function Welcome() {
 
         <div className="landing-divider" />
 
-        <Reveal className="glass landing-card" delay={0.16}>
-          <div className="support-head">
-            <span className="support-head-ic">
-              <IcSparkle size={18} />
-            </span>
-            <span className="support-head-title">{t('welcome.supporters.title')}</span>
-          </div>
-          <p className="sub" style={{ marginBottom: 16 }}>
-            {t('welcome.supporters.body')}
-          </p>
+        <Reveal className="landing-section" delay={0.16}>
+          <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
+          <h2 className="h2">{t('welcome.supporters.title')}</h2>
+          <p className="sub">{t('welcome.supporters.body')}</p>
           {SUPPORTERS.length >= MIN_MARQUEE_ITEMS ? (
             <SupportersMarquee items={SUPPORTERS} />
           ) : (
@@ -191,6 +185,8 @@ export default function Welcome() {
             </div>
           )}
         </Reveal>
+
+        <div className="landing-divider" />
       </div>
     </>
   );
