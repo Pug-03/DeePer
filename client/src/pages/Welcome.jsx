@@ -5,6 +5,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import { IcSparkle } from '../components/icons.jsx';
+import { DEV_TEAM } from '../dev-team-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
@@ -163,9 +164,28 @@ function SupportersMarquee({ items }) {
   );
 }
 
+// Static — no marquee/carousel. Reuses the supporter chip's initials-avatar
+// look for visual consistency, but as a plain stacked card, not a scroller.
+function DevTeamCard({ dev, lang }) {
+  const name = (lang === 'en' ? dev.nameEn : dev.nameTh) || dev.nameTh;
+  const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
+  return (
+    <div className="glass dev-team-card">
+      <span className="supporter-avatar dev-team-avatar">{initials(name)}</span>
+      <p className="dev-team-name">{name}</p>
+      <p className="dev-team-role">{role}</p>
+      {dev.link && (
+        <a className="link dev-team-link" href={dev.link} target="_blank" rel="noreferrer">
+          {dev.link.replace(/^https?:\/\//, '')}
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default function Welcome() {
   const nav = useNavigate();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [userCount, setUserCount] = useState(null);
   const mockSupporterCount = useMockSupporterCountForPreview();
   const activeSupporters =
@@ -248,7 +268,23 @@ export default function Welcome() {
 
         <div className="landing-divider" />
 
-        <Reveal className="landing-section" delay={0.08}>
+        {/* Credits the people who built the app — distinct from Supporters
+            (people who donated) below, deliberately different heading and a
+            plain static card, no carousel, so the two never read as the
+            same kind of list. */}
+        <Reveal className="landing-section" delay={0.06}>
+          <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
+          <h2 className="h2">{t('welcome.team.title')}</h2>
+          <div className="dev-team-grid">
+            {DEV_TEAM.map((dev) => (
+              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} />
+            ))}
+          </div>
+        </Reveal>
+
+        <div className="landing-divider" />
+
+        <Reveal className="landing-section" delay={0.12}>
           <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
           <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
           <div className="stat-label">{t('welcome.stats.label')}</div>
@@ -256,7 +292,7 @@ export default function Welcome() {
 
         <div className="landing-divider" />
 
-        <Reveal className="landing-section" delay={0.16}>
+        <Reveal className="landing-section" delay={0.18}>
           <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
           <h2 className="h2">{t('welcome.supporters.title')}</h2>
           <p className="sub">{t('welcome.supporters.body')}</p>
