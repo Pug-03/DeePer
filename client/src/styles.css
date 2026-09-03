@@ -1625,7 +1625,33 @@ a {
 .dev-team-entry {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+/* justify-content:center keeps the avatar+text pair centered as a unit
+   (matching the rest of the section), while the text itself reads
+   left-aligned next to the avatar rather than centered per line. */
+.dev-team-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.dev-team-avatar-img,
+.dev-team-avatar-fallback {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dev-team-avatar-img {
+  object-fit: cover;
+  border: 1.5px solid var(--border-red);
+}
+.dev-team-avatar-fallback {
+  font-size: 16px;
+}
+.dev-team-text {
+  text-align: left;
 }
 .dev-team-name {
   font-size: 15px;

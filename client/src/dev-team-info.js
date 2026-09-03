@@ -1,6 +1,11 @@
 // Who built DeePer — shown in the "Made by" section on the landing page.
 // `link` is optional per person; leave '' to skip rendering a link (see
-// Welcome.jsx, which only renders an <a> when link is truthy).
+// Welcome.jsx, which only renders an <a> when link is truthy). `avatar` is
+// also optional — Welcome.jsx falls back to an initials circle (same style
+// as the Supporters marquee's avatars) if it's missing or fails to load.
+import nathapornPhoto from './assets/team/nathaporn.jpg';
+import namphanPhoto from './assets/team/namphan.jpg';
+
 export const DEV_TEAM = [
   {
     nameTh: 'ณฐพร ไทรทับทิม',
@@ -8,6 +13,9 @@ export const DEV_TEAM = [
     roleTh: 'เจ้าของโปรเจกต์ ผู้พัฒนาหลัก (ดูแลทุกส่วน — เจ้าของและพัฒนาทั้งหมด)',
     roleEn: 'Project owner and lead developer who builds every part of DeePer',
     link: '',
+    avatar: nathapornPhoto,
+    // Proper headshot — the default centered crop already frames the face.
+    avatarPosition: 'center',
   },
   {
     nameTh: 'น้ำปั่น',
@@ -15,5 +23,9 @@ export const DEV_TEAM = [
     roleTh: 'ดูแลเรื่องการวางเลย์เอาต์ (layout/UI)',
     roleEn: 'Handles layout & UI',
     link: '',
+    avatar: namphanPhoto,
+    // Full-body/high-angle shot, not a headshot — bias the crop toward the
+    // top so the circle frames the face instead of the torso/floor below it.
+    avatarPosition: '50% 15%',
   },
 ];

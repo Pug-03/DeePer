@@ -164,15 +164,34 @@ function SupportersMarquee({ items }) {
   );
 }
 
-// Plain text, no box/border/avatar — matches the rest of the page's
-// text-based feel rather than reading as another boxed component.
+// Plain text, no box/border — matches the rest of the page's text-based
+// feel rather than reading as another boxed component. Just a small avatar
+// added to the left of each name+role line.
 function DevTeamCard({ dev, lang }) {
+  const [imgFailed, setImgFailed] = useState(false);
   const name = (lang === 'en' ? dev.nameEn : dev.nameTh) || dev.nameTh;
   const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
+  const showPhoto = dev.avatar && !imgFailed;
+
   return (
     <div className="dev-team-entry">
-      <p className="dev-team-name">{name}</p>
-      <p className="dev-team-role">{role}</p>
+      <div className="dev-team-row">
+        {showPhoto ? (
+          <img
+            className="dev-team-avatar-img"
+            src={dev.avatar}
+            alt={name}
+            style={{ objectPosition: dev.avatarPosition || 'center' }}
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <span className="supporter-avatar dev-team-avatar-fallback">{initials(name)}</span>
+        )}
+        <div className="dev-team-text">
+          <p className="dev-team-name">{name}</p>
+          <p className="dev-team-role">{role}</p>
+        </div>
+      </div>
       {dev.link && (
         <a className="link dev-team-link" href={dev.link} target="_blank" rel="noreferrer">
           {dev.link.replace(/^https?:\/\//, '')}
