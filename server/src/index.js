@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import fs from 'node:fs';
 
-import './db.js'; // initialize + seed
+import { db } from './db.js'; // initialize + seed
 import authRoutes from './routes/auth.js';
 import questionRoutes from './routes/questions.js';
 import dataRoutes from './routes/data.js';
@@ -65,6 +65,11 @@ fs.mkdirSync(join(uploadsDir, 'slips'), { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+// Public landing-page stat — total signups only, no per-user data.
+app.get('/api/stats', (_req, res) => {
+  const { c } = db.prepare('SELECT COUNT(*) AS c FROM users').get();
+  res.json({ user_count: c });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/support', supportRoutes);

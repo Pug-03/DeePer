@@ -1494,6 +1494,65 @@ a {
   font-size: 12.5px;
   color: var(--text-faint);
 }
+
+/* ---------- Landing — below-the-fold (about / stats / supporters) ---------- */
+/* Sits as a sibling after the hero `.page` block, which is pinned to
+   min-height:100dvh — so this section always starts past one full viewport,
+   regardless of screen size. Reuses .glass / .support-head / .btn tokens
+   from above instead of introducing new surface styles. */
+.landing-more {
+  padding: 48px 20px calc(40px + var(--safe-b));
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.landing-card {
+  padding: 22px;
+}
+.stat-card {
+  text-align: center;
+  padding: 32px 20px;
+}
+.stat-number {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(120deg, #fff 20%, var(--red-bright) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.stat-label {
+  margin-top: 8px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.supporters-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 26px 18px;
+  border: 1.5px dashed var(--border-red);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+}
+.supporters-placeholder-ic {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--red-bright);
+}
+.supporters-placeholder-text {
+  color: var(--text-faint);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 30ch;
+}
 @keyframes fadeIn {
   from {
     opacity: 0;

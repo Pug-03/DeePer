@@ -72,6 +72,13 @@ export const STRINGS = {
     'welcome.sample': '“อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”',
     'welcome.signup': 'สมัครใหม่',
     'welcome.haveAccount': 'มีบัญชีอยู่แล้ว',
+    'welcome.about.title': 'DeePer คืออะไร',
+    'welcome.about.body':
+      'DeePer คือการ์ดคำถามชวนคุยลึก ๆ ให้เปิดแอปเดียวกันแล้วผลัดกันตอบ — จะเป็นคู่รัก เพื่อนสนิท หรือคนในครอบครัวก็เล่นได้ ใช้เครื่องเดียวกัน ไม่ต้องต่างคนต่างดาวน์โหลด แค่หยิบมือถือขึ้นมาแล้วเริ่มคุยกันให้ลึกกว่าเดิม',
+    'welcome.stats.label': 'คนใช้ DeePer แล้ว',
+    'welcome.supporters.title': 'ผู้สนับสนุน',
+    'welcome.supporters.body': 'ขอบคุณทุกแรงใจที่ช่วยให้ DeePer ไปต่อได้',
+    'welcome.supporters.placeholder': 'ยังไม่มีรายชื่อผู้สนับสนุนอย่างเป็นทางการ — เร็ว ๆ นี้จะมาอัปเดตตรงนี้',
 
     // นำทางล่าง
     'nav.home': 'หน้าหลัก',
@@ -396,6 +403,13 @@ export const STRINGS = {
     'welcome.sample': '“What’s a little thing that makes you smile every day?”',
     'welcome.signup': 'Sign up',
     'welcome.haveAccount': 'I already have an account',
+    'welcome.about.title': 'What is DeePer',
+    'welcome.about.body':
+      'DeePer is a deep-conversation card game — open one app together and take turns answering. Couples, close friends, or family, all on the same device. No separate downloads, just pick up your phone and start talking a little deeper.',
+    'welcome.stats.label': 'people using DeePer',
+    'welcome.supporters.title': 'Supporters',
+    'welcome.supporters.body': 'Thanks to everyone whose support keeps DeePer going.',
+    'welcome.supporters.placeholder': 'No official supporter list yet — real names will be added here soon.',
 
     'nav.home': 'Home',
     'nav.saved': 'Saved',
