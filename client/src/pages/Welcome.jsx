@@ -5,6 +5,11 @@ import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import { IcSparkle } from '../components/icons.jsx';
+// `import.meta.env.DEV` below is a compile-time constant, so Vite's
+// production build dead-code-eliminates the branch that reads this import —
+// this fixture (and its placeholder strings) never reaches the shipped
+// bundle. See client/src/dev/mockSupporters.js for the full explanation.
+import { MOCK_SUPPORTERS_DEV_ONLY } from '../dev/mockSupporters.js';
 
 // Same easing the rest of the app's motion uses (page-load stagger, Saved's
 // scroll-pop, HomeTutorial, PostAuthWelcome) — kept identical here so the
@@ -39,6 +44,15 @@ function Reveal({ children, delay = 0, className }) {
 // the static placeholder below it until then.
 const SUPPORTERS = [];
 const MIN_MARQUEE_ITEMS = 3;
+
+// Dev-only preview of the marquee at a realistic item count — never on by
+// default, even locally: needs both a dev build AND `?mockSupporters=1` in
+// the URL. Production builds fold this whole check to `false` at compile
+// time, which is also what lets the mock-data import above get stripped.
+function useMockSupportersForPreview() {
+  if (!import.meta.env.DEV) return false;
+  return new URLSearchParams(window.location.search).get('mockSupporters') === '1';
+}
 
 const initials = (name) =>
   name
@@ -84,6 +98,8 @@ export default function Welcome() {
   const nav = useNavigate();
   const { t } = useI18n();
   const [userCount, setUserCount] = useState(null);
+  const showMockSupporters = useMockSupportersForPreview();
+  const activeSupporters = showMockSupporters ? MOCK_SUPPORTERS_DEV_ONLY : SUPPORTERS;
 
   useEffect(() => {
     let cancelled = false;
@@ -174,8 +190,8 @@ export default function Welcome() {
           <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
           <h2 className="h2">{t('welcome.supporters.title')}</h2>
           <p className="sub">{t('welcome.supporters.body')}</p>
-          {SUPPORTERS.length >= MIN_MARQUEE_ITEMS ? (
-            <SupportersMarquee items={SUPPORTERS} />
+          {activeSupporters.length >= MIN_MARQUEE_ITEMS ? (
+            <SupportersMarquee items={activeSupporters} />
           ) : (
             <div className="supporters-placeholder">
               <span className="supporters-placeholder-ic">
