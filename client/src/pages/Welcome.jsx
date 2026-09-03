@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
@@ -78,8 +78,14 @@ const initials = (name) =>
 // keyframes in styles.css), so the frame at the end of the loop is
 // pixel-identical to the frame at the start and `infinite` restarts with no
 // visible jump.
-const MARQUEE_SECONDS_PER_ITEM = 2.4;
-const MARQUEE_MIN_SECONDS = 14;
+//
+// Speed is a constant (px/second), not a constant duration — a fixed
+// duration made rows with fewer/shorter items finish their (shorter) lap
+// faster, i.e. visibly faster motion. Each row instead measures its own
+// rendered content width and derives its duration from that, so every row
+// moves at the same physical speed regardless of item count or name length.
+const MARQUEE_PX_PER_SECOND = 40;
+const MARQUEE_MIN_SECONDS = 8; // anti-jank floor for a pathologically narrow row, not a pacing target
 const MARQUEE_ROWS = 3;
 
 // Round-robin (not chunked) so consecutive items land on different rows —
@@ -94,14 +100,32 @@ function splitIntoRows(items, rowCount) {
 
 function SupportersRow({ items, reverse, paused }) {
   const track = [...items, ...items];
-  // Duration scales with this row's own item count so the read pace per
-  // item stays the same slow, easy-to-read speed regardless of how many
-  // rows the items got split into, or how uneven that split ended up.
-  const durationSeconds = Math.max(items.length * MARQUEE_SECONDS_PER_ITEM, MARQUEE_MIN_SECONDS);
+  const trackRef = useRef(null);
+  const [durationSeconds, setDurationSeconds] = useState(MARQUEE_MIN_SECONDS);
+
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const measure = () => {
+      // scrollWidth spans both duplicated sets (plus the gaps between
+      // them); halve it to get one set's actual rendered width, so the
+      // duration this produces always maps to the same px/second no matter
+      // how many items are in this row or how wide their names render.
+      const oneSetWidth = el.scrollWidth / 2;
+      setDurationSeconds(Math.max(oneSetWidth / MARQUEE_PX_PER_SECOND, MARQUEE_MIN_SECONDS));
+    };
+    measure();
+    // Re-measure if content width changes after mount (e.g. a webfont
+    // swapping in and reflowing the chip text).
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [items]);
 
   return (
     <div className="supporters-marquee">
       <div
+        ref={trackRef}
         className={`supporters-track${paused ? ' is-paused' : ''}${reverse ? ' is-reverse' : ''}`}
         style={{ animationDuration: `${durationSeconds}s` }}
       >
