@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
 import { catLabel, formatDate } from '../util.js';
@@ -14,6 +15,7 @@ export default function History() {
   const confirm = useConfirm();
   const { user } = useAuth();
   const { t } = useI18n();
+  const tutorial = useTutorial();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -26,11 +28,14 @@ export default function History() {
       const d = await api.get('/history');
       setItems(d.history);
       setStatus(d.history.length ? 'ready' : 'empty');
+      tutorial.setHistoryHasItems(d.history.length > 0);
     } catch (e) {
       setError(e.message);
       setStatus('error');
     }
-  }, []);
+    // See Saved.jsx's load() for why this depends on the setter directly
+    // rather than the whole `tutorial` object.
+  }, [tutorial.setHistoryHasItems]);
 
   useEffect(() => {
     load();
@@ -53,7 +58,7 @@ export default function History() {
 
   return (
     <div className="page page--tab stagger">
-      <div className="header">
+      <div className="header" data-tut="historyIntro">
         <h1 className="h1">{t('history.title')}</h1>
         <p className="sub">{t('history.sub')}</p>
       </div>
@@ -87,12 +92,15 @@ export default function History() {
 
       {status === 'ready' && filtered.length > 0 && (
         <div className="list stagger">
-          {filtered.map((it) => {
+          {filtered.map((it, index) => {
             const isOpen = open === it.id;
             return (
               <div
                 key={it.id}
                 className="card-item glass"
+                // Anchor for the tour's "here's a real history entry" step —
+                // only the first card (see historyItem in OnboardingTour.jsx).
+                data-tut={index === 0 ? 'historyItem' : undefined}
                 onClick={() => setOpen(isOpen ? null : it.id)}
               >
                 <p className="ci-q">{it.question_text}</p>

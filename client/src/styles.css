@@ -1724,7 +1724,7 @@ a {
   }
 }
 
-/* ---------- Home tutorial overlay ---------- */
+/* ---------- Onboarding tour overlay (Home -> Saved -> History) ---------- */
 .tut-overlay {
   position: fixed;
   inset: 0;
@@ -1754,10 +1754,31 @@ a {
   flex-direction: column;
   min-height: 0;
 }
+.tut-tip-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
 .tut-tip-title {
   font-size: 17px;
   font-weight: 700;
   margin: 0 0 6px;
+}
+/* Explicit skip control — the tour now spans three pages via real
+   navigation, so getting stuck mid-way needs a clear way out from any
+   step, not just reaching the final "Done". */
+.tut-skip-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+.tut-skip-btn:active {
+  color: var(--text-dim);
 }
 .tut-tip-desc {
   font-size: 14px;

@@ -11,6 +11,7 @@ import {
 } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
+import { useTutorial } from '../store/tutorial.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
 import {
@@ -24,7 +25,6 @@ import {
   IcShare,
   IcDownload,
 } from '../components/icons.jsx';
-import HomeTutorial from '../components/HomeTutorial.jsx';
 import { catLabel, CATS } from '../util.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 
@@ -655,9 +655,7 @@ export default function Home() {
   const [adding, setAdding] = useState(false);
   const [newQ, setNewQ] = useState('');
   const [addCat, setAddCat] = useState(() => localStorage.getItem('dt_cat') || 'couple');
-  const [showTutorial, setShowTutorial] = useState(
-    () => localStorage.getItem('dt_tutorial_pending') === '1',
-  );
+  const tutorial = useTutorial();
   const [enterDir, setEnterDir] = useState(0);
   const [saveFlash, setSaveFlash] = useState(false);
   // True while the "answer now / save for later" confirm dialog from addOwn
@@ -700,6 +698,24 @@ export default function Home() {
 
   const current = deck[idx];
   const remaining = deck.length - idx;
+
+  // Starts the shared tour — its first step targets a Home element, so it
+  // can only start once Home is actually ready, same gate the tour used
+  // when it was a Home-only component. Guarded on tutorial.active (shared
+  // state, not a local ref) rather than "have I called start() before":
+  // a Back press from the Saved step navigates here and remounts Home,
+  // which would otherwise see this effect's dependencies change again and
+  // call start() a second time, resetting the in-progress tour to step 0.
+  useEffect(() => {
+    if (
+      !tutorial.active &&
+      status === 'ready' &&
+      current &&
+      localStorage.getItem('dt_tutorial_pending') === '1'
+    ) {
+      tutorial.start();
+    }
+  }, [status, current, tutorial]);
 
   // enterDir only needs to drive the one card-slide transition right after a
   // category switch — clear it once that card has been rendered so normal
@@ -758,11 +774,11 @@ export default function Home() {
   // gestures (skip/answer), ↑ mirrors the save button. Kept in a ref so the
   // listener is attached once instead of re-subscribing on every render.
   const keyStateRef = useRef();
-  keyStateRef.current = { status, current, showTutorial, dialogOpen, doSkip, doAnswer, save };
+  keyStateRef.current = { status, current, tutorialActive: tutorial.active, dialogOpen, doSkip, doAnswer, save };
   useEffect(() => {
     const onKeyDown = (e) => {
-      const { status, current, showTutorial, dialogOpen, doSkip, doAnswer, save } = keyStateRef.current;
-      if (status !== 'ready' || !current || showTutorial || dialogOpen) return;
+      const { status, current, tutorialActive, dialogOpen, doSkip, doAnswer, save } = keyStateRef.current;
+      if (status !== 'ready' || !current || tutorialActive || dialogOpen) return;
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
@@ -976,15 +992,6 @@ export default function Home() {
           </>
         )}
       </div>
-
-      {showTutorial && status === 'ready' && current && (
-        <HomeTutorial
-          onDone={() => {
-            localStorage.removeItem('dt_tutorial_pending');
-            setShowTutorial(false);
-          }}
-        />
-      )}
     </>
   );
 }

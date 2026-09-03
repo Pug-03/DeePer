@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './store/auth.jsx';
+import { TutorialProvider, useTutorial } from './store/tutorial.jsx';
 import { ToastProvider, ConfirmProvider, Loading } from './components/ui.jsx';
 import BottomNav from './components/BottomNav.jsx';
+import OnboardingTour from './components/OnboardingTour.jsx';
 
 import Welcome from './pages/Welcome.jsx';
 import Signup from './pages/Signup.jsx';
@@ -31,10 +33,16 @@ function GuestOnly({ children }) {
 }
 
 function TabLayout() {
+  // Mounted here (a sibling of <Outlet/>, same as BottomNav) rather than
+  // inside Home — TabLayout doesn't unmount when the tour navigates
+  // Home -> Saved -> History, so the overlay and its progress survive the
+  // tab switches instead of resetting.
+  const tutorial = useTutorial();
   return (
     <>
       <Outlet />
       <BottomNav />
+      {tutorial.active && <OnboardingTour />}
     </>
   );
 }
@@ -43,29 +51,31 @@ export default function App() {
   return (
     <ToastProvider>
       <ConfirmProvider>
-        <div className="app-shell">
-          <Routes>
-            <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
-            <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
-            <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
-            <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+        <TutorialProvider>
+          <div className="app-shell">
+            <Routes>
+              <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
+              <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
+              <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
+              <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
 
-            <Route path="/app" element={<Protected><TabLayout /></Protected>}>
-              <Route index element={<Navigate to="home" replace />} />
-              <Route path="home" element={<Home />} />
-              <Route path="saved" element={<Saved />} />
-              <Route path="history" element={<History />} />
-              <Route path="profile" element={<Profile />} />
-            </Route>
+              <Route path="/app" element={<Protected><TabLayout /></Protected>}>
+                <Route index element={<Navigate to="home" replace />} />
+                <Route path="home" element={<Home />} />
+                <Route path="saved" element={<Saved />} />
+                <Route path="history" element={<History />} />
+                <Route path="profile" element={<Profile />} />
+              </Route>
 
-            <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
-            <Route path="/app/profile/settings" element={<Protected><AccountSettings /></Protected>} />
-            <Route path="/app/profile/support" element={<Protected><Support /></Protected>} />
-            <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
+              <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
+              <Route path="/app/profile/settings" element={<Protected><AccountSettings /></Protected>} />
+              <Route path="/app/profile/support" element={<Protected><Support /></Protected>} />
+              <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </TutorialProvider>
       </ConfirmProvider>
     </ToastProvider>
   );

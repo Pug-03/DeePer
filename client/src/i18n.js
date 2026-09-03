@@ -159,9 +159,10 @@ export const STRINGS = {
     'postAuth.tutYes': 'ต้องการเลย',
     'postAuth.tutNo': 'ข้าม ไปเลย',
 
-    // สอนการใช้งาน (หน้าหลัก)
+    // สอนการใช้งาน (หน้าหลัก → บันทึกไว้ → ประวัติ)
     'tut.next': 'ถัดไป',
     'tut.done': 'เข้าใจแล้ว',
+    'tut.skip': 'ข้ามทั้งหมด',
     'tut.catsTitle': 'เลือกหมวดคำถาม',
     'tut.catsDesc': 'เลือกได้ว่าจะคุยกับคู่รัก เพื่อน ๆ หรือครอบครัว สลับหมวดได้ตลอดเวลา',
     'tut.deckTitle': 'ปัดการ์ดเพื่อเลือก',
@@ -181,8 +182,19 @@ export const STRINGS = {
     'tut.navHomeDesc': 'กลับมาที่นี่เพื่อดูการ์ดคำถามใหม่ ๆ ได้ตลอด สลับหมวดคู่รัก เพื่อน ๆ หรือครอบครัวได้จากด้านบน',
     'tut.navSavedTitle': 'บันทึกไว้',
     'tut.navSavedDesc': 'คำถามที่คุณกดปุ่มบันทึกไว้จะมารวมกันที่นี่ แตะคำถามไหนก็กลับไปตอบได้ทันที',
+    'tut.savedIntroTitle': 'นี่คือหน้าบันทึกไว้',
+    'tut.savedIntroDesc': 'คำถามที่คุณกดปุ่มบันทึกไว้จะมารวมกันที่นี่ กรองตามหมวดได้จากด้านบน',
+    'tut.savedItemTitle': 'ตัวอย่างคำถามที่บันทึกไว้',
+    'tut.savedItemDesc':
+      'แตะที่การ์ดเพื่อไปตอบคำถามนี้ หรือกดไอคอนถังขยะมุมขวาเพื่อลบออกจากรายการ',
     'tut.navHistoryTitle': 'ประวัติ',
     'tut.navHistoryDesc': 'คำถามและคำตอบที่เคยตอบไปแล้วทั้งหมดจะถูกเก็บไว้ที่นี่ ย้อนกลับมาอ่านได้เสมอ',
+    'tut.historyIntroTitle': 'นี่คือหน้าประวัติ',
+    'tut.historyIntroDesc':
+      'คำถามและคำตอบที่เคยตอบไปแล้วทั้งหมดจะถูกเก็บไว้ที่นี่ กรองตามหมวดได้จากด้านบน',
+    'tut.historyItemTitle': 'ตัวอย่างคำถามที่ตอบแล้ว',
+    'tut.historyItemDesc':
+      'แตะที่การ์ดเพื่อดูคำตอบของคุณและอีกฝ่าย กดไอคอนถังขยะเพื่อลบออกจากประวัติ',
     'tut.navProfileTitle': 'โปรไฟล์',
     'tut.navProfileDesc': 'แก้ไขข้อมูลของคุณและอีกฝ่าย เปลี่ยนภาษา หรือออกจากระบบได้จากหน้านี้',
 
@@ -491,9 +503,10 @@ export const STRINGS = {
     'postAuth.tutYes': 'Yes, show me',
     'postAuth.tutNo': 'No, skip',
 
-    // Home tutorial
+    // Onboarding tour (Home -> Saved -> History)
     'tut.next': 'Next',
     'tut.done': 'Got it',
+    'tut.skip': 'Skip',
     'tut.catsTitle': 'Choose a category',
     'tut.catsDesc': 'Pick couple, friends, or family — switch anytime',
     'tut.deckTitle': 'Swipe the card',
@@ -514,9 +527,20 @@ export const STRINGS = {
       'Come back here anytime for new question cards. Switch between Couple, Friends, or Family from the top.',
     'tut.navSavedTitle': 'Saved',
     'tut.navSavedDesc': 'Questions you tapped Save on land here — tap any of them to go answer it.',
+    'tut.savedIntroTitle': 'This is your Saved list',
+    'tut.savedIntroDesc': 'Questions you tapped Save on land here. Filter by category from the top.',
+    'tut.savedItemTitle': 'A saved question',
+    'tut.savedItemDesc':
+      'Tap the card to go answer it, or tap the trash icon in the corner to remove it from the list.',
     'tut.navHistoryTitle': 'History',
     'tut.navHistoryDesc':
       'Every question you’ve answered, along with the answers, is kept here so you can look back anytime.',
+    'tut.historyIntroTitle': 'This is your History',
+    'tut.historyIntroDesc':
+      'Every question you’ve answered, along with the answers, is kept here. Filter by category from the top.',
+    'tut.historyItemTitle': 'An answered question',
+    'tut.historyItemDesc':
+      'Tap the card to see both of your answers, or tap the trash icon to remove it from your history.',
     'tut.navProfileTitle': 'Profile',
     'tut.navProfileDesc':
       'Edit your info and your partner’s, change the language, or log out from this page.',

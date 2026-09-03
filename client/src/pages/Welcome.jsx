@@ -13,7 +13,7 @@ import { DEV_TEAM } from '../dev-team-info.js';
 import { makeMockSupportersDevOnly } from '../dev/mockSupporters.js';
 
 // Same easing the rest of the app's motion uses (page-load stagger, Saved's
-// scroll-pop, HomeTutorial, PostAuthWelcome) — kept identical here so the
+// scroll-pop, OnboardingTour, PostAuthWelcome) — kept identical here so the
 // landing page's scroll-reveal reads as the same motion language, not a
 // different one bolted on.
 const EASE = [0.16, 1, 0.3, 1];

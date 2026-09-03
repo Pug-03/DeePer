@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
+import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
 import { catLabel, formatDate } from '../util.js';
@@ -22,6 +23,11 @@ function SavedItem({ it, index, onAnswer, onRemove }) {
     <motion.div
       ref={ref}
       className="card-item glass"
+      // Anchor for the tour's "here's a real saved item" step (only ever
+      // the first card, see the .map below) — kept off SavedItem's own
+      // className/logic so this stays a one-line addition, not a behavior
+      // change to the card itself.
+      data-tut={index === 0 ? 'savedItem' : undefined}
       onClick={() => onAnswer(it)}
       initial={{ scale: 0.7, opacity: 0 }}
       animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.7, opacity: 0 }}
@@ -44,6 +50,7 @@ export default function Saved() {
   const toast = useToast();
   const confirm = useConfirm();
   const { t } = useI18n();
+  const tutorial = useTutorial();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -55,11 +62,16 @@ export default function Saved() {
       const d = await api.get('/saved');
       setItems(d.saved);
       setStatus(d.saved.length ? 'ready' : 'empty');
+      tutorial.setSavedHasItems(d.saved.length > 0);
     } catch (e) {
       setError(e.message);
       setStatus('error');
     }
-  }, []);
+    // setSavedHasItems (a useState setter) is referentially stable, unlike
+    // the `tutorial` context object itself — depending on the whole object
+    // would recreate `load` (and re-trigger the effect below) on every
+    // unrelated tutorial state change, re-fetching /saved for no reason.
+  }, [tutorial.setSavedHasItems]);
 
   useEffect(() => {
     load();
@@ -88,7 +100,7 @@ export default function Saved() {
 
   return (
     <div className="page page--tab stagger">
-      <div className="header">
+      <div className="header" data-tut="savedIntro">
         <h1 className="h1">{t('saved.title')}</h1>
         <p className="sub">{t('saved.sub')}</p>
       </div>
