@@ -72,32 +72,37 @@ const initials = (name) =>
 // hold also works — iOS Safari doesn't reliably apply :hover/:active from a
 // held touch without a touchstart listener already registered on the page.
 //
-// Loop is seamless by construction, not by resetting scroll position: the
-// track renders the item list twice back-to-back and animates by exactly
-// one set's width (translateX(-50%) — see .supportersMarquee keyframes in
-// styles.css), so the frame at the end of the loop is pixel-identical to
-// the frame at the start and `infinite` restarts with no visible jump.
+// Loop is seamless by construction, not by resetting scroll position: each
+// row's track renders its item list twice back-to-back and animates by
+// exactly one set's width (translateX(-50%) — see .supportersMarquee
+// keyframes in styles.css), so the frame at the end of the loop is
+// pixel-identical to the frame at the start and `infinite` restarts with no
+// visible jump.
 const MARQUEE_SECONDS_PER_ITEM = 2.4;
 const MARQUEE_MIN_SECONDS = 14;
-function SupportersMarquee({ items }) {
-  const [paused, setPaused] = useState(false);
+const MARQUEE_ROWS = 3;
+
+// Round-robin (not chunked) so consecutive items land on different rows —
+// with the 10-item mock set that spreads 01..10 across all 3 rows instead
+// of stacking 01-03 in row 1, which reads as more "alive" once the rows
+// start scrolling opposite directions.
+function splitIntoRows(items, rowCount) {
+  const rows = Array.from({ length: rowCount }, () => []);
+  items.forEach((item, i) => rows[i % rowCount].push(item));
+  return rows.filter((row) => row.length > 0);
+}
+
+function SupportersRow({ items, reverse, paused }) {
   const track = [...items, ...items];
-  // Duration scales with item count so the read pace per item stays the
-  // same slow, easy-to-read speed whether there are 3 items or 30 — a fixed
-  // duration would make a longer list race by faster (wider track, same time).
+  // Duration scales with this row's own item count so the read pace per
+  // item stays the same slow, easy-to-read speed regardless of how many
+  // rows the items got split into, or how uneven that split ended up.
   const durationSeconds = Math.max(items.length * MARQUEE_SECONDS_PER_ITEM, MARQUEE_MIN_SECONDS);
 
   return (
-    <div
-      className="supporters-marquee"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
-      onTouchCancel={() => setPaused(false)}
-    >
+    <div className="supporters-marquee">
       <div
-        className={`supporters-track${paused ? ' is-paused' : ''}`}
+        className={`supporters-track${paused ? ' is-paused' : ''}${reverse ? ' is-reverse' : ''}`}
         style={{ animationDuration: `${durationSeconds}s` }}
       >
         {track.map((s, i) => (
@@ -107,6 +112,29 @@ function SupportersMarquee({ items }) {
           </span>
         ))}
       </div>
+    </div>
+  );
+}
+
+// One shared pause state for all rows — hovering/touching anywhere in the
+// group pauses every row together, which reads cleaner than each row
+// independently starting and stopping as the pointer crosses between them.
+function SupportersMarquee({ items }) {
+  const [paused, setPaused] = useState(false);
+  const rows = splitIntoRows(items, MARQUEE_ROWS);
+
+  return (
+    <div
+      className="supporters-marquee-group"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+      onTouchCancel={() => setPaused(false)}
+    >
+      {rows.map((row, i) => (
+        <SupportersRow key={i} items={row} reverse={i % 2 === 1} paused={paused} />
+      ))}
     </div>
   );
 }
