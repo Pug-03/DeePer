@@ -1611,37 +1611,21 @@ a {
   white-space: nowrap;
 }
 /* ---------- Made-by / dev credits ---------- */
-/* Stacked on narrow phones (content-driven, not device-driven — the role
-   line is a full sentence, and a phone-width half-column wraps it badly);
-   side by side once there's room for two ~230px+ cards to breathe. */
-.dev-team-grid {
+/* Plain stacked text list — no box/border, deliberately not styled like a
+   card so it reads as part of the page's copy rather than a component. A
+   vertical list at any width is the ask here (unlike Supporters, this one
+   isn't wide/scrollable content that needs a wider layout to earn its
+   keep), so no responsive column switch. */
+.dev-team-list {
   margin-top: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
-@media (min-width: 480px) {
-  .dev-team-grid {
-    flex-direction: row;
-    align-items: stretch;
-  }
-  .dev-team-card {
-    flex: 1;
-  }
-}
-.dev-team-card {
+.dev-team-entry {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
-  padding: 22px 18px;
-}
-.dev-team-avatar {
-  width: 40px;
-  height: 40px;
-  font-size: 14px;
-  margin-bottom: 4px;
+  gap: 4px;
 }
 .dev-team-name {
   font-size: 15px;
@@ -1657,7 +1641,7 @@ a {
 }
 .dev-team-link {
   font-size: 13px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 .supporters-placeholder {
   display: flex;

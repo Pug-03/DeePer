@@ -164,14 +164,13 @@ function SupportersMarquee({ items }) {
   );
 }
 
-// Static — no marquee/carousel. Reuses the supporter chip's initials-avatar
-// look for visual consistency, but as a plain stacked card, not a scroller.
+// Plain text, no box/border/avatar — matches the rest of the page's
+// text-based feel rather than reading as another boxed component.
 function DevTeamCard({ dev, lang }) {
   const name = (lang === 'en' ? dev.nameEn : dev.nameTh) || dev.nameTh;
   const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
   return (
-    <div className="glass dev-team-card">
-      <span className="supporter-avatar dev-team-avatar">{initials(name)}</span>
+    <div className="dev-team-entry">
       <p className="dev-team-name">{name}</p>
       <p className="dev-team-role">{role}</p>
       {dev.link && (
@@ -268,26 +267,26 @@ export default function Welcome() {
 
         <div className="landing-divider" />
 
-        {/* Credits the people who built the app — distinct from Supporters
-            (people who donated) below, deliberately different heading and a
-            plain static card, no carousel, so the two never read as the
-            same kind of list. */}
         <Reveal className="landing-section" delay={0.06}>
-          <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
-          <h2 className="h2">{t('welcome.team.title')}</h2>
-          <div className="dev-team-grid">
-            {DEV_TEAM.map((dev) => (
-              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} />
-            ))}
-          </div>
+          <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
+          <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
+          <div className="stat-label">{t('welcome.stats.label')}</div>
         </Reveal>
 
         <div className="landing-divider" />
 
+        {/* Credits the people who built the app — distinct from Supporters
+            (people who donated) below, deliberately different heading and a
+            plain text list, no card/box and no carousel, so the two never
+            read as the same kind of list. */}
         <Reveal className="landing-section" delay={0.12}>
-          <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
-          <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
-          <div className="stat-label">{t('welcome.stats.label')}</div>
+          <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
+          <h2 className="h2">{t('welcome.team.title')}</h2>
+          <div className="dev-team-list">
+            {DEV_TEAM.map((dev) => (
+              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} />
+            ))}
+          </div>
         </Reveal>
 
         <div className="landing-divider" />
