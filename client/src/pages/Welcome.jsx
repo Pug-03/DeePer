@@ -9,7 +9,7 @@ import { IcSparkle } from '../components/icons.jsx';
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
 // bundle. See client/src/dev/mockSupporters.js for the full explanation.
-import { MOCK_SUPPORTERS_DEV_ONLY } from '../dev/mockSupporters.js';
+import { makeMockSupportersDevOnly } from '../dev/mockSupporters.js';
 
 // Same easing the rest of the app's motion uses (page-load stagger, Saved's
 // scroll-pop, HomeTutorial, PostAuthWelcome) — kept identical here so the
@@ -45,13 +45,15 @@ function Reveal({ children, delay = 0, className }) {
 const SUPPORTERS = [];
 const MIN_MARQUEE_ITEMS = 3;
 
-// Dev-only preview of the marquee at a realistic item count — never on by
-// default, even locally: needs both a dev build AND `?mockSupporters=1` in
-// the URL. Production builds fold this whole check to `false` at compile
-// time, which is also what lets the mock-data import above get stripped.
-function useMockSupportersForPreview() {
-  if (!import.meta.env.DEV) return false;
-  return new URLSearchParams(window.location.search).get('mockSupporters') === '1';
+// Dev-only preview of the marquee at any item count — never on by default,
+// even locally: needs both a dev build AND `?mockSupporters=<count>` in the
+// URL (e.g. ?mockSupporters=10). Production builds fold this whole check to
+// `0` at compile time, which is also what lets the mock-data import above
+// get stripped.
+function useMockSupporterCountForPreview() {
+  if (!import.meta.env.DEV) return 0;
+  const n = Number(new URLSearchParams(window.location.search).get('mockSupporters'));
+  return Number.isInteger(n) && n > 0 ? Math.min(n, 50) : 0;
 }
 
 const initials = (name) =>
@@ -69,9 +71,21 @@ const initials = (name) =>
 // passes. Paused via React state (not just CSS :hover) so touch press-and-
 // hold also works — iOS Safari doesn't reliably apply :hover/:active from a
 // held touch without a touchstart listener already registered on the page.
+//
+// Loop is seamless by construction, not by resetting scroll position: the
+// track renders the item list twice back-to-back and animates by exactly
+// one set's width (translateX(-50%) — see .supportersMarquee keyframes in
+// styles.css), so the frame at the end of the loop is pixel-identical to
+// the frame at the start and `infinite` restarts with no visible jump.
+const MARQUEE_SECONDS_PER_ITEM = 2.4;
+const MARQUEE_MIN_SECONDS = 14;
 function SupportersMarquee({ items }) {
   const [paused, setPaused] = useState(false);
   const track = [...items, ...items];
+  // Duration scales with item count so the read pace per item stays the
+  // same slow, easy-to-read speed whether there are 3 items or 30 — a fixed
+  // duration would make a longer list race by faster (wider track, same time).
+  const durationSeconds = Math.max(items.length * MARQUEE_SECONDS_PER_ITEM, MARQUEE_MIN_SECONDS);
 
   return (
     <div
@@ -82,7 +96,10 @@ function SupportersMarquee({ items }) {
       onTouchEnd={() => setPaused(false)}
       onTouchCancel={() => setPaused(false)}
     >
-      <div className={`supporters-track${paused ? ' is-paused' : ''}`}>
+      <div
+        className={`supporters-track${paused ? ' is-paused' : ''}`}
+        style={{ animationDuration: `${durationSeconds}s` }}
+      >
         {track.map((s, i) => (
           <span className="supporter-chip glass" key={`${s.name}-${i}`} aria-hidden={i >= items.length}>
             <span className="supporter-avatar">{initials(s.name)}</span>
@@ -98,8 +115,9 @@ export default function Welcome() {
   const nav = useNavigate();
   const { t } = useI18n();
   const [userCount, setUserCount] = useState(null);
-  const showMockSupporters = useMockSupportersForPreview();
-  const activeSupporters = showMockSupporters ? MOCK_SUPPORTERS_DEV_ONLY : SUPPORTERS;
+  const mockSupporterCount = useMockSupporterCountForPreview();
+  const activeSupporters =
+    mockSupporterCount > 0 ? makeMockSupportersDevOnly(mockSupporterCount) : SUPPORTERS;
 
   useEffect(() => {
     let cancelled = false;
