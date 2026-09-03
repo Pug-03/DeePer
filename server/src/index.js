@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import fs from 'node:fs';
@@ -35,6 +36,26 @@ const corsOrigins = String(process.env.CORS_ORIGIN || '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
+// CSP is scoped to the exact third parties the client actually loads (Google
+// Identity's script/iframe for the Google Sign-In button, Google Fonts) —
+// everything else stays same-origin. crossOriginEmbedderPolicy is off
+// because Google's Sign-In iframe doesn't send the CORP header COEP requires.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", 'https://accounts.google.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'", 'https://accounts.google.com'],
+        frameSrc: ['https://accounts.google.com'],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  }),
+);
 app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
 app.use(express.json({ limit: '256kb' }));
 
@@ -58,6 +79,14 @@ if (fs.existsSync(clientDist)) {
     res.sendFile(join(clientDist, 'index.html'));
   });
 }
+
+// Fallback for anything a route didn't catch itself (sync throws, bad JSON
+// bodies, etc.) — without this express's default handler echoes the raw
+// error (stack trace included) back to the client.
+app.use((err, req, res, _next) => {
+  console.error('[unhandled]', err);
+  res.status(err.status || 500).json({ error: 'เกิดข้อผิดพลาดบางอย่าง', error_code: 'INTERNAL_ERROR' });
+});
 
 const PORT = Number(process.env.PORT || 4000);
 app.listen(PORT, () => {

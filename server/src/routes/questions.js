@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CATEGORIES } from '../questions-bank.js';
@@ -7,6 +8,16 @@ import { generateQuestions, aiReady } from '../ai.js';
 const router = Router();
 
 const validCategory = (c) => CATEGORIES.includes(c);
+
+// Each hit costs a real Anthropic API call — cap it per-IP so a script (or a
+// bored user mashing the button) can't run up the bill.
+const aiGenerateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'ขอคำถามด้วย AI บ่อยเกินไป กรุณาลองใหม่ภายหลัง', error_code: 'RATE_LIMITED' },
+});
 
 // Fetch a shuffled batch of questions for a category (bank + AI + this user's own).
 // `exclude` (comma-separated ids) lets the client avoid repeats within a session.
@@ -35,7 +46,7 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // Live AI top-up — generate fresh questions, persist them, return them.
-router.post('/generate', requireAuth, async (req, res) => {
+router.post('/generate', requireAuth, aiGenerateLimiter, async (req, res) => {
   const category = req.body.category;
   if (!validCategory(category))
     return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
