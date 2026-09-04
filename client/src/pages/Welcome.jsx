@@ -107,20 +107,27 @@ const initials = (name) =>
 
 // Shared by both the scrolling marquee and the static (< MIN_MARQUEE_ITEMS)
 // display — same photo-with-initials-fallback pattern as DevTeamCard.
-function SupporterChip({ s }) {
+// `vertical` switches to the static (< MIN_MARQUEE_ITEMS) layout: image on
+// top, name below, and object-fit: contain in a slightly bigger square
+// instead of the marquee chip's tight cropped circle — a logo (not
+// necessarily a square headshot) reads cleanly there, where the marquee's
+// small circle was cropping/squishing it.
+function SupporterChip({ s, vertical }) {
   const [imgFailed, setImgFailed] = useState(false);
   const showPhoto = s.avatar && !imgFailed;
   return (
     <>
       {showPhoto ? (
         <img
-          className="supporter-avatar-img"
+          className={vertical ? 'supporter-avatar-static' : 'supporter-avatar-img'}
           src={s.avatar}
           alt={s.name}
           onError={() => setImgFailed(true)}
         />
       ) : (
-        <span className="supporter-avatar">{initials(s.name)}</span>
+        <span className={`supporter-avatar${vertical ? ' supporter-avatar-static' : ''}`}>
+          {initials(s.name)}
+        </span>
       )}
       <span className="supporter-name">{s.name}</span>
     </>
@@ -391,13 +398,14 @@ export default function Welcome() {
           ) : activeSupporters.length > 0 ? (
             // 1-2 real supporters isn't enough for a loop to feel like one
             // (it'd just be the same chip endlessly re-passing itself) —
-            // show them as plain static chips instead of forcing the
-            // marquee, same chip look, just not scrolling.
+            // shown stacked (image on top, name below) instead of forcing
+            // the marquee, no pill wrapper, matching the plain-list look
+            // the rest of this page already uses (About, dev team, etc).
             <div className="supporters-static">
               {activeSupporters.map((s) => (
-                <span className="supporter-chip glass" key={s.name}>
-                  <SupporterChip s={s} />
-                </span>
+                <div className="supporter-static-item" key={s.name}>
+                  <SupporterChip s={s} vertical />
+                </div>
               ))}
             </div>
           ) : (
