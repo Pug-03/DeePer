@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import { IcSparkle } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
+import yeahPhoto from '../assets/supporters/yeah.png';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
@@ -38,12 +39,50 @@ function Reveal({ children, delay = 0, className }) {
   );
 }
 
+// Small twinkle accent next to the stat number — separate from (and
+// independent of) OnboardingTour's own tip-corner sparkles; kept local here
+// since it's a different layout (1-2 points anchored to a number, not 4
+// tip corners), not worth sharing a component for.
+const STAT_SPARKLES = [
+  { top: -8, right: -14, delay: 0, size: 16 },
+  { bottom: -4, left: -16, delay: 1.1, size: 11 },
+];
+function StatSparkles() {
+  const reduceMotion = useReducedMotion();
+  if (reduceMotion) return null;
+  return (
+    <>
+      {STAT_SPARKLES.map((pos, i) => (
+        <motion.span
+          key={i}
+          className="stat-sparkle"
+          style={{ top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left }}
+          initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
+          animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5], rotate: [0, 20, 0] }}
+          transition={{
+            duration: 2.6,
+            delay: pos.delay,
+            repeat: Infinity,
+            repeatDelay: 1.4,
+            ease: 'easeInOut',
+          }}
+        >
+          <IcSparkle size={pos.size} />
+        </motion.span>
+      ))}
+    </>
+  );
+}
+
 // No vetted supporter data exists yet — support_proofs (server/src/db.js) is
-// self-reported and unapproved, so it isn't safe to surface publicly as-is.
-// Once there's a reviewed list, drop entries in here as { name }; the
-// carousel switches on automatically at MIN_MARQUEE_ITEMS and falls back to
-// the static placeholder below it until then.
-const SUPPORTERS = [];
+// self-reported and unapproved, so most entries here still need a name to
+// come from you directly before being added. `avatar` is optional — falls
+// back to an initials circle (see SupporterChip) if missing or it fails to
+// load, same pattern as DevTeamCard.
+const SUPPORTERS = [{ name: 'Yeah', avatar: yeahPhoto }];
+// Below this count the marquee's loop/scroll would just be one item
+// endlessly passing itself — shown as a plain static chip instead (see the
+// supporters-static branch below) until there's enough for a real loop.
 const MIN_MARQUEE_ITEMS = 3;
 
 // Dev-only preview of the marquee at any item count — never on by default,
@@ -65,6 +104,28 @@ const initials = (name) =>
     .map((w) => w[0])
     .join('')
     .toUpperCase();
+
+// Shared by both the scrolling marquee and the static (< MIN_MARQUEE_ITEMS)
+// display — same photo-with-initials-fallback pattern as DevTeamCard.
+function SupporterChip({ s }) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const showPhoto = s.avatar && !imgFailed;
+  return (
+    <>
+      {showPhoto ? (
+        <img
+          className="supporter-avatar-img"
+          src={s.avatar}
+          alt={s.name}
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        <span className="supporter-avatar">{initials(s.name)}</span>
+      )}
+      <span className="supporter-name">{s.name}</span>
+    </>
+  );
+}
 
 // CSS-driven marquee (not Framer Motion) — an infinite linear loop is
 // cheaper as a plain animation than as a JS-driven tween, and it's the one
@@ -132,8 +193,7 @@ function SupportersRow({ items, reverse, paused }) {
       >
         {track.map((s, i) => (
           <span className="supporter-chip glass" key={`${s.name}-${i}`} aria-hidden={i >= items.length}>
-            <span className="supporter-avatar">{initials(s.name)}</span>
-            <span className="supporter-name">{s.name}</span>
+            <SupporterChip s={s} />
           </span>
         ))}
       </div>
@@ -167,7 +227,7 @@ function SupportersMarquee({ items }) {
 // Plain text, no box/border — matches the rest of the page's text-based
 // feel rather than reading as another boxed component. Just a small avatar
 // added to the left of each name+role line.
-function DevTeamCard({ dev, lang }) {
+function DevTeamCard({ dev, lang, t, nav }) {
   const [imgFailed, setImgFailed] = useState(false);
   const name = (lang === 'en' ? dev.nameEn : dev.nameTh) || dev.nameTh;
   const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
@@ -190,6 +250,15 @@ function DevTeamCard({ dev, lang }) {
         <div className="dev-team-text">
           <p className="dev-team-name">{name}</p>
           <p className="dev-team-role">{role}</p>
+          {dev.awardsHref && (
+            <button
+              type="button"
+              className="link dev-team-awards-link"
+              onClick={() => nav(dev.awardsHref)}
+            >
+              {t('welcome.team.awardsLink')}
+            </button>
+          )}
         </div>
       </div>
       {dev.link && (
@@ -288,7 +357,10 @@ export default function Welcome() {
 
         <Reveal className="landing-section" delay={0.06}>
           <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
-          <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
+          <div className="stat-number-wrap">
+            <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
+            <StatSparkles />
+          </div>
           <div className="stat-label">{t('welcome.stats.label')}</div>
         </Reveal>
 
@@ -303,7 +375,7 @@ export default function Welcome() {
           <h2 className="h2">{t('welcome.team.title')}</h2>
           <div className="dev-team-list">
             {DEV_TEAM.map((dev) => (
-              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} />
+              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} t={t} nav={nav} />
             ))}
           </div>
         </Reveal>
@@ -316,6 +388,18 @@ export default function Welcome() {
           <p className="sub">{t('welcome.supporters.body')}</p>
           {activeSupporters.length >= MIN_MARQUEE_ITEMS ? (
             <SupportersMarquee items={activeSupporters} />
+          ) : activeSupporters.length > 0 ? (
+            // 1-2 real supporters isn't enough for a loop to feel like one
+            // (it'd just be the same chip endlessly re-passing itself) —
+            // show them as plain static chips instead of forcing the
+            // marquee, same chip look, just not scrolling.
+            <div className="supporters-static">
+              {activeSupporters.map((s) => (
+                <span className="supporter-chip glass" key={s.name}>
+                  <SupporterChip s={s} />
+                </span>
+              ))}
+            </div>
           ) : (
             <div className="supporters-placeholder">
               <span className="supporters-placeholder-ic">

@@ -1525,6 +1525,10 @@ a {
   max-width: 34ch;
   margin: 8px auto 0;
 }
+.stat-number-wrap {
+  position: relative;
+  display: inline-block;
+}
 .stat-number {
   margin-top: 4px;
   font-size: 48px;
@@ -1534,6 +1538,15 @@ a {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+/* Twinkle accents anchored to the stat number specifically — independent of
+   the onboarding tour's own .tut-sparkle (different component, different
+   trigger, left untouched). */
+.stat-sparkle {
+  position: absolute;
+  color: var(--red-bright);
+  filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.55));
+  pointer-events: none;
 }
 .stat-label {
   margin-top: 8px;
@@ -1604,6 +1617,22 @@ a {
   color: #fff;
   flex-shrink: 0;
 }
+.supporter-avatar-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+/* Below MIN_MARQUEE_ITEMS — same chip look as the marquee, just laid out
+   plainly instead of scrolling. */
+.supporters-static {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
 .supporter-name {
   font-size: 13.5px;
   font-weight: 600;
@@ -1668,6 +1697,61 @@ a {
 .dev-team-link {
   font-size: 13px;
   margin-top: 2px;
+}
+.dev-team-awards-link {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Awards page ---------- */
+/* Plain stacked text, no box/border — matches the "Who's behind DeePer"
+   list treatment (see .dev-team-entry) rather than a card component. */
+.award-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.award-entry:last-of-type {
+  margin-bottom: 0;
+}
+.award-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+}
+/* CSS-generated marker, not a typed "-" in the content — spacing after it
+   stays consistent regardless of font/zoom, and screen readers won't read
+   out a literal dash character. */
+.award-name::before {
+  content: '- ';
+  color: var(--text-dim);
+}
+.award-result {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--red-bright);
+  margin: 0;
+  line-height: 1.5;
+}
+.award-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.award-contact-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  width: fit-content;
 }
 .supporters-placeholder {
   display: flex;
@@ -1744,6 +1828,15 @@ a {
   padding: 20px;
   display: flex;
   flex-direction: column;
+}
+/* Ambient corner twinkle — .tut-tip is already position:fixed, so it's a
+   valid containing block for these without an extra wrapper. */
+.tut-sparkle {
+  position: absolute;
+  display: block;
+  color: var(--red-bright);
+  filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.55));
+  pointer-events: none;
 }
 /* Wraps TipBody inside the real (non-measuring) tip — stretched to fill the
    fixed tip height so tut-tip-foot's auto margin below can pin it to the

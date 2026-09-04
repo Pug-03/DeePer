@@ -4,7 +4,7 @@
 // also optional — Welcome.jsx falls back to an initials circle (same style
 // as the Supporters marquee's avatars) if it's missing or fails to load.
 import nathapornPhoto from './assets/team/nathaporn.jpg';
-import namphanPhoto from './assets/team/namphan.jpg';
+import natshaPhoto from './assets/team/namphan.jpg';
 
 export const DEV_TEAM = [
   {
@@ -16,14 +16,17 @@ export const DEV_TEAM = [
     avatar: nathapornPhoto,
     // Proper headshot — the default centered crop already frames the face.
     avatarPosition: 'center',
+    // Only Nathaporn's entry links out to the Awards page — see
+    // welcome.team.awardsLink / DevTeamCard in Welcome.jsx.
+    awardsHref: '/awards',
   },
   {
-    nameTh: 'น้ำปั่น',
-    nameEn: 'น้ำปั่น',
-    roleTh: 'ดูแลเรื่องการวางเลย์เอาต์ (layout/UI)',
-    roleEn: 'Handles layout & UI',
+    nameTh: 'นัชชา ตติยชัยทวีสุข',
+    nameEn: 'Natsha Tatiyachaitaweesuk',
+    roleTh: 'ดูแลเรื่อง UX/UI และการวางเลย์เอาต์',
+    roleEn: 'Handles UX/UI and layout',
     link: '',
-    avatar: namphanPhoto,
+    avatar: natshaPhoto,
     // Full-body/high-angle shot, not a headshot — bias the crop toward the
     // top so the circle frames the face instead of the torso/floor below it.
     avatarPosition: '50% 15%',

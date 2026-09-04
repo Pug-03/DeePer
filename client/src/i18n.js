@@ -80,6 +80,7 @@ export const STRINGS = {
     'welcome.stats.label': 'คนใช้ DeePer แล้ว',
     'welcome.team.eyebrow': 'ผู้พัฒนา',
     'welcome.team.title': 'ใครอยู่เบื้องหลัง DeePer',
+    'welcome.team.awardsLink': 'ดูรางวัลที่เคยได้รับ',
     'welcome.supporters.eyebrow': 'ชุมชน DeePer',
     'welcome.supporters.title': 'ผู้สนับสนุน',
     'welcome.supporters.body': 'ขอบคุณทุกแรงใจที่ช่วยให้ DeePer ไปต่อได้',
@@ -326,6 +327,10 @@ export const STRINGS = {
     'profile.deleteConfirm': 'ลบบัญชี',
     'profile.deleting': 'กำลังลบ...',
 
+    // รางวัลและความสำเร็จ
+    'awards.title': 'รางวัลและความสำเร็จ',
+    'awards.contactTitle': 'ติดต่องาน',
+
     // สนับสนุนเรา
     'support.teaser': 'แอปนี้ทำและดูแลฟรี ถ้าชอบ สนับสนุนเราได้ตามกำลังนะ',
     'support.cta': 'สนับสนุนเรา',
@@ -428,6 +433,7 @@ export const STRINGS = {
     'welcome.stats.label': 'people using DeePer',
     'welcome.team.eyebrow': 'Developers',
     'welcome.team.title': 'Who’s behind DeePer',
+    'welcome.team.awardsLink': 'View awards & achievements',
     'welcome.supporters.eyebrow': 'DeePer community',
     'welcome.supporters.title': 'Supporters',
     'welcome.supporters.body': 'Thanks to everyone whose support keeps DeePer going.',
@@ -665,6 +671,9 @@ export const STRINGS = {
     'profile.deleteMsg': 'Deleting your account permanently erases all your data. This can’t be undone.',
     'profile.deleteConfirm': 'Delete account',
     'profile.deleting': 'Deleting...',
+
+    'awards.title': 'Awards & Achievements',
+    'awards.contactTitle': 'Contact',
 
     'support.teaser': "This app is made and run for free. If you like it, you can support it however you'd like",
     'support.cta': 'Support us',

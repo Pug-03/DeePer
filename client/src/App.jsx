@@ -6,6 +6,7 @@ import BottomNav from './components/BottomNav.jsx';
 import OnboardingTour from './components/OnboardingTour.jsx';
 
 import Welcome from './pages/Welcome.jsx';
+import Awards from './pages/Awards.jsx';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx';
@@ -55,6 +56,10 @@ export default function App() {
           <div className="app-shell">
             <Routes>
               <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
+              {/* Public regardless of auth state — reachable from the
+                  landing page's "Made by" section whether or not the
+                  visitor is logged in. */}
+              <Route path="/awards" element={<Awards />} />
               <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
               <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
               <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
