@@ -36,6 +36,102 @@
 
 ---
 
+## 🏗️ สถาปัตยกรรมระบบ
+
+Client เป็น React SPA (PWA) เรียก REST API ของ Express ตัวเดียว ซึ่งต่อออกไปอีก 3 ทาง: ฐานข้อมูล SQLite (เก็บข้อมูลผู้ใช้/คำถาม), Anthropic API (สร้างคำถามด้วย AI แบบออปชัน), และ Google OAuth (สมัคร/เข้าสู่ระบบด้วย Google แบบออปชัน)
+
+```mermaid
+flowchart LR
+    Client["Client\n(React PWA)"] -->|"REST /api/*"| Server["Express API Server"]
+    Server --> DB[("SQLite\n(node:sqlite)")]
+    Server --> AI["Anthropic API\n(สร้างคำถามด้วย AI)"]
+    Server --> Google["Google OAuth\n(สมัคร/ล็อกอิน)"]
+```
+
+---
+
+## 🧭 เส้นทางการใช้งาน (User Flow)
+
+จากหน้าแรกไปจนถึงการใช้งานจริง: สมัคร/ล็อกอินแล้วมาเจอหน้าถามว่าอยากดูตัวอย่างการใช้งาน (onboarding tour) ไหม — ถ้าใช่ ทัวร์จะพาไล่ดูตั้งแต่หน้าหลักไปจนถึงบันทึกไว้และประวัติ ถ้าข้าม ก็เข้าหน้าหลักได้ทันทีเหมือนกัน
+
+```mermaid
+flowchart TD
+    A["Landing Page"] --> B["สมัคร / เข้าสู่ระบบ"]
+    B --> C["ถามว่าอยากดูตัวอย่างการใช้งานไหม"]
+    C -->|"อยากดู"| D["Onboarding Tour\nหน้าหลัก → บันทึกไว้ → ประวัติ"]
+    C -->|"ข้าม"| E["หน้าหลัก (การ์ดคำถาม)"]
+    D --> E
+    E --> F["บันทึกไว้"]
+    E --> G["ประวัติ"]
+```
+
+---
+
+## 🗄️ โครงสร้างฐานข้อมูล
+
+ตารางหลักที่เชื่อมกับผู้ใช้ด้วย foreign key: `questions` (คำถามที่ผู้ใช้เพิ่มเอง), `saved_questions`, `history`, และ `support_proofs` (ยอมให้ `user_id` เป็น NULL ได้) — ส่วน `otp_codes` อ้างอิงด้วยอีเมลตรง ๆ ไม่มี foreign key และ `app_meta` เป็น key-value ทั่วไป จึงไม่แสดงในแผนภาพนี้
+
+```mermaid
+erDiagram
+    users ||--o{ questions : "เพิ่มคำถามเอง (source='user')"
+    users ||--o{ saved_questions : บันทึกไว้
+    users ||--o{ history : ตอบแล้ว
+    users |o--o{ support_proofs : "ส่งหลักฐานสนับสนุน (ออปชัน)"
+
+    users {
+        int id PK
+        string email
+        string google_sub
+        string nickname
+        int age
+        string gender
+        string password_hash
+        string avatar_url
+        string partner_name
+        string partner_color
+        string created_at
+    }
+    questions {
+        int id PK
+        string category
+        string text
+        string source
+        int user_id FK
+        string created_at
+    }
+    saved_questions {
+        int id PK
+        int user_id FK
+        string question_text
+        string category
+        string created_at
+    }
+    history {
+        int id PK
+        int user_id FK
+        string question_text
+        string category
+        string my_answer
+        string partner_answer
+        string partner_name
+        string partner_color
+        string created_at
+    }
+    support_proofs {
+        int id PK
+        int user_id FK
+        string display_name
+        string transfer_date
+        string transfer_time
+        real amount
+        string slip_path
+        int notified
+        string created_at
+    }
+```
+
+---
+
 ## ✅ ความต้องการของระบบ
 
 - **Node.js 22+** (แนะนำ 24) — จำเป็นเพราะใช้ `node:sqlite`
@@ -127,6 +223,18 @@ npm start               # เซิร์ฟเวอร์เสิร์ฟท
 ---
 
 ## 📁 โครงสร้างโปรเจกต์
+
+ภาพรวมระดับบนสุด (ลึก 2 ชั้น) — รายละเอียดไฟล์จริงทั้งหมดอยู่ในโครงสร้างแบบ tree ด้านล่าง
+
+```mermaid
+flowchart TD
+    Root["Dee_Per/"] --> Server["server/"]
+    Root --> Client["client/"]
+    Server --> ServerSrc["src/\n(routes, db, auth, ai, mailer)"]
+    Server --> ServerEnv[".env.example"]
+    Client --> ClientSrc["src/\n(pages, components, store, utils)"]
+    Client --> ClientPublic["public/"]
+```
 
 ```
 Dee_Per/
