@@ -177,6 +177,13 @@ export async function renderShareCard({ text, categoryLabel }) {
   const blockH = lines.length * lineHeight;
   let ty = cardY + cardH / 2 - blockH / 2 + lineHeight / 2 + 40;
 
+  // Clipped to the card's own rounded-rect path — a hard backstop so an
+  // outlier question (longer than anything in the bank today) still can't
+  // paint past the card edge even if fitText's font-size floor can't shrink
+  // it enough to fit on height.
+  ctx.save();
+  roundRectPath(ctx, cardX, cardY, cardW, cardH, radius);
+  ctx.clip();
   ctx.font = `700 ${size}px "${FONT}"`;
   ctx.fillStyle = '#f4f1f2';
   ctx.textAlign = 'center';
@@ -185,6 +192,7 @@ export async function renderShareCard({ text, categoryLabel }) {
     ctx.fillText(line, W / 2, ty);
     ty += lineHeight;
   }
+  ctx.restore();
 
   // Brand lockup below the card — what makes the shared post point back at
   // the app instead of reading as an anonymous quote graphic.
