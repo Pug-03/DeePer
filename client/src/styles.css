@@ -1673,8 +1673,17 @@ span.supporter-avatar-static {
    vertical list at any width is the ask here (unlike Supporters, this one
    isn't wide/scrollable content that needs a wider layout to earn its
    keep), so no responsive column switch. */
+/* width:fit-content + margin-inline:auto shrinks the list to its widest
+   entry and centers that block as a whole, while each entry fills the
+   list's width (100%) so every row's avatar shares the same left edge
+   instead of each row centering its avatar+text pair independently —
+   which used to shift avatars sideways whenever name/role text length
+   differed between entries. */
 .dev-team-list {
   margin-top: 18px;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1683,14 +1692,11 @@ span.supporter-avatar-static {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
-/* justify-content:center keeps the avatar+text pair centered as a unit
-   (matching the rest of the section), while the text itself reads
-   left-aligned next to the avatar rather than centered per line. */
 .dev-team-row {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 14px;
 }
 .dev-team-avatar-img,
