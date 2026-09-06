@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './store/auth.jsx';
 import { TutorialProvider, useTutorial } from './store/tutorial.jsx';
 import { ToastProvider, ConfirmProvider, Loading } from './components/ui.jsx';
+import ScrollToTop from './components/ScrollToTop.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import OnboardingTour from './components/OnboardingTour.jsx';
 
@@ -55,6 +56,7 @@ export default function App() {
       <ConfirmProvider>
         <TutorialProvider>
           <div className="app-shell">
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
               {/* Public regardless of auth state — reachable from the
