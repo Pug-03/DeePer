@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
+import Sparkles from '../components/Sparkles.jsx';
 import { IcSparkle, IcMousePointer } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
 import yeahPhoto from '../assets/supporters/yeah.png';
@@ -40,39 +41,13 @@ function Reveal({ children, delay = 0, className }) {
 }
 
 // Small twinkle accent next to the stat number — separate from (and
-// independent of) OnboardingTour's own tip-corner sparkles; kept local here
-// since it's a different layout (1-2 points anchored to a number, not 4
-// tip corners), not worth sharing a component for.
+// independent of) OnboardingTour's own tip-corner sparkles. Uses the shared
+// <Sparkles/> component (see components/Sparkles.jsx); History's page-title
+// accent reuses the same component with its own point set.
 const STAT_SPARKLES = [
   { top: -8, right: -14, delay: 0, size: 16 },
   { bottom: -4, left: -16, delay: 1.1, size: 11 },
 ];
-function StatSparkles() {
-  const reduceMotion = useReducedMotion();
-  if (reduceMotion) return null;
-  return (
-    <>
-      {STAT_SPARKLES.map((pos, i) => (
-        <motion.span
-          key={i}
-          className="stat-sparkle"
-          style={{ top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left }}
-          initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
-          animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5], rotate: [0, 20, 0] }}
-          transition={{
-            duration: 2.6,
-            delay: pos.delay,
-            repeat: Infinity,
-            repeatDelay: 1.4,
-            ease: 'easeInOut',
-          }}
-        >
-          <IcSparkle size={pos.size} />
-        </motion.span>
-      ))}
-    </>
-  );
-}
 
 // No vetted supporter data exists yet — support_proofs (server/src/db.js) is
 // self-reported and unapproved, so most entries here still need a name to
@@ -368,7 +343,7 @@ export default function Welcome() {
           <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
           <div className="stat-number-wrap">
             <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
-            <StatSparkles />
+            <Sparkles points={STAT_SPARKLES} />
           </div>
           <div className="stat-label">{t('welcome.stats.label')}</div>
         </Reveal>

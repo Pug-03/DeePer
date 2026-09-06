@@ -973,6 +973,9 @@ a {
 .card-item:active {
   transform: scale(0.99);
 }
+.card-item:hover {
+  border-color: var(--border-red);
+}
 .card-item .ci-q {
   font-size: 16px;
   font-weight: 600;
@@ -1529,6 +1532,13 @@ a {
   max-width: 34ch;
   margin: 8px auto 0;
 }
+/* Generic anchor for the <Sparkles/> component — any element that wants a
+   twinkle accent wraps its content in this so the sparkle's absolute
+   top/right/bottom/left positioning is relative to it, not the page. */
+.sparkle-anchor {
+  position: relative;
+  display: inline-block;
+}
 .stat-number-wrap {
   position: relative;
   display: inline-block;
@@ -1543,10 +1553,10 @@ a {
   background-clip: text;
   color: transparent;
 }
-/* Twinkle accents anchored to the stat number specifically — independent of
-   the onboarding tour's own .tut-sparkle (different component, different
-   trigger, left untouched). */
-.stat-sparkle {
+/* Twinkle accent used by <Sparkles/> — independent of the onboarding
+   tour's own .tut-sparkle (different component, different trigger, left
+   untouched). */
+.sparkle {
   position: absolute;
   color: var(--red-bright);
   filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.55));
