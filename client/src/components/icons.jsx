@@ -60,9 +60,10 @@ export const IcTrash = (p) => (
     <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
   </svg>
 );
-export const IcArrowUpRight = (p) => (
+export const IcMousePointer = (p) => (
   <svg {...S(p)}>
-    <path d="M7 17 17 7M8 7h9v9" />
+    <path d="M3.688 3.037a.497.497 0 0 0-.651.651l6.5 15.999a.501.501 0 0 0 .947-.062l1.569-6.083a2 2 0 0 1 1.448-1.479l6.124-1.579a.5.5 0 0 0 .063-.947z" />
+    <path d="M12.586 12.586 19 19" />
   </svg>
 );
 export const IcMail = (p) => (

@@ -4,7 +4,7 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
-import { IcSparkle, IcArrowUpRight } from '../components/icons.jsx';
+import { IcSparkle, IcMousePointer } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
 import yeahPhoto from '../assets/supporters/yeah.png';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
@@ -262,7 +262,7 @@ function DevTeamCard({ dev, lang, nav }) {
               onClick={() => nav(dev.awardsHref)}
             >
               {name}
-              <IcArrowUpRight size={17} className="dev-team-name-icon" />
+              <IcMousePointer size={17} className="dev-team-name-icon" />
             </button>
           ) : (
             <p className="dev-team-name">{name}</p>
