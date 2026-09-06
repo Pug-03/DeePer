@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
+import Sparkles from '../components/Sparkles.jsx';
 import { IcBack, IcMail, IcGithub } from '../components/icons.jsx';
 
 const CONTACT_EMAIL = 'ftxz12789@gmail.com';
@@ -51,6 +52,14 @@ const AWARDS = [
   },
 ];
 
+// Twinkle accent next to the page title — same <Sparkles/> component and
+// motion the landing page's "20+" stat number uses, just its own point set
+// sized for a title-height anchor instead of a big number.
+const TITLE_SPARKLES = [
+  { top: -6, right: -20, delay: 0, size: 14 },
+  { bottom: -8, left: -16, delay: 1.2, size: 10 },
+];
+
 export default function Awards() {
   const nav = useNavigate();
   const { t } = useI18n();
@@ -68,15 +77,20 @@ export default function Awards() {
       </button>
 
       <div className="header" style={{ marginBottom: 20 }}>
-        <h1 className="h1">{t('awards.title')}</h1>
+        <div className="sparkle-anchor">
+          <h1 className="h1">{t('awards.title')}</h1>
+          <Sparkles points={TITLE_SPARKLES} />
+        </div>
       </div>
 
-      {AWARDS.map((a) => (
-        <div className="award-entry" key={a.name}>
-          <p className="award-name">{a.name}</p>
-          <p className="award-result">{a.result}</p>
-        </div>
-      ))}
+      <div className="award-list stagger">
+        {AWARDS.map((a) => (
+          <div className="award-entry" key={a.name}>
+            <p className="award-name">{a.name}</p>
+            <p className="award-result">{a.result}</p>
+          </div>
+        ))}
+      </div>
 
       <div className="award-contact">
         <p className="eyebrow">{t('awards.contactTitle')}</p>
