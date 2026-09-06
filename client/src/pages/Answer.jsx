@@ -6,8 +6,6 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcCheck } from '../components/icons.jsx';
 
-const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
-
 export default function Answer() {
   const nav = useNavigate();
   const loc = useLocation();
@@ -26,9 +24,8 @@ export default function Answer() {
   const [partnerName, setPartnerName] = useState(
     preset?.partner_name || user?.partner_name || partnerDefault,
   );
-  const [partnerColor, setPartnerColor] = useState(
-    preset?.partner_color || user?.partner_color || '#f43f5e',
-  );
+  // Color is set once in Profile, not per-answer here — see Profile.jsx.
+  const partnerColor = preset?.partner_color || user?.partner_color || '#f43f5e';
   const [busy, setBusy] = useState(false);
 
   if (!q) {
@@ -89,16 +86,16 @@ export default function Answer() {
       {/* turn toggle — one device, take turns */}
       <div className="turn-tabs">
         <button
-          className="turn-tab"
-          style={turn === 'me' ? { background: 'var(--red)', borderColor: 'transparent' } : {}}
+          className={`turn-tab ${turn === 'me' ? 'active' : ''}`}
+          style={turn === 'me' ? { background: 'var(--red)' } : {}}
           onClick={() => setTurn('me')}
         >
           <span className="turn-dot" style={{ background: '#fff' }} />
           {user?.nickname || t('answer.us')}
         </button>
         <button
-          className="turn-tab"
-          style={turn === 'partner' ? { background: partnerColor, borderColor: 'transparent' } : {}}
+          className={`turn-tab ${turn === 'partner' ? 'active' : ''}`}
+          style={turn === 'partner' ? { background: partnerColor } : {}}
           onClick={() => setTurn('partner')}
         >
           <span className="turn-dot" style={{ background: partnerColor }} />
@@ -135,7 +132,7 @@ export default function Answer() {
             autoFocus
           />
 
-          <div className="field" style={{ marginTop: 10 }}>
+          <div className="field" style={{ marginTop: 10, marginBottom: 0 }}>
             <label>{t('answer.partnerName')}</label>
             <input
               className="input"
@@ -144,20 +141,6 @@ export default function Answer() {
               placeholder={t('answer.partnerNamePh')}
               maxLength={30}
             />
-          </div>
-          <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
-            {t('answer.color')}
-          </label>
-          <div className="color-swatches" style={{ marginTop: 8 }}>
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                className={`swatch ${partnerColor === c ? 'sel' : ''}`}
-                style={{ background: c }}
-                onClick={() => setPartnerColor(c)}
-                aria-label={c}
-              />
-            ))}
           </div>
         </div>
       )}
