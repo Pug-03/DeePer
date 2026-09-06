@@ -8,6 +8,7 @@ const S = (props) => ({
   strokeWidth: props.sw || 2,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
+  className: props.className,
 });
 
 export const IcHome = (p) => (
@@ -57,6 +58,11 @@ export const IcPlus = (p) => (
 export const IcTrash = (p) => (
   <svg {...S({ ...p, sw: 1.8 })}>
     <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+  </svg>
+);
+export const IcArrowUpRight = (p) => (
+  <svg {...S(p)}>
+    <path d="M7 17 17 7M8 7h9v9" />
   </svg>
 );
 export const IcMail = (p) => (
