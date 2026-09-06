@@ -1053,6 +1053,10 @@ a {
   width: 12px;
   height: 12px;
   border-radius: 50%;
+  /* A thin ring so the dot stays visible even when its fill matches (or is
+     very close to) the tab's own background — e.g. the partner dot against
+     its own active-tab fill, which otherwise blends the dot away. */
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.65);
 }
 .color-swatches {
   display: flex;
