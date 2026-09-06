@@ -1534,8 +1534,8 @@ a {
   display: inline-block;
 }
 .stat-number {
-  margin-top: 4px;
-  font-size: 48px;
+  margin-top: 10px;
+  font-size: 68px;
   font-weight: 800;
   line-height: 1;
   background: linear-gradient(120deg, #fff 20%, var(--red-bright) 90%);
@@ -1553,7 +1553,7 @@ a {
   pointer-events: none;
 }
 .stat-label {
-  margin-top: 8px;
+  margin-top: 12px;
   color: var(--text-dim);
   font-size: 14px;
 }
