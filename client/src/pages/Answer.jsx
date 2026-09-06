@@ -21,9 +21,8 @@ export default function Answer() {
   const [turn, setTurn] = useState('me'); // me | partner
   const [myAnswer, setMyAnswer] = useState(preset?.my_answer || '');
   const [partnerAnswer, setPartnerAnswer] = useState(preset?.partner_answer || '');
-  const [partnerName, setPartnerName] = useState(
-    preset?.partner_name || user?.partner_name || partnerDefault,
-  );
+  // Partner's name is edited in Profile, not here — see Profile.jsx.
+  const partnerName = preset?.partner_name || user?.partner_name || partnerDefault;
   // Color is set once in Profile, not per-answer here — see Profile.jsx.
   const partnerColor = preset?.partner_color || user?.partner_color || '#f43f5e';
   const [busy, setBusy] = useState(false);
@@ -137,10 +136,18 @@ export default function Answer() {
             <input
               className="input"
               value={partnerName}
-              onChange={(e) => setPartnerName(e.target.value)}
+              readOnly
               placeholder={t('answer.partnerNamePh')}
-              maxLength={30}
+              style={{ opacity: 0.7, cursor: 'default' }}
             />
+            <button
+              type="button"
+              className="link"
+              style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 6 }}
+              onClick={() => nav('/app/profile')}
+            >
+              {t('answer.partnerNameHint')}
+            </button>
           </div>
         </div>
       )}
