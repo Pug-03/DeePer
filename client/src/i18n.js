@@ -115,7 +115,9 @@ export const STRINGS = {
     'signup.sub': 'เลือกวิธีสมัครที่สะดวก',
     'signup.emailMethod': 'สมัครด้วยอีเมล',
     'signup.emailMethodSub': 'รับรหัส OTP ทางอีเมล แล้วตั้งรหัสผ่าน',
-    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง Google ดูแลการยืนยันตัวตนให้',
+    // Non-breaking space before "ให้" so it can't wrap onto its own
+    // line as a lone orphan word.
+    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง Google ดูแลการยืนยันตัวตน ให้',
     'signup.emailTitle': 'กรอกอีเมล',
     'signup.emailSub': 'เราจะส่งรหัส OTP 4 หลักไปที่อีเมลของคุณ',
     'signup.sendOtp': 'ส่งรหัส OTP',
