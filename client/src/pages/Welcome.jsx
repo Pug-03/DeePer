@@ -234,7 +234,7 @@ function SupportersMarquee({ items }) {
 // Plain text, no box/border — matches the rest of the page's text-based
 // feel rather than reading as another boxed component. Just a small avatar
 // added to the left of each name+role line.
-function DevTeamCard({ dev, lang, t, nav }) {
+function DevTeamCard({ dev, lang, nav }) {
   const [imgFailed, setImgFailed] = useState(false);
   const name = (lang === 'en' ? dev.nameEn : dev.nameTh) || dev.nameTh;
   const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
@@ -255,17 +255,18 @@ function DevTeamCard({ dev, lang, t, nav }) {
           <span className="supporter-avatar dev-team-avatar-fallback">{initials(name)}</span>
         )}
         <div className="dev-team-text">
-          <p className="dev-team-name">{name}</p>
-          <p className="dev-team-role">{role}</p>
-          {dev.awardsHref && (
+          {dev.awardsHref ? (
             <button
               type="button"
-              className="link dev-team-awards-link"
+              className="dev-team-name dev-team-name-clickable"
               onClick={() => nav(dev.awardsHref)}
             >
-              {t('welcome.team.awardsLink')}
+              {name}
             </button>
+          ) : (
+            <p className="dev-team-name">{name}</p>
           )}
+          <p className="dev-team-role">{role}</p>
         </div>
       </div>
       {dev.link && (
@@ -382,7 +383,7 @@ export default function Welcome() {
           <h2 className="h2">{t('welcome.team.title')}</h2>
           <div className="dev-team-list">
             {DEV_TEAM.map((dev) => (
-              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} t={t} nav={nav} />
+              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} nav={nav} />
             ))}
           </div>
         </Reveal>
