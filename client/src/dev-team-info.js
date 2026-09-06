@@ -16,8 +16,7 @@ export const DEV_TEAM = [
     avatar: nathapornPhoto,
     // Proper headshot — the default centered crop already frames the face.
     avatarPosition: 'center',
-    // Only Nathaporn's entry links out to the Awards page — see
-    // welcome.team.awardsLink / DevTeamCard in Welcome.jsx.
+    // Clicking the name in DevTeamCard (Welcome.jsx) navigates here.
     awardsHref: '/awards',
   },
   {
@@ -30,5 +29,8 @@ export const DEV_TEAM = [
     // Full-body/high-angle shot, not a headshot — bias the crop toward the
     // top so the circle frames the face instead of the torso/floor below it.
     avatarPosition: '50% 15%',
+    // Own page, honest empty state until she has achievements to list —
+    // see pages/AwardsNatsha.jsx.
+    awardsHref: '/awards/natsha',
   },
 ];

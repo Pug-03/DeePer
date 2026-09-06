@@ -329,6 +329,7 @@ export const STRINGS = {
     // รางวัลและความสำเร็จ
     'awards.title': 'รางวัลและความสำเร็จ',
     'awards.contactTitle': 'ติดต่องาน',
+    'awards.empty': 'ยังไม่มีผลงานที่แสดง ณ ตอนนี้',
 
     // สนับสนุนเรา
     'support.teaser': 'แอปนี้ทำและดูแลฟรี ถ้าชอบ สนับสนุนเราได้ตามกำลังนะ',
@@ -672,6 +673,7 @@ export const STRINGS = {
 
     'awards.title': 'Awards & Achievements',
     'awards.contactTitle': 'Contact',
+    'awards.empty': 'No achievements listed yet.',
 
     'support.teaser': "This app is made and run for free. If you like it, you can support it however you'd like",
     'support.cta': 'Support us',
