@@ -279,7 +279,9 @@ export const STRINGS = {
     'answer.color': 'สีประจำตัว',
     'answer.save': 'บันทึกคำตอบ',
     'answer.saving': 'กำลังบันทึก...',
-    'answer.needOne': 'กรอกคำตอบอย่างน้อยหนึ่งช่องก่อนนะ',
+    // Non-breaking space before the trailing "นะ" so it can't be
+    // stranded alone on its own line (same widow fix as signup.googleNote).
+    'answer.needOne': 'กรอกคำตอบอย่างน้อยหนึ่งช่องก่อน นะ',
     'answer.saved': 'บันทึกคำตอบลงประวัติแล้ว',
 
     // บันทึกไว้
