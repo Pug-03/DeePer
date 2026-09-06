@@ -53,11 +53,16 @@ const AWARDS = [
 ];
 
 // Twinkle accent next to the page title — same <Sparkles/> component and
-// motion the landing page's "20+" stat number uses, just its own point set
-// sized for a title-height anchor instead of a big number.
+// motion the landing page's "20+" stat number uses. Offsets are smaller
+// than the stat number's own (-20/-16) because the title is a full
+// sentence, not a compact number — the same magnitude there reads as
+// "floating near the corner of a wide box" rather than "next to the
+// text", and on a narrow page the left offset pushed the sparkle past the
+// page's own padding, right against the viewport edge. Kept tight to the
+// text on both axes instead.
 const TITLE_SPARKLES = [
-  { top: -6, right: -20, delay: 0, size: 14 },
-  { bottom: -8, left: -16, delay: 1.2, size: 10 },
+  { top: -2, right: -10, delay: 0, size: 12 },
+  { bottom: -2, left: -6, delay: 1.2, size: 9 },
 ];
 
 export default function Awards() {

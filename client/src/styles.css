@@ -1801,7 +1801,6 @@ button.dev-team-name-clickable:focus-visible {
   color: var(--text);
   margin: 0;
   line-height: 1.4;
-  transition: color 0.15s ease;
 }
 /* CSS-generated marker, not a typed "-" in the content — spacing after it
    stays consistent regardless of font/zoom, and screen readers won't read
@@ -1809,9 +1808,6 @@ button.dev-team-name-clickable:focus-visible {
 .award-name::before {
   content: '- ';
   color: var(--text-dim);
-}
-.award-entry:hover .award-name {
-  color: var(--red-bright);
 }
 .award-result {
   font-size: 13.5px;
