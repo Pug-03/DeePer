@@ -54,7 +54,7 @@ export function ToastProvider({ children }) {
   const show = useCallback((text) => {
     setMsg(text);
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMsg(null), 2200);
+    timer.current = setTimeout(() => setMsg(null), 2800);
   }, []);
   return (
     <ToastCtx.Provider value={show}>

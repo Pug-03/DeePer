@@ -1980,6 +1980,23 @@ button.dev-team-name-clickable:focus-visible {
   max-width: 88%;
   text-align: center;
 }
+/* .fade-up's own keyframes end on `transform: none`, which would wipe out
+   the translateX(-50%) centering above once the animation finishes — this
+   overrides it with a toast-specific animation that keeps the horizontal
+   centering in both the from/to transform states. */
+.toast.fade-up {
+  animation: toastFadeUp 0.35s ease both;
+}
+@keyframes toastFadeUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
 .toast svg {
   flex-shrink: 0;
   color: var(--red-bright);
