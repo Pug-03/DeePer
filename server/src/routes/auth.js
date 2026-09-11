@@ -24,6 +24,9 @@ const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : nul
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const AVATAR_DIR = join(__dirname, '..', '..', 'uploads', 'avatars');
 const avatarPath = (avatarUrl) => join(AVATAR_DIR, basename(avatarUrl));
+const PARTNER_AVATAR_DIR = join(__dirname, '..', '..', 'uploads', 'partner_avatars');
+const partnerAvatarPath = (avatarUrl) => join(PARTNER_AVATAR_DIR, basename(avatarUrl));
+fs.mkdirSync(PARTNER_AVATAR_DIR, { recursive: true });
 
 const AVATAR_MIME_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 const avatarUpload = multer({
@@ -34,6 +37,18 @@ const avatarUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, !!AVATAR_MIME_EXT[file.mimetype]),
 });
+const partnerAvatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: PARTNER_AVATAR_DIR,
+    filename: (req, file, cb) => cb(null, `${req.user.id}-${Date.now()}${AVATAR_MIME_EXT[file.mimetype]}`),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, !!AVATAR_MIME_EXT[file.mimetype]),
+});
+
+// Kept in sync with PARTNER_ICONS in client/src/utils/partnerIcons.js — the
+// server only needs the id whitelist, not the actual icon artwork.
+const PARTNER_ICON_IDS = new Set(['heart', 'star', 'cat', 'dog', 'sun', 'moon', 'flower', 'coffee']);
 
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits
@@ -384,11 +399,34 @@ router.get('/me/login-history', requireAuth, (req, res) => {
 
 // --- Update profile ---
 router.patch('/me', requireAuth, (req, res) => {
-  const { nickname, age, gender, partner_name, partner_color } = req.body;
+  const { nickname, age, gender, partner_name, partner_color, partner_icon } = req.body;
   const u = req.user;
+
+  // Picking a stock icon clears any uploaded partner photo — the two are
+  // mutually exclusive representations of the same slot (see
+  // partner-avatar upload below, which does the reverse).
+  let nextIcon = u.partner_icon;
+  let nextAvatarUrl = u.partner_avatar_url;
+  if (partner_icon !== undefined) {
+    if (partner_icon === null || partner_icon === '') {
+      nextIcon = null;
+    } else if (PARTNER_ICON_IDS.has(partner_icon)) {
+      nextIcon = partner_icon;
+      if (nextAvatarUrl) {
+        fs.unlink(partnerAvatarPath(nextAvatarUrl), () => {});
+        nextAvatarUrl = null;
+      }
+    } else {
+      return res
+        .status(400)
+        .json({ error: 'ไอคอนไม่ถูกต้อง', error_code: 'PARTNER_ICON_INVALID' });
+    }
+  }
+
   db.prepare(
     `UPDATE users SET
-       nickname = ?, age = ?, gender = ?, partner_name = ?, partner_color = ?
+       nickname = ?, age = ?, gender = ?, partner_name = ?, partner_color = ?,
+       partner_icon = ?, partner_avatar_url = ?
      WHERE id = ?`,
   ).run(
     nickname != null ? String(nickname).trim() : u.nickname,
@@ -396,8 +434,53 @@ router.patch('/me', requireAuth, (req, res) => {
     gender != null ? gender : u.gender,
     partner_name != null ? String(partner_name).trim() : u.partner_name,
     partner_color != null ? partner_color : u.partner_color,
+    nextIcon,
+    nextAvatarUrl,
     u.id,
   );
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  res.json({ user: publicUser(updated) });
+});
+
+// --- Upload partner photo (clears any picked icon) ---
+router.post('/me/partner-avatar', requireAuth, (req, res) => {
+  partnerAvatarUpload.single('avatar')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE')
+        return res
+          .status(400)
+          .json({ error: 'ไฟล์รูปใหญ่เกินไป (สูงสุด 5MB)', error_code: 'AVATAR_TOO_LARGE' });
+      return res
+        .status(400)
+        .json({ error: 'อัปโหลดรูปไม่สำเร็จ', error_code: 'AVATAR_UPLOAD_FAILED' });
+    }
+    if (!req.file)
+      return res.status(400).json({
+        error: 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP',
+        error_code: 'AVATAR_TYPE_INVALID',
+      });
+
+    const u = req.user;
+    const oldAvatarUrl = u.partner_avatar_url;
+    const partner_avatar_url = `/uploads/partner_avatars/${req.file.filename}`;
+    db.prepare('UPDATE users SET partner_avatar_url = ?, partner_icon = NULL WHERE id = ?').run(
+      partner_avatar_url,
+      u.id,
+    );
+    if (oldAvatarUrl) fs.unlink(partnerAvatarPath(oldAvatarUrl), () => {});
+
+    const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    res.json({ user: publicUser(updated) });
+  });
+});
+
+// --- Remove partner photo ---
+router.delete('/me/partner-avatar', requireAuth, (req, res) => {
+  const u = req.user;
+  if (u.partner_avatar_url) {
+    fs.unlink(partnerAvatarPath(u.partner_avatar_url), () => {});
+    db.prepare('UPDATE users SET partner_avatar_url = NULL WHERE id = ?').run(u.id);
+  }
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
   res.json({ user: publicUser(updated) });
 });

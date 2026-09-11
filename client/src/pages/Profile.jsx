@@ -7,6 +7,8 @@ import { useToast, useConfirm } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import { IcCamera, IcCheck, IcSettings, IcTrash } from '../components/icons.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
+import { PARTNER_ICONS } from '../utils/partnerIcons.js';
+import PartnerAvatar from '../components/PartnerAvatar.jsx';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -25,7 +27,9 @@ export default function Profile() {
   const [partnerColor, setPartnerColor] = useState(user?.partner_color || '#f43f5e');
   const [busy, setBusy] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
+  const [partnerAvatarBusy, setPartnerAvatarBusy] = useState(false);
   const fileInputRef = useRef(null);
+  const partnerFileInputRef = useRef(null);
 
   const save = async () => {
     setBusy(true);
@@ -88,6 +92,57 @@ export default function Profile() {
       toast(err.message);
     } finally {
       setAvatarBusy(false);
+    }
+  };
+
+  const pickPartnerAvatar = () => partnerFileInputRef.current?.click();
+
+  const onPartnerAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!AVATAR_TYPES.includes(file.type)) {
+      toast(t('err.AVATAR_TYPE_INVALID'));
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast(t('err.AVATAR_TOO_LARGE'));
+      return;
+    }
+    setPartnerAvatarBusy(true);
+    try {
+      const form = new FormData();
+      form.append('avatar', file);
+      const d = await api.upload('/auth/me/partner-avatar', form);
+      setUser(d.user);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setPartnerAvatarBusy(false);
+    }
+  };
+
+  const removePartnerAvatar = async () => {
+    setPartnerAvatarBusy(true);
+    try {
+      const d = await api.del('/auth/me/partner-avatar');
+      setUser(d.user);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setPartnerAvatarBusy(false);
+    }
+  };
+
+  const pickPartnerIcon = async (id) => {
+    setPartnerAvatarBusy(true);
+    try {
+      const d = await api.patch('/auth/me', { partner_icon: id });
+      setUser(d.user);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setPartnerAvatarBusy(false);
     }
   };
 
@@ -204,6 +259,56 @@ export default function Profile() {
             maxLength={30}
           />
         </div>
+        <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
+          {t('profile.partnerPicture')}
+        </label>
+        <p className="faint" style={{ margin: '4px 0 10px' }}>
+          {t('profile.partnerPictureHint')}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+          <div className="avatar-edit">
+            <PartnerAvatar avatarUrl={user?.partner_avatar_url} icon={user?.partner_icon} color={partnerColor} />
+            <button
+              type="button"
+              className="avatar-edit__btn"
+              onClick={pickPartnerAvatar}
+              disabled={partnerAvatarBusy}
+              aria-label={t('profile.changePhoto')}
+            >
+              <IcCamera size={14} />
+            </button>
+            <input
+              ref={partnerFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={onPartnerAvatarChange}
+            />
+          </div>
+          {user?.partner_avatar_url && (
+            <button className="link-btn" onClick={removePartnerAvatar} disabled={partnerAvatarBusy}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <IcTrash size={13} /> {t('profile.partnerPictureRemove')}
+              </span>
+            </button>
+          )}
+        </div>
+        <div className="color-swatches" style={{ marginBottom: 18 }}>
+          {PARTNER_ICONS.map(({ id, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className={`swatch ${user?.partner_icon === id ? 'sel' : ''}`}
+              style={{ background: 'var(--glass)', display: 'grid', placeItems: 'center', color: 'var(--text-dim)' }}
+              onClick={() => pickPartnerIcon(id)}
+              disabled={partnerAvatarBusy}
+              aria-label={id}
+            >
+              <Icon size={18} />
+            </button>
+          ))}
+        </div>
+
         <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
           {t('answer.color')}
         </label>

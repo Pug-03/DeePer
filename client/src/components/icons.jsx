@@ -194,6 +194,61 @@ export const IcGoogle = (p) => (
     />
   </svg>
 );
+// --- Partner-picture stand-ins: a small stock-icon set someone can pick as
+// their partner's "avatar" instead of uploading a real photo. See
+// utils/partnerIcons.js for the id -> component map used to render these.
+export const IcHeart = (p) => (
+  <svg {...S(p)}>
+    <path d="M12 21s-7.5-4.6-10-9.1C.4 8.6 2 5 5.4 5c2 0 3.4 1.1 4.1 2.3.4.7.7 1.4.9 2 .2-.6.5-1.3.9-2C12 6.1 13.4 5 15.4 5 18.8 5 20.4 8.6 22 11.9 19.5 16.4 12 21 12 21Z" />
+  </svg>
+);
+export const IcStar = (p) => (
+  <svg {...S(p)}>
+    <path d="M12 2.5 15 9l7 .9-5 4.9 1.2 7-6.2-3.3L5.8 21.8 7 14.8 2 9.9 9 9Z" />
+  </svg>
+);
+export const IcCat = (p) => (
+  <svg {...S(p)}>
+    <path d="M5 4 8 9h8l3-5-3 8.5a5 5 0 0 1-5 3.5 5 5 0 0 1-5-3.5Z" />
+    <path d="M9 21c-1-1.2-1.5-2.6-1.5-4M15 21c1-1.2 1.5-2.6 1.5-4" />
+    <circle cx="9.5" cy="12.2" r=".6" fill="currentColor" />
+    <circle cx="14.5" cy="12.2" r=".6" fill="currentColor" />
+  </svg>
+);
+export const IcDog = (p) => (
+  <svg {...S(p)}>
+    <path d="M4 9c0-3 2-6 8-6s8 3 8 6c0 4-2.5 8-8 8s-8-4-8-8Z" />
+    <path d="M4 9 1.5 6M20 9l2.5-3" />
+    <circle cx="9.5" cy="10" r=".6" fill="currentColor" />
+    <circle cx="14.5" cy="10" r=".6" fill="currentColor" />
+    <path d="M10.5 13.5c.6.5 1.4.5 2 0" />
+  </svg>
+);
+export const IcSun = (p) => (
+  <svg {...S(p)}>
+    <circle cx="12" cy="12" r="4.5" />
+    <path d="M12 2.5v3M12 18.5v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+  </svg>
+);
+export const IcMoon = (p) => (
+  <svg {...S(p)}>
+    <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
+  </svg>
+);
+export const IcFlower = (p) => (
+  <svg {...S(p)}>
+    <circle cx="12" cy="12" r="2.3" />
+    <path d="M12 9.7a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5ZM12 19.3a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5ZM14.3 12a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0ZM4.7 12a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0Z" />
+    <path d="M12 19.3V22" />
+  </svg>
+);
+export const IcCoffee = (p) => (
+  <svg {...S(p)}>
+    <path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z" />
+    <path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17" />
+    <path d="M7 4.5c0 1-1 1-1 2M10.5 4.5c0 1-1 1-1 2" />
+  </svg>
+);
 export const IcGithub = (p) => (
   <svg width={p.size || 24} height={p.size || 24} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 .5C5.73.5.5 5.73.5 12c0 5.09 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.03 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.05 11.05 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .3.2.66.79.55A11.5 11.5 0 0 0 23.5 12c0-6.27-5.23-11.5-11.5-11.5Z" />

@@ -111,6 +111,18 @@ if (!userCols.some((c) => c.name === 'avatar_url')) {
   db.exec(`ALTER TABLE users ADD COLUMN avatar_url TEXT`);
 }
 
+// Migration: partner_avatar_url (an uploaded photo) and partner_icon (a
+// picked stock icon id) — added for letting the partner be represented by
+// something other than just a flat color. Mutually exclusive in practice
+// (the route layer clears one whenever the other is set) but both columns
+// stay nullable so "neither chosen yet" is representable too.
+if (!userCols.some((c) => c.name === 'partner_avatar_url')) {
+  db.exec(`ALTER TABLE users ADD COLUMN partner_avatar_url TEXT`);
+}
+if (!userCols.some((c) => c.name === 'partner_icon')) {
+  db.exec(`ALTER TABLE users ADD COLUMN partner_icon TEXT`);
+}
+
 // Migration: older databases stored a single transfer_at column — split it
 // into transfer_date + transfer_time, backfill existing rows from it, add
 // the new amount column, then drop transfer_at entirely. Dropping it (rather
