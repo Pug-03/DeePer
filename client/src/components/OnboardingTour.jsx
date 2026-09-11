@@ -147,17 +147,25 @@ function useTargetRect(selector) {
 
     const measure = () => {
       const el = document.querySelector(selector);
-      setRect(el ? el.getBoundingClientRect() : null);
-
-      // Keep re-measuring every frame while the target (still mid its own
-      // entrance animation right after the tour navigates to a new page,
-      // for instance) hasn't settled — the 1500ms cap is only a safety net
-      // for something failing to report 'finished' at all, not the actual
-      // stop condition anymore.
-      settledStreak = el && isSettled(el) ? settledStreak + 1 : 0;
-      if (settledStreak < 2 && performance.now() - start < 1500) {
-        id = requestAnimationFrame(measure);
+      if (!el) {
+        setRect(null);
+        settledStreak = 0;
+        return;
       }
+
+      // Only commit a rect once the target is settled (or the 1500ms safety
+      // net expires) — NOT on every intermediate frame. Landing on this step
+      // right as the page itself first mounts (e.g. jumping straight into
+      // the tour, target still riding its own .stagger entrance animation)
+      // used to setRect() on every in-flight frame too, so the spotlight
+      // visibly chased the target from its mid-animation position to the
+      // final one instead of just appearing there.
+      settledStreak = isSettled(el) ? settledStreak + 1 : 0;
+      if (settledStreak >= 2 || performance.now() - start >= 1500) {
+        setRect(el.getBoundingClientRect());
+        return;
+      }
+      id = requestAnimationFrame(measure);
     };
     measure();
     window.addEventListener('resize', measure);
