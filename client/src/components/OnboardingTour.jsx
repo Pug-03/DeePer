@@ -110,18 +110,35 @@ function clamp(v, lo, hi) {
   return Math.min(Math.max(v, lo), hi);
 }
 
-// True once every animation/transition running directly on `el` (e.g. the
-// page's own .stagger entrance — applied straight to each `.stagger > *`,
-// which includes our data-tut targets) has reached its end state. Used
-// instead of comparing consecutive measured rects: on an ease-out curve
-// like staggerRise's cubic-bezier(0.16, 1, 0.3, 1), the tail moves by a
-// fraction of a pixel per frame, so a few consecutive frames can measure
-// as "the same rect" well before the animation has actually finished —
-// which was the bug (the spotlight/tip locked onto a not-quite-settled
+// True once every animation/transition affecting `el`'s position has reached
+// its end state. Used instead of comparing consecutive measured rects: on an
+// ease-out curve like staggerRise's cubic-bezier(0.16, 1, 0.3, 1), the tail
+// moves by a fraction of a pixel per frame, so a few consecutive frames can
+// measure as "the same rect" well before the animation has actually finished
+// — which was the bug (the spotlight/tip locked onto a not-quite-settled
 // position, landing a few px off from the header's true resting spot).
+//
+// Walks up the ancestor chain rather than just checking `el` itself — the
+// page's own .stagger entrance is applied to `.stagger > *` (each direct
+// child), but a data-tut target (e.g. "add") can be nested a level or two
+// below that direct child (inside a .row-between, say). getAnimations() has
+// no "include ancestors" option, so el.getAnimations() alone stayed
+// permanently empty for such a target and isSettled() returned true on
+// frame 1 (vacuous truth on an empty list) — capturing the rect mid-animation
+// on the ancestor and never re-measuring, which read as a stuck-forever
+// wrong position rather than a one-frame flash.
 function isSettled(el) {
-  if (typeof el.getAnimations !== 'function') return true; // no WAAPI support — nothing to wait for
-  return el.getAnimations().every((a) => a.playState !== 'running' && a.playState !== 'pending');
+  let node = el;
+  while (node instanceof Element) {
+    if (typeof node.getAnimations === 'function') {
+      const running = node
+        .getAnimations()
+        .some((a) => a.playState === 'running' || a.playState === 'pending');
+      if (running) return false;
+    }
+    node = node.parentElement;
+  }
+  return true;
 }
 
 function useTargetRect(selector) {
