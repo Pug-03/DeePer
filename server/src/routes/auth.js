@@ -38,6 +38,15 @@ const avatarUpload = multer({
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits
 
+// Logged at every token-issuing endpoint below (password login, Google,
+// register, password-reset) so the account settings "login history" view
+// has one row per time a session was actually created.
+const recordLogin = (userId, method, req) => {
+  db.prepare(
+    `INSERT INTO login_history (user_id, method, ip, user_agent) VALUES (?, ?, ?, ?)`,
+  ).run(userId, method, req.ip || null, req.get('user-agent') || null);
+};
+
 // Guards the account-takeover-shaped endpoints — OTP request/verify, login,
 // password reset. 10 requests / 15 min per IP is loose enough for a real
 // user retrying a typo, but caps an attacker well short of exhausting the
@@ -166,6 +175,7 @@ router.post('/register', authLimiter, (req, res) => {
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
+  recordLogin(user.id, 'register', req);
   res.json({ token: signToken(user), user: publicUser(user) });
 });
 
@@ -184,6 +194,7 @@ router.post('/login', authLimiter, (req, res) => {
       .status(401)
       .json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', error_code: 'LOGIN_INVALID' });
 
+  recordLogin(user.id, 'password', req);
   res.json({ token: signToken(user), user: publicUser(user) });
 });
 
@@ -281,6 +292,7 @@ router.post('/password-reset/confirm', authLimiter, (req, res) => {
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
 
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
+  recordLogin(updated.id, 'password_reset', req);
   res.json({ token: signToken(updated), user: publicUser(updated) });
 });
 
@@ -347,12 +359,27 @@ router.post('/google', async (req, res) => {
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   }
 
+  recordLogin(user.id, 'google', req);
   res.json({ token: signToken(user), user: publicUser(user) });
 });
 
 // --- Current user ---
 router.get('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
+});
+
+// --- Login history ---
+router.get('/me/login-history', requireAuth, (req, res) => {
+  const rows = db
+    .prepare(
+      `SELECT id, method, ip, user_agent, created_at FROM login_history
+       WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 100`,
+    )
+    .all(req.user.id);
+  const { c: total } = db
+    .prepare(`SELECT COUNT(*) AS c FROM login_history WHERE user_id = ?`)
+    .get(req.user.id);
+  res.json({ login_history: rows, total });
 });
 
 // --- Update profile ---

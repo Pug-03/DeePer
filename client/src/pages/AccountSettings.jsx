@@ -6,7 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
-import { IcBack, IcCheck, IcTrash } from '../components/icons.jsx';
+import { IcBack, IcCheck, IcHistory, IcTrash } from '../components/icons.jsx';
 import { pwScore } from '../utils/password.js';
 
 export default function AccountSettings() {
@@ -128,6 +128,14 @@ export default function AccountSettings() {
           </button>
         </form>
       </div>
+
+      <button
+        className="btn btn--ghost"
+        style={{ marginBottom: 14 }}
+        onClick={() => nav('/app/profile/login-history')}
+      >
+        <IcHistory size={18} /> {t('profile.loginHistory')}
+      </button>
 
       <button className="btn btn--ghost" style={{ marginBottom: 14 }} onClick={doLogout}>
         {t('profile.logout')}

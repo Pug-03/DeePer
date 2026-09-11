@@ -81,10 +81,20 @@ db.exec(`
     value  TEXT
   );
 
+  CREATE TABLE IF NOT EXISTS login_history (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    method      TEXT NOT NULL,
+    ip          TEXT,
+    user_agent  TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE INDEX IF NOT EXISTS idx_questions_category ON questions(category);
   CREATE INDEX IF NOT EXISTS idx_saved_user ON saved_questions(user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_history_user ON history(user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_support_notified ON support_proofs(notified, created_at);
+  CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id, created_at DESC);
 `);
 
 // Migration: older databases don't have otp_codes.purpose yet (added for

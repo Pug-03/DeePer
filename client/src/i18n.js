@@ -330,6 +330,18 @@ export const STRINGS = {
     'profile.deleteMsg': 'การลบบัญชีจะลบข้อมูลทั้งหมดของคุณอย่างถาวรและไม่สามารถกู้คืนได้',
     'profile.deleteConfirm': 'ลบบัญชี',
     'profile.deleting': 'กำลังลบ...',
+    'profile.loginHistory': 'ประวัติการเข้าสู่ระบบ',
+
+    // ประวัติการเข้าสู่ระบบ
+    'loginHistory.title': 'ประวัติการเข้าสู่ระบบ',
+    'loginHistory.sub': 'ดูว่าคุณเข้าสู่ระบบบัญชีนี้เมื่อไหร่บ้าง และกี่ครั้งแล้ว',
+    'loginHistory.count': 'เข้าสู่ระบบทั้งหมด {n} ครั้ง',
+    'loginHistory.emptyTitle': 'ยังไม่มีประวัติ',
+    'loginHistory.emptySub': 'ครั้งถัดไปที่เข้าสู่ระบบจะแสดงที่นี่',
+    'loginHistory.method.password': 'อีเมล + รหัสผ่าน',
+    'loginHistory.method.google': 'เข้าสู่ระบบด้วย Google',
+    'loginHistory.method.register': 'สมัครสมาชิก (เข้าสู่ระบบครั้งแรก)',
+    'loginHistory.method.password_reset': 'ตั้งรหัสผ่านใหม่',
 
     // รางวัลและความสำเร็จ
     'awards.title': 'รางวัลและความสำเร็จ',
@@ -676,6 +688,17 @@ export const STRINGS = {
     'profile.deleteMsg': 'Deleting your account permanently erases all your data. This can’t be undone.',
     'profile.deleteConfirm': 'Delete account',
     'profile.deleting': 'Deleting...',
+    'profile.loginHistory': 'Login history',
+
+    'loginHistory.title': 'Login history',
+    'loginHistory.sub': 'See when — and how many times — you’ve logged into this account.',
+    'loginHistory.count': 'Logged in {n} times total',
+    'loginHistory.emptyTitle': 'No history yet',
+    'loginHistory.emptySub': 'Your next login will show up here.',
+    'loginHistory.method.password': 'Email + password',
+    'loginHistory.method.google': 'Signed in with Google',
+    'loginHistory.method.register': 'Account created (first login)',
+    'loginHistory.method.password_reset': 'Password reset',
 
     'awards.title': 'Awards & Achievements',
     'awards.contactTitle': 'Contact',
