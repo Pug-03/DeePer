@@ -884,36 +884,47 @@ export default function Home() {
 
         <CatTabs category={category} onSwitch={switchCat} />
 
-        {adding && (
-          <form className="glass fade-up" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
-            <div className="field">
-              <label>{t('home.addCatLabel')}</label>
-              <select className="select" value={addCat} onChange={(e) => setAddCat(e.target.value)}>
-                {CATS.map((c) => (
-                  <option key={c} value={c}>
-                    {t(`cat.${c}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <textarea
-              className="textarea"
-              style={{ minHeight: 80 }}
-              placeholder={t('home.addPh')}
-              value={newQ}
-              onChange={(e) => setNewQ(e.target.value)}
-              maxLength={200}
-            />
-            <div className="btn-row" style={{ marginTop: 10 }}>
-              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
-                {t('common.cancel')}
-              </button>
-              <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
-                {t('home.add')}
-              </button>
-            </div>
-          </form>
-        )}
+        <AnimatePresence initial={false}>
+          {adding && (
+            <motion.div
+              key="add-form"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              style={{ overflow: 'hidden' }}
+            >
+              <form className="glass" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
+                <div className="field">
+                  <label>{t('home.addCatLabel')}</label>
+                  <select className="select" value={addCat} onChange={(e) => setAddCat(e.target.value)}>
+                    {CATS.map((c) => (
+                      <option key={c} value={c}>
+                        {t(`cat.${c}`)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <textarea
+                  className="textarea"
+                  style={{ minHeight: 80 }}
+                  placeholder={t('home.addPh')}
+                  value={newQ}
+                  onChange={(e) => setNewQ(e.target.value)}
+                  maxLength={200}
+                />
+                <div className="btn-row" style={{ marginTop: 10 }}>
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
+                    {t('common.cancel')}
+                  </button>
+                  <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
+                    {t('home.add')}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {status === 'loading' && <Loading label={t('home.loading')} />}
 
