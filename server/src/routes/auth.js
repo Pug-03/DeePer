@@ -48,7 +48,10 @@ const partnerAvatarUpload = multer({
 
 // Kept in sync with PARTNER_ICONS in client/src/utils/partnerIcons.js — the
 // server only needs the id whitelist, not the actual icon artwork.
-const PARTNER_ICON_IDS = new Set(['heart', 'star', 'cat', 'dog', 'sun', 'moon', 'flower', 'coffee']);
+const PARTNER_ICON_IDS = new Set([
+  'heart', 'star', 'cat', 'dog', 'sun', 'moon', 'flower', 'coffee',
+  'smile', 'music', 'gamepad', 'gift', 'cloud', 'leaf', 'bolt', 'diamond',
+]);
 
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits

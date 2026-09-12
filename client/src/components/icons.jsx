@@ -209,19 +209,75 @@ export const IcStar = (p) => (
 );
 export const IcCat = (p) => (
   <svg {...S(p)}>
-    <path d="M5 4 8 9h8l3-5-3 8.5a5 5 0 0 1-5 3.5 5 5 0 0 1-5-3.5Z" />
-    <path d="M9 21c-1-1.2-1.5-2.6-1.5-4M15 21c1-1.2 1.5-2.6 1.5-4" />
-    <circle cx="9.5" cy="12.2" r=".6" fill="currentColor" />
-    <circle cx="14.5" cy="12.2" r=".6" fill="currentColor" />
+    <path d="M6 9 4 4l5 3" />
+    <path d="M18 9l2-5-5 3" />
+    <circle cx="12" cy="14" r="7" />
+    <circle cx="9.5" cy="13" r=".6" fill="currentColor" />
+    <circle cx="14.5" cy="13" r=".6" fill="currentColor" />
+    <path d="M11 16.5q1 .8 2 0" />
   </svg>
 );
 export const IcDog = (p) => (
   <svg {...S(p)}>
-    <path d="M4 9c0-3 2-6 8-6s8 3 8 6c0 4-2.5 8-8 8s-8-4-8-8Z" />
-    <path d="M4 9 1.5 6M20 9l2.5-3" />
-    <circle cx="9.5" cy="10" r=".6" fill="currentColor" />
-    <circle cx="14.5" cy="10" r=".6" fill="currentColor" />
-    <path d="M10.5 13.5c.6.5 1.4.5 2 0" />
+    <path d="M6 9q-3 1-3 5.5" />
+    <path d="M18 9q3 1 3 5.5" />
+    <circle cx="12" cy="13" r="7" />
+    <circle cx="9.5" cy="12" r=".6" fill="currentColor" />
+    <circle cx="14.5" cy="12" r=".6" fill="currentColor" />
+    <circle cx="12" cy="15" r=".9" fill="currentColor" />
+    <path d="M10.3 17c1 .7 2.4.7 3.4 0" />
+  </svg>
+);
+export const IcSmile = (p) => (
+  <svg {...S(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="9" cy="10" r=".6" fill="currentColor" />
+    <circle cx="15" cy="10" r=".6" fill="currentColor" />
+    <path d="M8 14.5q4 4 8 0" />
+  </svg>
+);
+export const IcMusic = (p) => (
+  <svg {...S(p)}>
+    <path d="M9 18V5l10-2v13" />
+    <circle cx="7" cy="18" r="2.3" />
+    <circle cx="17" cy="16" r="2.3" />
+  </svg>
+);
+export const IcGamepad = (p) => (
+  <svg {...S(p)}>
+    <rect x="2.5" y="8" width="19" height="9" rx="4.5" />
+    <path d="M7 10.5v4M5 12.5h4" />
+    <circle cx="16" cy="11.3" r=".9" fill="currentColor" />
+    <circle cx="18.5" cy="13.8" r=".9" fill="currentColor" />
+  </svg>
+);
+export const IcGift = (p) => (
+  <svg {...S(p)}>
+    <rect x="3" y="9" width="18" height="12" rx="1.5" />
+    <path d="M3 13h18M12 9v12" />
+    <path d="M12 9c-1.5-4-6-4-6-1s3 1 6 1ZM12 9c1.5-4 6-4 6-1s-3 1-6 1Z" />
+  </svg>
+);
+export const IcCloud = (p) => (
+  <svg {...S(p)}>
+    <path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 9.1 4 4 0 0 0 7 18Z" />
+  </svg>
+);
+export const IcLeaf = (p) => (
+  <svg {...S(p)}>
+    <path d="M20 4C10 4 4 10 4 18c8 0 14-6 14-14Z" />
+    <path d="M8 18c2-4 5.5-7.5 10-10" />
+  </svg>
+);
+export const IcBolt = (p) => (
+  <svg {...S(p)}>
+    <path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" />
+  </svg>
+);
+export const IcDiamond = (p) => (
+  <svg {...S(p)}>
+    <path d="M4 9 8 4h8l4 5-10 11Z" />
+    <path d="M4 9h16M9.5 4 8 9l4 11 4-11-1.5-5" />
   </svg>
 );
 export const IcSun = (p) => (
