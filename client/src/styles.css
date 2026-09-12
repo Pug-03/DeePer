@@ -835,10 +835,10 @@ a {
   text-align: center;
 }
 .share-sheet-preview {
-  width: 200px;
-  height: 356px;
-  max-height: 46vh;
-  object-fit: cover;
+  width: auto;
+  height: min(356px, 46vh);
+  aspect-ratio: 1080 / 1920;
+  object-fit: contain;
   border-radius: 20px;
   margin: 0 auto 10px;
   display: block;
