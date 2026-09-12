@@ -199,7 +199,7 @@ export const IcGoogle = (p) => (
 // utils/partnerIcons.js for the id -> component map used to render these.
 export const IcHeart = (p) => (
   <svg {...S(p)}>
-    <path d="M12 21s-7.5-4.6-10-9.1C.4 8.6 2 5 5.4 5c2 0 3.4 1.1 4.1 2.3.4.7.7 1.4.9 2 .2-.6.5-1.3.9-2C12 6.1 13.4 5 15.4 5 18.8 5 20.4 8.6 22 11.9 19.5 16.4 12 21 12 21Z" />
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
   </svg>
 );
 export const IcStar = (p) => (
@@ -276,8 +276,9 @@ export const IcBolt = (p) => (
 );
 export const IcDiamond = (p) => (
   <svg {...S(p)}>
-    <path d="M4 9 8 4h8l4 5-10 11Z" />
-    <path d="M4 9h16M9.5 4 8 9l4 11 4-11-1.5-5" />
+    <path d="M6 3h12l4 6-10 12L2 9Z" />
+    <path d="M11 3 8 9l4 12 4-12-3-6" />
+    <path d="M2 9h20" />
   </svg>
 );
 export const IcSun = (p) => (
