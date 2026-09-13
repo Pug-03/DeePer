@@ -15,7 +15,7 @@ export function formatDate(s) {
   const locale = currentLang === 'en' ? 'en-US' : 'th-TH';
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
-  const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  const time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   if (sameDay) return `${translate(currentLang, 'date.today')} ${time}`;
   return (
     d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) + ` ${time}`
