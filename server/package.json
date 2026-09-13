@@ -8,7 +8,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "proofs": "node src/list-proofs.js",
-    "digest": "node src/send-digest.js"
+    "digest": "node src/send-digest.js",
+    "test": "NODE_ENV=test node --test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

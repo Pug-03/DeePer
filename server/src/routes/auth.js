@@ -93,7 +93,11 @@ const recordLogin = (userId, method, req) => {
 // 10,000 possible 4-digit OTP codes within their 10-minute expiry window.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  // The test suite legitimately registers/logs in far more than 10 times
+  // per run (each test gets its own account) from one machine — raise the
+  // cap in test mode only, so those runs don't trip a limiter meant for a
+  // single real client. Production/dev behavior is unchanged.
+  max: process.env.NODE_ENV === 'test' ? 1000 : 10,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'พยายามมากเกินไป กรุณาลองใหม่ภายหลัง', error_code: 'RATE_LIMITED' },
