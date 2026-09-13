@@ -67,7 +67,6 @@ export default function LoginHistory() {
                 <p className="ci-q">{formatDate(it.created_at)}</p>
                 <div className="ci-meta">
                   <span className="tag">{methodLabel(it.method)}</span>
-                  {it.ip && <span>{it.ip}</span>}
                 </div>
               </div>
             ))}
