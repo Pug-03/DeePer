@@ -152,6 +152,14 @@ if (!loginHistoryCols.some((c) => c.name === 'revoked_at')) {
   db.exec(`ALTER TABLE login_history ADD COLUMN revoked_at TEXT`);
 }
 
+// Housekeeping: prune login_history rows older than 90 days — well past
+// the 30-day token TTL (see TOKEN_TTL in auth.js), so a row this old can
+// no longer represent a live, revocable session; it's pure audit history
+// at that point, and keeping it forever would grow the table with no
+// remaining benefit. Runs on every boot rather than as a one-time
+// migration — it's ongoing data hygiene, not a schema change.
+db.exec(`DELETE FROM login_history WHERE created_at < datetime('now', '-90 days')`);
+
 // Migration: seed one `partners` row per category per existing user from
 // the old single, global partner_* columns above — so every user's
 // family/friends categories start out showing what "the other person"
