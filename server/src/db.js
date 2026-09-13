@@ -135,13 +135,21 @@ if (!userCols.some((c) => c.name === 'partner_icon')) {
   db.exec(`ALTER TABLE users ADD COLUMN partner_icon TEXT`);
 }
 
-// Migration: token_version — bumped by "log out of all other devices" so
-// every previously-issued JWT (which embeds the version it was signed
-// with) stops verifying, without needing a server-side session/token
-// store. Default 1 so existing tokens (signed before this column existed,
-// effectively version 1) keep working.
-if (!userCols.some((c) => c.name === 'token_version')) {
-  db.exec(`ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 1`);
+// Migration: users.token_version — an earlier, coarser take on session
+// revocation (one shared counter, bumping it invalidated every token at
+// once). Superseded by login_history.revoked_at below, which revokes one
+// session at a time — drop it rather than keep two mechanisms around.
+if (userCols.some((c) => c.name === 'token_version')) {
+  db.exec(`ALTER TABLE users DROP COLUMN token_version`);
+}
+
+// Migration: login_history.revoked_at — each row is a session (its id is
+// embedded in that session's JWT as `sid`, see signToken); setting this
+// marks that one session logged out without touching any other session,
+// for "log out this device" / "log out other devices".
+const loginHistoryCols = db.prepare(`PRAGMA table_info(login_history)`).all();
+if (!loginHistoryCols.some((c) => c.name === 'revoked_at')) {
+  db.exec(`ALTER TABLE login_history ADD COLUMN revoked_at TEXT`);
 }
 
 // Migration: seed one `partners` row per category per existing user from

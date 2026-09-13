@@ -22,8 +22,12 @@ export function verifyPassword(plain, hash) {
   return bcrypt.compareSync(plain, hash);
 }
 
-export function signToken(user) {
-  return jwt.sign({ uid: user.id, tv: user.token_version ?? 1 }, JWT_SECRET, { expiresIn: TOKEN_TTL });
+// sessionId is the login_history row id created for this login (see
+// recordLogin in routes/auth.js) — embedding it lets requireAuth check
+// (and a later "log out this device" revoke) target this one token
+// specifically, without affecting any of the user's other sessions.
+export function signToken(user, sessionId) {
+  return jwt.sign({ uid: user.id, sid: sessionId }, JWT_SECRET, { expiresIn: TOKEN_TTL });
 }
 
 // Password rule: upper + lower + digit + special
@@ -83,13 +87,19 @@ export function requireAuth(req, res, next) {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.uid);
     if (!user)
       return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้', error_code: 'USER_NOT_FOUND' });
-    // Token was issued before the account's last "log out of all other
-    // devices" — treat it the same as an expired session.
-    if ((payload.tv ?? 1) !== (user.token_version ?? 1))
+    // The token's own session must still be an un-revoked login_history
+    // row — gone (revoked via "log out this device" / "log out other
+    // devices", or a token signed before sessions existed) means treat it
+    // the same as an expired session.
+    const session = db
+      .prepare('SELECT id FROM login_history WHERE id = ? AND user_id = ? AND revoked_at IS NULL')
+      .get(payload.sid ?? -1, user.id);
+    if (!session)
       return res
         .status(401)
         .json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', error_code: 'SESSION_EXPIRED' });
     req.user = user;
+    req.sessionId = payload.sid;
     next();
   } catch {
     return res

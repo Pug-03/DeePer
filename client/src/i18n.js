@@ -348,6 +348,12 @@ export const STRINGS = {
     'loginHistory.logoutOthers': 'ออกจากอุปกรณ์อื่นทั้งหมด',
     'loginHistory.logoutOthersConfirm': 'อุปกรณ์และเซสชันอื่นทั้งหมดจะถูกออกจากระบบทันที (ยกเว้นเครื่องนี้)',
     'loginHistory.logoutOthersDone': 'ออกจากอุปกรณ์อื่นเรียบร้อยแล้ว',
+    'loginHistory.thisDevice': 'เครื่องนี้',
+    'loginHistory.revoked': 'ออกจากระบบแล้ว',
+    'loginHistory.logoutDevice': 'ออกจากระบบ',
+    'loginHistory.logoutDeviceConfirm': 'ออกจากระบบสำหรับอุปกรณ์นี้ทันที',
+    'loginHistory.logoutDeviceConfirmSelf': 'อุปกรณ์นี้เป็นเครื่องที่คุณกำลังใช้อยู่ — จะออกจากระบบทันทีเช่นกัน',
+    'loginHistory.logoutDeviceDone': 'ออกจากระบบอุปกรณ์นี้แล้ว',
 
     // รางวัลและความสำเร็จ
     'awards.title': 'รางวัลและความสำเร็จ',
@@ -711,6 +717,12 @@ export const STRINGS = {
     'loginHistory.logoutOthers': 'Log out of all other devices',
     'loginHistory.logoutOthersConfirm': 'Every other device and session will be signed out immediately (this one stays signed in).',
     'loginHistory.logoutOthersDone': 'Signed out of other devices.',
+    'loginHistory.thisDevice': 'This device',
+    'loginHistory.revoked': 'Signed out',
+    'loginHistory.logoutDevice': 'Log out',
+    'loginHistory.logoutDeviceConfirm': 'This device will be signed out immediately.',
+    'loginHistory.logoutDeviceConfirmSelf': 'This is the device you’re using right now — it’ll be signed out too.',
+    'loginHistory.logoutDeviceDone': 'Signed out that device.',
 
     'awards.title': 'Awards & Achievements',
     'awards.contactTitle': 'Contact',

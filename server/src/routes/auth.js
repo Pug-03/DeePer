@@ -76,11 +76,15 @@ const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digit
 
 // Logged at every token-issuing endpoint below (password login, Google,
 // register, password-reset) so the account settings "login history" view
-// has one row per time a session was actually created.
+// has one row per time a session was actually created. The row's own id
+// doubles as that session's id — embedded in the signed token (see
+// signToken) so an individual login can be revoked later without
+// touching any other session.
 const recordLogin = (userId, method, req) => {
-  db.prepare(
-    `INSERT INTO login_history (user_id, method, ip, user_agent) VALUES (?, ?, ?, ?)`,
-  ).run(userId, method, req.ip || null, req.get('user-agent') || null);
+  const info = db
+    .prepare(`INSERT INTO login_history (user_id, method, ip, user_agent) VALUES (?, ?, ?, ?)`)
+    .run(userId, method, req.ip || null, req.get('user-agent') || null);
+  return Number(info.lastInsertRowid);
 };
 
 // Guards the account-takeover-shaped endpoints — OTP request/verify, login,
@@ -211,8 +215,8 @@ router.post('/register', authLimiter, (req, res) => {
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
-  recordLogin(user.id, 'register', req);
-  res.json({ token: signToken(user), user: publicUser(user) });
+  const sessionId = recordLogin(user.id, 'register', req);
+  res.json({ token: signToken(user, sessionId), user: publicUser(user) });
 });
 
 // --- Email + password login ---
@@ -230,8 +234,8 @@ router.post('/login', authLimiter, (req, res) => {
       .status(401)
       .json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', error_code: 'LOGIN_INVALID' });
 
-  recordLogin(user.id, 'password', req);
-  res.json({ token: signToken(user), user: publicUser(user) });
+  const sessionId = recordLogin(user.id, 'password', req);
+  res.json({ token: signToken(user, sessionId), user: publicUser(user) });
 });
 
 // --- Forgot password — Step 1: request OTP ---
@@ -328,8 +332,8 @@ router.post('/password-reset/confirm', authLimiter, (req, res) => {
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
 
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
-  recordLogin(updated.id, 'password_reset', req);
-  res.json({ token: signToken(updated), user: publicUser(updated) });
+  const sessionId = recordLogin(updated.id, 'password_reset', req);
+  res.json({ token: signToken(updated, sessionId), user: publicUser(updated) });
 });
 
 // --- Google OAuth (verify ID token from Google Identity Services) ---
@@ -395,8 +399,8 @@ router.post('/google', async (req, res) => {
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   }
 
-  recordLogin(user.id, 'google', req);
-  res.json({ token: signToken(user), user: publicUser(user) });
+  const sessionId = recordLogin(user.id, 'google', req);
+  res.json({ token: signToken(user, sessionId), user: publicUser(user) });
 });
 
 // --- Current user ---
@@ -404,29 +408,45 @@ router.get('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
-// --- Log out of all other devices — bumps token_version so every
-// previously-issued token (any device but this request's own) fails the
-// version check in requireAuth. Re-signs and returns a fresh token for
-// the CURRENT session (which embeds the new version), so the caller stays
-// logged in here while everywhere else is signed out.
-router.post('/me/logout-other-devices', requireAuth, (req, res) => {
-  db.prepare('UPDATE users SET token_version = token_version + 1 WHERE id = ?').run(req.user.id);
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-  res.json({ token: signToken(updated), user: publicUser(updated) });
-});
-
-// --- Login history ---
+// --- Login history — each row is its own revocable session (see
+// requireAuth's sid check). current_id tells the client which row this
+// very request came in on, so it can label/disable that one differently.
 router.get('/me/login-history', requireAuth, (req, res) => {
   const rows = db
     .prepare(
-      `SELECT id, method, ip, user_agent, created_at FROM login_history
+      `SELECT id, method, ip, user_agent, revoked_at, created_at FROM login_history
        WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 100`,
     )
     .all(req.user.id);
   const { c: total } = db
     .prepare(`SELECT COUNT(*) AS c FROM login_history WHERE user_id = ?`)
     .get(req.user.id);
-  res.json({ login_history: rows, total });
+  res.json({ login_history: rows, total, current_id: req.sessionId });
+});
+
+// --- Log out one specific device/session — revokes just that login_history
+// row, so only the token issued for that one login stops working (see
+// requireAuth). No-ops (still 200) if the id doesn't belong to this user
+// or is already revoked, matching the delete-by-id pattern used elsewhere
+// (e.g. DELETE /history/:id) rather than leaking which ids exist.
+router.delete('/me/login-history/:id', requireAuth, (req, res) => {
+  db.prepare(
+    `UPDATE login_history SET revoked_at = datetime('now') WHERE id = ? AND user_id = ? AND revoked_at IS NULL`,
+  ).run(Number(req.params.id), req.user.id);
+  res.json({ ok: true });
+});
+
+// --- Log out of every OTHER device/session at once — revokes every
+// not-yet-revoked login_history row for this user except the one the
+// current request came in on.
+router.post('/me/logout-other-devices', requireAuth, (req, res) => {
+  const { changes } = db
+    .prepare(
+      `UPDATE login_history SET revoked_at = datetime('now')
+       WHERE user_id = ? AND id != ? AND revoked_at IS NULL`,
+    )
+    .run(req.user.id, req.sessionId);
+  res.json({ ok: true, revoked: changes });
 });
 
 // --- Update profile ---
