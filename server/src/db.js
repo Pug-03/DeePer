@@ -135,6 +135,15 @@ if (!userCols.some((c) => c.name === 'partner_icon')) {
   db.exec(`ALTER TABLE users ADD COLUMN partner_icon TEXT`);
 }
 
+// Migration: token_version — bumped by "log out of all other devices" so
+// every previously-issued JWT (which embeds the version it was signed
+// with) stops verifying, without needing a server-side session/token
+// store. Default 1 so existing tokens (signed before this column existed,
+// effectively version 1) keep working.
+if (!userCols.some((c) => c.name === 'token_version')) {
+  db.exec(`ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 1`);
+}
+
 // Migration: seed one `partners` row per category per existing user from
 // the old single, global partner_* columns above — so every user's
 // family/friends categories start out showing what "the other person"

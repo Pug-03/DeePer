@@ -345,6 +345,9 @@ export const STRINGS = {
     'loginHistory.method.google': 'เข้าสู่ระบบด้วย Google',
     'loginHistory.method.register': 'สมัครสมาชิก (เข้าสู่ระบบครั้งแรก)',
     'loginHistory.method.password_reset': 'ตั้งรหัสผ่านใหม่',
+    'loginHistory.logoutOthers': 'ออกจากอุปกรณ์อื่นทั้งหมด',
+    'loginHistory.logoutOthersConfirm': 'อุปกรณ์และเซสชันอื่นทั้งหมดจะถูกออกจากระบบทันที (ยกเว้นเครื่องนี้)',
+    'loginHistory.logoutOthersDone': 'ออกจากอุปกรณ์อื่นเรียบร้อยแล้ว',
 
     // รางวัลและความสำเร็จ
     'awards.title': 'รางวัลและความสำเร็จ',
@@ -705,6 +708,9 @@ export const STRINGS = {
     'loginHistory.method.google': 'Signed in with Google',
     'loginHistory.method.register': 'Account created (first login)',
     'loginHistory.method.password_reset': 'Password reset',
+    'loginHistory.logoutOthers': 'Log out of all other devices',
+    'loginHistory.logoutOthersConfirm': 'Every other device and session will be signed out immediately (this one stays signed in).',
+    'loginHistory.logoutOthersDone': 'Signed out of other devices.',
 
     'awards.title': 'Awards & Achievements',
     'awards.contactTitle': 'Contact',

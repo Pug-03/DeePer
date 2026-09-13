@@ -23,7 +23,7 @@ export function verifyPassword(plain, hash) {
 }
 
 export function signToken(user) {
-  return jwt.sign({ uid: user.id }, JWT_SECRET, { expiresIn: TOKEN_TTL });
+  return jwt.sign({ uid: user.id, tv: user.token_version ?? 1 }, JWT_SECRET, { expiresIn: TOKEN_TTL });
 }
 
 // Password rule: upper + lower + digit + special
@@ -83,6 +83,12 @@ export function requireAuth(req, res, next) {
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.uid);
     if (!user)
       return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้', error_code: 'USER_NOT_FOUND' });
+    // Token was issued before the account's last "log out of all other
+    // devices" — treat it the same as an expired session.
+    if ((payload.tv ?? 1) !== (user.token_version ?? 1))
+      return res
+        .status(401)
+        .json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', error_code: 'SESSION_EXPIRED' });
     req.user = user;
     next();
   } catch {

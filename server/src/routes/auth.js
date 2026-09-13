@@ -404,6 +404,17 @@ router.get('/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
+// --- Log out of all other devices — bumps token_version so every
+// previously-issued token (any device but this request's own) fails the
+// version check in requireAuth. Re-signs and returns a fresh token for
+// the CURRENT session (which embeds the new version), so the caller stays
+// logged in here while everywhere else is signed out.
+router.post('/me/logout-other-devices', requireAuth, (req, res) => {
+  db.prepare('UPDATE users SET token_version = token_version + 1 WHERE id = ?').run(req.user.id);
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  res.json({ token: signToken(updated), user: publicUser(updated) });
+});
+
 // --- Login history ---
 router.get('/me/login-history', requireAuth, (req, res) => {
   const rows = db
