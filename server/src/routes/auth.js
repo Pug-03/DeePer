@@ -638,6 +638,11 @@ router.delete('/me', requireAuth, (req, res) => {
   }
 
   if (u.avatar_url) fs.unlink(avatarPath(u.avatar_url), () => {});
+  const partnerAvatars = db
+    .prepare(`SELECT avatar_url FROM partners WHERE user_id = ? AND avatar_url IS NOT NULL`)
+    .all(u.id);
+  for (const { avatar_url } of partnerAvatars) fs.unlink(partnerAvatarPath(avatar_url), () => {});
+
   db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
   res.json({ ok: true });
 });
