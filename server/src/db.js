@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { bankRows } from './questions-bank.js';
+import { bankRows, CATEGORIES } from './questions-bank.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.DB_PATH || join(__dirname, '..', 'deeptalk.db');
@@ -95,6 +95,18 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_history_user ON history(user_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_support_notified ON support_proofs(notified, created_at);
   CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS partners (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category    TEXT NOT NULL,
+    name        TEXT NOT NULL DEFAULT 'อีกฝ่าย',
+    color       TEXT NOT NULL DEFAULT '#f43f5e',
+    icon        TEXT,
+    avatar_url  TEXT,
+    UNIQUE(user_id, category)
+  );
+  CREATE INDEX IF NOT EXISTS idx_partners_user ON partners(user_id);
 `);
 
 // Migration: older databases don't have otp_codes.purpose yet (added for
@@ -121,6 +133,34 @@ if (!userCols.some((c) => c.name === 'partner_avatar_url')) {
 }
 if (!userCols.some((c) => c.name === 'partner_icon')) {
   db.exec(`ALTER TABLE users ADD COLUMN partner_icon TEXT`);
+}
+
+// Migration: seed one `partners` row per category per existing user from
+// the old single, global partner_* columns above — so every user's
+// family/friends categories start out showing what "the other person"
+// used to show everywhere, instead of resetting to the default name. Runs
+// once (guarded on the table being empty), same pattern as the bank-
+// question seed below.
+const { c: partnerRowCount } = db.prepare(`SELECT COUNT(*) AS c FROM partners`).get();
+if (partnerRowCount === 0) {
+  const existingUsers = db
+    .prepare(`SELECT id, partner_name, partner_color, partner_icon, partner_avatar_url FROM users`)
+    .all();
+  const insertPartner = db.prepare(
+    `INSERT INTO partners (user_id, category, name, color, icon, avatar_url) VALUES (?, ?, ?, ?, ?, ?)`,
+  );
+  for (const u of existingUsers) {
+    for (const category of CATEGORIES) {
+      insertPartner.run(
+        u.id,
+        category,
+        u.partner_name || 'อีกฝ่าย',
+        u.partner_color || '#f43f5e',
+        u.partner_icon,
+        u.partner_avatar_url,
+      );
+    }
+  }
 }
 
 // Migration: older databases stored a single transfer_at column — split it

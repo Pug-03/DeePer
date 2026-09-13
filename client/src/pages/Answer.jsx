@@ -21,10 +21,13 @@ export default function Answer() {
   const [turn, setTurn] = useState('me'); // me | partner
   const [myAnswer, setMyAnswer] = useState(preset?.my_answer || '');
   const [partnerAnswer, setPartnerAnswer] = useState(preset?.partner_answer || '');
+  // Each category has its own partner (set in Profile, not here) — look it
+  // up by this question's own category rather than a single global slot.
+  const partner = user?.partners?.[q?.category];
   // Partner's name is edited in Profile, not here — see Profile.jsx.
-  const partnerName = preset?.partner_name || user?.partner_name || partnerDefault;
+  const partnerName = preset?.partner_name || partner?.name || partnerDefault;
   // Color is set once in Profile, not per-answer here — see Profile.jsx.
-  const partnerColor = preset?.partner_color || user?.partner_color || '#f43f5e';
+  const partnerColor = preset?.partner_color || partner?.color || '#f43f5e';
   const [busy, setBusy] = useState(false);
 
   if (!q) {

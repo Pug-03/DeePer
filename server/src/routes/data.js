@@ -82,6 +82,17 @@ router.post('/history', (req, res) => {
   if (!CATEGORIES.includes(category))
     return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
 
+  // Client always sends both today (Answer.jsx computes them from the
+  // question's own category), so this only covers a caller that doesn't —
+  // look up that category's own partner rather than the (no longer
+  // authoritative) flat users.partner_* columns.
+  const fallback =
+    partner_name == null || partner_color == null
+      ? db
+          .prepare(`SELECT name, color FROM partners WHERE user_id = ? AND category = ?`)
+          .get(req.user.id, category) || { name: 'อีกฝ่าย', color: '#f43f5e' }
+      : null;
+
   const info = db
     .prepare(
       `INSERT INTO history
@@ -94,8 +105,8 @@ router.post('/history', (req, res) => {
       category,
       String(my_answer || ''),
       String(partner_answer || ''),
-      partner_name != null ? String(partner_name) : req.user.partner_name,
-      partner_color != null ? String(partner_color) : req.user.partner_color,
+      partner_name != null ? String(partner_name) : fallback.name,
+      partner_color != null ? String(partner_color) : fallback.color,
     );
 
   // If this came from a saved question, remove it from the saved list.

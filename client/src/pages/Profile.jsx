@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
@@ -9,6 +9,7 @@ import { IcCamera, IcCheck, IcSettings, IcTrash } from '../components/icons.jsx'
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
+import { CATS } from '../util.js';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -23,24 +24,28 @@ export default function Profile() {
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [age, setAge] = useState(user?.age || '');
   const [gender, setGender] = useState(user?.gender || '');
-  const [partnerName, setPartnerName] = useState(user?.partner_name || t('answer.partnerDefault'));
-  const [partnerColor, setPartnerColor] = useState(user?.partner_color || '#f43f5e');
+  const [activeCat, setActiveCat] = useState(CATS[0]);
+  const [partnerName, setPartnerName] = useState('');
+  const [partnerColor, setPartnerColor] = useState('#f43f5e');
   const [busy, setBusy] = useState(false);
+  const [partnerBusy, setPartnerBusy] = useState(false);
   const [avatarBusy, setAvatarBusy] = useState(false);
   const [partnerAvatarBusy, setPartnerAvatarBusy] = useState(false);
   const fileInputRef = useRef(null);
   const partnerFileInputRef = useRef(null);
 
+  // Each category has its own partner — reload the name/color draft
+  // whenever the selected tab (or the underlying user data) changes.
+  useEffect(() => {
+    const p = user?.partners?.[activeCat];
+    setPartnerName(p?.name || '');
+    setPartnerColor(p?.color || '#f43f5e');
+  }, [activeCat, user]);
+
   const save = async () => {
     setBusy(true);
     try {
-      const d = await api.patch('/auth/me', {
-        nickname,
-        age,
-        gender,
-        partner_name: partnerName,
-        partner_color: partnerColor,
-      });
+      const d = await api.patch('/auth/me', { nickname, age, gender });
       setUser(d.user);
       toast(
         <>
@@ -51,6 +56,26 @@ export default function Profile() {
       toast(e.message);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const savePartner = async () => {
+    setPartnerBusy(true);
+    try {
+      const d = await api.patch(`/auth/me/partner/${activeCat}`, {
+        name: partnerName,
+        color: partnerColor,
+      });
+      setUser(d.user);
+      toast(
+        <>
+          <IcCheck size={16} /> {t('profile.saved')}
+        </>,
+      );
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setPartnerBusy(false);
     }
   };
 
@@ -113,7 +138,7 @@ export default function Profile() {
     try {
       const form = new FormData();
       form.append('avatar', file);
-      const d = await api.upload('/auth/me/partner-avatar', form);
+      const d = await api.upload(`/auth/me/partner/${activeCat}/avatar`, form);
       setUser(d.user);
     } catch (err) {
       toast(err.message);
@@ -125,7 +150,7 @@ export default function Profile() {
   const removePartnerAvatar = async () => {
     setPartnerAvatarBusy(true);
     try {
-      const d = await api.del('/auth/me/partner-avatar');
+      const d = await api.del(`/auth/me/partner/${activeCat}/avatar`);
       setUser(d.user);
     } catch (err) {
       toast(err.message);
@@ -137,7 +162,7 @@ export default function Profile() {
   const pickPartnerIcon = async (id) => {
     setPartnerAvatarBusy(true);
     try {
-      const d = await api.patch('/auth/me', { partner_icon: id });
+      const d = await api.patch(`/auth/me/partner/${activeCat}`, { icon: id });
       setUser(d.user);
     } catch (err) {
       toast(err.message);
@@ -250,6 +275,18 @@ export default function Profile() {
         <p className="faint" style={{ marginBottom: 14 }}>
           {t('profile.partnerHint')}
         </p>
+        <div className="filter-row" style={{ marginBottom: 16 }}>
+          {CATS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={`pill ${activeCat === c ? 'active' : ''}`}
+              onClick={() => setActiveCat(c)}
+            >
+              {t(`cat.${c}`)}
+            </button>
+          ))}
+        </div>
         <div className="field">
           <label>{t('answer.partnerName')}</label>
           <input
@@ -267,7 +304,11 @@ export default function Profile() {
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
           <div className="avatar-edit">
-            <PartnerAvatar avatarUrl={user?.partner_avatar_url} icon={user?.partner_icon} color={partnerColor} />
+            <PartnerAvatar
+              avatarUrl={user?.partners?.[activeCat]?.avatar_url}
+              icon={user?.partners?.[activeCat]?.icon}
+              color={partnerColor}
+            />
             <button
               type="button"
               className="avatar-edit__btn"
@@ -285,7 +326,7 @@ export default function Profile() {
               onChange={onPartnerAvatarChange}
             />
           </div>
-          {user?.partner_avatar_url && (
+          {user?.partners?.[activeCat]?.avatar_url && (
             <button className="link-btn" onClick={removePartnerAvatar} disabled={partnerAvatarBusy}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <IcTrash size={13} /> {t('profile.partnerPictureRemove')}
@@ -298,7 +339,7 @@ export default function Profile() {
             <button
               key={id}
               type="button"
-              className={`swatch ${user?.partner_icon === id ? 'sel' : ''}`}
+              className={`swatch ${user?.partners?.[activeCat]?.icon === id ? 'sel' : ''}`}
               style={{ background: 'var(--glass)', display: 'grid', placeItems: 'center', color: 'var(--text-dim)' }}
               onClick={() => pickPartnerIcon(id)}
               disabled={partnerAvatarBusy}
@@ -312,7 +353,7 @@ export default function Profile() {
         <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
           {t('answer.color')}
         </label>
-        <div className="color-swatches" style={{ marginTop: 8 }}>
+        <div className="color-swatches" style={{ marginTop: 8, marginBottom: 18 }}>
           {COLORS.map((c) => (
             <button
               key={c}
@@ -323,6 +364,10 @@ export default function Profile() {
             />
           ))}
         </div>
+
+        <button className="btn btn--primary btn--sm" onClick={savePartner} disabled={partnerBusy}>
+          {partnerBusy ? t('profile.saving') : t('profile.save')}
+        </button>
       </div>
 
       <button className="btn btn--primary" onClick={save} disabled={busy} style={{ marginBottom: 14 }}>

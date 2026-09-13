@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, basename } from 'node:path';
 import { db } from '../db.js';
+import { CATEGORIES } from '../questions-bank.js';
 import { sendOtpEmail, mailerReady } from '../mailer.js';
 import {
   hashPassword,
@@ -40,7 +41,8 @@ const avatarUpload = multer({
 const partnerAvatarUpload = multer({
   storage: multer.diskStorage({
     destination: PARTNER_AVATAR_DIR,
-    filename: (req, file, cb) => cb(null, `${req.user.id}-${Date.now()}${AVATAR_MIME_EXT[file.mimetype]}`),
+    filename: (req, file, cb) =>
+      cb(null, `${req.user.id}-${req.params.category}-${Date.now()}${AVATAR_MIME_EXT[file.mimetype]}`),
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, !!AVATAR_MIME_EXT[file.mimetype]),
@@ -52,6 +54,22 @@ const PARTNER_ICON_IDS = new Set([
   'heart', 'star', 'cat', 'dog', 'sun', 'moon', 'flower', 'coffee',
   'smile', 'music', 'gamepad', 'gift', 'cloud', 'leaf', 'bolt', 'diamond',
 ]);
+
+const getPartnerOrDefault = (userId, category) =>
+  db.prepare(`SELECT name, color, icon, avatar_url FROM partners WHERE user_id = ? AND category = ?`).get(
+    userId,
+    category,
+  ) || { name: 'อีกฝ่าย', color: '#f43f5e', icon: null, avatar_url: null };
+
+const upsertPartner = (userId, category, { name, color, icon, avatar_url }) =>
+  db
+    .prepare(
+      `INSERT INTO partners (user_id, category, name, color, icon, avatar_url)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(user_id, category) DO UPDATE SET
+         name = excluded.name, color = excluded.color, icon = excluded.icon, avatar_url = excluded.avatar_url`,
+    )
+    .run(userId, category, name, color, icon, avatar_url);
 
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits
@@ -402,19 +420,38 @@ router.get('/me/login-history', requireAuth, (req, res) => {
 
 // --- Update profile ---
 router.patch('/me', requireAuth, (req, res) => {
-  const { nickname, age, gender, partner_name, partner_color, partner_icon } = req.body;
+  const { nickname, age, gender } = req.body;
   const u = req.user;
 
-  // Picking a stock icon clears any uploaded partner photo — the two are
-  // mutually exclusive representations of the same slot (see
-  // partner-avatar upload below, which does the reverse).
-  let nextIcon = u.partner_icon;
-  let nextAvatarUrl = u.partner_avatar_url;
-  if (partner_icon !== undefined) {
-    if (partner_icon === null || partner_icon === '') {
+  db.prepare(`UPDATE users SET nickname = ?, age = ?, gender = ? WHERE id = ?`).run(
+    nickname != null ? String(nickname).trim() : u.nickname,
+    age != null && age !== '' ? Number(age) : u.age,
+    gender != null ? gender : u.gender,
+    u.id,
+  );
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  res.json({ user: publicUser(updated) });
+});
+
+// --- Update one category's partner (name/color/icon) ---
+router.patch('/me/partner/:category', requireAuth, (req, res) => {
+  const { category } = req.params;
+  if (!CATEGORIES.includes(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
+
+  const { name, color, icon } = req.body;
+  const current = getPartnerOrDefault(req.user.id, category);
+
+  // Picking a stock icon clears any uploaded partner photo for this
+  // category — the two are mutually exclusive representations of the same
+  // slot (see the avatar upload route below, which does the reverse).
+  let nextIcon = current.icon;
+  let nextAvatarUrl = current.avatar_url;
+  if (icon !== undefined) {
+    if (icon === null || icon === '') {
       nextIcon = null;
-    } else if (PARTNER_ICON_IDS.has(partner_icon)) {
-      nextIcon = partner_icon;
+    } else if (PARTNER_ICON_IDS.has(icon)) {
+      nextIcon = icon;
       if (nextAvatarUrl) {
         fs.unlink(partnerAvatarPath(nextAvatarUrl), () => {});
         nextAvatarUrl = null;
@@ -426,27 +463,23 @@ router.patch('/me', requireAuth, (req, res) => {
     }
   }
 
-  db.prepare(
-    `UPDATE users SET
-       nickname = ?, age = ?, gender = ?, partner_name = ?, partner_color = ?,
-       partner_icon = ?, partner_avatar_url = ?
-     WHERE id = ?`,
-  ).run(
-    nickname != null ? String(nickname).trim() : u.nickname,
-    age != null && age !== '' ? Number(age) : u.age,
-    gender != null ? gender : u.gender,
-    partner_name != null ? String(partner_name).trim() : u.partner_name,
-    partner_color != null ? partner_color : u.partner_color,
-    nextIcon,
-    nextAvatarUrl,
-    u.id,
-  );
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  upsertPartner(req.user.id, category, {
+    name: name != null ? String(name).trim() : current.name,
+    color: color != null ? color : current.color,
+    icon: nextIcon,
+    avatar_url: nextAvatarUrl,
+  });
+
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   res.json({ user: publicUser(updated) });
 });
 
-// --- Upload partner photo (clears any picked icon) ---
-router.post('/me/partner-avatar', requireAuth, (req, res) => {
+// --- Upload a category's partner photo (clears any picked icon) ---
+router.post('/me/partner/:category/avatar', requireAuth, (req, res) => {
+  const { category } = req.params;
+  if (!CATEGORIES.includes(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
+
   partnerAvatarUpload.single('avatar')(req, res, (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE')
@@ -463,28 +496,28 @@ router.post('/me/partner-avatar', requireAuth, (req, res) => {
         error_code: 'AVATAR_TYPE_INVALID',
       });
 
-    const u = req.user;
-    const oldAvatarUrl = u.partner_avatar_url;
-    const partner_avatar_url = `/uploads/partner_avatars/${req.file.filename}`;
-    db.prepare('UPDATE users SET partner_avatar_url = ?, partner_icon = NULL WHERE id = ?').run(
-      partner_avatar_url,
-      u.id,
-    );
-    if (oldAvatarUrl) fs.unlink(partnerAvatarPath(oldAvatarUrl), () => {});
+    const current = getPartnerOrDefault(req.user.id, category);
+    const avatar_url = `/uploads/partner_avatars/${req.file.filename}`;
+    upsertPartner(req.user.id, category, { name: current.name, color: current.color, icon: null, avatar_url });
+    if (current.avatar_url) fs.unlink(partnerAvatarPath(current.avatar_url), () => {});
 
-    const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+    const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
     res.json({ user: publicUser(updated) });
   });
 });
 
-// --- Remove partner photo ---
-router.delete('/me/partner-avatar', requireAuth, (req, res) => {
-  const u = req.user;
-  if (u.partner_avatar_url) {
-    fs.unlink(partnerAvatarPath(u.partner_avatar_url), () => {});
-    db.prepare('UPDATE users SET partner_avatar_url = NULL WHERE id = ?').run(u.id);
+// --- Remove a category's partner photo ---
+router.delete('/me/partner/:category/avatar', requireAuth, (req, res) => {
+  const { category } = req.params;
+  if (!CATEGORIES.includes(category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
+
+  const current = getPartnerOrDefault(req.user.id, category);
+  if (current.avatar_url) {
+    fs.unlink(partnerAvatarPath(current.avatar_url), () => {});
+    upsertPartner(req.user.id, category, { ...current, avatar_url: null });
   }
-  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
+  const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   res.json({ user: publicUser(updated) });
 });
 

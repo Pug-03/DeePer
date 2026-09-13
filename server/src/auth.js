@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { db } from './db.js';
+import { CATEGORIES } from './questions-bank.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const TOKEN_TTL = '30d';
@@ -36,6 +37,27 @@ export function validatePassword(pw) {
   );
 }
 
+// One partner slot per category (couple/friends/family) instead of one
+// global slot — a category with no row yet (never customized) falls back
+// to the same defaults the `partners` table columns declare.
+function partnersByCategory(userId) {
+  const rows = db
+    .prepare(`SELECT category, name, color, icon, avatar_url FROM partners WHERE user_id = ?`)
+    .all(userId);
+  const byCategory = Object.fromEntries(rows.map((r) => [r.category, r]));
+  const partners = {};
+  for (const category of CATEGORIES) {
+    const r = byCategory[category];
+    partners[category] = {
+      name: r?.name ?? 'อีกฝ่าย',
+      color: r?.color ?? '#f43f5e',
+      icon: r?.icon ?? null,
+      avatar_url: r?.avatar_url ?? null,
+    };
+  }
+  return partners;
+}
+
 export function publicUser(u) {
   if (!u) return null;
   return {
@@ -44,10 +66,7 @@ export function publicUser(u) {
     nickname: u.nickname,
     age: u.age,
     gender: u.gender,
-    partner_name: u.partner_name,
-    partner_color: u.partner_color,
-    partner_avatar_url: u.partner_avatar_url,
-    partner_icon: u.partner_icon,
+    partners: partnersByCategory(u.id),
     avatar_url: u.avatar_url,
     has_password: !!u.password_hash,
     via_google: !!u.google_sub,
