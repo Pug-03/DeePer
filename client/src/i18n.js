@@ -305,6 +305,13 @@ export const STRINGS = {
     'history.noAnswers': 'ไม่มีคำตอบที่บันทึกไว้',
     'history.removed': 'ลบออกจากประวัติแล้ว',
     'history.emptyFilter': 'ยังไม่มีประวัติการตอบในหมวดนี้',
+    'history.memoryEyebrow': 'ย้อนความทรงจำ',
+    'history.memoryYearAgo': '{n} ปีที่แล้ว',
+    'history.memoryYearsAgo': '{n} ปีที่แล้ว',
+    'history.memoryMonthAgo': '{n} เดือนที่แล้ว',
+    'history.memoryMonthsAgo': '{n} เดือนที่แล้ว',
+    'history.memoryDayAgo': '{n} วันที่แล้ว',
+    'history.memoryDaysAgo': '{n} วันที่แล้ว',
 
     // โปรไฟล์
     'profile.changePhoto': 'เปลี่ยนรูปโปรไฟล์',
@@ -675,6 +682,13 @@ export const STRINGS = {
     'history.noAnswers': 'No saved answers',
     'history.removed': 'Removed from history',
     'history.emptyFilter': 'No answer history in this category yet',
+    'history.memoryEyebrow': 'A memory',
+    'history.memoryYearAgo': '{n} year ago',
+    'history.memoryYearsAgo': '{n} years ago',
+    'history.memoryMonthAgo': '{n} month ago',
+    'history.memoryMonthsAgo': '{n} months ago',
+    'history.memoryDayAgo': '{n} day ago',
+    'history.memoryDaysAgo': '{n} days ago',
 
     'profile.changePhoto': 'Change profile photo',
     'profile.removePhoto': 'Remove photo',

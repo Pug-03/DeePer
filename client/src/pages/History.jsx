@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
@@ -7,7 +7,50 @@ import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
 import { catLabel, formatDate } from '../util.js';
-import { IcTrash, IcHistory } from '../components/icons.jsx';
+import { IcTrash, IcHistory, IcSparkle } from '../components/icons.jsx';
+
+// SQLite stores "YYYY-MM-DD HH:MM:SS" in UTC — same parsing convention as
+// formatDate in util.js.
+const daysSince = (createdAt) => (Date.now() - new Date(createdAt.replace(' ', 'T') + 'Z')) / 86400000;
+
+const dayOfYear = (d) => Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+
+// Picks one past entry to resurface as "on this day"-style memory: prefer
+// whichever came back near exactly a year/month/week ago (closest match
+// within a tolerance), falling back to any entry at least a week old.
+// The fallback picks by day-of-year modulo the candidate count rather than
+// Math.random(), so it stays the same across reloads within a day instead
+// of jumping around every time the page is revisited.
+function pickMemory(items) {
+  if (!items.length) return null;
+  const withAge = items.map((it) => ({ it, days: daysSince(it.created_at) }));
+
+  const closestNear = (targetDays, tolerance) =>
+    withAge
+      .filter(({ days }) => Math.abs(days - targetDays) <= tolerance)
+      .sort((a, b) => Math.abs(a.days - targetDays) - Math.abs(b.days - targetDays))[0]?.it;
+
+  const nearAnniversary = closestNear(365, 5) || closestNear(30, 4) || closestNear(7, 2);
+  if (nearAnniversary) return nearAnniversary;
+
+  const old = withAge.filter(({ days }) => days >= 7).map(({ it }) => it);
+  if (!old.length) return null;
+  return old[dayOfYear(new Date()) % old.length];
+}
+
+function memoryRelativeLabel(t, createdAt) {
+  const days = daysSince(createdAt);
+  const years = Math.round(days / 365);
+  if (years >= 1 && Math.abs(days - years * 365) <= 5) {
+    return t(years === 1 ? 'history.memoryYearAgo' : 'history.memoryYearsAgo', { n: years });
+  }
+  const months = Math.round(days / 30);
+  if (months >= 1 && Math.abs(days - months * 30) <= 4) {
+    return t(months === 1 ? 'history.memoryMonthAgo' : 'history.memoryMonthsAgo', { n: months });
+  }
+  const wholeDays = Math.round(days);
+  return t(wholeDays === 1 ? 'history.memoryDayAgo' : 'history.memoryDaysAgo', { n: wholeDays });
+}
 
 export default function History() {
   const nav = useNavigate();
@@ -21,6 +64,7 @@ export default function History() {
   const [error, setError] = useState('');
   const [open, setOpen] = useState(null);
   const [catFilter, setCatFilter] = useState('all');
+  const memory = useMemo(() => pickMemory(items), [items]);
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -80,6 +124,33 @@ export default function History() {
             </button>
           }
         />
+      )}
+
+      {status === 'ready' && memory && (
+        <div className="card-item glass glass--red" style={{ marginBottom: 16 }}>
+          <div className="ci-meta" style={{ marginBottom: 6 }}>
+            <IcSparkle size={14} />
+            <span className="tag">{t('history.memoryEyebrow')}</span>
+            <span>{memoryRelativeLabel(t, memory.created_at)}</span>
+          </div>
+          <p className="ci-q">{memory.question_text}</p>
+          {memory.my_answer && (
+            <div className="answer-block" style={{ borderLeftColor: 'var(--red)' }}>
+              <div className="ab-name" style={{ color: 'var(--red-bright)' }}>
+                {user?.nickname || t('answer.we')}
+              </div>
+              <div className="ab-text">{memory.my_answer}</div>
+            </div>
+          )}
+          {memory.partner_answer && (
+            <div className="answer-block" style={{ borderLeftColor: memory.partner_color || 'var(--red)' }}>
+              <div className="ab-name" style={{ color: memory.partner_color || 'var(--red-bright)' }}>
+                {memory.partner_name || t('answer.partnerDefault')}
+              </div>
+              <div className="ab-text">{memory.partner_answer}</div>
+            </div>
+          )}
+        </div>
       )}
 
       {status === 'ready' && <CatFilter value={catFilter} onChange={setCatFilter} />}
