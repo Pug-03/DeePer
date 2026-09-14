@@ -5,7 +5,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
-import { IcSparkle, IcMousePointer } from '../components/icons.jsx';
+import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcBook } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
 import yeahPhoto from '../assets/supporters/yeah.png';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
@@ -47,6 +47,18 @@ function Reveal({ children, delay = 0, className }) {
 const STAT_SPARKLES = [
   { top: -8, right: -14, delay: 0, size: 16 },
   { bottom: -4, left: -16, delay: 1.1, size: 11 },
+];
+
+// The app's standout features, shown below the About blurb — icon +
+// i18n key pair per row, kept as data so the section is one small map()
+// rather than six near-identical JSX blocks.
+const FEATURES = [
+  { Icon: IcCards, key: 'deck' },
+  { Icon: IcSparkle, key: 'ai' },
+  { Icon: IcUser, key: 'partner' },
+  { Icon: IcShare, key: 'share' },
+  { Icon: IcHistory, key: 'memory' },
+  { Icon: IcBook, key: 'history' },
 ];
 
 // No vetted supporter data exists yet — support_proofs (server/src/db.js) is
@@ -340,6 +352,26 @@ export default function Welcome() {
         <div className="landing-divider" />
 
         <Reveal className="landing-section" delay={0.06}>
+          <p className="eyebrow">{t('welcome.features.eyebrow')}</p>
+          <h2 className="h2">{t('welcome.features.title')}</h2>
+          <div className="feature-list">
+            {FEATURES.map(({ Icon, key }) => (
+              <div className="feature-row" key={key}>
+                <span className="feature-ic">
+                  <Icon size={18} />
+                </span>
+                <div className="feature-text">
+                  <p className="feature-title">{t(`welcome.features.${key}.title`)}</p>
+                  <p className="feature-desc">{t(`welcome.features.${key}.desc`)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+
+        <div className="landing-divider" />
+
+        <Reveal className="landing-section" delay={0.1}>
           <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
           <div className="stat-number-wrap">
             <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
@@ -354,7 +386,7 @@ export default function Welcome() {
             (people who donated) below, deliberately different heading and a
             plain text list, no card/box and no carousel, so the two never
             read as the same kind of list. */}
-        <Reveal className="landing-section" delay={0.12}>
+        <Reveal className="landing-section" delay={0.16}>
           <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
           <h2 className="h2">{t('welcome.team.title')}</h2>
           <div className="dev-team-list">
@@ -366,7 +398,7 @@ export default function Welcome() {
 
         <div className="landing-divider" />
 
-        <Reveal className="landing-section" delay={0.18}>
+        <Reveal className="landing-section" delay={0.22}>
           <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
           <h2 className="h2">{t('welcome.supporters.title')}</h2>
           <p className="sub">{t('welcome.supporters.body')}</p>
