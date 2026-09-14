@@ -51,10 +51,10 @@ export function useToast() {
 export function ToastProvider({ children }) {
   const [msg, setMsg] = useState(null);
   const timer = useRef(null);
-  const show = useCallback((text) => {
+  const show = useCallback((text, duration = 2800) => {
     setMsg(text);
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setMsg(null), 2800);
+    timer.current = setTimeout(() => setMsg(null), duration);
   }, []);
   return (
     <ToastCtx.Provider value={show}>

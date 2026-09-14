@@ -24,9 +24,16 @@ import {
   IcChat,
   IcShare,
   IcDownload,
+  IcHistory,
 } from '../components/icons.jsx';
 import { catLabel, CATS } from '../util.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
+import { pickMemory, memoryRelativeLabel } from '../utils/memory.js';
+
+// Shown at most once per calendar day — checked/stamped in localStorage
+// (see the memory notification effect below) so re-entering the app
+// later the same day doesn't pop it again.
+const MEMORY_SHOWN_KEY = 'dt_memory_shown_date';
 
 // Web Share API only exists on (most) mobile browsers — desktop gets just the
 // "save to device" option in the sheet instead of a share button that can't
@@ -695,6 +702,44 @@ export default function Home() {
     fetchBatch(category, { reset: true, silent: !firstLoad.current });
     firstLoad.current = false;
   }, [category, fetchBatch]);
+
+  // "On this day"-style memory notification — pops up as a toast once per
+  // calendar day on app entry, then fades on its own like any other toast
+  // (no persistent card sitting on a page). Runs once on mount only; the
+  // localStorage stamp is what keeps re-entering the app later the same
+  // day from popping it again, not the effect's own dependency array.
+  useEffect(() => {
+    const today = new Date().toDateString();
+    if (localStorage.getItem(MEMORY_SHOWN_KEY) === today) return;
+    (async () => {
+      try {
+        const d = await api.get('/history');
+        const memory = pickMemory(d.history);
+        if (memory) {
+          // Toasts elsewhere in the app are always short phrases — the
+          // question text is the one variable-length piece of content
+          // here, so it's clipped rather than risk overflowing the fixed,
+          // centered toast box on a narrow phone.
+          const text =
+            memory.question_text.length > 60 ? `${memory.question_text.slice(0, 60)}…` : memory.question_text;
+          toast(
+            <>
+              <IcHistory size={16} />
+              <span style={{ minWidth: 0 }}>
+                {memoryRelativeLabel(t, memory.created_at)}: {text}
+              </span>
+            </>,
+            5000,
+          );
+        }
+      } catch {
+        // A failed background check shouldn't surface an error toast of
+        // its own — just skip today's memory silently.
+      } finally {
+        localStorage.setItem(MEMORY_SHOWN_KEY, today);
+      }
+    })();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const current = deck[idx];
   const remaining = deck.length - idx;
