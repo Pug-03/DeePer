@@ -54,7 +54,6 @@ const STAT_SPARKLES = [
 // rather than six near-identical JSX blocks.
 const FEATURES = [
   { Icon: IcCards, key: 'deck' },
-  { Icon: IcSparkle, key: 'ai' },
   { Icon: IcUser, key: 'partner' },
   { Icon: IcShare, key: 'share' },
   { Icon: IcHistory, key: 'memory' },
