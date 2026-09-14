@@ -384,6 +384,14 @@ a {
   color: var(--text-faint);
   margin: 0 0 6px;
 }
+/* Letter-spacing pries Thai vowel/tone marks apart from their base
+   consonant (it adds a gap between every character, diacritics
+   included), and the uppercase transform is a no-op on a script with no
+   case — both were only ever meant for the Latin/English eyebrow text. */
+.eyebrow:lang(th) {
+  text-transform: none;
+  letter-spacing: normal;
+}
 .otp-row {
   display: flex;
   gap: 12px;
