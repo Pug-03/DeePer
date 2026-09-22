@@ -1731,6 +1731,21 @@ span.supporter-avatar-static {
   color: var(--text-dim);
   white-space: nowrap;
 }
+/* Sponsor logos inside the supporters marquee — fixed height, natural
+   width, so wordmarks and seals line up on one baseline per row. */
+.sponsor-logo {
+  flex-shrink: 0;
+  height: 44px;
+  margin-right: 26px;
+  display: flex;
+  align-items: center;
+}
+.sponsor-logo img {
+  height: 100%;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+}
 /* ---------- Made-by / dev credits ---------- */
 /* Plain stacked text list — no box/border, deliberately not styled like a
    card so it reads as part of the page's copy rather than a component. A

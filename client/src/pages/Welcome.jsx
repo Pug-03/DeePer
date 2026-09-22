@@ -7,7 +7,7 @@ import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
 import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcBook } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
-import yeahPhoto from '../assets/supporters/yeah.png';
+import { SPONSORS } from '../sponsors-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
@@ -65,7 +65,8 @@ const FEATURES = [
 // come from you directly before being added. `avatar` is optional — falls
 // back to an initials circle (see SupporterChip) if missing or it fails to
 // load, same pattern as DevTeamCard.
-const SUPPORTERS = [{ name: 'Yeah', avatar: yeahPhoto }];
+// Organizations (logo wall) live in SPONSORS instead — see sponsors-info.js.
+const SUPPORTERS = [];
 // Below this count the marquee's loop/scroll would just be one item
 // endlessly passing itself — shown as a plain static chip instead (see the
 // supporters-static branch below) until there's enough for a real loop.
@@ -153,8 +154,21 @@ function splitIntoRows(items, rowCount) {
   return rows.filter((row) => row.length > 0);
 }
 
-function SupportersRow({ items, reverse, paused }) {
-  const track = [...items, ...items];
+// A row whose one set is narrower than the container would show a blank gap
+// before the loop point — so short rows repeat their items into a longer
+// set first (still seamless: the track is that set twice, animated -50%).
+const MARQUEE_MIN_SET_ITEMS = 6;
+
+const renderSupporterChip = (s, i, hidden) => (
+  <span className="supporter-chip glass" key={`${s.name}-${i}`} aria-hidden={hidden}>
+    <SupporterChip s={s} />
+  </span>
+);
+
+function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChip }) {
+  let set = items;
+  while (set.length < MARQUEE_MIN_SET_ITEMS) set = [...set, ...items];
+  const track = [...set, ...set];
   const trackRef = useRef(null);
   const [durationSeconds, setDurationSeconds] = useState(MARQUEE_MIN_SECONDS);
 
@@ -184,11 +198,7 @@ function SupportersRow({ items, reverse, paused }) {
         className={`supporters-track${paused ? ' is-paused' : ''}${reverse ? ' is-reverse' : ''}`}
         style={{ animationDuration: `${durationSeconds}s` }}
       >
-        {track.map((s, i) => (
-          <span className="supporter-chip glass" key={`${s.name}-${i}`} aria-hidden={i >= items.length}>
-            <SupporterChip s={s} />
-          </span>
-        ))}
+        {track.map((s, i) => renderItem(s, i, i >= items.length))}
       </div>
     </div>
   );
@@ -197,7 +207,7 @@ function SupportersRow({ items, reverse, paused }) {
 // One shared pause state for all rows — hovering/touching anywhere in the
 // group pauses every row together, which reads cleaner than each row
 // independently starting and stopping as the pointer crosses between them.
-function SupportersMarquee({ items }) {
+function SupportersMarquee({ items, renderItem }) {
   const [paused, setPaused] = useState(false);
   const rows = splitIntoRows(items, MARQUEE_ROWS);
 
@@ -211,11 +221,26 @@ function SupportersMarquee({ items }) {
       onTouchCancel={() => setPaused(false)}
     >
       {rows.map((row, i) => (
-        <SupportersRow key={i} items={row} reverse={i % 2 === 1} paused={paused} />
+        <SupportersRow
+          key={i}
+          items={row}
+          reverse={i % 2 === 1}
+          paused={paused}
+          renderItem={renderItem}
+        />
       ))}
     </div>
   );
 }
+
+// Organization logos in the same 3-row, alternating-direction marquee as
+// the supporter chips — no tile/background: the logo files themselves are
+// transparent and pre-recolored for the dark page (see sponsors-info.js).
+const renderSponsorLogo = (s, i, hidden) => (
+  <span className="sponsor-logo" key={`${s.name}-${i}`} aria-hidden={hidden}>
+    <img src={s.logo} alt={hidden ? '' : s.name} />
+  </span>
+);
 
 // Plain text, no box/border — matches the rest of the page's text-based
 // feel rather than reading as another boxed component. Just a small avatar
@@ -401,6 +426,9 @@ export default function Welcome() {
           <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
           <h2 className="h2">{t('welcome.supporters.title')}</h2>
           <p className="sub">{t('welcome.supporters.body')}</p>
+          {SPONSORS.length > 0 && (
+            <SupportersMarquee items={SPONSORS} renderItem={renderSponsorLogo} />
+          )}
           {activeSupporters.length >= MIN_MARQUEE_ITEMS ? (
             <SupportersMarquee items={activeSupporters} />
           ) : activeSupporters.length > 0 ? (
@@ -416,7 +444,7 @@ export default function Welcome() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : SPONSORS.length > 0 ? null : (
             <div className="supporters-placeholder">
               <span className="supporters-placeholder-ic">
                 <IcSparkle size={20} />
