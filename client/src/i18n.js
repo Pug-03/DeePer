@@ -96,9 +96,9 @@ export const STRINGS = {
     'welcome.supporters.title': 'ผู้สนับสนุน',
     'welcome.supporters.body': 'ขอบคุณทุกแรงใจที่ช่วยให้ DeePer ไปต่อได้',
     'welcome.supporters.placeholder': 'ยังไม่มีรายชื่อผู้สนับสนุนอย่างเป็นทางการ เร็ว ๆ นี้จะมาอัปเดตตรงนี้',
-    'welcome.supporters.tier.high': 'ผู้สนับสนุนระดับสูง',
-    'welcome.supporters.tier.medium': 'ผู้สนับสนุนระดับกลาง',
-    'welcome.supporters.tier.general': 'ผู้สนับสนุนทั่วไป',
+    'welcome.supporters.tier.high': 'ผู้สนับสนุนระดับทอง',
+    'welcome.supporters.tier.medium': 'ผู้สนับสนุนระดับเงิน',
+    'welcome.supporters.tier.general': 'ผู้สนับสนุนระดับทองแดง',
 
     // นำทางล่าง
     'nav.home': 'หน้าหลัก',
@@ -499,9 +499,9 @@ export const STRINGS = {
     'welcome.supporters.title': 'Supporters',
     'welcome.supporters.body': 'Thanks to everyone whose support keeps DeePer going.',
     'welcome.supporters.placeholder': 'No official supporter list yet — real names will be added here soon.',
-    'welcome.supporters.tier.high': 'Premier sponsors',
-    'welcome.supporters.tier.medium': 'Major sponsors',
-    'welcome.supporters.tier.general': 'Sponsors',
+    'welcome.supporters.tier.high': 'Gold sponsors',
+    'welcome.supporters.tier.medium': 'Silver sponsors',
+    'welcome.supporters.tier.general': 'Bronze sponsors',
 
     'nav.home': 'Home',
     'nav.saved': 'Saved',

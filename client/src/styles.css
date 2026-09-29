@@ -1748,13 +1748,45 @@ span.supporter-avatar-static {
   gap: 28px;
 }
 .sponsor-tier-label {
-  margin: 0 0 12px;
-  font-size: 12px;
+  margin: 0 0 14px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-dim);
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.sponsor-tier-label:lang(th) {
+  letter-spacing: normal;
+}
+/* Metallic tiers, like the gold / silver / bronze sponsor walls at big
+   events: the label text (and its gem glyphs) is filled with a polished
+   gradient, plus a soft glow in the metal's own color. */
+.sponsor-tier-label--high,
+.sponsor-tier-label--medium,
+.sponsor-tier-label--general {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.sponsor-tier-label--high {
+  background-image: linear-gradient(120deg, #fff4c2 0%, #f5c542 35%, #b8860b 65%, #ffe28a 100%);
+  filter: drop-shadow(0 0 10px rgba(245, 197, 66, 0.35));
+}
+.sponsor-tier-label--medium {
+  background-image: linear-gradient(120deg, #ffffff 0%, #d7dde4 35%, #8e99a6 65%, #eef2f6 100%);
+  filter: drop-shadow(0 0 10px rgba(215, 221, 228, 0.25));
+}
+.sponsor-tier-label--general {
+  background-image: linear-gradient(120deg, #ffd2b0 0%, #cd7f32 40%, #8b4513 70%, #f0a878 100%);
+  filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.3));
+}
+.tier-gem {
+  font-size: 10px;
 }
 /* Static wall for the short high/medium lists; the marquee's margin-right
    spacing is swapped for a flex gap so centered rows stay centered. */

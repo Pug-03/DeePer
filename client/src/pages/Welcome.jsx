@@ -348,7 +348,13 @@ function SponsorTiers({ t }) {
         const marquee = tier === 'general' && items.length >= MIN_MARQUEE_ITEMS;
         return (
           <div className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
-            <p className="sponsor-tier-label">{t(`welcome.supporters.tier.${tier}`)}</p>
+            {/* Gold / silver / bronze: metallic gradient label between two
+                gem glyphs (see .sponsor-tier-label--<tier> in styles.css). */}
+            <p className={`sponsor-tier-label sponsor-tier-label--${tier}`}>
+              <span className="tier-gem" aria-hidden="true">✦</span>
+              {t(`welcome.supporters.tier.${tier}`)}
+              <span className="tier-gem" aria-hidden="true">✦</span>
+            </p>
             {marquee ? (
               <SupportersMarquee items={items} renderItem={renderSponsorLogo} rowCount={1} />
             ) : (
