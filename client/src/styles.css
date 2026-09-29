@@ -1731,8 +1731,8 @@ span.supporter-avatar-static {
   color: var(--text-dim);
   white-space: nowrap;
 }
-/* Sponsor logos inside the supporters marquee — fixed height, natural
-   width, so wordmarks and seals line up on one baseline per row. */
+/* Sponsor logos — fixed height, natural width, so wordmarks and seals
+   line up on one baseline per row. Height steps down per tier below. */
 .sponsor-logo {
   flex-shrink: 0;
   height: 44px;
@@ -1745,6 +1745,72 @@ span.supporter-avatar-static {
   width: auto;
   max-width: 150px;
   object-fit: contain;
+}
+/* ---------- Sponsor tiers ---------- */
+.sponsor-tiers {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.sponsor-tier-label {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+}
+/* Static wall for the short high/medium lists; the marquee's margin-right
+   spacing is swapped for a flex gap so centered rows stay centered. */
+.sponsor-wall {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 18px 32px;
+}
+.sponsor-wall .sponsor-logo {
+  margin-right: 0;
+}
+.sponsor-tier-high .sponsor-logo {
+  height: 72px;
+}
+.sponsor-tier-high .sponsor-logo img {
+  max-width: 220px;
+}
+.sponsor-tier-medium .sponsor-logo {
+  height: 52px;
+}
+.sponsor-tier-medium .sponsor-logo img {
+  max-width: 170px;
+}
+.sponsor-tier-general .sponsor-logo {
+  height: 36px;
+}
+.sponsor-tier-general .sponsor-logo img {
+  max-width: 130px;
+}
+.sponsor-tier .supporters-marquee-group {
+  margin-top: 0;
+}
+@media (max-width: 480px) {
+  .sponsor-wall {
+    gap: 14px 22px;
+  }
+  .sponsor-tier-high .sponsor-logo {
+    height: 56px;
+  }
+  .sponsor-tier-high .sponsor-logo img {
+    max-width: 160px;
+  }
+  .sponsor-tier-medium .sponsor-logo {
+    height: 42px;
+  }
+  .sponsor-tier-medium .sponsor-logo img {
+    max-width: 130px;
+  }
 }
 /* ---------- Made-by / dev credits ---------- */
 /* Plain stacked text list — no box/border, deliberately not styled like a

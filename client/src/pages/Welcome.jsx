@@ -7,7 +7,7 @@ import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
 import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcBook } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
-import { SPONSORS } from '../sponsors-info.js';
+import { SPONSORS, SPONSOR_TIERS } from '../sponsors-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
@@ -207,9 +207,9 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
 // One shared pause state for all rows — hovering/touching anywhere in the
 // group pauses every row together, which reads cleaner than each row
 // independently starting and stopping as the pointer crosses between them.
-function SupportersMarquee({ items, renderItem }) {
+function SupportersMarquee({ items, renderItem, rowCount = MARQUEE_ROWS }) {
   const [paused, setPaused] = useState(false);
-  const rows = splitIntoRows(items, MARQUEE_ROWS);
+  const rows = splitIntoRows(items, rowCount);
 
   return (
     <div
@@ -233,14 +233,39 @@ function SupportersMarquee({ items, renderItem }) {
   );
 }
 
-// Organization logos in the same 3-row, alternating-direction marquee as
-// the supporter chips — no tile/background: the logo files themselves are
+// Organization logos — no tile/background: the logo files themselves are
 // transparent and pre-recolored for the dark page (see sponsors-info.js).
 const renderSponsorLogo = (s, i, hidden) => (
   <span className="sponsor-logo" key={`${s.name}-${i}`} aria-hidden={hidden}>
     <img src={s.logo} alt={hidden ? '' : s.name} />
   </span>
 );
+
+// Sponsors grouped by tier, largest logos first. High and medium tiers are
+// short, fixed lists shown as a static centered wall so they stay readable;
+// the general tier is the one expected to grow, so it keeps the 1-row
+// marquee once it has enough logos to loop.
+function SponsorTiers({ t }) {
+  return (
+    <div className="sponsor-tiers">
+      {SPONSOR_TIERS.map((tier) => {
+        const items = SPONSORS.filter((s) => s.tier === tier);
+        if (items.length === 0) return null;
+        const marquee = tier === 'general' && items.length >= MIN_MARQUEE_ITEMS;
+        return (
+          <div className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
+            <p className="sponsor-tier-label">{t(`welcome.supporters.tier.${tier}`)}</p>
+            {marquee ? (
+              <SupportersMarquee items={items} renderItem={renderSponsorLogo} rowCount={1} />
+            ) : (
+              <div className="sponsor-wall">{items.map((s, i) => renderSponsorLogo(s, i, false))}</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // Plain text, no box/border — matches the rest of the page's text-based
 // feel rather than reading as another boxed component. Just a small avatar
@@ -426,9 +451,7 @@ export default function Welcome() {
           <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
           <h2 className="h2">{t('welcome.supporters.title')}</h2>
           <p className="sub">{t('welcome.supporters.body')}</p>
-          {SPONSORS.length > 0 && (
-            <SupportersMarquee items={SPONSORS} renderItem={renderSponsorLogo} />
-          )}
+          {SPONSORS.length > 0 && <SponsorTiers t={t} />}
           {activeSupporters.length >= MIN_MARQUEE_ITEMS ? (
             <SupportersMarquee items={activeSupporters} />
           ) : activeSupporters.length > 0 ? (
