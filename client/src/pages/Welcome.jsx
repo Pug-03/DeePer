@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
@@ -168,6 +168,9 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
   const scrollerRef = useRef(null);
   const pausedRef = useRef(paused);
   pausedRef.current = paused;
+  // Scroll position lives in a ref so it survives the effect re-running;
+  // null = not placed yet.
+  const posRef = useRef(null);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -176,7 +179,7 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
     // Float position kept here, not read back from scrollLeft, since some
     // browsers round scrollLeft to whole pixels and 40px/s at 60fps is
     // well under one pixel per frame.
-    let pos = 0;
+    let pos = posRef.current ?? 0;
     let userActiveUntil = 0;
     let lastTime = 0;
     let frame = 0;
@@ -188,8 +191,9 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
       if (half <= 0) return x;
       return ((x % half) + half) % half;
     };
-    // Start reversed rows mid-set so they have room to move left too.
-    pos = reverse ? oneSet() / 2 : 0;
+    // First mount only: start reversed rows mid-set so they have room to
+    // move left too. Later runs keep wherever the row already was.
+    if (posRef.current === null) pos = reverse ? oneSet() / 2 : 0;
     el.scrollLeft = pos;
 
     const markUserActive = () => {
@@ -203,6 +207,7 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
         pos = wrap(pos + (reverse ? -1 : 1) * MARQUEE_PX_PER_SECOND * dt);
         el.scrollLeft = pos;
       }
+      posRef.current = pos;
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -269,7 +274,10 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
 // independently starting and stopping as the pointer crosses between them.
 function SupportersMarquee({ items, renderItem, rowCount = MARQUEE_ROWS }) {
   const [paused, setPaused] = useState(false);
-  const rows = splitIntoRows(items, rowCount);
+  // Memoized so hovering (which re-renders via setPaused) hands each row the
+  // same array — a new one would restart the row's scroll effect and make
+  // it jump.
+  const rows = useMemo(() => splitIntoRows(items, rowCount), [items, rowCount]);
 
   return (
     <div
@@ -305,11 +313,13 @@ const renderSponsorLogo = (s, i, hidden) => (
 // short, fixed lists shown as a static centered wall so they stay readable;
 // the general tier is the one expected to grow, so it keeps the 1-row
 // marquee once it has enough logos to loop.
+// Built once so each tier's list keeps the same identity across renders.
+const SPONSORS_BY_TIER = SPONSOR_TIERS.map((tier) => [tier, SPONSORS.filter((s) => s.tier === tier)]);
+
 function SponsorTiers({ t }) {
   return (
     <div className="sponsor-tiers">
-      {SPONSOR_TIERS.map((tier) => {
-        const items = SPONSORS.filter((s) => s.tier === tier);
+      {SPONSORS_BY_TIER.map(([tier, items]) => {
         if (items.length === 0) return null;
         const marquee = tier === 'general' && items.length >= MIN_MARQUEE_ITEMS;
         return (
