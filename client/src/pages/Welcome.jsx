@@ -138,6 +138,12 @@ function SupporterChip({ s, vertical }) {
 // speed regardless of item count or name length.
 const MARQUEE_PX_PER_SECOND = 40;
 const MARQUEE_RESUME_MS = 1500; // idle time after a manual scroll before auto-scroll picks back up
+// Mouse-drag fling: releasing mid-drag keeps the row gliding at the release
+// speed, decaying by this rate (1/s) until it drops under the stop speed —
+// touch already gets native momentum from overflow-x.
+const MARQUEE_FLING_DECAY = 3;
+const MARQUEE_FLING_MIN_PX_PER_SECOND = 20;
+const MARQUEE_FLING_STALE_MS = 80; // pause this long before release = no fling
 const MARQUEE_ROWS = 3;
 
 // Round-robin (not chunked) so consecutive items land on different rows —
@@ -184,6 +190,7 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
     let lastTime = 0;
     let frame = 0;
     let drag = null;
+    let fling = 0; // px/s, signed along scrollLeft
 
     const oneSet = () => el.scrollWidth / 2;
     const wrap = (x) => {
@@ -203,7 +210,13 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
     const tick = (now) => {
       const dt = lastTime ? (now - lastTime) / 1000 : 0;
       lastTime = now;
-      if (!reduceMotion && !pausedRef.current && !drag && now > userActiveUntil) {
+      if (fling && !drag) {
+        pos = wrap(pos + fling * dt);
+        el.scrollLeft = pos;
+        fling *= Math.exp(-MARQUEE_FLING_DECAY * dt);
+        if (Math.abs(fling) < MARQUEE_FLING_MIN_PX_PER_SECOND) fling = 0;
+        markUserActive();
+      } else if (!reduceMotion && !pausedRef.current && !drag && now > userActiveUntil) {
         pos = wrap(pos + (reverse ? -1 : 1) * MARQUEE_PX_PER_SECOND * dt);
         el.scrollLeft = pos;
       }
@@ -227,16 +240,27 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
     // Mouse drag — touch already scrolls natively via overflow-x.
     const onPointerDown = (e) => {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      drag = { x: e.clientX, start: pos };
+      drag = { x: e.clientX, start: pos, lastX: e.clientX, lastT: e.timeStamp, v: 0 };
+      fling = 0;
       el.setPointerCapture(e.pointerId);
     };
     const onPointerMove = (e) => {
       if (!drag) return;
       pos = wrap(drag.start - (e.clientX - drag.x));
       el.scrollLeft = pos;
+      // Smoothed so one jittery event doesn't set the whole fling.
+      const dtMs = e.timeStamp - drag.lastT;
+      if (dtMs > 0) {
+        const v = ((drag.lastX - e.clientX) / dtMs) * 1000;
+        drag.v = drag.v * 0.3 + v * 0.7;
+        drag.lastX = e.clientX;
+        drag.lastT = e.timeStamp;
+      }
     };
-    const onPointerUp = () => {
+    const onPointerUp = (e) => {
       if (!drag) return;
+      const stale = e.timeStamp - drag.lastT > MARQUEE_FLING_STALE_MS;
+      if (!reduceMotion && !stale) fling = drag.v;
       drag = null;
       markUserActive();
     };
