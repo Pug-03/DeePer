@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
@@ -121,27 +121,23 @@ function SupporterChip({ s, vertical }) {
   );
 }
 
-// CSS-driven marquee (not Framer Motion) — an infinite linear loop is
-// cheaper as a plain animation than as a JS-driven tween, and it's the one
-// piece of motion on this page that should never pause between scroll
-// passes. Paused via React state (not just CSS :hover) so touch press-and-
-// hold also works — iOS Safari doesn't reliably apply :hover/:active from a
-// held touch without a touchstart listener already registered on the page.
+// JS-driven marquee: each row is a real horizontal scroller (overflow-x)
+// whose scrollLeft is advanced every animation frame, so people can also
+// swipe / trackpad-scroll / mouse-drag through it themselves. Any manual
+// interaction pauses the auto-scroll, which resumes shortly after the last
+// one. Paused via React state (not just CSS :hover) so touch press-and-hold
+// also works.
 //
-// Loop is seamless by construction, not by resetting scroll position: each
-// row's track renders its item list twice back-to-back and animates by
-// exactly one set's width (translateX(-50%) — see .supportersMarquee
-// keyframes in styles.css), so the frame at the end of the loop is
-// pixel-identical to the frame at the start and `infinite` restarts with no
-// visible jump.
+// Loop is seamless: each row's track renders its item list twice back-to-
+// back, and whenever the scroll position passes one set's width (half the
+// scrollWidth) it jumps back by exactly that width — the frame on either
+// side of the jump is pixel-identical. The same wrap applies to manual
+// scrolling, so dragging never hits an end.
 //
-// Speed is a constant (px/second), not a constant duration — a fixed
-// duration made rows with fewer/shorter items finish their (shorter) lap
-// faster, i.e. visibly faster motion. Each row instead measures its own
-// rendered content width and derives its duration from that, so every row
-// moves at the same physical speed regardless of item count or name length.
+// Speed is a constant px/second, so every row moves at the same physical
+// speed regardless of item count or name length.
 const MARQUEE_PX_PER_SECOND = 40;
-const MARQUEE_MIN_SECONDS = 8; // anti-jank floor for a pathologically narrow row, not a pacing target
+const MARQUEE_RESUME_MS = 1500; // idle time after a manual scroll before auto-scroll picks back up
 const MARQUEE_ROWS = 3;
 
 // Round-robin (not chunked) so consecutive items land on different rows —
@@ -169,35 +165,99 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
   let set = items;
   while (set.length < MARQUEE_MIN_SET_ITEMS) set = [...set, ...items];
   const track = [...set, ...set];
-  const trackRef = useRef(null);
-  const [durationSeconds, setDurationSeconds] = useState(MARQUEE_MIN_SECONDS);
+  const scrollerRef = useRef(null);
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
-  useLayoutEffect(() => {
-    const el = trackRef.current;
+  useEffect(() => {
+    const el = scrollerRef.current;
     if (!el) return;
-    const measure = () => {
-      // scrollWidth spans both duplicated sets (plus the gaps between
-      // them); halve it to get one set's actual rendered width, so the
-      // duration this produces always maps to the same px/second no matter
-      // how many items are in this row or how wide their names render.
-      const oneSetWidth = el.scrollWidth / 2;
-      setDurationSeconds(Math.max(oneSetWidth / MARQUEE_PX_PER_SECOND, MARQUEE_MIN_SECONDS));
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Float position kept here, not read back from scrollLeft, since some
+    // browsers round scrollLeft to whole pixels and 40px/s at 60fps is
+    // well under one pixel per frame.
+    let pos = 0;
+    let userActiveUntil = 0;
+    let lastTime = 0;
+    let frame = 0;
+    let drag = null;
+
+    const oneSet = () => el.scrollWidth / 2;
+    const wrap = (x) => {
+      const half = oneSet();
+      if (half <= 0) return x;
+      return ((x % half) + half) % half;
     };
-    measure();
-    // Re-measure if content width changes after mount (e.g. a webfont
-    // swapping in and reflowing the chip text).
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [items]);
+    // Start reversed rows mid-set so they have room to move left too.
+    pos = reverse ? oneSet() / 2 : 0;
+    el.scrollLeft = pos;
+
+    const markUserActive = () => {
+      userActiveUntil = performance.now() + MARQUEE_RESUME_MS;
+    };
+
+    const tick = (now) => {
+      const dt = lastTime ? (now - lastTime) / 1000 : 0;
+      lastTime = now;
+      if (!reduceMotion && !pausedRef.current && !drag && now > userActiveUntil) {
+        pos = wrap(pos + (reverse ? -1 : 1) * MARQUEE_PX_PER_SECOND * dt);
+        el.scrollLeft = pos;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+
+    // Manual scroll (touch swipe, trackpad, scrollbar): adopt its position
+    // and wrap so it never reaches either end.
+    const onScroll = () => {
+      // Our own writes land within a pixel of pos; skip those unless a
+      // person is mid-interaction (slow swipes also move < 1px per event).
+      if (Math.abs(el.scrollLeft - pos) < 1 && performance.now() > userActiveUntil) return;
+      markUserActive();
+      const wrapped = wrap(el.scrollLeft);
+      if (Math.abs(wrapped - el.scrollLeft) >= 1) el.scrollLeft = wrapped;
+      pos = wrapped;
+    };
+
+    // Mouse drag — touch already scrolls natively via overflow-x.
+    const onPointerDown = (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag = { x: e.clientX, start: pos };
+      el.setPointerCapture(e.pointerId);
+    };
+    const onPointerMove = (e) => {
+      if (!drag) return;
+      pos = wrap(drag.start - (e.clientX - drag.x));
+      el.scrollLeft = pos;
+    };
+    const onPointerUp = () => {
+      if (!drag) return;
+      drag = null;
+      markUserActive();
+    };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener('touchstart', markUserActive, { passive: true });
+    el.addEventListener('wheel', markUserActive, { passive: true });
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('pointercancel', onPointerUp);
+    return () => {
+      cancelAnimationFrame(frame);
+      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener('touchstart', markUserActive);
+      el.removeEventListener('wheel', markUserActive);
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('pointercancel', onPointerUp);
+    };
+  }, [items, reverse]);
 
   return (
-    <div className="supporters-marquee">
-      <div
-        ref={trackRef}
-        className={`supporters-track${paused ? ' is-paused' : ''}${reverse ? ' is-reverse' : ''}`}
-        style={{ animationDuration: `${durationSeconds}s` }}
-      >
+    <div className="supporters-marquee" ref={scrollerRef}>
+      <div className="supporters-track">
         {track.map((s, i) => renderItem(s, i, i >= items.length))}
       </div>
     </div>
