@@ -12,6 +12,8 @@
 import aiPreneur from './assets/sponsors/ai-preneur.png';
 import csii from './assets/sponsors/csii.png';
 import depa from './assets/sponsors/depa.png';
+// DotTH keeps its vector paths, with a tight viewBox and white ink for this page.
+import dotth from './assets/sponsors/dotth.svg';
 import microsoft from './assets/sponsors/microsoft.png';
 import yeah from './assets/sponsors/yeah.png';
 
@@ -19,6 +21,7 @@ export const SPONSORS = [
   { name: 'depa', logo: depa, tier: 'high' },
   { name: 'Microsoft', logo: microsoft, tier: 'medium' },
   { name: 'AI Preneur', logo: aiPreneur, tier: 'medium' },
+  { name: 'DotTH', logo: dotth, tier: 'general' },
   { name: 'CSII', logo: csii, tier: 'general' },
   { name: 'Yeah', logo: yeah, tier: 'general' },
 ];
