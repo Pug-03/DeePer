@@ -20,11 +20,12 @@ import { makeMockSupportersDevOnly } from '../dev/mockSupporters.js';
 // different one bolted on.
 const EASE = [0.16, 1, 0.3, 1];
 
-// Fades + rises each block in as it crosses into view (replays only once —
-// unlike Saved's cards, these are a handful of large landing blocks, not a
+// Fades + rises one landing element in as it crosses into view — each
+// heading, paragraph, row and tier gets its own, so they arrive one by one
+// while scrolling. Replays only once: unlike Saved's cards this isn't a
 // scrolling feed, so a repeat-on-every-pass would read as fidgety rather
-// than lively).
-function Reveal({ children, delay = 0, className }) {
+// than lively.
+function Reveal({ children = null, delay = 0, className }) {
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.3, once: true });
   return (
@@ -388,7 +389,8 @@ function SponsorTiers({ t }) {
         if (items.length === 0) return null;
         const marquee = tier === 'general' && items.length >= MIN_MARQUEE_ITEMS;
         return (
-          <div className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
+          // Each tier reveals on its own as it scrolls into view.
+          <Reveal className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
             {/* Gold / silver / bronze: metallic gradient label between two
                 gem glyphs (see .sponsor-tier-label--<tier> in styles.css). */}
             <p className={`sponsor-tier-label sponsor-tier-label--${tier}`}>
@@ -401,7 +403,7 @@ function SponsorTiers({ t }) {
             ) : (
               <div className="sponsor-wall">{items.map((s, i) => renderSponsorLogo(s, i, false))}</div>
             )}
-          </div>
+          </Reveal>
         );
       })}
     </div>
@@ -537,23 +539,33 @@ export default function Welcome() {
         </div>
       </div>
 
+      {/* Below the fold, every piece rises in on its own as it scrolls into
+          view — dividers, headings, paragraphs, each feature row, each
+          developer, each sponsor tier — one after another, not a whole
+          section at once (same as the iOS app's WelcomeView). */}
       <div className="landing-more">
-        <div className="landing-divider" />
+        <Reveal className="landing-divider" />
 
-        <Reveal className="landing-section">
-          <p className="eyebrow">{t('welcome.about.eyebrow')}</p>
-          <h2 className="h2">{t('welcome.about.title')}</h2>
-          <p className="sub">{t('welcome.about.body')}</p>
-        </Reveal>
+        <div className="landing-section">
+          <Reveal>
+            <p className="eyebrow">{t('welcome.about.eyebrow')}</p>
+            <h2 className="h2">{t('welcome.about.title')}</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="sub">{t('welcome.about.body')}</p>
+          </Reveal>
+        </div>
 
-        <div className="landing-divider" />
+        <Reveal className="landing-divider" />
 
-        <Reveal className="landing-section" delay={0.06}>
-          <p className="eyebrow">{t('welcome.features.eyebrow')}</p>
-          <h2 className="h2">{t('welcome.features.title')}</h2>
+        <div className="landing-section">
+          <Reveal>
+            <p className="eyebrow">{t('welcome.features.eyebrow')}</p>
+            <h2 className="h2">{t('welcome.features.title')}</h2>
+          </Reveal>
           <div className="feature-list">
-            {FEATURES.map(({ Icon, key }) => (
-              <div className="feature-row" key={key}>
+            {FEATURES.map(({ Icon, key }, i) => (
+              <Reveal className="feature-row" key={key} delay={0.08 * i}>
                 <span className="feature-ic">
                   <Icon size={18} />
                 </span>
@@ -561,71 +573,87 @@ export default function Welcome() {
                   <p className="feature-title">{t(`welcome.features.${key}.title`)}</p>
                   <p className="feature-desc">{t(`welcome.features.${key}.desc`)}</p>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
-        </Reveal>
+        </div>
 
-        <div className="landing-divider" />
+        <Reveal className="landing-divider" />
 
-        <Reveal className="landing-section" delay={0.1}>
-          <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
-          <div className="stat-number-wrap">
-            <CountUpNumber target={userCount} />
-            <Sparkles points={STAT_SPARKLES} />
-          </div>
-          <div className="stat-label">{t('welcome.stats.label')}</div>
-        </Reveal>
+        <div className="landing-section">
+          <Reveal>
+            <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <div className="stat-number-wrap">
+              <CountUpNumber target={userCount} />
+              <Sparkles points={STAT_SPARKLES} />
+            </div>
+          </Reveal>
+          <Reveal delay={0.2}>
+            <div className="stat-label">{t('welcome.stats.label')}</div>
+          </Reveal>
+        </div>
 
-        <div className="landing-divider" />
+        <Reveal className="landing-divider" />
 
         {/* Credits the people who built the app — distinct from Supporters
             (people who donated) below, deliberately different heading and a
             plain text list, no card/box and no carousel, so the two never
             read as the same kind of list. */}
-        <Reveal className="landing-section" delay={0.16}>
-          <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
-          <h2 className="h2">{t('welcome.team.title')}</h2>
+        <div className="landing-section">
+          <Reveal>
+            <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
+            <h2 className="h2">{t('welcome.team.title')}</h2>
+          </Reveal>
           <div className="dev-team-list">
-            {DEV_TEAM.map((dev) => (
-              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} nav={nav} />
+            {DEV_TEAM.map((dev, i) => (
+              <Reveal key={dev.nameTh} delay={0.1 * i}>
+                <DevTeamCard dev={dev} lang={lang} nav={nav} />
+              </Reveal>
             ))}
           </div>
-        </Reveal>
+        </div>
 
-        <div className="landing-divider" />
+        <Reveal className="landing-divider" />
 
-        <Reveal className="landing-section" delay={0.22}>
-          <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
-          <h2 className="h2">{t('welcome.supporters.title')}</h2>
-          <p className="sub">{t('welcome.supporters.body')}</p>
+        <div className="landing-section">
+          <Reveal>
+            <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
+            <h2 className="h2">{t('welcome.supporters.title')}</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="sub">{t('welcome.supporters.body')}</p>
+          </Reveal>
           {SPONSORS.length > 0 && <SponsorTiers t={t} />}
           {activeSupporters.length >= MIN_MARQUEE_ITEMS ? (
-            <SupportersMarquee items={activeSupporters} />
+            <Reveal>
+              <SupportersMarquee items={activeSupporters} />
+            </Reveal>
           ) : activeSupporters.length > 0 ? (
             // 1-2 real supporters isn't enough for a loop to feel like one
             // (it'd just be the same chip endlessly re-passing itself) —
             // shown stacked (image on top, name below) instead of forcing
             // the marquee, no pill wrapper, matching the plain-list look
             // the rest of this page already uses (About, dev team, etc).
-            <div className="supporters-static">
+            <Reveal className="supporters-static">
               {activeSupporters.map((s) => (
                 <div className="supporter-static-item" key={s.name}>
                   <SupporterChip s={s} vertical />
                 </div>
               ))}
-            </div>
+            </Reveal>
           ) : SPONSORS.length > 0 ? null : (
-            <div className="supporters-placeholder">
+            <Reveal className="supporters-placeholder">
               <span className="supporters-placeholder-ic">
                 <IcSparkle size={20} />
               </span>
               <p className="supporters-placeholder-text">{t('welcome.supporters.placeholder')}</p>
-            </div>
+            </Reveal>
           )}
-        </Reveal>
+        </div>
 
-        <div className="landing-divider" />
+        <Reveal className="landing-divider" />
       </div>
     </>
   );
