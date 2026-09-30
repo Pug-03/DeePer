@@ -1823,6 +1823,12 @@ span.supporter-avatar-static {
 .sponsor-tier .supporters-marquee-group {
   margin-top: 0;
 }
+/* Individual supporters: the lowest tier, a sibling below .sponsor-tiers
+   (not inside it), so it adds the tiers' own 28px gap itself. Plain dim
+   label — no metal, these are people rather than sponsor packages. */
+.sponsor-tier-individual {
+  margin-top: 28px;
+}
 @media (max-width: 480px) {
   .sponsor-wall {
     gap: 14px 22px;

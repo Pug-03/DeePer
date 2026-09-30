@@ -7,7 +7,7 @@ import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
 import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcBook } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
-import { SPONSORS, SPONSOR_TIERS } from '../sponsors-info.js';
+import { SPONSORS, SPONSOR_TIERS, SUPPORTERS } from '../sponsors-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
@@ -102,16 +102,8 @@ const FEATURES = [
   { Icon: IcBook, key: 'history' },
 ];
 
-// No vetted supporter data exists yet — support_proofs (server/src/db.js) is
-// self-reported and unapproved, so most entries here still need a name to
-// come from you directly before being added. `avatar` is optional — falls
-// back to an initials circle (see SupporterChip) if missing or it fails to
-// load, same pattern as DevTeamCard.
-// Organizations (logo wall) live in SPONSORS instead — see sponsors-info.js.
-const SUPPORTERS = [];
-// Below this count the marquee's loop/scroll would just be one item
-// endlessly passing itself — shown as a plain static chip instead (see the
-// supporters-static branch below) until there's enough for a real loop.
+// Below this count the bronze tier's logo marquee would just be one logo
+// endlessly passing itself, so it's shown as a static wall instead.
 const MIN_MARQUEE_ITEMS = 3;
 
 // Dev-only preview of the marquee at any item count — never on by default,
@@ -626,22 +618,14 @@ export default function Welcome() {
             <p className="sub">{t('welcome.supporters.body')}</p>
           </Reveal>
           {SPONSORS.length > 0 && <SponsorTiers t={t} />}
-          {activeSupporters.length >= MIN_MARQUEE_ITEMS ? (
-            <Reveal>
-              <SupportersMarquee items={activeSupporters} />
-            </Reveal>
-          ) : activeSupporters.length > 0 ? (
-            // 1-2 real supporters isn't enough for a loop to feel like one
-            // (it'd just be the same chip endlessly re-passing itself) —
-            // shown stacked (image on top, name below) instead of forcing
-            // the marquee, no pill wrapper, matching the plain-list look
-            // the rest of this page already uses (About, dev team, etc).
-            <Reveal className="supporters-static">
-              {activeSupporters.map((s) => (
-                <div className="supporter-static-item" key={s.name}>
-                  <SupporterChip s={s} vertical />
-                </div>
-              ))}
+          {activeSupporters.length > 0 ? (
+            // Lowest tier, below bronze: individual supporters (small
+            // donations) as one auto-scrolling row of name chips — it loops
+            // even with only a couple of names, since short rows repeat
+            // their items into a longer set (see SupportersRow).
+            <Reveal className="sponsor-tier sponsor-tier-individual">
+              <p className="sponsor-tier-label">{t('welcome.supporters.tier.individual')}</p>
+              <SupportersMarquee items={activeSupporters} rowCount={1} />
             </Reveal>
           ) : SPONSORS.length > 0 ? null : (
             <Reveal className="supporters-placeholder">
