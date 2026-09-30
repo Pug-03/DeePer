@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
-import { IcBack, IcMail, IcGithub, IcSparkle } from '../components/icons.jsx';
+import { IcBack, IcMail, IcSparkle } from '../components/icons.jsx';
 
-const CONTACT_EMAIL = 'ftxz12789@gmail.com';
-const CONTACT_GITHUB = 'https://github.com/Pug-03';
+const CONTACT_EMAIL = 'natsha.nampan@gmail.com';
 
 // No real achievements to list yet — see Awards.jsx for the same page
 // structure with a filled-in list. Honest empty state instead of
@@ -39,14 +38,6 @@ export default function AwardsNatsha() {
         <p className="eyebrow">{t('awards.contactTitle')}</p>
         <a className="link award-contact-row" href={`mailto:${CONTACT_EMAIL}`}>
           <IcMail size={18} /> {CONTACT_EMAIL}
-        </a>
-        <a
-          className="link award-contact-row"
-          href={CONTACT_GITHUB}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <IcGithub size={18} /> {CONTACT_GITHUB.replace(/^https?:\/\//, '')}
         </a>
       </div>
     </div>

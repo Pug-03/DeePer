@@ -1,10 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
 import Sparkles from '../components/Sparkles.jsx';
-import { IcBack, IcMail, IcGithub } from '../components/icons.jsx';
+import { IcBack, IcMail, IcPhone, IcGithub } from '../components/icons.jsx';
 
 const CONTACT_EMAIL = 'ftxz12789@gmail.com';
+// DeePer's own inbox, for app-related contact.
+const CONTACT_EMAIL_APP = 'deeper.th.app@gmail.com';
 const CONTACT_GITHUB = 'https://github.com/Pug-03';
+// Thai mobile number — shown as dialled locally, linked in E.164 form.
+const CONTACT_PHONE = '061-792-3062';
+const CONTACT_PHONE_TEL = '+66617923062';
 
 // Real, fixed content (not fetched, not translated per-field — award names
 // and results are proper nouns/placements, same in either app language).
@@ -101,6 +106,12 @@ export default function Awards() {
         <p className="eyebrow">{t('awards.contactTitle')}</p>
         <a className="link award-contact-row" href={`mailto:${CONTACT_EMAIL}`}>
           <IcMail size={18} /> {CONTACT_EMAIL}
+        </a>
+        <a className="link award-contact-row" href={`mailto:${CONTACT_EMAIL_APP}`}>
+          <IcMail size={18} /> {CONTACT_EMAIL_APP}
+        </a>
+        <a className="link award-contact-row" href={`tel:${CONTACT_PHONE_TEL}`}>
+          <IcPhone size={18} /> {CONTACT_PHONE} (TH)
         </a>
         <a
           className="link award-contact-row"
