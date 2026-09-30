@@ -1145,13 +1145,23 @@ a {
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   color: var(--red-bright);
   box-shadow: 0 0 22px -8px rgba(244, 63, 94, 0.55);
-  transition: transform 0.12s ease, box-shadow 0.2s ease, color 0.2s ease;
+  transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease,
+    border-color 0.2s ease;
+}
+/* Brighten (not whiten) on hover. Hover is gated to real pointers so a tap
+   on touch screens doesn't leave the button stuck in its hover state;
+   touch gets the same brightening while pressed via :active instead. */
+@media (hover: hover) {
+  .lang-btn:hover {
+    filter: brightness(1.3);
+    border-color: var(--red-bright);
+    box-shadow: var(--glow-red);
+  }
 }
 .lang-btn:active {
   transform: scale(0.9);
-}
-.lang-btn:hover {
-  color: #fff;
+  filter: brightness(1.3);
+  border-color: var(--red-bright);
   box-shadow: var(--glow-red);
 }
 .lang-float {
