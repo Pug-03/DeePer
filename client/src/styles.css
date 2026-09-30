@@ -1556,6 +1556,8 @@ a {
   font-size: 68px;
   font-weight: 800;
   line-height: 1;
+  /* Fixed-width digits so the count-up doesn't jitter sideways. */
+  font-variant-numeric: tabular-nums;
   background: linear-gradient(120deg, #fff 20%, var(--red-bright) 90%);
   -webkit-background-clip: text;
   background-clip: text;

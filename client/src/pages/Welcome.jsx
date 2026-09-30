@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, useReducedMotion, animate } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
@@ -36,6 +36,47 @@ function Reveal({ children, delay = 0, className }) {
       transition={{ duration: 0.6, delay, ease: EASE }}
     >
       {children}
+    </motion.div>
+  );
+}
+
+// The landing user count: "···" until the stat loads, then counts up from 0
+// on a gentle ease-out the first time it scrolls into view, and pops when it
+// lands — same timing as the iOS app's CountUpNumber (WelcomeView.swift).
+function CountUpNumber({ target }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
+  const reduceMotion = useReducedMotion();
+  const [value, setValue] = useState(0);
+  const [landed, setLanded] = useState(false);
+
+  useEffect(() => {
+    if (!inView || target == null) return;
+    if (reduceMotion) {
+      setValue(target);
+      return;
+    }
+    // A steeper curve burns through most of the count while the section
+    // is still fading in, so keep the ease-out gentle.
+    const controls = animate(0, target, {
+      duration: 0.8,
+      delay: 0.1,
+      ease: [0.3, 0.1, 0.3, 1],
+      onUpdate: (v) => setValue(Math.round(v)),
+      onComplete: () => setLanded(true),
+    });
+    return () => controls.stop();
+  }, [inView, target, reduceMotion]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="stat-number"
+      // Landing pop: swell out, then spring back to size.
+      animate={landed ? { scale: [1, 1.22, 1] } : { scale: 1 }}
+      transition={{ duration: 0.66, times: [0, 0.25, 1], ease: ['easeOut', [0.34, 1.56, 0.64, 1]] }}
+    >
+      {target == null ? '···' : `${value}+`}
     </motion.div>
   );
 }
@@ -423,18 +464,25 @@ export default function Welcome() {
   const activeSupporters =
     mockSupporterCount > 0 ? makeMockSupportersDevOnly(mockSupporterCount) : SUPPORTERS;
 
+  // Public stat — keeps retrying every 5s while the page is open, so the
+  // count fills in once the server is reachable instead of sticking on "···".
   useEffect(() => {
     let cancelled = false;
-    api
-      .get('/stats', { auth: false })
-      .then((data) => {
-        if (!cancelled) setUserCount(data.user_count);
-      })
-      .catch(() => {
-        /* public stat, fine to just stay hidden if it fails */
-      });
+    let timer = null;
+    const load = () => {
+      api
+        .get('/stats', { auth: false })
+        .then((data) => {
+          if (!cancelled) setUserCount(data.user_count);
+        })
+        .catch(() => {
+          if (!cancelled) timer = setTimeout(load, 5000);
+        });
+    };
+    load();
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -523,7 +571,7 @@ export default function Welcome() {
         <Reveal className="landing-section" delay={0.1}>
           <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
           <div className="stat-number-wrap">
-            <div className="stat-number">{userCount != null ? `${userCount}+` : '···'}</div>
+            <CountUpNumber target={userCount} />
             <Sparkles points={STAT_SPARKLES} />
           </div>
           <div className="stat-label">{t('welcome.stats.label')}</div>
