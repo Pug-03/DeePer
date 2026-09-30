@@ -2125,6 +2125,16 @@ button.dev-team-name-clickable:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: none;
+}
+/* Never wraps — with 14 step dots beside it, a two-word label like
+   "เข้าใจแล้ว" used to get squeezed onto two lines. The dots give way
+   instead (see .tut-dots). */
+.tut-next-btn {
+  flex: none;
+  min-width: 96px;
+  gap: 6px;
+  white-space: nowrap;
 }
 .tut-back-btn {
   width: 46px;
@@ -2133,9 +2143,12 @@ button.dev-team-name-clickable:focus-visible {
 }
 .tut-dots {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
 }
 .tut-dots span {
+  flex: none;
   width: 6px;
   height: 6px;
   border-radius: 50%;

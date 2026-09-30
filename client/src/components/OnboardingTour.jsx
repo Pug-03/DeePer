@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
-import { IcBack, IcSparkle } from './icons.jsx';
+import { IcBack, IcCheck, IcSparkle } from './icons.jsx';
 
 // Ambient twinkle around the tip box — one instance per corner, each on its
 // own staggered loop so they never blink in sync. Lives on the persistent
@@ -257,7 +257,8 @@ function TipBody({ id, step, isLast, t, onBack, onNext, onSkip }) {
               <IcBack size={18} />
             </button>
           )}
-          <button className="btn btn--primary btn--sm" onClick={onNext}>
+          <button className="btn btn--primary btn--sm tut-next-btn" onClick={onNext}>
+            {isLast && <IcCheck size={18} />}
             {isLast ? t('tut.done') : t('tut.next')}
           </button>
         </div>
