@@ -112,6 +112,18 @@ a {
   padding-bottom: calc(132px + var(--safe-b));
 }
 
+/* Make route changes visible without moving the persistent bottom nav. */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.app-shell > .page {
+  animation: pageEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell > .page { animation: none; }
+}
+
 /* Staggered entrance — direct children of a `.stagger` container rise & fade
    in one after another, top to bottom (1 → 2 → 3 → 4 …). Transform is only
    applied to each child itself (never an ancestor), so absolutely-positioned
