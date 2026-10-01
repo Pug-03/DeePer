@@ -300,6 +300,9 @@ a {
   padding: 0;
   font-size: 15px;
 }
+.back-btn {
+  font-size: 16px;
+}
 
 /* ---------- Inputs ---------- */
 .field {

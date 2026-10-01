@@ -77,12 +77,12 @@ export default function Awards() {
   return (
     <div className="page stagger">
       <button
-        className="link"
+        className="link back-btn"
         style={{ alignSelf: 'flex-start', marginBottom: 18 }}
         onClick={() => nav('/')}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <IcBack size={18} /> {t('common.back')}
+          <IcBack size={20} /> {t('common.back')}
         </span>
       </button>
 

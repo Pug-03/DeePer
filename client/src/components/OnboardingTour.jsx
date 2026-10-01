@@ -254,7 +254,7 @@ function TipBody({ id, step, isLast, t, onBack, onNext, onSkip }) {
               onClick={onBack}
               aria-label={t('common.back')}
             >
-              <IcBack size={18} />
+              <IcBack size={20} />
             </button>
           )}
           <button className="btn btn--primary btn--sm tut-next-btn" onClick={onNext}>

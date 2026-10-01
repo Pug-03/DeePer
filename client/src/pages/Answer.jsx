@@ -75,9 +75,9 @@ export default function Answer() {
 
   return (
     <div className="page stagger">
-      <button className="link" style={{ alignSelf: 'flex-start', marginBottom: 14 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 14 }} onClick={() => nav(-1)}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <IcBack size={18} /> {t('common.back')}
+          <IcBack size={20} /> {t('common.back')}
         </span>
       </button>
 

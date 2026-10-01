@@ -123,9 +123,9 @@ export default function ForgotPassword() {
         <LangToggle />
       </div>
 
-      <button className="link" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={back}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={back}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <IcBack size={18} /> {t('common.back')}
+          <IcBack size={20} /> {t('common.back')}
         </span>
       </button>
 
