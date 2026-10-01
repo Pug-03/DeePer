@@ -1967,6 +1967,9 @@ button.dev-team-name-clickable:focus-visible {
 .stagger > .award-list {
   animation: none;
 }
+.stagger > .award-contact {
+  animation: none;
+}
 .award-list {
   display: block;
 }

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import Sparkles from '../components/Sparkles.jsx';
 import { IcBack, IcMail, IcPhone, IcGithub } from '../components/icons.jsx';
@@ -102,7 +103,13 @@ export default function Awards() {
         ))}
       </div>
 
-      <div className="award-contact">
+      <motion.div
+        className="award-contact"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      >
         <p className="eyebrow">{t('awards.contactTitle')}</p>
         <a className="link award-contact-row" href={`mailto:${CONTACT_EMAIL}`}>
           <IcMail size={18} /> {CONTACT_EMAIL}
@@ -121,7 +128,7 @@ export default function Awards() {
         >
           <IcGithub size={18} /> {CONTACT_GITHUB.replace(/^https?:\/\//, '')}
         </a>
-      </div>
+      </motion.div>
     </div>
   );
 }
