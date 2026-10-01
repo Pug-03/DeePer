@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import Sparkles from '../components/Sparkles.jsx';
+import { ContactReveal, ContactLink } from '../components/ContactReveal.jsx';
 import { IcBack, IcMail, IcPhone, IcGithub } from '../components/icons.jsx';
 
 const CONTACT_EMAIL = 'ftxz12789@gmail.com';
@@ -74,6 +75,7 @@ const TITLE_SPARKLES = [
 export default function Awards() {
   const nav = useNavigate();
   const { t } = useI18n();
+  const [awardsRevealed, setAwardsRevealed] = useState(false);
 
   return (
     <div className="page stagger">
@@ -95,40 +97,36 @@ export default function Awards() {
       </div>
 
       <div className="award-list stagger">
-        {AWARDS.map((a) => (
-          <div className="award-entry" key={a.name}>
+        {AWARDS.map((a, i) => (
+          <div
+            className="award-entry"
+            key={a.name}
+            onAnimationEnd={i === AWARDS.length - 1 ? () => setAwardsRevealed(true) : undefined}
+          >
             <p className="award-name">{a.name}</p>
             <p className="award-result">{a.result}</p>
           </div>
         ))}
       </div>
 
-      <motion.div
-        className="award-contact"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <p className="eyebrow">{t('awards.contactTitle')}</p>
-        <a className="link award-contact-row" href={`mailto:${CONTACT_EMAIL}`}>
+      <ContactReveal title={t('awards.contactTitle')} ready={awardsRevealed}>
+        <ContactLink href={`mailto:${CONTACT_EMAIL}`}>
           <IcMail size={18} /> {CONTACT_EMAIL}
-        </a>
-        <a className="link award-contact-row" href={`mailto:${CONTACT_EMAIL_APP}`}>
+        </ContactLink>
+        <ContactLink href={`mailto:${CONTACT_EMAIL_APP}`}>
           <IcMail size={18} /> {CONTACT_EMAIL_APP}
-        </a>
-        <a className="link award-contact-row" href={`tel:${CONTACT_PHONE_TEL}`}>
+        </ContactLink>
+        <ContactLink href={`tel:${CONTACT_PHONE_TEL}`}>
           <IcPhone size={18} /> {CONTACT_PHONE} (TH)
-        </a>
-        <a
-          className="link award-contact-row"
+        </ContactLink>
+        <ContactLink
           href={CONTACT_GITHUB}
           target="_blank"
           rel="noopener noreferrer"
         >
           <IcGithub size={18} /> {CONTACT_GITHUB.replace(/^https?:\/\//, '')}
-        </a>
-      </motion.div>
+        </ContactLink>
+      </ContactReveal>
     </div>
   );
 }
