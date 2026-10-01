@@ -1764,7 +1764,8 @@ span.supporter-avatar-static {
 }
 .sponsor-tier-label {
   margin: 0 0 14px;
-  font-size: 13px;
+  font-family: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1773,7 +1774,7 @@ span.supporter-avatar-static {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
 }
 .sponsor-tier-label:lang(th) {
   letter-spacing: normal;
@@ -1801,10 +1802,9 @@ span.supporter-avatar-static {
   filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.3));
 }
 .tier-gem {
-  font-size: 10px;
+  font-size: 18px;
 }
-/* Static wall for the short high/medium lists; the marquee's margin-right
-   spacing is swapped for a flex gap so centered rows stay centered. */
+/* Static logo wall for every sponsor tier. */
 .sponsor-wall {
   display: flex;
   flex-wrap: wrap;

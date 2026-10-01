@@ -102,10 +102,6 @@ const FEATURES = [
   { Icon: IcBook, key: 'history' },
 ];
 
-// Below this count the bronze tier's logo marquee would just be one logo
-// endlessly passing itself, so it's shown as a static wall instead.
-const MIN_MARQUEE_ITEMS = 3;
-
 // Dev-only preview of the marquee at any item count — never on by default,
 // even locally: needs both a dev build AND `?mockSupporters=<count>` in the
 // URL (e.g. ?mockSupporters=10). Production builds fold this whole check to
@@ -126,9 +122,9 @@ const initials = (name) =>
     .join('')
     .toUpperCase();
 
-// Shared by both the scrolling marquee and the static (< MIN_MARQUEE_ITEMS)
-// display — same photo-with-initials-fallback pattern as DevTeamCard.
-// `vertical` switches to the static (< MIN_MARQUEE_ITEMS) layout: image on
+// Shared by both the scrolling marquee and the static display — same
+// photo-with-initials-fallback pattern as DevTeamCard.
+// `vertical` switches to the static layout: image on
 // top, name below, and object-fit: contain in a slightly bigger square
 // instead of the marquee chip's tight cropped circle — a logo (not
 // necessarily a square headshot) reads cleanly there, where the marquee's
@@ -361,16 +357,14 @@ function SupportersMarquee({ items, renderItem, rowCount = MARQUEE_ROWS }) {
 
 // Organization logos — no tile/background: the logo files themselves are
 // transparent and pre-recolored for the dark page (see sponsors-info.js).
-const renderSponsorLogo = (s, i, hidden) => (
-  <span className="sponsor-logo" key={`${s.name}-${i}`} aria-hidden={hidden}>
-    <img src={s.logo} alt={hidden ? '' : s.name} />
+const renderSponsorLogo = (s, i) => (
+  <span className="sponsor-logo" key={`${s.name}-${i}`}>
+    <img src={s.logo} alt={s.name} />
   </span>
 );
 
-// Sponsors grouped by tier, largest logos first. High and medium tiers are
-// short, fixed lists shown as a static centered wall so they stay readable;
-// the general tier is the one expected to grow, so it keeps the 1-row
-// marquee once it has enough logos to loop.
+// Sponsors grouped by tier, largest logos first. Each tier uses a static
+// centered wall so every logo stays visible.
 // Built once so each tier's list keeps the same identity across renders.
 const SPONSORS_BY_TIER = SPONSOR_TIERS.map((tier) => [tier, SPONSORS.filter((s) => s.tier === tier)]);
 
@@ -379,7 +373,6 @@ function SponsorTiers({ t }) {
     <div className="sponsor-tiers">
       {SPONSORS_BY_TIER.map(([tier, items]) => {
         if (items.length === 0) return null;
-        const marquee = tier === 'general' && items.length >= MIN_MARQUEE_ITEMS;
         return (
           // Each tier reveals on its own as it scrolls into view.
           <Reveal className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
@@ -390,11 +383,7 @@ function SponsorTiers({ t }) {
               {t(`welcome.supporters.tier.${tier}`)}
               <span className="tier-gem" aria-hidden="true">✦</span>
             </p>
-            {marquee ? (
-              <SupportersMarquee items={items} renderItem={renderSponsorLogo} rowCount={1} />
-            ) : (
-              <div className="sponsor-wall">{items.map((s, i) => renderSponsorLogo(s, i, false))}</div>
-            )}
+            <div className="sponsor-wall">{items.map(renderSponsorLogo)}</div>
           </Reveal>
         );
       })}
