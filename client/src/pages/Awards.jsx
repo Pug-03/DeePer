@@ -57,6 +57,10 @@ const AWARDS = [
     name: 'Thailand Metaverse Hackathon and Exhibition 2026 by Chulalongkorn University (CU)',
     result: '1st Place Winner',
   },
+  {
+    name: 'OIC InsurTech Award 2026',
+    result: 'Top 5 Finalist, selected from 501 teams',
+  },
 ];
 
 // Twinkle accent next to the page title — same <Sparkles/> component and
@@ -101,6 +105,7 @@ export default function Awards() {
           <div
             className="award-entry"
             key={a.name}
+            style={{ animationDelay: `${0.05 + i * 0.12}s` }}
             onAnimationEnd={i === AWARDS.length - 1 ? () => setAwardsRevealed(true) : undefined}
           >
             <p className="award-name">{a.name}</p>

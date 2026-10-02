@@ -1958,12 +1958,8 @@ button.dev-team-name-clickable:focus-visible {
 }
 
 /* ---------- Awards page ---------- */
-/* Own nested `.stagger` scope for just the 10 entries (same reasoning as
-   `.stagger > .list { animation: none; }` above) — without this, the back
-   button and page title eat 2 of the 10 nth-child delay slots, so the last
-   few awards (and the contact block right after them) all land on the
-   shared 1.13s "10th and beyond" delay and pop in together instead of
-   cascading like the rest. */
+/* The award list doesn't animate as one block. Each entry gets its own
+   index-based delay in Awards.jsx so added awards still appear in order. */
 .stagger > .award-list {
   animation: none;
 }
@@ -2012,16 +2008,37 @@ button.dev-team-name-clickable:focus-visible {
 .award-contact {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 32px;
+  padding: 18px;
+  border: 1px solid var(--border-red);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), var(--glass-strong));
+  box-shadow: 0 16px 36px -28px rgba(244, 63, 94, 0.5);
+}
+.award-contact .eyebrow {
+  color: #fff;
+  font-size: 20px;
+  letter-spacing: normal;
+  text-transform: none;
+  margin-bottom: 4px;
 }
 .award-contact-row {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  width: fit-content;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow-wrap: anywhere;
+  transition: background 0.2s ease;
+}
+.award-contact-row:hover,
+.award-contact-row:focus-visible {
+  background: rgba(244, 63, 94, 0.13);
 }
 .supporters-placeholder {
   display: flex;
