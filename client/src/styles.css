@@ -2298,6 +2298,19 @@ button.dev-team-name-clickable:focus-visible {
   flex-shrink: 0;
   color: var(--red-bright);
 }
+/* Validation message right under the field it belongs to (signup /
+   profile forms); the field itself turns red via aria-invalid. */
+.field-err {
+  margin: -2px 0 0 4px;
+  color: #fca5b4;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.input[aria-invalid='true'],
+.select[aria-invalid='true'] {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
+}
 .err-inline {
   color: #fca5b4;
   font-size: 14px;

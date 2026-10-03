@@ -13,6 +13,7 @@ import { pwScore } from '../utils/password.js';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { IcBack, IcCamera, IcGoogle, IcMail } from '../components/icons.jsx';
 import { nicknameThError, nicknameEnError } from '../util.js';
+import FieldError, { invalidProps } from '../components/FieldError.jsx';
 
 const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
 
@@ -25,6 +26,8 @@ function ProfileFields({
   setAge,
   gender,
   setGender,
+  errors,
+  clearError,
   avatarPreview,
   onPickAvatar,
   onAvatarChange,
@@ -59,49 +62,68 @@ function ProfileFields({
       <div className="field">
         <label>{t('signup.nicknameTh')}</label>
         <input
+          id="pf-nickname"
           className="input"
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={(e) => {
+            setNickname(e.target.value);
+            clearError('nickname');
+          }}
           placeholder={t('signup.nicknameThPh')}
           maxLength={40}
           lang="th"
-          required
+          {...invalidProps('nickname', errors)}
         />
+        <FieldError id="pf-nickname-err" msg={errors.nickname} />
       </div>
       <div className="field">
         <label>{t('signup.nicknameEn')}</label>
         <input
+          id="pf-nicknameEn"
           className="input"
           value={nicknameEn}
-          onChange={(e) => setNicknameEn(e.target.value)}
+          onChange={(e) => {
+            setNicknameEn(e.target.value);
+            clearError('nicknameEn');
+          }}
           placeholder={t('signup.nicknameEnPh')}
           maxLength={40}
           lang="en"
           autoCapitalize="words"
-          required
+          {...invalidProps('nicknameEn', errors)}
         />
+        <FieldError id="pf-nicknameEn-err" msg={errors.nicknameEn} />
       </div>
       <div className="field">
         <label>{t('signup.age')}</label>
         <input
+          id="pf-age"
           className="input"
           type="number"
           inputMode="numeric"
           value={age}
-          onChange={(e) => setAge(e.target.value)}
+          onChange={(e) => {
+            setAge(e.target.value);
+            clearError('age');
+          }}
           placeholder={t('signup.agePh')}
           min={1}
           max={120}
-          required
+          {...invalidProps('age', errors)}
         />
+        <FieldError id="pf-age-err" msg={errors.age} />
       </div>
       <div className="field">
         <label>{t('signup.gender')}</label>
         <select
+          id="pf-gender"
           className="select"
           value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          required
+          onChange={(e) => {
+            setGender(e.target.value);
+            clearError('gender');
+          }}
+          {...invalidProps('gender', errors)}
         >
           <option value="" disabled>
             {t('signup.genderPh')}
@@ -112,10 +134,23 @@ function ProfileFields({
             </option>
           ))}
         </select>
+        <FieldError id="pf-gender-err" msg={errors.gender} />
       </div>
     </>
   );
 }
+
+// Server error codes that belong to one profile field — shown under that
+// field instead of in the banner at the top of the form.
+const FIELD_OF_ERROR = {
+  NICKNAME_REQUIRED: 'nickname',
+  NICKNAME_TH_INVALID: 'nickname',
+  NICKNAME_EN_REQUIRED: 'nicknameEn',
+  NICKNAME_EN_INVALID: 'nicknameEn',
+  AGE_REQUIRED: 'age',
+  GENDER_REQUIRED: 'gender',
+};
+const FIELD_ORDER = ['nickname', 'nicknameEn', 'age', 'gender'];
 
 export default function Signup() {
   const nav = useNavigate();
@@ -142,8 +177,43 @@ export default function Signup() {
     if (/[\u0E00-\u0E7F]/.test(name)) setNickname(name);
     else setNicknameEn(name);
   };
-  // First problem with the two nicknames as an i18n key, or ''.
-  const nicknamesError = () => nicknameThError(nickname) || nicknameEnError(nicknameEn);
+  // Per-field validation messages for the profile step, shown under each
+  // field (see ProfileFields) rather than as one banner above the form.
+  const [fieldErr, setFieldErr] = useState({});
+  const clearFieldErr = useCallback(
+    (field) => setFieldErr((cur) => (cur[field] ? { ...cur, [field]: undefined } : cur)),
+    [],
+  );
+  // Shows the given field errors and brings the first one into view.
+  const showFieldErrors = (errs) => {
+    setFieldErr(errs);
+    const first = FIELD_ORDER.find((f) => errs[f]);
+    if (first) {
+      const el = document.getElementById(`pf-${first}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el?.focus({ preventScroll: true });
+    }
+  };
+  // Checks every profile field at once; returns {} when all are valid.
+  const profileErrors = () => {
+    const errs = {};
+    const th = nicknameThError(nickname);
+    const en = nicknameEnError(nicknameEn);
+    const ageNum = Number(age);
+    if (th) errs.nickname = t(th);
+    if (en) errs.nicknameEn = t(en);
+    if (!age) errs.age = t('signup.needAge');
+    else if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 120) errs.age = t('signup.ageInvalid');
+    if (!gender) errs.gender = t('signup.needGender');
+    return errs;
+  };
+  // A rejected submit: field errors go under their field, anything else
+  // to the banner at the top.
+  const showSubmitError = (e2) => {
+    const field = FIELD_OF_ERROR[e2.data?.error_code];
+    if (field) showFieldErrors({ [field]: e2.message });
+    else setErr(e2.message);
+  };
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
@@ -249,9 +319,8 @@ export default function Signup() {
   const registerEmail = async (e) => {
     e.preventDefault();
     setErr('');
-    if (nicknamesError()) return setErr(t(nicknamesError()));
-    if (!age) return setErr(t('signup.needAge'));
-    if (!gender) return setErr(t('signup.needGender'));
+    const errs = profileErrors();
+    if (Object.keys(errs).length) return showFieldErrors(errs);
     if (!pwValid) return setErr(t('signup.pwNotValid'));
     setBusy(true);
     try {
@@ -264,7 +333,7 @@ export default function Signup() {
       await uploadAvatarIfAny();
       nav('/app/welcome', { replace: true, state: { isNew: true } });
     } catch (e2) {
-      setErr(e2.message);
+      showSubmitError(e2);
     } finally {
       setBusy(false);
     }
@@ -293,9 +362,8 @@ export default function Signup() {
   const registerGoogle = async (e) => {
     e.preventDefault();
     setErr('');
-    if (nicknamesError()) return setErr(t(nicknamesError()));
-    if (!age) return setErr(t('signup.needAge'));
-    if (!gender) return setErr(t('signup.needGender'));
+    const errs = profileErrors();
+    if (Object.keys(errs).length) return showFieldErrors(errs);
     setBusy(true);
     try {
       const d = await api.post(
@@ -307,7 +375,7 @@ export default function Signup() {
       await uploadAvatarIfAny();
       nav('/app/welcome', { replace: true, state: { isNew: true } });
     } catch (e2) {
-      setErr(e2.message);
+      showSubmitError(e2);
     } finally {
       setBusy(false);
     }
@@ -455,7 +523,7 @@ export default function Signup() {
 
       {/* Step: profile + password (email flow) */}
       {step === 'profile' && (
-        <form className="stagger" onSubmit={registerEmail}>
+        <form className="stagger" onSubmit={registerEmail} noValidate>
           <div className="header">
             <h1 className="h1">{t('signup.profileTitle')}</h1>
             <p className="sub">{t('signup.profileSub')}</p>
@@ -469,6 +537,8 @@ export default function Signup() {
             setAge={setAge}
             gender={gender}
             setGender={setGender}
+            errors={fieldErr}
+            clearError={clearFieldErr}
             avatarPreview={avatarPreview}
             onPickAvatar={onPickAvatar}
             onAvatarChange={onAvatarChange}
@@ -490,7 +560,7 @@ export default function Signup() {
 
       {/* Step: Google profile completion */}
       {step === 'gprofile' && (
-        <form className="stagger" onSubmit={registerGoogle}>
+        <form className="stagger" onSubmit={registerGoogle} noValidate>
           <div className="header">
             <h1 className="h1">{t('signup.profileTitle')}</h1>
             <p className="sub">{t('signup.gprofileSub')}</p>
@@ -504,6 +574,8 @@ export default function Signup() {
             setAge={setAge}
             gender={gender}
             setGender={setGender}
+            errors={fieldErr}
+            clearError={clearFieldErr}
             avatarPreview={avatarPreview}
             onPickAvatar={onPickAvatar}
             onAvatarChange={onAvatarChange}

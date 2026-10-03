@@ -10,6 +10,7 @@ import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
 import { CATS, displayName, nicknameThError, nicknameEnError } from '../util.js';
+import FieldError, { invalidProps } from '../components/FieldError.jsx';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -23,6 +24,8 @@ export default function Profile() {
 
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [nicknameEn, setNicknameEn] = useState(user?.nickname_en || '');
+  // Name validation messages, shown under each name field.
+  const [nameErr, setNameErr] = useState({});
   const [age, setAge] = useState(user?.age || '');
   const [gender, setGender] = useState(user?.gender || '');
   const [activeCat, setActiveCat] = useState(CATS[0]);
@@ -44,8 +47,13 @@ export default function Profile() {
   }, [activeCat, user]);
 
   const save = async () => {
-    const nameErr = nicknameThError(nickname) || nicknameEnError(nicknameEn);
-    if (nameErr) return toast(t(nameErr));
+    const thErr = nicknameThError(nickname);
+    const enErr = nicknameEnError(nicknameEn);
+    if (thErr || enErr) {
+      setNameErr({ nickname: thErr && t(thErr), nicknameEn: enErr && t(enErr) });
+      document.getElementById(thErr ? 'pf-nickname' : 'pf-nicknameEn')?.focus();
+      return;
+    }
     setBusy(true);
     try {
       const d = await api.patch('/auth/me', { nickname, nickname_en: nicknameEn, age, gender });
@@ -56,7 +64,10 @@ export default function Profile() {
         </>,
       );
     } catch (e) {
-      toast(e.message);
+      const code = e.data?.error_code || '';
+      if (code.startsWith('NICKNAME_EN')) setNameErr({ nicknameEn: e.message });
+      else if (code.startsWith('NICKNAME')) setNameErr({ nickname: e.message });
+      else toast(e.message);
     } finally {
       setBusy(false);
     }
@@ -262,25 +273,37 @@ export default function Profile() {
         <div className="field">
           <label>{t('signup.nicknameTh')}</label>
           <input
+            id="pf-nickname"
             className="input"
             value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
+            onChange={(e) => {
+              setNickname(e.target.value);
+              setNameErr((cur) => ({ ...cur, nickname: undefined }));
+            }}
             placeholder={t('signup.nicknameThPh')}
             maxLength={40}
             lang="th"
+            {...invalidProps('nickname', nameErr)}
           />
+          <FieldError id="pf-nickname-err" msg={nameErr.nickname} />
         </div>
         <div className="field">
           <label>{t('signup.nicknameEn')}</label>
           <input
+            id="pf-nicknameEn"
             className="input"
             value={nicknameEn}
-            onChange={(e) => setNicknameEn(e.target.value)}
+            onChange={(e) => {
+              setNicknameEn(e.target.value);
+              setNameErr((cur) => ({ ...cur, nicknameEn: undefined }));
+            }}
             placeholder={t('signup.nicknameEnPh')}
             maxLength={40}
             lang="en"
             autoCapitalize="words"
+            {...invalidProps('nicknameEn', nameErr)}
           />
+          <FieldError id="pf-nicknameEn-err" msg={nameErr.nicknameEn} />
         </div>
         <div className="field">
           <label>{t('signup.age')}</label>
