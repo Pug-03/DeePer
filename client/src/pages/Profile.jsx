@@ -5,7 +5,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
-import { IcCamera, IcCheck, IcSettings, IcTrash } from '../components/icons.jsx';
+import { IcCamera, IcCheck, IcPlayCircle, IcSettings, IcTrash } from '../components/icons.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
@@ -169,6 +169,20 @@ export default function Profile() {
     } finally {
       setPartnerAvatarBusy(false);
     }
+  };
+
+  const replayTutorial = async () => {
+    const ok = await confirm({
+      icon: <IcPlayCircle size={36} />,
+      title: t('profile.tutorialConfirmTitle'),
+      message: t('profile.tutorialConfirmMessage'),
+      confirmText: t('profile.tutorialStart'),
+      danger: false,
+      pulse: false,
+    });
+    if (!ok) return;
+    localStorage.setItem('dt_tutorial_pending', '1');
+    nav('/app/home');
   };
 
   const initial = (user?.nickname || '?').trim().charAt(0).toUpperCase();
@@ -372,6 +386,10 @@ export default function Profile() {
 
       <button className="btn btn--primary" onClick={save} disabled={busy} style={{ marginBottom: 14 }}>
         {busy ? t('profile.saving') : t('profile.save')}
+      </button>
+
+      <button className="btn btn--ghost" onClick={replayTutorial} style={{ marginBottom: 14 }}>
+        <IcPlayCircle size={18} /> {t('profile.appTutorial')}
       </button>
 
       <button className="btn btn--ghost" onClick={() => nav('/app/profile/settings')}>

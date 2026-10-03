@@ -1254,6 +1254,9 @@ a {
   color: var(--red-bright);
   animation: iconPulse 1.6s ease-out infinite;
 }
+.modal-icon--static {
+  animation: none;
+}
 @keyframes iconPulse {
   0% {
     box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.55);

@@ -130,7 +130,9 @@ export function ConfirmProvider({ children }) {
             aria-labelledby="confirm-modal-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-icon">{state.icon || <IcTrash size={36} />}</div>
+            <div className={`modal-icon ${state.pulse === false ? 'modal-icon--static' : ''}`}>
+              {state.icon || <IcTrash size={36} />}
+            </div>
             <h3 className="modal-title" id="confirm-modal-title">
               {state.title || t('confirm.deleteTitle')}
             </h3>

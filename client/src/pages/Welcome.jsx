@@ -5,7 +5,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
-import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcBook } from '../components/icons.jsx';
+import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcFileText } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
 import { SPONSORS, SPONSOR_TIERS, SUPPORTERS } from '../sponsors-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
@@ -99,7 +99,7 @@ const FEATURES = [
   { Icon: IcUser, key: 'partner' },
   { Icon: IcShare, key: 'share' },
   { Icon: IcHistory, key: 'memory' },
-  { Icon: IcBook, key: 'history' },
+  { Icon: IcFileText, key: 'history' },
 ];
 
 // Dev-only preview of the marquee at any item count — never on by default,

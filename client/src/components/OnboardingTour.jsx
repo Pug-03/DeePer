@@ -274,6 +274,7 @@ export default function OnboardingTour() {
   const tutorial = useTutorial();
   const step = tutorial.step;
   const [closing, setClosing] = useState(false);
+  const lastSpot = useRef(null);
   const id = STEPS[step].id;
   const rect = useTargetRect(`[data-tut="${id}"]`);
   const isLast = step === STEPS.length - 1;
@@ -323,18 +324,23 @@ export default function OnboardingTour() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, rect]);
 
+  const pad = id.startsWith('nav') ? 4 : PAD;
   const baseRadius = STEP_RADIUS[id] ?? 20;
   // Outsetting a rounded rect by PAD flattens its curve unless the radius
   // grows by the same amount — so the frame keeps the target's true shape
   // instead of looking like a plain rounded box once padded out.
-  const spotRadius = baseRadius >= 500 ? baseRadius : baseRadius + PAD;
-
-  const spot = rect && {
-    top: rect.top - PAD,
-    left: rect.left - PAD,
-    width: rect.width + PAD * 2,
-    height: rect.height + PAD * 2,
+  const targetSpot = rect && {
+    top: rect.top - pad,
+    left: rect.left - pad,
+    width: rect.width + pad * 2,
+    height: rect.height + pad * 2,
+    borderRadius: baseRadius >= 500 ? baseRadius : baseRadius + pad,
   };
+  // Keep the old opening and its corner shape until the next target appears,
+  // so the spotlight glides between pages instead of vanishing mid-handoff.
+  if (targetSpot) lastSpot.current = targetSpot;
+  const spot = targetSpot || lastSpot.current;
+  const spotRadius = spot?.borderRadius ?? 20;
 
   let tipTop = null;
   if (spot) {
