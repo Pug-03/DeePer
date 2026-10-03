@@ -28,7 +28,7 @@ export default function BottomNav() {
             title={t(key)}
           >
             <span className="nav-ic">
-              <Icon size={24} fill={to === '/app/saved' && active ? 'currentColor' : 'none'} />
+              <Icon size={28} fill={to === '/app/saved' && active ? 'currentColor' : 'none'} />
             </span>
           </button>
         );
