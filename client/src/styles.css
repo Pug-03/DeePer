@@ -16,6 +16,11 @@
   --red: #f43f5e;
   --red-bright: #ff5a72;
   --red-deep: #be123c;
+  /* Saturated pink-red for the active category pill and the Answer button,
+     matched to the iOS app — the base --red gradient reads dull at that size. */
+  --hot: #ff1d5a;
+  --hot-deep: #d10039;
+  --glow-hot: 0 0 40px -6px rgba(255, 29, 90, 0.6);
   --green: #34d399;
   --text: #f4f1f2;
   --text-dim: #a8a0a6;
@@ -720,8 +725,8 @@ a {
 }
 .pill-bg {
   border-radius: 999px;
-  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
-  box-shadow: var(--glow-red);
+  background: linear-gradient(120deg, var(--hot), var(--hot-deep));
+  box-shadow: var(--glow-hot);
   z-index: 0;
 }
 .pill-bg--elastic {
@@ -977,10 +982,10 @@ a {
   color: #eab308;
 }
 .fab--check {
-  background: linear-gradient(120deg, var(--red), var(--red-deep));
+  background: linear-gradient(120deg, var(--hot), var(--hot-deep));
   border: none;
   color: #fff;
-  box-shadow: var(--glow-red);
+  box-shadow: var(--glow-hot);
 }
 /* ---------- Lists (saved / history) ---------- */
 .list {
