@@ -56,10 +56,13 @@ const CARD_EXIT_TRANSITION = { ...CARD_SPRING, opacity: { duration: 0.32, ease: 
 // Deck <-> add-form swap (Home header "Add question"), matching the iOS
 // app: opening pushes the whole deck off to the right while the form drops
 // in from above the header; closing lifts the form back out the top and
-// slides the deck in from the left. One shared iOS-style ease-out for every
-// value — giving opacity its own shorter transition made framer-motion snap
-// both layers back to full/zero opacity for a frame when that tween ended.
+// slides the deck in from the left. One shared iOS-style ease-out.
 const SWAP_TRANSITION = { duration: 0.4, ease: [0.32, 0.72, 0, 1] };
+// Passed as onUpdate to both swap layers. Any onUpdate stops framer-motion
+// from handing opacity to the browser (WAAPI): when that hardware animation
+// finished, the browser dropped it a frame before framer wrote the final
+// inline value, so both layers flashed back to their starting opacity.
+const KEEP_ON_MAIN_THREAD = () => {};
 const SWAP_LAYER = { gridArea: '1 / 1', minWidth: 0 };
 // Matches the resting look of the "next" preview card behind the deck
 // (see backScale/backY/backOpacity below) so promoting it to the top card
@@ -668,6 +671,20 @@ export default function Home() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [adding, setAdding] = useState(false);
+  // The swap wrapper clips x only while the deck/form swap animates (the
+  // deck slides a full width off-screen); clipping all the time also cut
+  // off the card's and buttons' glow. Toggled on the DOM node directly: a
+  // state update when the exit finishes re-rendered Home mid-handoff and
+  // flashed both layers at the wrong opacity for a frame.
+  const swapStageRef = useRef(null);
+  // Compared against the last value (not a "first run" flag) so StrictMode's
+  // double-invoked effect on mount doesn't count as a swap.
+  const prevAdding = useRef(adding);
+  useLayoutEffect(() => {
+    if (prevAdding.current === adding) return;
+    prevAdding.current = adding;
+    if (swapStageRef.current) swapStageRef.current.style.overflowX = 'clip';
+  }, [adding]);
   const [newQ, setNewQ] = useState('');
   const [addCat, setAddCat] = useState(() => localStorage.getItem('dt_cat') || 'couple');
   const tutorial = useTutorial();
@@ -937,138 +954,152 @@ export default function Home() {
 
         <CatTabs category={category} onSwitch={switchCat} />
 
-        {/* Form and deck share one grid cell so the outgoing view stays in
-            place while the incoming one crosses over it. Only x is clipped:
-            the deck travels a full width sideways, but the form has to be
-            free to rise up over the category tabs. */}
-        <div style={{ display: 'grid', overflowX: 'clip' }}>
-          <AnimatePresence initial={false}>
-            {adding ? (
-              <motion.div
-                key="add-form"
-                style={{ ...SWAP_LAYER, zIndex: 1 }}
-                initial={{ opacity: 0, y: -140 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -140 }}
-                transition={SWAP_TRANSITION}
-              >
-                <form className="glass" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
-                  <div className="field">
-                    <label>{t('home.addCatLabel')}</label>
-                    <select className="select" value={addCat} onChange={(e) => setAddCat(e.target.value)}>
-                      {CATS.map((c) => (
-                        <option key={c} value={c}>
-                          {t(`cat.${c}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <textarea
-                    className="textarea"
-                    style={{ minHeight: 80 }}
-                    placeholder={t('home.addPh')}
-                    value={newQ}
-                    onChange={(e) => setNewQ(e.target.value)}
-                    maxLength={200}
-                  />
-                  <div className="btn-row" style={{ marginTop: 10 }}>
-                    <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
-                      {t('common.cancel')}
-                    </button>
-                    <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
-                      {t('home.add')}
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="deck"
-                style={SWAP_LAYER}
-                initial={{ opacity: 0, x: '-100%' }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: '100%' }}
-                transition={SWAP_TRANSITION}
-              >
-                {status === 'loading' && <Loading label={t('home.loading')} />}
+        {/* Form and deck share one grid cell and both stay mounted; `adding`
+            only flips which one is shown. Mounting/unmounting them through
+            AnimatePresence flashed both at the wrong opacity for one frame
+            as the outgoing layer was removed. The hidden layer is `inert`
+            (no focus, taps or swipes) and visibility:hidden once it's out.
+            Only x is clipped, and only mid-swap: the deck travels a full
+            width sideways, but the form has to rise up over the tabs. */}
+        <div className="swap-stage" ref={swapStageRef}>
+          <motion.div
+            style={{ ...SWAP_LAYER, zIndex: 1, alignSelf: 'start' }}
+            inert={adding ? undefined : ''}
+            aria-hidden={!adding}
+            initial={{ opacity: 0, y: -140, visibility: 'hidden' }}
+            animate={
+              adding
+                ? { opacity: 1, y: 0, visibility: 'visible' }
+                : { opacity: 0, y: -140, transitionEnd: { visibility: 'hidden' } }
+            }
+            transition={SWAP_TRANSITION}
+            onUpdate={KEEP_ON_MAIN_THREAD}
+          >
+            <form className="glass" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
+              <div className="field">
+                <label>{t('home.addCatLabel')}</label>
+                <select className="select" value={addCat} onChange={(e) => setAddCat(e.target.value)}>
+                  {CATS.map((c) => (
+                    <option key={c} value={c}>
+                      {t(`cat.${c}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                className="textarea"
+                style={{ minHeight: 80 }}
+                placeholder={t('home.addPh')}
+                value={newQ}
+                onChange={(e) => setNewQ(e.target.value)}
+                maxLength={200}
+              />
+              <div className="btn-row" style={{ marginTop: 10 }}>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
+                  {t('common.cancel')}
+                </button>
+                <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
+                  {t('home.add')}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+          <motion.div
+            className="swap-deck"
+            style={SWAP_LAYER}
+            inert={adding ? '' : undefined}
+            aria-hidden={adding}
+            initial={false}
+            animate={
+              adding
+                ? // Leaves to the right, then parks off the left edge while
+                  // hidden so it comes back in from the left.
+                  { opacity: 0, x: '100%', transitionEnd: { x: '-100%', visibility: 'hidden' } }
+                : { opacity: 1, x: 0, visibility: 'visible' }
+            }
+            transition={SWAP_TRANSITION}
+            onUpdate={KEEP_ON_MAIN_THREAD}
+            onAnimationComplete={() => {
+              if (swapStageRef.current) swapStageRef.current.style.overflowX = '';
+            }}
+          >
+            {status === 'loading' && <Loading label={t('home.loading')} />}
 
-                {status === 'error' && (
-                  <ErrorState message={error} onRetry={() => fetchBatch(category, { reset: true })} />
-                )}
-
-                {status === 'empty' && (
-                  <EmptyState
-                    icon={<IcCards size={44} />}
-                    title={t('home.emptyTitle')}
-                    subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
-                    action={
-                      <div className="btn-row" style={{ marginTop: 10 }}>
-                        <button
-                          className="btn btn--ghost btn--sm"
-                          onClick={() => fetchBatch(category, { reset: true })}
-                        >
-                          {t('home.restart')}
-                        </button>
-                        {aiEnabled && (
-                          <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
-                            {generating ? (
-                              t('home.generating')
-                            ) : (
-                              <>
-                                <IcSparkle size={16} /> {t('home.genAi')}
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    }
-                  />
-                )}
-
-                {status === 'ready' && current && (
-                  <>
-                    <DeckStack
-                      current={current}
-                      next={deck[idx + 1]}
-                      onSkip={advance}
-                      onAnswer={goAnswer}
-                      onSave={save}
-                      enterDir={enterDir}
-                      flyRegistry={flyRegistry}
-                      saved={saveFlash}
-                    />
-
-                    <div className="actions">
-                      <button
-                        className="fab fab-md fab--x"
-                        data-tut="actionSkip"
-                        onClick={doSkip}
-                        aria-label={t('home.aSkip')}
-                      >
-                        <IcX size={26} />
-                      </button>
-                      <button
-                        className="fab fab-md fab--save"
-                        data-tut="actionSave"
-                        onClick={save}
-                        aria-label={t('home.aSave')}
-                      >
-                        <IcBookmark size={26} />
-                      </button>
-                      <button
-                        className="fab fab-md fab--check"
-                        data-tut="actionAnswer"
-                        onClick={doAnswer}
-                        aria-label={t('home.aAnswer')}
-                      >
-                        <IcCheck size={26} />
-                      </button>
-                    </div>
-                  </>
-                )}
-              </motion.div>
+            {status === 'error' && (
+              <ErrorState message={error} onRetry={() => fetchBatch(category, { reset: true })} />
             )}
-          </AnimatePresence>
+
+            {status === 'empty' && (
+              <EmptyState
+                icon={<IcCards size={44} />}
+                title={t('home.emptyTitle')}
+                subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
+                action={
+                  <div className="btn-row" style={{ marginTop: 10 }}>
+                    <button
+                      className="btn btn--ghost btn--sm"
+                      onClick={() => fetchBatch(category, { reset: true })}
+                    >
+                      {t('home.restart')}
+                    </button>
+                    {aiEnabled && (
+                      <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
+                        {generating ? (
+                          t('home.generating')
+                        ) : (
+                          <>
+                            <IcSparkle size={16} /> {t('home.genAi')}
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                }
+              />
+            )}
+
+            {status === 'ready' && current && (
+              <>
+                <DeckStack
+                  current={current}
+                  next={deck[idx + 1]}
+                  onSkip={advance}
+                  onAnswer={goAnswer}
+                  onSave={save}
+                  enterDir={enterDir}
+                  flyRegistry={flyRegistry}
+                  saved={saveFlash}
+                />
+
+                <div className="actions">
+                  <button
+                    className="fab fab-md fab--x"
+                    data-tut="actionSkip"
+                    onClick={doSkip}
+                    aria-label={t('home.aSkip')}
+                  >
+                    <IcX size={26} />
+                  </button>
+                  <button
+                    className="fab fab-md fab--save"
+                    data-tut="actionSave"
+                    onClick={save}
+                    aria-label={t('home.aSave')}
+                  >
+                    <IcBookmark size={26} />
+                  </button>
+                  <button
+                    className="fab fab-md fab--check"
+                    data-tut="actionAnswer"
+                    onClick={doAnswer}
+                    aria-label={t('home.aAnswer')}
+                  >
+                    <IcCheck size={26} />
+                  </button>
+                </div>
+              </>
+            )}
+          </motion.div>
         </div>
       </div>
     </>

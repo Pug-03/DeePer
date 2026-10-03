@@ -176,6 +176,11 @@ a {
 .stagger > .deck {
   animation: none;
 }
+/* Home wraps the deck in .swap-stage (deck <-> add-form swap), which makes
+   the wrapper the stagger item instead — same flash, same fix. */
+.stagger > .swap-stage {
+  animation: none;
+}
 /* Modal overlays are conditionally rendered late in a page's JSX, so when a
    modal opens it lands as one of the last direct children of `.stagger` and
    would otherwise inherit that child's nth-child entrance delay (up to
@@ -760,6 +765,18 @@ a {
 }
 
 /* ---------- Question card deck ---------- */
+/* Home's swap wrapper has to pass the page's leftover height down, or
+   .deck's flex:1 below has nothing to grow into and the card collapses to
+   its min-height. Both layers share the one grid cell. */
+.swap-stage {
+  flex: 1;
+  display: grid;
+  grid-template: 1fr / 1fr;
+}
+.swap-deck {
+  display: flex;
+  flex-direction: column;
+}
 .deck {
   position: relative;
   flex: 1;
