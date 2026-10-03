@@ -102,7 +102,7 @@ export const STRINGS = {
     'welcome.supporters.tier.high': 'ผู้สนับสนุนระดับทอง',
     'welcome.supporters.tier.medium': 'ผู้สนับสนุนระดับเงิน',
     'welcome.supporters.tier.general': 'ผู้สนับสนุนระดับทองแดง',
-    'welcome.supporters.tier.individual': 'ผู้สนับสนุนรายบุคคล',
+    'welcome.supporters.tier.individual': 'เพื่อนของ DeePer',
 
     // นำทางล่าง
     'nav.home': 'หน้าหลัก',
@@ -514,7 +514,7 @@ export const STRINGS = {
     'welcome.supporters.tier.high': 'Gold sponsors',
     'welcome.supporters.tier.medium': 'Silver sponsors',
     'welcome.supporters.tier.general': 'Bronze sponsors',
-    'welcome.supporters.tier.individual': 'Individual supporters',
+    'welcome.supporters.tier.individual': 'Friends of DeePer',
 
     'nav.home': 'Home',
     'nav.saved': 'Saved',

@@ -26,6 +26,9 @@ if (rows.length === 0) {
     console.log(`     จำนวนเงิน : ${amount}`);
     console.log(`     โอนเมื่อ  : ${r.transfer_date} ${r.transfer_time}`);
     console.log(`     ส่งเมื่อ  : ${r.created_at}  ${r.notified ? '✓ ส่งเข้าอีเมลสรุปแล้ว' : '• รอส่งเข้าอีเมลสรุป'}`);
+    console.log(
+      `     หน้าเว็บ  : ${r.approved_at ? `✓ ขึ้นชื่อแล้ว (อนุมัติ ${r.approved_at})` : `• ยังไม่ขึ้น — อนุมัติด้วย npm run approve -- ${r.id}`}`,
+    );
     console.log(`     สลิป      : ${join(SLIP_DIR, basename(r.slip_path))}`);
     console.log('');
   }

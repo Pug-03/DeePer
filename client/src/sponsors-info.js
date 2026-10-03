@@ -32,11 +32,14 @@ export const SPONSORS = [
 // Display order of the tiers; each renders as its own labeled group.
 export const SPONSOR_TIERS = ['high', 'medium', 'general'];
 
-// Individual supporters — people who chipped in a small amount (around
-// 100–200 baht). Shown below the bronze tier as one auto-scrolling row of
-// name chips. `avatar` (an imported image) is optional; without it the chip
+// "เพื่อนของ DeePer" — people who chipped in a small amount (around
+// 100–500 baht). Shown below the bronze tier as one auto-scrolling row of
+// name chips. Donors who send a slip through the site are added
+// automatically once approved (server: npm run proofs, then
+// npm run approve -- <id>); this list is only for names to add by hand. `avatar` (an imported image) is optional; without it the chip
 // shows the name's initial in a red circle. Add real names here only once
-// the person has agreed to be listed. The row is hidden while this is empty.
+// the person has agreed to be listed. The row is hidden while there are no
+// names from either source.
 export const SUPPORTERS = [
   // { name: 'มิว' },
 ];

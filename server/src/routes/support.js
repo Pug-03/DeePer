@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
+import { approvedSupporterNames } from '../supporters.js';
 
 const router = Router();
 
@@ -58,6 +59,12 @@ router.post('/proof', requireAuth, handleSlip, (req, res) => {
   ).run(req.user.id, displayName.slice(0, 80), transferDate.slice(0, 20), transferTime.slice(0, 10), amount, slipUrl);
 
   res.json({ ok: true });
+});
+
+// Public: names of donors whose proof the maintainer has approved, for the
+// "เพื่อนของ DeePer" tier on the landing page.
+router.get('/supporters', (req, res) => {
+  res.json({ supporters: approvedSupporterNames() });
 });
 
 export default router;

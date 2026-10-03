@@ -1897,6 +1897,11 @@ span.supporter-avatar-static {
 .sponsor-tier-individual {
   margin-top: 28px;
 }
+/* "เพื่อนของ DeePer" — keep the brand's own casing instead of the tier
+   labels' all-caps. */
+.sponsor-tier-individual .sponsor-tier-label {
+  text-transform: none;
+}
 @media (max-width: 480px) {
   .sponsor-wall {
     gap: 14px 22px;

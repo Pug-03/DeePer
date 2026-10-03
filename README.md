@@ -283,6 +283,8 @@ Dee_Per/
 | `npm run dev:client` | รัน Vite dev server ที่พอร์ต 5173 |
 | `npm run build` | build client ไปที่ `client/dist` |
 | `npm start` | รัน production (เสิร์ฟ API + static ที่พอร์ตเดียว) |
+| `npm run proofs` | ดูหลักฐานการโอนของผู้สนับสนุนทั้งหมด พร้อมเลข id และสถานะว่าขึ้นชื่อบนเว็บแล้วหรือยัง |
+| `npm run approve -- <id>` | อนุมัติหลักฐาน (ตรวจสลิปก่อน) ชื่อผู้บริจาคจะขึ้นในระดับ "เพื่อนของ DeePer" หน้าแรก — ใส่ `--revoke` เพื่อซ่อนชื่อกลับ |
 
 ---
 

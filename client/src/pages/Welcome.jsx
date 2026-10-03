@@ -444,8 +444,29 @@ export default function Welcome() {
   const { t, lang } = useI18n();
   const [userCount, setUserCount] = useState(null);
   const mockSupporterCount = useMockSupporterCountForPreview();
+  // Donors whose transfer proof the maintainer approved (npm run approve),
+  // on top of any names hard-coded in SUPPORTERS. Empty until it loads; the
+  // tier simply stays hidden if the request fails.
+  const [approvedSupporters, setApprovedSupporters] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/support/supporters', { auth: false })
+      .then((d) => {
+        if (!cancelled) setApprovedSupporters(d.supporters.map((name) => ({ name })));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const activeSupporters =
-    mockSupporterCount > 0 ? makeMockSupportersDevOnly(mockSupporterCount) : SUPPORTERS;
+    mockSupporterCount > 0
+      ? makeMockSupportersDevOnly(mockSupporterCount)
+      : [
+          ...SUPPORTERS,
+          ...approvedSupporters.filter((a) => !SUPPORTERS.some((s) => s.name === a.name)),
+        ];
 
   // Public stat — keeps retrying every 5s while the page is open, so the
   // count fills in once the server is reachable instead of sticking on "···".
@@ -608,8 +629,9 @@ export default function Welcome() {
           </Reveal>
           {SPONSORS.length > 0 && <SponsorTiers t={t} />}
           {activeSupporters.length > 0 ? (
-            // Lowest tier, below bronze: individual supporters (small
-            // donations) as one auto-scrolling row of name chips — it loops
+            // Lowest tier, below bronze: "เพื่อนของ DeePer", people who
+            // donated through the site (approved proofs, plus SUPPORTERS),
+            // as one auto-scrolling row of name chips — it loops
             // even with only a couple of names, since short rows repeat
             // their items into a longer set (see SupportersRow).
             <Reveal className="sponsor-tier sponsor-tier-individual">

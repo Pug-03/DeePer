@@ -221,6 +221,11 @@ if (proofCols.length) {
     `);
     db.exec(`ALTER TABLE support_proofs DROP COLUMN transfer_at`);
   }
+  // support_proofs.approved_at — set once the maintainer has checked the
+  // slip (npm run approve); only approved donors' names are shown publicly.
+  if (!proofCols.some((c) => c.name === 'approved_at')) {
+    db.exec(`ALTER TABLE support_proofs ADD COLUMN approved_at TEXT`);
+  }
 }
 
 // Seed the curated question bank once.
