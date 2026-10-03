@@ -1146,6 +1146,11 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  /* Tabs are icon-only now; a fixed tab height keeps the bar from
+     shrinking to just the icon (70px tab -> 92px bar, a touch taller than
+     the old labelled 83px bar), with the icon centred in the space. */
+  min-height: 70px;
   gap: 3px;
   padding: 8px 0;
   color: var(--text-faint);
