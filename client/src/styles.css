@@ -1870,6 +1870,19 @@ span.supporter-avatar-static {
 .sponsor-tier-general .sponsor-logo img {
   max-width: 130px;
 }
+/* Bronze logos always share one row: instead of wrapping on narrow phones,
+   each logo may shrink, and its image scales down within it (object-fit
+   keeps the aspect ratio), so the row stays put at any width. */
+.sponsor-tier-general .sponsor-wall {
+  flex-wrap: nowrap;
+}
+.sponsor-tier-general .sponsor-logo {
+  flex-shrink: 1;
+  min-width: 0;
+}
+.sponsor-tier-general .sponsor-logo img {
+  max-width: min(130px, 100%);
+}
 .sponsor-tier .supporters-marquee-group {
   margin-top: 0;
 }

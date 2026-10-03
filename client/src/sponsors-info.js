@@ -3,26 +3,30 @@
 // Welcome.jsx). Logo files are prepared for the near-black page: background
 // removed (transparent), trimmed to the artwork, downscaled to at most
 // 480x160, and dark ink (black/navy/gray text) recolored to white so it stays
-// legible — brand colors are left as-is. DotTH uses the navy color shown in
-// the sponsor reference. Re-derive PNGs from the originals rather than editing
-// them by hand.
+// legible — brand colors are left as-is. DotTH and TWA are all-white
+// wordmarks. Re-derive PNGs from the originals rather than editing them by
+// hand.
 //
 // `tier` groups the logo wall into levels, largest first: 'high' (ระดับทอง),
 // 'medium' (ระดับเงิน), 'general' (ระดับทองแดง). See SPONSOR_TIERS below.
 // A tier with no sponsors is simply not shown.
-import aiPreneur from './assets/sponsors/ai-preneur.png';
+// AWS keeps its vector paths (Wikimedia Commons SVG) with the dark "aws"
+// wordmark recolored to white; the orange smile stays brand orange.
+import aws from './assets/sponsors/aws.svg';
 import depa from './assets/sponsors/depa.png';
-// DotTH keeps its vector paths, with a tight viewBox and navy ink.
+// DotTH keeps its vector paths, with a tight viewBox and white ink.
 import dotth from './assets/sponsors/dotth.svg';
 import microsoft from './assets/sponsors/microsoft.png';
+import twa from './assets/sponsors/twa.png';
 import yeah from './assets/sponsors/yeah.png';
 
 export const SPONSORS = [
   { name: 'depa', logo: depa, tier: 'high' },
   { name: 'Microsoft', logo: microsoft, tier: 'medium' },
+  { name: 'AWS', logo: aws, tier: 'medium' },
   { name: 'Yeah', logo: yeah, tier: 'general' },
   { name: 'DotTH', logo: dotth, tier: 'general' },
-  { name: 'AI Preneur', logo: aiPreneur, tier: 'general' },
+  { name: 'TWA', logo: twa, tier: 'general' },
 ];
 
 // Display order of the tiers; each renders as its own labeled group.
