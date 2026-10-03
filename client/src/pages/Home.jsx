@@ -26,7 +26,7 @@ import {
   IcDownload,
   IcHistory,
 } from '../components/icons.jsx';
-import { catLabel, CATS } from '../util.js';
+import { CATS } from '../util.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 import { pickMemory, memoryRelativeLabel } from '../utils/memory.js';
 
@@ -173,7 +173,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     navigator.vibrate?.(15);
     setSharing(true);
     try {
-      const blob = await renderShareCard({ text: q.text, categoryLabel: catLabel(q.category) });
+      const blob = await renderShareCard({ text: q.text, label: 'DeePer' });
       if (!blob) throw new Error('render failed');
       if (sharePreviewUrlRef.current) URL.revokeObjectURL(sharePreviewUrlRef.current);
       const url = URL.createObjectURL(blob);

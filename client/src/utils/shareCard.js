@@ -103,10 +103,10 @@ function fitText(ctx, text, maxWidth, maxHeight, { max = 64, min = 32, lineHeigh
 
 /**
  * Draw the branded share card and resolve a PNG Blob.
- * @param {{ text: string, categoryLabel: string }} q
+ * @param {{ text: string, label: string }} q
  * @returns {Promise<Blob|null>}
  */
-export async function renderShareCard({ text, categoryLabel }) {
+export async function renderShareCard({ text, label: pillText }) {
   await ensureFonts();
 
   const canvas = document.createElement('canvas');
@@ -149,10 +149,11 @@ export async function renderShareCard({ text, categoryLabel }) {
   ctx.strokeStyle = 'rgba(244, 63, 94, 0.55)';
   ctx.stroke();
 
-  // Category pill, top-left of the card (mirrors .q-source on the real card).
-  if (categoryLabel) {
+  // Brand pill, top-left of the card (mirrors .q-source on the real card,
+  // which reads "DEEPER" rather than the question's category).
+  if (pillText) {
     ctx.font = '600 26px "IBM Plex Sans Thai", sans-serif';
-    const label = categoryLabel.toUpperCase();
+    const label = pillText.toUpperCase();
     const padX = 26;
     const pillW = ctx.measureText(label).width + padX * 2;
     const pillH = 56;
