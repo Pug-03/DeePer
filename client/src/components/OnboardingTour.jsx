@@ -349,7 +349,14 @@ export default function OnboardingTour() {
   }
 
   return (
-    <AnimatePresence onExitComplete={tutorial.stop}>
+    // Finishing or skipping the tour lands back on Home — it otherwise ends
+    // on whatever page its last step was on (History, Saved, ...).
+    <AnimatePresence
+      onExitComplete={() => {
+        tutorial.stop();
+        if (pathname !== '/app/home') nav('/app/home');
+      }}
+    >
       {!closing && (
         <motion.div
           className="tut-overlay"
