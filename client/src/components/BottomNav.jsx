@@ -23,12 +23,13 @@ export default function BottomNav() {
             className={`nav-item ${active ? 'active' : ''}`}
             data-tut={tut}
             onClick={() => nav(to)}
+            // Icon-only tabs: the label lives here (and as a tooltip) only.
             aria-label={t(key)}
+            title={t(key)}
           >
             <span className="nav-ic">
               <Icon size={24} fill={to === '/app/saved' && active ? 'currentColor' : 'none'} />
             </span>
-            {t(key)}
           </button>
         );
       })}
