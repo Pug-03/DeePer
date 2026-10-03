@@ -671,9 +671,12 @@ export default function Home() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [adding, setAdding] = useState(false);
-  // The swap wrapper clips x only while the deck/form swap animates (the
-  // deck slides a full width off-screen); clipping all the time also cut
-  // off the card's and buttons' glow. Toggled on the DOM node directly: a
+  // The swap wrapper clips x from the moment the swap starts until the deck
+  // is back at rest — i.e. the whole time the form is open too, since the
+  // hidden deck stays parked a full width off to the side and would
+  // otherwise let the page scroll sideways. Clipping while the deck is
+  // showing would cut off its and the buttons' glow. Toggled on the DOM
+  // node directly: a
   // state update when the exit finishes re-rendered Home mid-handoff and
   // flashed both layers at the wrong opacity for a frame.
   const swapStageRef = useRef(null);
@@ -1020,7 +1023,9 @@ export default function Home() {
             transition={SWAP_TRANSITION}
             onUpdate={KEEP_ON_MAIN_THREAD}
             onAnimationComplete={() => {
-              if (swapStageRef.current) swapStageRef.current.style.overflowX = '';
+              // Only once the deck has come back; while the form is open it
+              // sits off-screen and the clip has to stay.
+              if (!adding && swapStageRef.current) swapStageRef.current.style.overflowX = '';
             }}
           >
             {status === 'loading' && <Loading label={t('home.loading')} />}
