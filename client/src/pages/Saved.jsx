@@ -100,7 +100,7 @@ export default function Saved() {
 
   return (
     <div className="page page--tab stagger">
-      <div className="header" data-tut="savedIntro">
+      <div className="header">
         <h1 className="h1">{t('saved.title')}</h1>
         <p className="sub">{t('saved.sub')}</p>
       </div>

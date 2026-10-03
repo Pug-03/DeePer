@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { api } from '../api.js';
 
 // Holds the onboarding tour's state at a level that survives route changes —
 // OnboardingTour is mounted once in TabLayout (a sibling of <Outlet/>, same
@@ -22,6 +23,19 @@ export function TutorialProvider({ children }) {
   const start = useCallback(() => {
     setStep(0);
     setActive(true);
+    // The tour goes straight from the Home nav step to savedItem/historyItem,
+    // so it can't wait for Saved.jsx / History.jsx to report on their own
+    // mount — by then goToStep has already judged the step and skipped it.
+    // Ask up front instead; both land long before the tour gets that far.
+    // On failure the flag stays null and the step is skipped as before.
+    api
+      .get('/saved')
+      .then((d) => setSavedHasItems(d.saved.length > 0))
+      .catch(() => {});
+    api
+      .get('/history')
+      .then((d) => setHistoryHasItems(d.history.length > 0))
+      .catch(() => {});
   }, []);
 
   const stop = useCallback(() => {

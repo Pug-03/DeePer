@@ -58,10 +58,8 @@ const STEPS = [
   { id: 'actionAnswer', route: '/app/home' },
   { id: 'navHome', route: '/app/home' },
   { id: 'navSaved', route: '/app/home' },
-  { id: 'savedIntro', route: '/app/saved' },
   { id: 'savedItem', route: '/app/saved', requires: 'savedHasItems' },
   { id: 'navHistory', route: '/app/saved' },
-  { id: 'historyIntro', route: '/app/history' },
   { id: 'historyItem', route: '/app/history', requires: 'historyHasItems' },
   { id: 'navProfile', route: '/app/history' },
 ];
@@ -76,8 +74,8 @@ const TIP_CONTENT_TRANSITION = { duration: 0.18, ease: EASE };
 // .card-item) so the highlight frame hugs the real shape instead of a generic
 // rounded box. Single controls (add, deck, savedItem, historyItem) use their
 // exact real radius; rows of separate round buttons (cats, actions) read best
-// as a full pill wrap around them. savedIntro/historyIntro (a plain text
-// block, no card) fall through to the default radius below.
+// as a full pill wrap around them. Anything unlisted falls through to the
+// default radius below.
 const STEP_RADIUS = {
   add: 22,
   cats: 999,
@@ -293,7 +291,7 @@ export default function OnboardingTour() {
   //
   // `dir` keeps walking past any not-allowed step (savedItem/historyItem
   // with nothing to point at) in the direction the user was already
-  // moving, so Back from navHistory lands on savedIntro, not on a step
+  // moving, so Back from navHistory lands on navSaved, not on a step
   // that got skipped on the way there.
   const goToStep = (rawIndex, dir) => {
     let idx = rawIndex;

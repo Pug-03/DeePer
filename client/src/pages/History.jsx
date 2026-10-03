@@ -58,7 +58,7 @@ export default function History() {
 
   return (
     <div className="page page--tab stagger">
-      <div className="header" data-tut="historyIntro">
+      <div className="header">
         <h1 className="h1">{t('history.title')}</h1>
         <p className="sub">{t('history.sub')}</p>
       </div>
