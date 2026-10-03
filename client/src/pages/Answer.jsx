@@ -155,7 +155,9 @@ export default function Answer() {
         </div>
       )}
 
-      <div className="mt-a stack" style={{ marginTop: 24 }}>
+      {/* Sits right under the answer field (its 16px margin is the only gap)
+          instead of being pushed down with extra space above it. */}
+      <div className="stack">
         <button className="btn btn--primary" onClick={save} disabled={busy}>
           {busy ? t('answer.saving') : t('answer.save')}
         </button>
