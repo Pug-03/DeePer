@@ -9,7 +9,7 @@ import { IcCamera, IcCheck, IcPlayCircle, IcSettings, IcTrash } from '../compone
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
-import { CATS } from '../util.js';
+import { CATS, displayName, nicknameThError, nicknameEnError } from '../util.js';
 
 const GENDER_VALUES = ['', 'female', 'male', 'other', 'prefer_not'];
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
@@ -19,9 +19,10 @@ export default function Profile() {
   const toast = useToast();
   const confirm = useConfirm();
   const { user, setUser } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [nickname, setNickname] = useState(user?.nickname || '');
+  const [nicknameEn, setNicknameEn] = useState(user?.nickname_en || '');
   const [age, setAge] = useState(user?.age || '');
   const [gender, setGender] = useState(user?.gender || '');
   const [activeCat, setActiveCat] = useState(CATS[0]);
@@ -43,9 +44,11 @@ export default function Profile() {
   }, [activeCat, user]);
 
   const save = async () => {
+    const nameErr = nicknameThError(nickname) || nicknameEnError(nicknameEn);
+    if (nameErr) return toast(t(nameErr));
     setBusy(true);
     try {
-      const d = await api.patch('/auth/me', { nickname, age, gender });
+      const d = await api.patch('/auth/me', { nickname, nickname_en: nicknameEn, age, gender });
       setUser(d.user);
       toast(
         <>
@@ -185,7 +188,7 @@ export default function Profile() {
     nav('/app/home');
   };
 
-  const initial = (user?.nickname || '?').trim().charAt(0).toUpperCase();
+  const initial = (displayName(user, lang) || '?').trim().charAt(0).toUpperCase();
 
   return (
     <div className="page page--tab stagger">
@@ -219,7 +222,7 @@ export default function Profile() {
           />
         </div>
         <div className="profile-header-info">
-          <h1 className="h2">{user?.nickname}</h1>
+          <h1 className="h2">{displayName(user, lang)}</h1>
           <p className="faint" style={{ margin: '4px 0 0' }}>
             {user?.email || t('common.googleAccount')} {user?.via_google ? '· Google' : ''}
           </p>
@@ -257,8 +260,27 @@ export default function Profile() {
           {t('profile.myInfo')}
         </h2>
         <div className="field">
-          <label>{t('signup.nickname')}</label>
-          <input className="input" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={40} />
+          <label>{t('signup.nicknameTh')}</label>
+          <input
+            className="input"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder={t('signup.nicknameThPh')}
+            maxLength={40}
+            lang="th"
+          />
+        </div>
+        <div className="field">
+          <label>{t('signup.nicknameEn')}</label>
+          <input
+            className="input"
+            value={nicknameEn}
+            onChange={(e) => setNicknameEn(e.target.value)}
+            placeholder={t('signup.nicknameEnPh')}
+            maxLength={40}
+            lang="en"
+            autoCapitalize="words"
+          />
         </div>
         <div className="field">
           <label>{t('signup.age')}</label>

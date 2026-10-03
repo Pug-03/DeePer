@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import { displayName } from '../util.js';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcCheck } from '../components/icons.jsx';
 
@@ -10,7 +11,7 @@ export default function Answer() {
   const nav = useNavigate();
   const loc = useLocation();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const toast = useToast();
 
   const q = loc.state?.question;
@@ -41,7 +42,7 @@ export default function Answer() {
     );
   }
 
-  const myName = user?.nickname || t('answer.we');
+  const myName = displayName(user, lang) || t('answer.we');
   const pName = partnerName || partnerDefault;
 
   const save = async () => {
@@ -93,7 +94,7 @@ export default function Answer() {
           onClick={() => setTurn('me')}
         >
           <span className="turn-dot" style={{ background: '#fff' }} />
-          {user?.nickname || t('answer.us')}
+          {displayName(user, lang) || t('answer.us')}
         </button>
         <button
           className={`turn-tab ${turn === 'partner' ? 'active' : ''}`}

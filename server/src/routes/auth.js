@@ -164,18 +164,35 @@ router.post('/otp/verify', authLimiter, (req, res) => {
   res.json({ ok: true });
 });
 
+// Signup asks for the nickname twice: in Thai (stored in `nickname`) and in
+// English (`nickname_en`). The Thai one must contain Thai script and no
+// Latin letters; the English one only Latin letters plus space . ' -.
+const THAI_RE = /[\u0E00-\u0E7F]/;
+const LATIN_RE = /[A-Za-z]/;
+const EN_NAME_RE = /^[A-Za-z][A-Za-z .'-]*$/;
+
+function nameError(nickname, nicknameEn) {
+  const th = String(nickname ?? '').trim();
+  const en = String(nicknameEn ?? '').trim();
+  if (!th) return { error: 'กรุณากรอกชื่อเล่นภาษาไทย', error_code: 'NICKNAME_REQUIRED' };
+  if (!THAI_RE.test(th) || LATIN_RE.test(th))
+    return { error: 'ชื่อเล่นภาษาไทยต้องเป็นตัวอักษรไทย', error_code: 'NICKNAME_TH_INVALID' };
+  if (!en) return { error: 'กรุณากรอกชื่อเล่นภาษาอังกฤษ', error_code: 'NICKNAME_EN_REQUIRED' };
+  if (!EN_NAME_RE.test(en))
+    return { error: 'ชื่อเล่นภาษาอังกฤษต้องเป็นตัวอักษรภาษาอังกฤษ', error_code: 'NICKNAME_EN_INVALID' };
+  return null;
+}
+
 // --- Step 3: complete email signup ---
 router.post('/register', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
-  const { nickname, age, gender, password } = req.body;
+  const { nickname, nickname_en: nicknameEn, age, gender, password } = req.body;
 
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
-  if (!nickname || String(nickname).trim().length < 1)
-    return res
-      .status(400)
-      .json({ error: 'กรุณากรอกชื่อเล่น', error_code: 'NICKNAME_REQUIRED' });
+  const badName = nameError(nickname, nicknameEn);
+  if (badName) return res.status(400).json(badName);
   if (age == null || age === '' || Number.isNaN(Number(age)))
     return res.status(400).json({ error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' });
   if (!gender)
@@ -205,12 +222,13 @@ router.post('/register', authLimiter, (req, res) => {
 
   const info = db
     .prepare(
-      `INSERT INTO users (email, nickname, age, gender, password_hash)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO users (email, nickname, nickname_en, age, gender, password_hash)
+       VALUES (?, ?, ?, ?, ?, ?)`,
     )
     .run(
       email,
       String(nickname).trim(),
+      String(nicknameEn).trim(),
       age ? Number(age) : null,
       gender || null,
       hashPassword(password),
@@ -382,7 +400,7 @@ router.post('/google', async (req, res) => {
 
   if (!user) {
     // New Google account — needs profile completion (nickname/age/gender).
-    const { nickname, age, gender } = req.body;
+    const { nickname, nickname_en: nicknameEn, age, gender } = req.body;
     if (!nickname || String(nickname).trim().length < 1) {
       return res.json({
         needs_profile: true,
@@ -390,16 +408,25 @@ router.post('/google', async (req, res) => {
         suggested_nickname: payload.given_name || payload.name || '',
       });
     }
+    const badName = nameError(nickname, nicknameEn);
+    if (badName) return res.status(400).json(badName);
     if (age == null || age === '' || Number.isNaN(Number(age)))
       return res.status(400).json({ error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' });
     if (!gender)
       return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
     const info = db
       .prepare(
-        `INSERT INTO users (email, google_sub, nickname, age, gender)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO users (email, google_sub, nickname, nickname_en, age, gender)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
-      .run(email || null, sub, String(nickname).trim(), age ? Number(age) : null, gender || null);
+      .run(
+        email || null,
+        sub,
+        String(nickname).trim(),
+        String(nicknameEn).trim(),
+        age ? Number(age) : null,
+        gender || null,
+      );
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   }
 
@@ -455,11 +482,23 @@ router.post('/me/logout-other-devices', requireAuth, (req, res) => {
 
 // --- Update profile ---
 router.patch('/me', requireAuth, (req, res) => {
-  const { nickname, age, gender } = req.body;
+  const { nickname, nickname_en: nicknameEn, age, gender } = req.body;
   const u = req.user;
 
-  db.prepare(`UPDATE users SET nickname = ?, age = ?, gender = ? WHERE id = ?`).run(
-    nickname != null ? String(nickname).trim() : u.nickname,
+  // Either name may be sent on its own; the resulting pair is validated as
+  // at signup. The one exception: an account made before English names
+  // existed can still save its Thai name alone until it adds one.
+  const nextTh = nickname != null ? String(nickname).trim() : u.nickname;
+  const nextEn = nicknameEn != null ? String(nicknameEn).trim() : u.nickname_en;
+  if (nickname != null || nicknameEn != null) {
+    const badName = nameError(nextTh, nextEn);
+    const legacyNoEn = nicknameEn == null && !nextEn && badName?.error_code === 'NICKNAME_EN_REQUIRED';
+    if (badName && !legacyNoEn) return res.status(400).json(badName);
+  }
+
+  db.prepare(`UPDATE users SET nickname = ?, nickname_en = ?, age = ?, gender = ? WHERE id = ?`).run(
+    nextTh,
+    nextEn ?? null,
     age != null && age !== '' ? Number(age) : u.age,
     gender != null ? gender : u.gender,
     u.id,

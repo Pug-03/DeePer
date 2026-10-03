@@ -21,3 +21,27 @@ export function formatDate(s) {
     d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) + ` ${time}`
   );
 }
+
+// The nickname is kept in Thai (`nickname`) and English (`nickname_en`);
+// show the one matching the app language. Accounts from before English
+// names existed fall back to the Thai one.
+export function displayName(user, lang) {
+  if (!user) return '';
+  return (lang === 'en' && user.nickname_en) || user.nickname || '';
+}
+
+// Same rules as the server (nameError in server/src/routes/auth.js): the
+// Thai name needs Thai script and no Latin letters; the English one only
+// Latin letters plus space . ' -. Returns an i18n key, or '' when valid.
+export function nicknameThError(v) {
+  const s = v.trim();
+  if (!s) return 'signup.needNickname';
+  if (!/[\u0E00-\u0E7F]/.test(s) || /[A-Za-z]/.test(s)) return 'signup.nicknameThInvalid';
+  return '';
+}
+export function nicknameEnError(v) {
+  const s = v.trim();
+  if (!s) return 'signup.needNicknameEn';
+  if (!/^[A-Za-z][A-Za-z .'-]*$/.test(s)) return 'signup.nicknameEnInvalid';
+  return '';
+}

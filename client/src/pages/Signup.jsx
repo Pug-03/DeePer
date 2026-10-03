@@ -12,12 +12,15 @@ import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { IcBack, IcCamera, IcGoogle, IcMail } from '../components/icons.jsx';
+import { nicknameThError, nicknameEnError } from '../util.js';
 
 const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
 
 function ProfileFields({
   nickname,
   setNickname,
+  nicknameEn,
+  setNicknameEn,
   age,
   setAge,
   gender,
@@ -51,14 +54,30 @@ function ProfileFields({
           {t('signup.addPhoto')}
         </p>
       </div>
+      {/* Nickname in both languages — the app shows whichever matches the
+          language the user has it set to. */}
       <div className="field">
-        <label>{t('signup.nickname')}</label>
+        <label>{t('signup.nicknameTh')}</label>
         <input
           className="input"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          placeholder={t('signup.nicknamePh')}
+          placeholder={t('signup.nicknameThPh')}
           maxLength={40}
+          lang="th"
+          required
+        />
+      </div>
+      <div className="field">
+        <label>{t('signup.nicknameEn')}</label>
+        <input
+          className="input"
+          value={nicknameEn}
+          onChange={(e) => setNicknameEn(e.target.value)}
+          placeholder={t('signup.nicknameEnPh')}
+          maxLength={40}
+          lang="en"
+          autoCapitalize="words"
           required
         />
       </div>
@@ -116,6 +135,15 @@ export default function Signup() {
   const [otpStatus, setOtpStatus] = useState('idle'); // idle | error | success
 
   const [nickname, setNickname] = useState('');
+  const [nicknameEn, setNicknameEn] = useState('');
+  // Google's suggested name goes into whichever field its script fits.
+  const applySuggestedNickname = (name) => {
+    if (!name) return;
+    if (/[\u0E00-\u0E7F]/.test(name)) setNickname(name);
+    else setNicknameEn(name);
+  };
+  // First problem with the two nicknames as an i18n key, or ''.
+  const nicknamesError = () => nicknameThError(nickname) || nicknameEnError(nicknameEn);
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
@@ -156,7 +184,7 @@ export default function Signup() {
     const g = loc.state?.google;
     if (g?.credential) {
       setGCredential(g.credential);
-      if (g.suggested_nickname) setNickname(g.suggested_nickname);
+      applySuggestedNickname(g.suggested_nickname);
       setStep('gprofile');
     }
   }, [loc.state]);
@@ -221,7 +249,7 @@ export default function Signup() {
   const registerEmail = async (e) => {
     e.preventDefault();
     setErr('');
-    if (!nickname.trim()) return setErr(t('signup.needNickname'));
+    if (nicknamesError()) return setErr(t(nicknamesError()));
     if (!age) return setErr(t('signup.needAge'));
     if (!gender) return setErr(t('signup.needGender'));
     if (!pwValid) return setErr(t('signup.pwNotValid'));
@@ -229,7 +257,7 @@ export default function Signup() {
     try {
       const d = await api.post(
         '/auth/register',
-        { email, code: otp.join(''), nickname, age, gender, password },
+        { email, code: otp.join(''), nickname, nickname_en: nicknameEn, age, gender, password },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -249,7 +277,7 @@ export default function Signup() {
         const d = await api.post('/auth/google', { credential }, { auth: false });
         if (d.needs_profile) {
           setGCredential(credential);
-          if (d.suggested_nickname) setNickname(d.suggested_nickname);
+          applySuggestedNickname(d.suggested_nickname);
           setStep('gprofile');
           return;
         }
@@ -265,14 +293,14 @@ export default function Signup() {
   const registerGoogle = async (e) => {
     e.preventDefault();
     setErr('');
-    if (!nickname.trim()) return setErr(t('signup.needNickname'));
+    if (nicknamesError()) return setErr(t(nicknamesError()));
     if (!age) return setErr(t('signup.needAge'));
     if (!gender) return setErr(t('signup.needGender'));
     setBusy(true);
     try {
       const d = await api.post(
         '/auth/google',
-        { credential: gCredential, nickname, age, gender },
+        { credential: gCredential, nickname, nickname_en: nicknameEn, age, gender },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -435,6 +463,8 @@ export default function Signup() {
           <ProfileFields
             nickname={nickname}
             setNickname={setNickname}
+            nicknameEn={nicknameEn}
+            setNicknameEn={setNicknameEn}
             age={age}
             setAge={setAge}
             gender={gender}
@@ -468,6 +498,8 @@ export default function Signup() {
           <ProfileFields
             nickname={nickname}
             setNickname={setNickname}
+            nicknameEn={nicknameEn}
+            setNicknameEn={setNicknameEn}
             age={age}
             setAge={setAge}
             gender={gender}

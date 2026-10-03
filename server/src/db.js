@@ -135,6 +135,13 @@ if (!userCols.some((c) => c.name === 'partner_icon')) {
   db.exec(`ALTER TABLE users ADD COLUMN partner_icon TEXT`);
 }
 
+// Migration: users.nickname_en — signup now asks for the nickname in both
+// Thai (kept in the existing `nickname` column) and English. Nullable:
+// accounts made before this have no English name until they add one.
+if (!userCols.some((c) => c.name === 'nickname_en')) {
+  db.exec(`ALTER TABLE users ADD COLUMN nickname_en TEXT`);
+}
+
 // Migration: users.token_version — an earlier, coarser take on session
 // revocation (one shared counter, bumping it invalidated every token at
 // once). Superseded by login_history.revoked_at below, which revokes one

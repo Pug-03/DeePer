@@ -68,6 +68,7 @@ export function publicUser(u) {
     id: u.id,
     email: u.email,
     nickname: u.nickname,
+    nickname_en: u.nickname_en,
     age: u.age,
     gender: u.gender,
     partners: partnersByCategory(u.id),

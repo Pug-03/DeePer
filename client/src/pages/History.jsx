@@ -6,7 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
-import { catLabel, formatDate } from '../util.js';
+import { catLabel, displayName, formatDate } from '../util.js';
 import { IcTrash, IcHistory } from '../components/icons.jsx';
 
 export default function History() {
@@ -14,7 +14,7 @@ export default function History() {
   const toast = useToast();
   const confirm = useConfirm();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const tutorial = useTutorial();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -117,7 +117,7 @@ export default function History() {
                     {it.my_answer && (
                       <div className="answer-block" style={{ borderLeftColor: 'var(--red)' }}>
                         <div className="ab-name" style={{ color: 'var(--red-bright)' }}>
-                          {user?.nickname || t('answer.we')}
+                          {displayName(user, lang) || t('answer.we')}
                         </div>
                         <div className="ab-text">{it.my_answer}</div>
                       </div>

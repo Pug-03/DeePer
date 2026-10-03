@@ -2,6 +2,7 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import { displayName } from '../util.js';
 
 const EASE = [0.16, 1, 0.3, 1];
 const CIRCLE_DURATION = 0.9;
@@ -70,7 +71,7 @@ export default function PostAuthWelcome() {
   const nav = useNavigate();
   const loc = useLocation();
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const isNew = !!loc.state?.isNew;
 
   if (!user) return <Navigate to="/app/home" replace />;
@@ -87,8 +88,8 @@ export default function PostAuthWelcome() {
 
       <motion.h1 className="h1" {...rise(1.05)}>
         {isNew
-          ? t('postAuth.newTitle', { name: user.nickname })
-          : t('postAuth.backTitle', { name: user.nickname })}
+          ? t('postAuth.newTitle', { name: displayName(user, lang) })
+          : t('postAuth.backTitle', { name: displayName(user, lang) })}
       </motion.h1>
 
       <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto' }} {...rise(1.2)}>

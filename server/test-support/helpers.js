@@ -75,13 +75,16 @@ export function api(base, token) {
 // Registers a fresh user (own email + OTP flow) and returns their token —
 // the OTP's dev_code is only present because there's no SMTP configured in
 // the test environment, same as local dev without one.
-export async function registerUser(base, { email = uniqueEmail('u'), nickname = 'Tester', userAgent } = {}) {
+export async function registerUser(
+  base,
+  { email = uniqueEmail('u'), nickname = 'เทสเตอร์', nickname_en = 'Tester', userAgent } = {},
+) {
   const anon = api(base);
   const otpRes = await anon.post('/auth/otp/request', { email });
   const code = otpRes.body.dev_code;
   const res = await anon.post(
     '/auth/register',
-    { email, code, nickname, age: 25, gender: 'other', password: PASSWORD },
+    { email, code, nickname, nickname_en, age: 25, gender: 'other', password: PASSWORD },
     userAgent ? { 'User-Agent': userAgent } : undefined,
   );
   return { email, token: res.body.token, user: res.body.user };
