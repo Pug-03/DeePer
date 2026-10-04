@@ -3,6 +3,7 @@
 // Welcome.jsx, which only renders an <a> when link is truthy). `avatar` is
 // also optional — Welcome.jsx falls back to an initials circle (same style
 // as the Supporters marquee's avatars) if it's missing or fails to load.
+// A '\n' in a role starts a new line (.dev-team-role keeps line breaks).
 import nathapornPhoto from './assets/team/nathaporn.jpg';
 import natshaPhoto from './assets/team/namphan.jpg';
 
@@ -10,7 +11,7 @@ export const DEV_TEAM = [
   {
     nameTh: 'ณฐพร ไทรทับทิม',
     nameEn: 'Nathaporn Saituptim',
-    roleTh: 'เจ้าของโปรเจกต์ ผู้พัฒนาหลัก (ดูแลทุกส่วน เจ้าของและพัฒนาทั้งหมด)',
+    roleTh: 'เจ้าของโปรเจกต์ ผู้พัฒนาหลัก\n(ดูแลทุกส่วน เจ้าของและพัฒนาทั้งหมด)',
     roleEn: 'Project owner and lead developer who builds every part of DeePer',
     link: '',
     avatar: nathapornPhoto,
@@ -22,8 +23,8 @@ export const DEV_TEAM = [
   {
     nameTh: 'นัชชา ตติยชัยทวีสุข',
     nameEn: 'Natsha Tatiyachaitaweesuk',
-    roleTh: 'ดูแลเรื่อง UX/UI และการวางเลย์เอาต์',
-    roleEn: 'Handles UX/UI and layout',
+    roleTh: 'ดูแลเรื่อง UX/UI การวางเลย์เอาต์ คอนเทนต์ และการตลาด',
+    roleEn: 'Handles UX/UI, layout, content and marketing',
     link: '',
     avatar: natshaPhoto,
     // Full-body/high-angle shot, not a headshot — bias the crop toward the

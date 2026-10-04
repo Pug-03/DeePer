@@ -2066,6 +2066,7 @@ button.dev-team-name-clickable:focus-visible {
   color: var(--text-dim);
   line-height: 1.5;
   margin: 0;
+  white-space: pre-line;
 }
 .dev-team-link {
   font-size: 13px;
