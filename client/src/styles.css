@@ -1774,12 +1774,18 @@ a {
 }
 
 /* ---------- Report a problem / bug ---------- */
-/* Quiet one-line footer on Welcome, below the supporters */
+/* Quiet contact footer on Welcome, below the supporters */
 .landing-report {
   padding: 0 20px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   text-align: center;
   font-size: 14px;
   color: var(--text-faint);
+}
+.landing-report p {
+  margin: 0;
 }
 .landing-report .link {
   font-size: 14px;
@@ -2108,8 +2114,7 @@ a.btn {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px 8px 8px;
+  padding: 9px 16px;
   border-radius: 999px;
 }
 .supporter-avatar {
@@ -2123,50 +2128,6 @@ a.btn {
   background: linear-gradient(120deg, var(--red), var(--red-deep));
   color: #fff;
   flex-shrink: 0;
-}
-.supporter-avatar-img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-/* Below MIN_MARQUEE_ITEMS — stacked image-over-name, no pill/card wrapper
-   (matches the plain-list look the rest of this page uses). Square-ish
-   with object-fit: contain, not the chip's tight cropped circle — a logo
-   isn't necessarily square, and cover-cropping it into a 28px circle was
-   squishing/cutting it off. */
-.supporters-static {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 24px;
-}
-.supporter-static-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.supporter-avatar-static {
-  width: 64px;
-  height: 64px;
-  flex-shrink: 0;
-}
-/* No background/padding/border-radius on the image itself — the source
-   PNG already carries real alpha transparency (verified: 244x88, ~50%
-   fully-transparent pixels, clean antialiased edges, no baked-in flat
-   background), so a backdrop box here would be adding the exact visible
-   edge it's meant to avoid. The rounded-square backdrop only applies to
-   the initials fallback below, which needs some background since it's
-   plain text on nothing. */
-img.supporter-avatar-static {
-  object-fit: contain;
-}
-span.supporter-avatar-static {
-  border-radius: 16px;
-  font-size: 20px;
 }
 .supporter-name {
   font-size: 13.5px;

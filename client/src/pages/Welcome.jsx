@@ -140,35 +140,6 @@ const initials = (name) =>
     .join('')
     .toUpperCase();
 
-// Shared by both the scrolling marquee and the static display — same
-// photo-with-initials-fallback pattern as DevTeamCard.
-// `vertical` switches to the static layout: image on
-// top, name below, and object-fit: contain in a slightly bigger square
-// instead of the marquee chip's tight cropped circle — a logo (not
-// necessarily a square headshot) reads cleanly there, where the marquee's
-// small circle was cropping/squishing it.
-function SupporterChip({ s, vertical }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const showPhoto = s.avatar && !imgFailed;
-  return (
-    <>
-      {showPhoto ? (
-        <img
-          className={vertical ? 'supporter-avatar-static' : 'supporter-avatar-img'}
-          src={s.avatar}
-          alt={s.name}
-          onError={() => setImgFailed(true)}
-        />
-      ) : (
-        <span className={`supporter-avatar${vertical ? ' supporter-avatar-static' : ''}`}>
-          {initials(s.name)}
-        </span>
-      )}
-      <span className="supporter-name">{s.name}</span>
-    </>
-  );
-}
-
 // JS-driven marquee: each row is a real horizontal scroller (overflow-x)
 // whose scrollLeft is advanced every animation frame, so people can also
 // swipe / trackpad-scroll / mouse-drag through it themselves. Any manual
@@ -209,9 +180,10 @@ function splitIntoRows(items, rowCount) {
 // set first (still seamless: the track is that set twice, animated -50%).
 const MARQUEE_MIN_SET_ITEMS = 6;
 
+// Name only — no photo or initials circle.
 const renderSupporterChip = (s, i, hidden) => (
   <span className="supporter-chip glass" key={`${s.name}-${i}`} aria-hidden={hidden}>
-    <SupporterChip s={s} />
+    <span className="supporter-name">{s.name}</span>
   </span>
 );
 
@@ -737,11 +709,21 @@ export default function Welcome() {
 
         <Reveal className="landing-divider" />
 
+        {/* Contact lines, grouped at the foot of the page: sponsoring first
+            (right after the sponsor logos), then problems / suggestions. */}
         <Reveal className="landing-report">
-          {t('report.footer')}{' '}
-          <button className="link" type="button" onClick={() => nav('/report', { state: { from: '/' } })}>
-            {t('report.footerCta')}
-          </button>
+          <p>
+            {t('sponsorForm.teaser')}{' '}
+            <button className="link" type="button" onClick={() => nav('/sponsor')}>
+              {t('sponsorForm.teaserCta')}
+            </button>
+          </p>
+          <p>
+            {t('report.footer')}{' '}
+            <button className="link" type="button" onClick={() => nav('/report', { state: { from: '/' } })}>
+              {t('report.footerCta')}
+            </button>
+          </p>
         </Reveal>
       </div>
     </>

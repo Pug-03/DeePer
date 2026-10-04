@@ -91,6 +91,17 @@ db.exec(`
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  -- Organizations asking to become a sponsor, from the /sponsor form.
+  CREATE TABLE IF NOT EXISTS sponsor_inquiries (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    org_name      TEXT NOT NULL,
+    contact_name  TEXT NOT NULL,
+    contact       TEXT NOT NULL,
+    message       TEXT NOT NULL,
+    handled_at    TEXT,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   -- Sponsor logos added from the admin dashboard, shown on the Welcome page
   -- after the ones hard-coded in client/src/sponsors-info.js.
   CREATE TABLE IF NOT EXISTS sponsors (

@@ -49,6 +49,7 @@ router.get('/stats', (req, res) => {
     logins_today: count(`SELECT COUNT(*) AS c FROM login_history WHERE date(created_at, ${BKK}) = ${today}`),
     answers_today: count(`SELECT COUNT(*) AS c FROM history WHERE date(created_at, ${BKK}) = ${today}`),
     reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL'),
+    inquiries_open: count('SELECT COUNT(*) AS c FROM sponsor_inquiries WHERE handled_at IS NULL'),
     proofs_pending: count('SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL'),
     days: days.map((d) => ({
       day: d,
@@ -209,6 +210,27 @@ router.post('/proofs/:id/:action(approve|revoke)', (req, res) => {
   const id = Number(req.params.id);
   const done = (req.params.action === 'approve' ? approveProofs : revokeProofs)([id]);
   if (!done.length) return res.status(404).json({ error: 'ไม่พบหลักฐาน', error_code: 'NOT_FOUND' });
+  res.json({ ok: true });
+});
+
+// ---- Sponsorship inquiries ----
+router.get('/inquiries', (req, res) => {
+  res.json({
+    inquiries: db
+      .prepare('SELECT * FROM sponsor_inquiries ORDER BY handled_at IS NOT NULL, created_at DESC')
+      .all(),
+  });
+});
+
+router.post('/inquiries/:id/:action(handled|reopen)', (req, res) => {
+  const { changes } = db
+    .prepare(
+      req.params.action === 'handled'
+        ? `UPDATE sponsor_inquiries SET handled_at = COALESCE(handled_at, datetime('now')) WHERE id = ?`
+        : 'UPDATE sponsor_inquiries SET handled_at = NULL WHERE id = ?',
+    )
+    .run(Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
   res.json({ ok: true });
 });
 

@@ -24,6 +24,7 @@ import Support from './pages/Support.jsx';
 import Social from './pages/Social.jsx';
 import Report from './pages/Report.jsx';
 import Admin from './pages/Admin.jsx';
+import SponsorInquiry from './pages/SponsorInquiry.jsx';
 import VisitBeacon from './components/VisitBeacon.jsx';
 
 function Protected({ children }) {
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
               {/* Open to guests and signed-in users alike. */}
               <Route path="/report" element={<Report />} />
+              <Route path="/sponsor" element={<SponsorInquiry />} />
               {/* Owner-only back office with its own login, separate from user accounts. */}
               <Route path="/admin" element={<Admin />} />
 

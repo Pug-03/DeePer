@@ -72,7 +72,8 @@ function AdminDashboard({ onLogout }) {
     { key: 'insights', label: 'การใช้งาน' },
     { key: 'reports', label: 'แจ้งปัญหา', badge: stats?.reports_open },
     { key: 'proofs', label: 'ผู้สนับสนุน', badge: stats?.proofs_pending },
-    { key: 'sponsors', label: 'สปอนเซอร์' },
+    { key: 'inquiries', label: 'ติดต่อเป็นสปอนเซอร์', badge: stats?.inquiries_open },
+    { key: 'sponsors', label: 'โลโก้สปอนเซอร์' },
   ];
 
   return (
@@ -103,6 +104,7 @@ function AdminDashboard({ onLogout }) {
       {tab === 'insights' && <Insights onLogout={onLogout} />}
       {tab === 'reports' && <Reports onLogout={onLogout} onChange={reload} />}
       {tab === 'proofs' && <Proofs onLogout={onLogout} onChange={reload} />}
+      {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
       {tab === 'sponsors' && <Sponsors onLogout={onLogout} />}
     </div>
   );
@@ -118,6 +120,8 @@ function Overview({ stats }) {
     ['ตอบคำถามวันนี้', stats.answers_today],
     ['ผู้ใช้ทั้งหมด', stats.users_total],
     ['แจ้งปัญหาที่ยังไม่แก้', stats.reports_open],
+    ['องค์กรติดต่อเป็นสปอนเซอร์ (ยังไม่ได้ติดต่อกลับ)', stats.inquiries_open],
+    ['สลิปรออนุมัติ', stats.proofs_pending],
   ];
   return (
     <>
@@ -246,7 +250,8 @@ function Reports({ onLogout, onChange }) {
   const toast = useToast();
   const { data, error, reload } = useAdminData(adminApi.reports, onLogout);
   const [filter, setFilter] = useState('open');
-  const [shots, setShots] = useState({});
+  const [shots, setShots] = useState({}); // id -> loaded image URL (kept once fetched)
+  const [openShots, setOpenShots] = useState({}); // id -> currently shown
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data) return <Loading />;
@@ -279,13 +284,17 @@ function Reports({ onLogout, onChange }) {
     }
   };
   const showShot = async (id) => {
+    setOpenShots((o) => ({ ...o, [id]: true }));
+    if (shots[id]) return;
     try {
       const blob = await adminApi.screenshot(id);
       setShots((s) => ({ ...s, [id]: URL.createObjectURL(blob) }));
     } catch (e) {
+      setOpenShots((o) => ({ ...o, [id]: false }));
       if (e instanceof AdminAuthError) onLogout();
     }
   };
+
 
   const list = data.reports.filter((r) =>
     filter === 'all' ? true : filter === 'open' ? !r.resolved_at : !!r.resolved_at,
@@ -332,16 +341,22 @@ function Reports({ onLogout, onChange }) {
             <dt>อุปกรณ์</dt>
             <dd className="admin-ua">{r.user_agent || 'ไม่ทราบ'}</dd>
           </dl>
-          {r.has_screenshot &&
-            (shots[r.id] ? (
-              <a href={shots[r.id]} target="_blank" rel="noreferrer">
-                <img className="admin-img" src={shots[r.id]} alt="รูปหน้าจอ" />
-              </a>
-            ) : (
-              <button className="link admin-inline-btn" type="button" onClick={() => showShot(r.id)}>
-                ดูรูปหน้าจอ
+          {r.has_screenshot && (
+            <>
+              <button
+                className="link admin-inline-btn"
+                type="button"
+                onClick={() => (openShots[r.id] ? setOpenShots((o) => ({ ...o, [r.id]: false })) : showShot(r.id))}
+              >
+                {openShots[r.id] ? 'ซ่อนรูปหน้าจอ' : 'ดูรูปหน้าจอ'}
               </button>
-            ))}
+              {openShots[r.id] && shots[r.id] && (
+                <a href={shots[r.id]} target="_blank" rel="noreferrer">
+                  <img className="admin-img" src={shots[r.id]} alt="รูปหน้าจอ" />
+                </a>
+              )}
+            </>
+          )}
           <button
             className={`btn ${r.resolved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
             type="button"
@@ -533,7 +548,7 @@ function Sponsors({ onLogout }) {
   return (
     <>
       <p className="admin-note">
-        สปอนเซอร์ที่เพิ่มตรงนี้จะขึ้นในหน้าเว็บต่อจากที่อยู่ในโค้ด ใช้โลโก้พื้นหลังโปร่งใส (PNG หรือ SVG) ที่อ่านออกบนพื้นดำ
+        โลโก้สปอนเซอร์ที่เพิ่มตรงนี้จะขึ้นในหน้าเว็บต่อจากที่อยู่ในโค้ด ใช้โลโก้พื้นหลังโปร่งใส (PNG หรือ SVG) ที่อ่านออกบนพื้นดำ
         บน Render แบบฟรี โลโก้ที่เพิ่มจะหายเมื่อ deploy ใหม่
       </p>
 
@@ -620,6 +635,61 @@ function Sponsors({ onLogout }) {
           </div>
         );
       })}
+    </>
+  );
+}
+
+// Organizations that asked to sponsor us via /sponsor — contact them, then
+// mark handled.
+function Inquiries({ onLogout, onChange }) {
+  const { data, error, reload } = useAdminData(adminApi.inquiries, onLogout);
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (!data) return <Loading />;
+
+  const act = async (id, action) => {
+    try {
+      await adminApi.setInquiry(id, action);
+      reload();
+      onChange();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+    }
+  };
+
+  return (
+    <>
+      <p className="admin-note">
+        องค์กรที่กด "สนใจร่วมเป็นสปอนเซอร์กับ DeePer? ติดต่อเรา" ในหน้าแรก แล้วกรอกฟอร์มเข้ามา
+      </p>
+      {data.inquiries.length === 0 && <p className="admin-note">ยังไม่มีองค์กรติดต่อเข้ามา</p>}
+      {data.inquiries.map((q) => (
+        <div key={q.id} className="glass admin-card">
+          <div className="admin-card-head">
+            <span className="admin-proof-name">{q.org_name}</span>
+            <span className={`admin-tag ${q.handled_at ? 'admin-tag--ok' : 'admin-tag--wait'}`}>
+              {q.handled_at ? 'ติดต่อแล้ว' : 'ยังไม่ได้ติดต่อ'}
+            </span>
+          </div>
+          <p className="admin-message">{q.message}</p>
+          <dl className="admin-dl">
+            <dt>ผู้ติดต่อ</dt>
+            <dd>{q.contact_name}</dd>
+            <dt>ติดต่อกลับ</dt>
+            <dd>
+              {EMAIL_RE.test(q.contact) ? <a href={`mailto:${q.contact}`}>{q.contact}</a> : q.contact}
+            </dd>
+            <dt>ส่งเมื่อ</dt>
+            <dd>{fmtTime(q.created_at)}</dd>
+          </dl>
+          <button
+            className={`btn ${q.handled_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
+            type="button"
+            onClick={() => act(q.id, q.handled_at ? 'reopen' : 'handled')}
+          >
+            {q.handled_at ? `ติดต่อแล้ว ${fmtTime(q.handled_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าติดต่อแล้ว'}
+          </button>
+        </div>
+      ))}
     </>
   );
 }

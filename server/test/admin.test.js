@@ -223,3 +223,22 @@ test('declining a supporter name hides it, emails thanks, and can be undone by a
   const { slip_path: sp } = db.prepare('SELECT slip_path FROM support_proofs WHERE id = ?').get(proof.id);
   fs.rmSync(join(uploads, sp.replace(/^\/uploads\//, '')), { force: true });
 });
+
+test('a sponsorship inquiry is validated, listed for the admin and can be marked handled', async () => {
+  const send = (body) => api(base).post('/sponsor-inquiries', body);
+  const ok = { org_name: 'บริษัทใจดี จำกัด', contact_name: 'คุณเอ', contact: 'a@example.com', message: 'สนใจเป็นสปอนเซอร์ระดับเงิน' };
+  assert.equal((await send({ ...ok, org_name: '' })).body.error_code, 'INQUIRY_ORG_REQUIRED');
+  assert.equal((await send({ ...ok, contact: ' ' })).body.error_code, 'INQUIRY_CONTACT_REQUIRED');
+  assert.equal((await send({ ...ok, message: 'hi' })).body.error_code, 'INQUIRY_MESSAGE_REQUIRED');
+
+  const admin = api(base, await adminToken());
+  const before = (await admin.get('/admin/stats')).body.inquiries_open;
+  assert.equal((await send(ok)).status, 200);
+  assert.equal((await admin.get('/admin/stats')).body.inquiries_open, before + 1);
+
+  const item = (await admin.get('/admin/inquiries')).body.inquiries.find((i) => i.org_name === ok.org_name);
+  assert.equal(item.contact, 'a@example.com');
+  assert.equal((await admin.post(`/admin/inquiries/${item.id}/handled`)).status, 200);
+  assert.equal((await admin.get('/admin/stats')).body.inquiries_open, before);
+  assert.equal((await api(base).get('/admin/inquiries')).status, 401);
+});

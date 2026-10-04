@@ -8,7 +8,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcAlertCircle, IcCamera } from '../components/icons.jsx';
 
-const CATEGORIES = ['bug', 'problem', 'idea'];
+const CATEGORIES = ['idea', 'bug', 'problem'];
 
 // Bug / problem / idea report — open to guests (from the Welcome page) and
 // signed-in users (from Profile). Signed-in reports are tied to the account
@@ -20,7 +20,7 @@ export default function Report() {
   const { t } = useI18n();
   const toast = useToast();
 
-  const [category, setCategory] = useState('bug');
+  const [category, setCategory] = useState(CATEGORIES[0]);
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
   const [shotFile, setShotFile] = useState(null);
