@@ -462,6 +462,10 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   // during the swipe/save reveal, instead of it only showing up later once
   // the card is formally promoted.
   const backGlow = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0, 1]);
+  // Its question stays hidden while it sits under the top card and fades in
+  // as the top card moves off it — otherwise the text showed through the
+  // top card's translucent glass.
+  const backText = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0.5, 0, 0.5]);
 
   useEffect(() => {
     if (saved) {
@@ -496,9 +500,9 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
         >
           <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
             <motion.div className="qcard-glow" style={{ opacity: backGlow }} />
-            <p className="q-text" style={{ opacity: 0.5 }}>
+            <motion.p className="q-text" style={{ opacity: backText }}>
               {next.text}
-            </p>
+            </motion.p>
           </motion.div>
         </motion.div>
       )}
