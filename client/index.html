@@ -24,6 +24,13 @@
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Digits only (text= subset): Noto Sans Thai is listed first in the font
+         stack, so 0-9 render in Noto while every other character falls back to
+         IBM Plex Sans Thai. Plex's numeral 1 read oddly at stat sizes. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&text=0123456789&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>

@@ -61,7 +61,7 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  font-family: 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
+  font-family: 'Noto Sans Thai', 'IBM Plex Sans Thai', system-ui, -apple-system, sans-serif;
   color: var(--text);
   background: transparent;
   -webkit-font-smoothing: antialiased;
@@ -1806,7 +1806,7 @@ span.supporter-avatar-static {
 }
 .sponsor-tier-label {
   margin: 0 0 14px;
-  font-family: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  font-family: 'Noto Sans Thai', 'IBM Plex Sans Thai', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.08em;
