@@ -49,6 +49,9 @@ export async function sendOtpEmail(to, code, purpose = 'register') {
 // isn't configured so the rest of the flow still works in development.
 export async function sendMail({ to, subject, text, html, attachments }) {
   const from = process.env.SMTP_FROM || 'DeePer <no-reply@deeper.app>';
+  // Subjects can carry user-typed text (a report's first line, an org or
+  // donor name) — keep them to one line.
+  subject = String(subject).replace(/[\r\n]+/g, ' ');
   if (!transporter) {
     console.log(`\n========== [DeePer mail — dev fallback] ==========`);
     console.log(`  ส่งถึง: ${to}`);
