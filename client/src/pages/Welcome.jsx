@@ -375,21 +375,25 @@ function SupportersMarquee({ items, renderItem, rowCount = MARQUEE_ROWS }) {
 
 // Organization logos — no tile/background: the logo files themselves are
 // transparent and pre-recolored for the dark page (see sponsors-info.js).
-const renderSponsorLogo = (s, i) => (
-  <span className="sponsor-logo" key={`${s.name}-${i}`}>
-    <img src={s.logo} alt={s.name} />
-  </span>
-);
+// Admin-added sponsors may carry a link; those logos open it.
+const renderSponsorLogo = (s, i) =>
+  s.link ? (
+    <a className="sponsor-logo" key={`${s.name}-${i}`} href={s.link} target="_blank" rel="noopener noreferrer">
+      <img src={s.logo} alt={s.name} />
+    </a>
+  ) : (
+    <span className="sponsor-logo" key={`${s.name}-${i}`}>
+      <img src={s.logo} alt={s.name} />
+    </span>
+  );
 
 // Sponsors grouped by tier, largest logos first. Each tier uses a static
 // centered wall so every logo stays visible.
-// Built once so each tier's list keeps the same identity across renders.
-const SPONSORS_BY_TIER = SPONSOR_TIERS.map((tier) => [tier, SPONSORS.filter((s) => s.tier === tier)]);
-
-function SponsorTiers({ t }) {
+function SponsorTiers({ t, sponsors }) {
+  const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
   return (
     <div className="sponsor-tiers">
-      {SPONSORS_BY_TIER.map(([tier, items]) => {
+      {byTier.map(([tier, items]) => {
         if (items.length === 0) return null;
         return (
           // Each tier reveals on its own as it scrolls into view.
@@ -479,6 +483,21 @@ export default function Welcome() {
       cancelled = true;
     };
   }, []);
+  // Sponsor logos added from the admin dashboard, after the hard-coded ones.
+  const [adminSponsors, setAdminSponsors] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get('/support/sponsors', { auth: false })
+      .then((d) => {
+        if (!cancelled) setAdminSponsors(d.sponsors);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const sponsors = [...SPONSORS, ...adminSponsors];
   const activeSupporters =
     mockSupporterCount > 0
       ? makeMockSupportersDevOnly(mockSupporterCount)
@@ -695,7 +714,7 @@ export default function Welcome() {
           <Reveal delay={0.1}>
             <p className="sub">{t('welcome.supporters.body')}</p>
           </Reveal>
-          {SPONSORS.length > 0 && <SponsorTiers t={t} />}
+          {sponsors.length > 0 && <SponsorTiers t={t} sponsors={sponsors} />}
           {activeSupporters.length > 0 ? (
             // Lowest tier, below bronze: "เพื่อนของ DeePer", people who
             // donated through the site (approved proofs, plus SUPPORTERS),
@@ -706,7 +725,7 @@ export default function Welcome() {
               <p className="sponsor-tier-label">{t('welcome.supporters.tier.individual')}</p>
               <SupportersMarquee items={activeSupporters} rowCount={1} />
             </Reveal>
-          ) : SPONSORS.length > 0 ? null : (
+          ) : sponsors.length > 0 ? null : (
             <Reveal className="supporters-placeholder">
               <span className="supporters-placeholder-ic">
                 <IcSparkle size={20} />

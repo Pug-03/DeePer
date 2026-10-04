@@ -92,6 +92,14 @@ router.post('/proof', requireAuth, handleSlip, (req, res) => {
   res.json({ ok: true });
 });
 
+// Public: sponsor logos added from the admin dashboard (the Welcome page
+// shows them after the ones hard-coded in the client).
+router.get('/sponsors', (req, res) => {
+  res.json({
+    sponsors: db.prepare('SELECT name, tier, logo_path AS logo, link FROM sponsors ORDER BY created_at, id').all(),
+  });
+});
+
 // Public: names of donors whose proof the maintainer has approved, for the
 // "เพื่อนของ DeePer" tier on the landing page.
 router.get('/supporters', (req, res) => {

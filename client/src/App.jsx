@@ -24,6 +24,7 @@ import Support from './pages/Support.jsx';
 import Social from './pages/Social.jsx';
 import Report from './pages/Report.jsx';
 import Admin from './pages/Admin.jsx';
+import VisitBeacon from './components/VisitBeacon.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -61,6 +62,7 @@ export default function App() {
         <TutorialProvider>
           <div className="app-shell">
             <ScrollToTop />
+            <VisitBeacon />
             <Routes>
               <Route path="/" element={<GuestOnly><Welcome /></GuestOnly>} />
               {/* Public regardless of auth state — reachable from the

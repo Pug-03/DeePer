@@ -15,10 +15,15 @@ async function request(path, { method = 'GET', body, raw = false } = {}) {
   const headers = {};
   const token = getAdminToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (body) headers['Content-Type'] = 'application/json';
+  const isForm = body instanceof FormData;
+  if (body && !isForm) headers['Content-Type'] = 'application/json';
   let res;
   try {
-    res = await fetch(`/api/admin${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    res = await fetch(`/api/admin${path}`, {
+      method,
+      headers,
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+    });
   } catch {
     throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้');
   }
@@ -27,6 +32,7 @@ async function request(path, { method = 'GET', body, raw = false } = {}) {
     throw new AdminAuthError('เซสชันแอดมินหมดอายุ กรุณาเข้าสู่ระบบใหม่');
   }
   if (raw && res.ok) return res.blob();
+  if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error || 'เกิดข้อผิดพลาด');
   return data;
@@ -34,9 +40,15 @@ async function request(path, { method = 'GET', body, raw = false } = {}) {
 
 export const adminApi = {
   stats: () => request('/stats'),
+  insights: () => request('/insights'),
   reports: () => request('/reports'),
   screenshot: (id) => request(`/reports/${id}/screenshot`, { raw: true }),
   setReport: (id, action) => request(`/reports/${id}/${action}`, { method: 'POST' }),
+  replyReport: (id) => request(`/reports/${id}/reply`, { method: 'POST' }),
+  sponsors: () => request('/sponsors'),
+  addSponsor: (form) => request('/sponsors', { method: 'POST', body: form }),
+  updateSponsor: (id, fields) => request(`/sponsors/${id}`, { method: 'PATCH', body: fields }),
+  deleteSponsor: (id) => request(`/sponsors/${id}`, { method: 'DELETE' }),
   proofs: () => request('/proofs'),
   setProof: (id, action) => request(`/proofs/${id}/${action}`, { method: 'POST' }),
 };

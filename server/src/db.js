@@ -87,7 +87,19 @@ db.exec(`
     user_agent       TEXT,
     screenshot_path  TEXT,
     resolved_at      TEXT,
+    replied_at       TEXT,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  -- Sponsor logos added from the admin dashboard, shown on the Welcome page
+  -- after the ones hard-coded in client/src/sponsors-info.js.
+  CREATE TABLE IF NOT EXISTS sponsors (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    tier        TEXT NOT NULL,
+    logo_path   TEXT NOT NULL,
+    link        TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
   -- One row per signed-in user per Bangkok calendar day they used the app,
@@ -96,6 +108,20 @@ db.exec(`
     day      TEXT NOT NULL,
     user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (day, user_id)
+  );
+
+  -- One row per browser per Bangkok day it opened the site, signed in or
+  -- not. visitor_id is a random id the browser keeps in localStorage — no
+  -- IP or account is stored. source is where the visit came from (?ref=,
+  -- else the referrer's host, else 'direct').
+  CREATE TABLE IF NOT EXISTS site_visits (
+    day         TEXT NOT NULL,
+    visitor_id  TEXT NOT NULL,
+    source      TEXT NOT NULL DEFAULT 'direct',
+    path        TEXT,
+    signed_in   INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (day, visitor_id)
   );
 
   CREATE TABLE IF NOT EXISTS app_meta (
@@ -258,6 +284,13 @@ if (proofCols.length) {
   for (const { id } of db.prepare('SELECT id FROM support_proofs WHERE review_token IS NULL').all()) {
     fill.run(randomBytes(24).toString('hex'), id);
   }
+}
+
+// Migration: bug_reports.replied_at — set when the admin emails the
+// reporter a thank-you from the dashboard.
+const reportCols = db.prepare(`PRAGMA table_info(bug_reports)`).all();
+if (!reportCols.some((c) => c.name === 'replied_at')) {
+  db.exec(`ALTER TABLE bug_reports ADD COLUMN replied_at TEXT`);
 }
 
 // Seed the curated question bank once.
