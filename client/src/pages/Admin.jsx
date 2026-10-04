@@ -375,9 +375,20 @@ function Proofs({ onLogout, onChange }) {
   const confirm = useConfirm();
   const toast = useToast();
   const { data, error, reload } = useAdminData(adminApi.proofs, onLogout);
+  const [filter, setFilter] = useState('pending');
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data) return <Loading />;
+
+  const statusOf = (p) => (p.approved_at ? 'approved' : p.rejected_at ? 'rejected' : 'pending');
+  const filters = [
+    ['pending', 'รออนุมัติ'],
+    ['approved', 'ขึ้นหน้าเว็บแล้ว'],
+    ['rejected', 'ไม่ขึ้นชื่อ'],
+    ['all', 'ทั้งหมด'],
+  ];
+  const countOf = (k) => (k === 'all' ? data.proofs.length : data.proofs.filter((p) => statusOf(p) === k).length);
+  const list = filter === 'all' ? data.proofs : data.proofs.filter((p) => statusOf(p) === filter);
 
   const act = async (id, action) => {
     try {
@@ -413,9 +424,17 @@ function Proofs({ onLogout, onChange }) {
 
   return (
     <>
-      <p className="admin-note">ตรวจสลิปว่ายอดและเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "เพื่อนของ DeePer" บนหน้าเว็บทันที ถ้าชื่อไม่เหมาะสม กด "ไม่ขึ้นชื่อ" ระบบจะส่งอีเมลขอบคุณไปที่อีเมลที่เขาใช้สมัครแทน</p>
-      {data.proofs.length === 0 && <p className="admin-note">ยังไม่มีคนส่งหลักฐาน</p>}
-      {data.proofs.map((p) => (
+      <p className="admin-note">ตรวจสลิปว่ายอดและเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "ผู้สนับสนุนรายบุคคล" บนหน้าเว็บทันที ถ้าชื่อไม่เหมาะสม กด "ไม่ขึ้นชื่อ" ระบบจะส่งอีเมลขอบคุณไปที่อีเมลที่เขาใช้สมัครแทน</p>
+      <div className="filter-row">
+        {filters.map(([k, l]) => (
+          <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+            {l}
+            <span className="admin-badge">{countOf(k)}</span>
+          </button>
+        ))}
+      </div>
+      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.map((p) => (
         <div key={p.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">{p.display_name}</span>

@@ -108,12 +108,6 @@ export const IcCards = (p) => (
     <path d="M7.5 8V5.4A2.4 2.4 0 0 1 9.9 3H19a2.4 2.4 0 0 1 2.4 2.4V15a2.4 2.4 0 0 1-2.4 2.4h-3" />
   </svg>
 );
-export const IcBook = (p) => (
-  <svg {...S(p)}>
-    <path d="M12 7c-2-2-5-2-8-2v14c3 0 6 0 8 2 2-2 5-2 8-2V5c-3 0-6 0-8 2Z" />
-    <path d="M12 7v14" />
-  </svg>
-);
 export const IcFileText = (p) => (
   <svg {...S(p)}>
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z M14 2v6h6 M8 13h8 M8 17h8" />

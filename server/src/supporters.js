@@ -1,5 +1,5 @@
 // Approval gate between a submitted transfer proof (support_proofs) and the
-// donor's name showing up on the landing page ("เพื่อนของ DeePer" tier).
+// donor's name showing up on the landing page ("ผู้สนับสนุนรายบุคคล" tier).
 // Nothing is public until the maintainer has checked the slip and approved
 // it — a submitted proof alone never puts a name on the site. Approval
 // happens from the review link emailed per proof, or `npm run approve`.

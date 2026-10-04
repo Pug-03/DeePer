@@ -18,7 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPORT_DIR = join(__dirname, '..', '..', 'private-uploads', 'reports');
 fs.mkdirSync(REPORT_DIR, { recursive: true });
 
-export const REPORT_CATEGORIES = ['bug', 'problem', 'idea'];
+const REPORT_CATEGORIES = ['bug', 'problem', 'idea'];
 const CATEGORY_LABEL = { bug: 'บัค', problem: 'ปัญหาการใช้งาน', idea: 'ข้อเสนอแนะ' };
 // Never mail from the test suite — a developer's real .env may hold SMTP
 // credentials, and each test run would land in their inbox.

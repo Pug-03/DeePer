@@ -140,29 +140,27 @@ const initials = (name) =>
     .join('')
     .toUpperCase();
 
-// JS-driven marquee: each row is a real horizontal scroller (overflow-x)
-// whose scrollLeft is advanced every animation frame, so people can also
-// swipe / trackpad-scroll / mouse-drag through it themselves. Any manual
-// interaction pauses the auto-scroll, which resumes shortly after the last
-// one. Paused via React state (not just CSS :hover) so touch press-and-hold
-// also works.
+// JS-driven marquee: each row moves at a velocity that always eases back
+// to the cruising speed. Drag it (finger or mouse) and it follows your hand;
+// let go mid-swipe and it keeps your release speed, then slows down
+// smoothly until it's back at cruising speed — it never stops dead. A
+// sideways trackpad/wheel swipe nudges it the same way. Holding a finger on
+// it (or the mouse button down) holds it still.
 //
 // Loop is seamless: each row's track renders its item list twice back-to-
-// back, and whenever the scroll position passes one set's width (half the
+// back, and whenever the position passes one set's width (half the
 // scrollWidth) it jumps back by exactly that width — the frame on either
-// side of the jump is pixel-identical. The same wrap applies to manual
-// scrolling, so dragging never hits an end.
+// side of the jump is pixel-identical. The same wrap applies while
+// dragging, so it never hits an end.
 //
-// Speed is a constant px/second, so every row moves at the same physical
-// speed regardless of item count or name length.
+// Speed is in px/second, so every row moves at the same physical speed
+// regardless of item count or name length.
 const MARQUEE_PX_PER_SECOND = 40;
-const MARQUEE_RESUME_MS = 1500; // idle time after a manual scroll before auto-scroll picks back up
-// Mouse-drag fling: releasing mid-drag keeps the row gliding at the release
-// speed, decaying by this rate (1/s) until it drops under the stop speed —
-// touch already gets native momentum from overflow-x.
-const MARQUEE_FLING_DECAY = 3;
-const MARQUEE_FLING_MIN_PX_PER_SECOND = 20;
-const MARQUEE_FLING_STALE_MS = 80; // pause this long before release = no fling
+// How fast a fling eases back to cruising speed (1/s): higher = shorter
+// glide. At 1.6 a hard swipe takes ~2.5s to settle.
+const MARQUEE_EASE_RATE = 1.6;
+const MARQUEE_MAX_PX_PER_SECOND = 4000;
+const MARQUEE_FLING_STALE_MS = 80; // held still this long before release = no fling
 const MARQUEE_ROWS = 3;
 
 // Round-robin (not chunked) so consecutive items land on different rows —
@@ -187,30 +185,31 @@ const renderSupporterChip = (s, i, hidden) => (
   </span>
 );
 
-function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChip }) {
+function SupportersRow({ items, reverse, renderItem = renderSupporterChip }) {
   let set = items;
   while (set.length < MARQUEE_MIN_SET_ITEMS) set = [...set, ...items];
   const track = [...set, ...set];
   const scrollerRef = useRef(null);
-  const pausedRef = useRef(paused);
-  pausedRef.current = paused;
-  // Scroll position lives in a ref so it survives the effect re-running;
-  // null = not placed yet.
+  // Position and velocity live in refs so they survive the effect
+  // re-running; position null = not placed yet.
   const posRef = useRef(null);
+  const velRef = useRef(null);
 
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Cruising velocity this row eases back to (px/s along scrollLeft).
+    const cruise = reduceMotion ? 0 : (reverse ? -1 : 1) * MARQUEE_PX_PER_SECOND;
     // Float position kept here, not read back from scrollLeft, since some
     // browsers round scrollLeft to whole pixels and 40px/s at 60fps is
     // well under one pixel per frame.
     let pos = posRef.current ?? 0;
-    let userActiveUntil = 0;
+    let vel = velRef.current ?? cruise;
     let lastTime = 0;
     let frame = 0;
     let drag = null;
-    let fling = 0; // px/s, signed along scrollLeft
+    let lastWheel = 0;
 
     const oneSet = () => el.scrollWidth / 2;
     const wrap = (x) => {
@@ -218,54 +217,37 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
       if (half <= 0) return x;
       return ((x % half) + half) % half;
     };
+    const clamp = (v) => Math.max(-MARQUEE_MAX_PX_PER_SECOND, Math.min(MARQUEE_MAX_PX_PER_SECOND, v));
     // First mount only: start reversed rows mid-set so they have room to
     // move left too. Later runs keep wherever the row already was.
     if (posRef.current === null) pos = reverse ? oneSet() / 2 : 0;
     el.scrollLeft = pos;
 
-    const markUserActive = () => {
-      userActiveUntil = performance.now() + MARQUEE_RESUME_MS;
-    };
-
     const tick = (now) => {
-      const dt = lastTime ? (now - lastTime) / 1000 : 0;
+      const dt = lastTime ? Math.min((now - lastTime) / 1000, 0.1) : 0;
       lastTime = now;
-      if (fling && !drag) {
-        pos = wrap(pos + fling * dt);
-        el.scrollLeft = pos;
-        fling *= Math.exp(-MARQUEE_FLING_DECAY * dt);
-        if (Math.abs(fling) < MARQUEE_FLING_MIN_PX_PER_SECOND) fling = 0;
-        markUserActive();
-      } else if (!reduceMotion && !pausedRef.current && !drag && now > userActiveUntil) {
-        pos = wrap(pos + (reverse ? -1 : 1) * MARQUEE_PX_PER_SECOND * dt);
+      if (!drag) {
+        // Exponential ease toward cruising speed — frame-rate independent.
+        vel = cruise + (vel - cruise) * Math.exp(-MARQUEE_EASE_RATE * dt);
+        pos = wrap(pos + vel * dt);
         el.scrollLeft = pos;
       }
       posRef.current = pos;
+      velRef.current = vel;
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
 
-    // Manual scroll (touch swipe, trackpad, scrollbar): adopt its position
-    // and wrap so it never reaches either end.
-    const onScroll = () => {
-      // Our own writes land within a pixel of pos; skip those unless a
-      // person is mid-interaction (slow swipes also move < 1px per event).
-      if (Math.abs(el.scrollLeft - pos) < 1 && performance.now() > userActiveUntil) return;
-      markUserActive();
-      const wrapped = wrap(el.scrollLeft);
-      if (Math.abs(wrapped - el.scrollLeft) >= 1) el.scrollLeft = wrapped;
-      pos = wrapped;
-    };
-
-    // Mouse drag — touch already scrolls natively via overflow-x.
+    // Finger or mouse drag. touch-action: pan-y (styles.css) leaves vertical
+    // swipes to the page and hands horizontal ones to us.
     const onPointerDown = (e) => {
-      if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      drag = { x: e.clientX, start: pos, lastX: e.clientX, lastT: e.timeStamp, v: 0 };
-      fling = 0;
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      drag = { id: e.pointerId, x: e.clientX, start: pos, lastX: e.clientX, lastT: e.timeStamp, v: 0 };
+      vel = 0;
       el.setPointerCapture(e.pointerId);
     };
     const onPointerMove = (e) => {
-      if (!drag) return;
+      if (!drag || e.pointerId !== drag.id) return;
       pos = wrap(drag.start - (e.clientX - drag.x));
       el.scrollLeft = pos;
       // Smoothed so one jittery event doesn't set the whole fling.
@@ -278,29 +260,38 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
       }
     };
     const onPointerUp = (e) => {
-      if (!drag) return;
+      if (!drag || e.pointerId !== drag.id) return;
       const stale = e.timeStamp - drag.lastT > MARQUEE_FLING_STALE_MS;
-      if (!reduceMotion && !stale) fling = drag.v;
+      // From here the tick eases this back to cruising speed.
+      vel = stale ? 0 : clamp(drag.v);
       drag = null;
-      markUserActive();
     };
 
-    el.addEventListener('scroll', onScroll, { passive: true });
-    el.addEventListener('touchstart', markUserActive, { passive: true });
-    el.addEventListener('wheel', markUserActive, { passive: true });
+    // Sideways trackpad / shift+wheel: move with it, and carry its speed
+    // into the glide once the gesture ends.
+    const onWheel = (e) => {
+      const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+      if (!dx) return;
+      e.preventDefault();
+      const dtMs = Math.max(e.timeStamp - lastWheel, 8);
+      lastWheel = e.timeStamp;
+      pos = wrap(pos + dx);
+      el.scrollLeft = pos;
+      vel = clamp(vel * 0.5 + ((dx / dtMs) * 1000) * 0.5);
+    };
+
     el.addEventListener('pointerdown', onPointerDown);
     el.addEventListener('pointermove', onPointerMove);
     el.addEventListener('pointerup', onPointerUp);
     el.addEventListener('pointercancel', onPointerUp);
+    el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       cancelAnimationFrame(frame);
-      el.removeEventListener('scroll', onScroll);
-      el.removeEventListener('touchstart', markUserActive);
-      el.removeEventListener('wheel', markUserActive);
       el.removeEventListener('pointerdown', onPointerDown);
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', onPointerUp);
       el.removeEventListener('pointercancel', onPointerUp);
+      el.removeEventListener('wheel', onWheel);
     };
   }, [items, reverse]);
 
@@ -313,33 +304,17 @@ function SupportersRow({ items, reverse, paused, renderItem = renderSupporterChi
   );
 }
 
-// One shared pause state for all rows — hovering/touching anywhere in the
-// group pauses every row together, which reads cleaner than each row
-// independently starting and stopping as the pointer crosses between them.
+// Rows alternate direction. No hover pause: the rows ease back to cruising
+// speed after a fling instead of stopping under the cursor.
 function SupportersMarquee({ items, renderItem, rowCount = MARQUEE_ROWS }) {
-  const [paused, setPaused] = useState(false);
-  // Memoized so hovering (which re-renders via setPaused) hands each row the
-  // same array — a new one would restart the row's scroll effect and make
-  // it jump.
+  // Memoized so a re-render hands each row the same array — a new one would
+  // restart the row's scroll effect and make it jump.
   const rows = useMemo(() => splitIntoRows(items, rowCount), [items, rowCount]);
 
   return (
-    <div
-      className="supporters-marquee-group"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
-      onTouchCancel={() => setPaused(false)}
-    >
+    <div className="supporters-marquee-group">
       {rows.map((row, i) => (
-        <SupportersRow
-          key={i}
-          items={row}
-          reverse={i % 2 === 1}
-          paused={paused}
-          renderItem={renderItem}
-        />
+        <SupportersRow key={i} items={row} reverse={i % 2 === 1} renderItem={renderItem} />
       ))}
     </div>
   );
@@ -688,7 +663,7 @@ export default function Welcome() {
           </Reveal>
           {sponsors.length > 0 && <SponsorTiers t={t} sponsors={sponsors} />}
           {activeSupporters.length > 0 ? (
-            // Lowest tier, below bronze: "เพื่อนของ DeePer", people who
+            // Lowest tier, below bronze: "ผู้สนับสนุนรายบุคคล", people who
             // donated through the site (approved proofs, plus SUPPORTERS),
             // as one auto-scrolling row of name chips — it loops
             // even with only a couple of names, since short rows repeat

@@ -235,7 +235,7 @@ router.post('/inquiries/:id/:action(handled|reopen)', (req, res) => {
 });
 
 // ---- Sponsor logos ----
-export const SPONSOR_TIERS = ['high', 'medium', 'general'];
+const SPONSOR_TIERS = ['high', 'medium', 'general'];
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SPONSOR_DIR = join(__dirname, '..', '..', 'uploads', 'sponsors');
 fs.mkdirSync(SPONSOR_DIR, { recursive: true });

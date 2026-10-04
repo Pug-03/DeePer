@@ -139,7 +139,7 @@ export function optionalAuth(req, res, next) {
 // the hash with:  node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 10))" '<password>'
 const ADMIN_TTL = '12h';
 
-export const adminConfigured = () => !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD_HASH);
+const adminConfigured = () => !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD_HASH);
 
 export function checkAdminLogin(email, password) {
   if (!adminConfigured()) return false;

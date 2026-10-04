@@ -1,5 +1,5 @@
 // Approve (or take back) a supporter's transfer proof so their name shows
-// in the "เพื่อนของ DeePer" tier on the landing page. Check the slip first —
+// in the "ผู้สนับสนุนรายบุคคล" tier on the landing page. Check the slip first —
 // list everything with `npm run proofs`. Run from the server folder:
 //   npm run approve -- 12 15          approve proofs #12 and #15
 //   npm run approve -- --revoke 12    hide #12 again

@@ -101,7 +101,7 @@ router.get('/sponsors', (req, res) => {
 });
 
 // Public: names of donors whose proof the maintainer has approved, for the
-// "เพื่อนของ DeePer" tier on the landing page.
+// "ผู้สนับสนุนรายบุคคล" tier on the landing page.
 router.get('/supporters', (req, res) => {
   res.json({ supporters: approvedSupporterNames() });
 });
