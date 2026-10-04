@@ -357,6 +357,8 @@ function Reports({ onLogout, onChange }) {
 }
 
 function Proofs({ onLogout, onChange }) {
+  const confirm = useConfirm();
+  const toast = useToast();
   const { data, error, reload } = useAdminData(adminApi.proofs, onLogout);
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -372,16 +374,40 @@ function Proofs({ onLogout, onChange }) {
     }
   };
 
+  // Name not fit to show publicly: keep it off the site and email the donor
+  // a thank-you at their sign-up address instead.
+  const reject = async (p) => {
+    const ok = await confirm({
+      title: 'ไม่ขึ้นชื่อ',
+      message: p.email
+        ? `ไม่แสดงชื่อ "${p.display_name}" บนหน้าเว็บ และส่งอีเมลขอบคุณไปที่ ${p.email} ?`
+        : `ไม่แสดงชื่อ "${p.display_name}" บนหน้าเว็บ? (บัญชีนี้ไม่มีอีเมล จึงส่งอีเมลขอบคุณไม่ได้)`,
+      confirmText: 'ไม่ขึ้นชื่อ',
+    });
+    if (!ok) return;
+    try {
+      const r = await adminApi.rejectProof(p.id);
+      toast(r.emailed ? 'ไม่ขึ้นชื่อ และส่งอีเมลขอบคุณแล้ว' : 'ไม่ขึ้นชื่อแล้ว แต่ส่งอีเมลไม่ได้ (ไม่มีอีเมล หรือยังไม่ได้ตั้งค่า SMTP)');
+      reload();
+      onChange();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+      else toast(e.message);
+    }
+  };
+
   return (
     <>
-      <p className="admin-note">ตรวจสลิปว่ายอดและเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "เพื่อนของ DeePer" บนหน้าเว็บทันที</p>
+      <p className="admin-note">ตรวจสลิปว่ายอดและเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "เพื่อนของ DeePer" บนหน้าเว็บทันที ถ้าชื่อไม่เหมาะสม กด "ไม่ขึ้นชื่อ" ระบบจะส่งอีเมลขอบคุณไปที่อีเมลที่เขาใช้สมัครแทน</p>
       {data.proofs.length === 0 && <p className="admin-note">ยังไม่มีคนส่งหลักฐาน</p>}
       {data.proofs.map((p) => (
         <div key={p.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">{p.display_name}</span>
-            <span className={`admin-tag ${p.approved_at ? 'admin-tag--ok' : 'admin-tag--wait'}`}>
-              {p.approved_at ? 'ขึ้นหน้าเว็บแล้ว' : 'รออนุมัติ'}
+            <span
+              className={`admin-tag ${p.approved_at ? 'admin-tag--ok' : p.rejected_at ? '' : 'admin-tag--wait'}`}
+            >
+              {p.approved_at ? 'ขึ้นหน้าเว็บแล้ว' : p.rejected_at ? 'ไม่ขึ้นชื่อ' : 'รออนุมัติ'}
             </span>
           </div>
           <dl className="admin-dl">
@@ -406,6 +432,13 @@ function Proofs({ onLogout, onChange }) {
           >
             {p.approved_at ? 'ซ่อนชื่อออกจากหน้าเว็บ' : 'อนุมัติ ให้ชื่อขึ้นหน้าเว็บ'}
           </button>
+          {p.rejected_at ? (
+            <p className="admin-note admin-replied">ไม่ขึ้นชื่อเมื่อ {fmtTime(p.rejected_at)} · กดอนุมัติด้านบนถ้าเปลี่ยนใจ</p>
+          ) : (
+            <button className="btn btn--ghost admin-action admin-reply" type="button" onClick={() => reject(p)}>
+              ไม่ขึ้นชื่อ · ส่งอีเมลขอบคุณแทน
+            </button>
+          )}
         </div>
       ))}
     </>

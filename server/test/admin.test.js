@@ -180,3 +180,46 @@ test('admin-added sponsors show on the public list and can be changed or removed
   assert.deepEqual(await pub(), []);
   assert.equal((await admin.get('/admin/sponsors')).body.sponsors.length, 0);
 });
+
+test('declining a supporter name hides it, emails thanks, and can be undone by approving', async () => {
+  const admin = api(base, await adminToken());
+  const { token } = await registerUser(base);
+  const PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  const form = new FormData();
+  form.append('slip', new Blob([PNG], { type: 'image/png' }), 'slip.png');
+  form.append('display_name', 'ชื่อไม่เหมาะสม');
+  form.append('transfer_date', '2026-10-05');
+  form.append('transfer_time', '09:00');
+  form.append('amount', '100');
+  await fetch(`${base}/support/proof`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+
+  const before = (await admin.get('/admin/stats')).body.proofs_pending;
+  const proof = (await admin.get('/admin/proofs')).body.proofs.find((p) => p.display_name === 'ชื่อไม่เหมาะสม');
+  await admin.post(`/admin/proofs/${proof.id}/approve`);
+
+  const res = await admin.post(`/admin/proofs/${proof.id}/reject`);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.emailed, true);
+  assert.ok(res.body.email);
+  const names = async () => (await api(base).get('/support/supporters')).body.supporters;
+  assert.ok(!(await names()).includes('ชื่อไม่เหมาะสม'));
+  const after = (await admin.get('/admin/proofs')).body.proofs.find((p) => p.id === proof.id);
+  assert.ok(after.rejected_at);
+  assert.equal(after.approved_at, null);
+  assert.equal((await admin.get('/admin/stats')).body.proofs_pending, before - 1);
+
+  await admin.post(`/admin/proofs/${proof.id}/approve`);
+  assert.ok((await names()).includes('ชื่อไม่เหมาะสม'));
+  assert.equal((await admin.get('/admin/proofs')).body.proofs.find((p) => p.id === proof.id).rejected_at, null);
+
+  const { db } = await import('../src/db.js');
+  const fs = await import('node:fs');
+  const { join } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const uploads = join(fileURLToPath(new URL('..', import.meta.url)), 'uploads');
+  const { slip_path: sp } = db.prepare('SELECT slip_path FROM support_proofs WHERE id = ?').get(proof.id);
+  fs.rmSync(join(uploads, sp.replace(/^\/uploads\//, '')), { force: true });
+});

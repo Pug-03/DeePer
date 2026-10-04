@@ -274,6 +274,11 @@ if (proofCols.length) {
   if (!proofCols.some((c) => c.name === 'approved_at')) {
     db.exec(`ALTER TABLE support_proofs ADD COLUMN approved_at TEXT`);
   }
+  // support_proofs.rejected_at — set when the admin declines to show the
+  // name (e.g. it's inappropriate) and emails the donor a thank-you instead.
+  if (!proofCols.some((c) => c.name === 'rejected_at')) {
+    db.exec(`ALTER TABLE support_proofs ADD COLUMN rejected_at TEXT`);
+  }
   // support_proofs.review_token — secret in the maintainer's email link to
   // the review page (approve / hide without a shell). Backfilled so proofs
   // sent before this column existed can be reviewed the same way.

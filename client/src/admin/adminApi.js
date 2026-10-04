@@ -51,4 +51,5 @@ export const adminApi = {
   deleteSponsor: (id) => request(`/sponsors/${id}`, { method: 'DELETE' }),
   proofs: () => request('/proofs'),
   setProof: (id, action) => request(`/proofs/${id}/${action}`, { method: 'POST' }),
+  rejectProof: (id) => request(`/proofs/${id}/reject`, { method: 'POST' }),
 };

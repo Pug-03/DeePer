@@ -49,7 +49,7 @@ router.get('/stats', (req, res) => {
     logins_today: count(`SELECT COUNT(*) AS c FROM login_history WHERE date(created_at, ${BKK}) = ${today}`),
     answers_today: count(`SELECT COUNT(*) AS c FROM history WHERE date(created_at, ${BKK}) = ${today}`),
     reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL'),
-    proofs_pending: count('SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL'),
+    proofs_pending: count('SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL'),
     days: days.map((d) => ({
       day: d,
       visitors: visitors[d] || 0,
@@ -166,12 +166,43 @@ router.get('/proofs', (req, res) => {
   const rows = db
     .prepare(
       `SELECT p.id, p.display_name, p.transfer_date, p.transfer_time, p.amount, p.slip_path,
-              p.approved_at, p.created_at, u.nickname, u.email
+              p.approved_at, p.rejected_at, p.created_at, u.nickname, u.email
        FROM support_proofs p LEFT JOIN users u ON u.id = p.user_id
-       ORDER BY p.approved_at IS NOT NULL, p.created_at DESC`,
+       ORDER BY p.approved_at IS NOT NULL OR p.rejected_at IS NOT NULL, p.created_at DESC`,
     )
     .all();
   res.json({ proofs: rows });
+});
+
+// Decline to show a donor's name (e.g. it's inappropriate) and thank them
+// by email instead, at the address they signed up with. The proof stays on
+// file and can still be approved later.
+const REJECT_TEXT = (name) =>
+  `ขอบคุณมากที่สนับสนุน DeePer นะ ทุกการสนับสนุนช่วยให้เราพัฒนาแอปต่อไปได้จริง ๆ\n\n` +
+  `เราได้รับหลักฐานการโอนของคุณแล้ว แต่ขออนุญาตไม่แสดงชื่อ "${name}" บนหน้าเว็บ ` +
+  `เพราะชื่อหรือความหมายอาจไม่เหมาะสมกับพื้นที่สาธารณะ\n\n` +
+  `ถ้าอยากให้แสดงชื่ออื่น ส่งหลักฐานใหม่ในแอปพร้อมชื่อที่ต้องการได้เลย\n\n— ทีม DeePer`;
+
+router.post('/proofs/:id/reject', async (req, res) => {
+  const p = db
+    .prepare('SELECT p.*, u.email FROM support_proofs p LEFT JOIN users u ON u.id = p.user_id WHERE p.id = ?')
+    .get(Number(req.params.id));
+  if (!p) return res.status(404).json({ error: 'ไม่พบหลักฐาน', error_code: 'NOT_FOUND' });
+  db.prepare(`UPDATE support_proofs SET approved_at = NULL, rejected_at = datetime('now') WHERE id = ?`).run(p.id);
+
+  let emailed = false;
+  if (p.email) {
+    // Never mail from the test suite (a real .env may hold SMTP credentials).
+    emailed =
+      process.env.NODE_ENV === 'test' ||
+      (await sendMail({ to: p.email, subject: 'ขอบคุณที่สนับสนุน DeePer', text: REJECT_TEXT(p.display_name) })
+        .then((r) => r.delivered)
+        .catch((err) => {
+          console.error('[admin] reject email failed', err);
+          return false;
+        }));
+  }
+  res.json({ ok: true, emailed, email: p.email || null });
 });
 
 router.post('/proofs/:id/:action(approve|revoke)', (req, res) => {

@@ -15,7 +15,7 @@ export function proofByToken(token) {
 // exist; already-approved ones keep their original approval time.
 export function approveProofs(ids) {
   const stmt = db.prepare(
-    `UPDATE support_proofs SET approved_at = COALESCE(approved_at, datetime('now')) WHERE id = ?`,
+    `UPDATE support_proofs SET approved_at = COALESCE(approved_at, datetime('now')), rejected_at = NULL WHERE id = ?`,
   );
   return ids.filter((id) => stmt.run(id).changes > 0);
 }
