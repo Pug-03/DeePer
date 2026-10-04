@@ -103,6 +103,11 @@ const STAT_SPARKLES = [
   { top: -8, right: -14, delay: 0, size: 16 },
   { bottom: -4, left: -16, delay: 1.1, size: 11 },
 ];
+// Same twinkle on the "follow us" heading, offset in time from the stat's.
+const SOCIAL_SPARKLES = [
+  { top: -10, right: -18, delay: 0.4, size: 14 },
+  { bottom: -2, left: -18, delay: 1.6, size: 10 },
+];
 
 // The app's standout features, shown below the About blurb — icon +
 // i18n key pair per row, kept as data so the section is one small map()
@@ -618,7 +623,12 @@ export default function Welcome() {
         <div className="landing-section">
           <Reveal>
             <p className="eyebrow">{t('welcome.social.eyebrow')}</p>
-            <h2 className="h2">{t('welcome.social.title')}</h2>
+            <h2 className="h2">
+              <span className="sparkle-anchor">
+                {t('welcome.social.title')}
+                <Sparkles points={SOCIAL_SPARKLES} />
+              </span>
+            </h2>
           </Reveal>
           <Reveal delay={0.1}>
             <p className="sub">{t('social.msg')}</p>

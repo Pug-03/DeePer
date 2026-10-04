@@ -3,7 +3,7 @@
 // still shows, but as a non-clickable "coming soon" entry.
 export const SOCIAL_INFO = {
   instagram: {
-    handle: '',
+    handle: 'deeper.th.app',
   },
   tiktok: {
     handle: '',
