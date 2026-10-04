@@ -1,8 +1,15 @@
 // Approval gate between a submitted transfer proof (support_proofs) and the
 // donor's name showing up on the landing page ("เพื่อนของ DeePer" tier).
 // Nothing is public until the maintainer has checked the slip and approved
-// it — a submitted proof alone never puts a name on the site.
+// it — a submitted proof alone never puts a name on the site. Approval
+// happens from the review link emailed per proof, or `npm run approve`.
 import { db } from './db.js';
+
+// The proof a review link points at, or undefined for an unknown token.
+export function proofByToken(token) {
+  if (!token) return undefined;
+  return db.prepare('SELECT * FROM support_proofs WHERE review_token = ?').get(String(token));
+}
 
 // Marks proofs approved (their names go public). Returns the ids that
 // exist; already-approved ones keep their original approval time.

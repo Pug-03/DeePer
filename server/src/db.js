@@ -1,4 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
+import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { bankRows, CATEGORIES } from './questions-bank.js';
@@ -238,6 +239,16 @@ if (proofCols.length) {
   // slip (npm run approve); only approved donors' names are shown publicly.
   if (!proofCols.some((c) => c.name === 'approved_at')) {
     db.exec(`ALTER TABLE support_proofs ADD COLUMN approved_at TEXT`);
+  }
+  // support_proofs.review_token — secret in the maintainer's email link to
+  // the review page (approve / hide without a shell). Backfilled so proofs
+  // sent before this column existed can be reviewed the same way.
+  if (!proofCols.some((c) => c.name === 'review_token')) {
+    db.exec(`ALTER TABLE support_proofs ADD COLUMN review_token TEXT`);
+  }
+  const fill = db.prepare('UPDATE support_proofs SET review_token = ? WHERE id = ?');
+  for (const { id } of db.prepare('SELECT id FROM support_proofs WHERE review_token IS NULL').all()) {
+    fill.run(randomBytes(24).toString('hex'), id);
   }
 }
 

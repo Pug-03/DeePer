@@ -79,3 +79,32 @@ test('the same name donating twice is listed once, with no amounts', async () =>
   assert.deepEqual(res.body.supporters, ['Mew']);
   assert.ok(!JSON.stringify(res.body).includes('100'));
 });
+
+test('the emailed review link approves and hides a name, but only via POST', async () => {
+  const { token } = await registerUser(base);
+  await submitProof(token, 'น้ำ');
+  const { db } = await import('../src/db.js');
+  const { review_token: rt } = db.prepare(`SELECT review_token FROM support_proofs WHERE display_name = 'น้ำ'`).get();
+  assert.match(rt, /^[0-9a-f]{48}$/);
+  const names = async () => (await api(base).get('/support/supporters')).body.supporters;
+
+  // Opening the link (as a mail scanner would) shows the proof, changes nothing.
+  const page = await fetch(`${base}/support/review/${rt}`);
+  assert.equal(page.status, 200);
+  assert.ok((await page.text()).includes('น้ำ'));
+  assert.ok(!(await names()).includes('น้ำ'));
+
+  const approve = await fetch(`${base}/support/review/${rt}/approve`, { method: 'POST', redirect: 'manual' });
+  assert.equal(approve.status, 303);
+  assert.ok((await names()).includes('น้ำ'));
+
+  await fetch(`${base}/support/review/${rt}/revoke`, { method: 'POST', redirect: 'manual' });
+  assert.ok(!(await names()).includes('น้ำ'));
+});
+
+test('an unknown review token is a 404 and approves nothing', async () => {
+  const page = await fetch(`${base}/support/review/deadbeef`);
+  assert.equal(page.status, 404);
+  const post = await fetch(`${base}/support/review/deadbeef/approve`, { method: 'POST', redirect: 'manual' });
+  assert.equal(post.status, 404);
+});
