@@ -76,6 +76,19 @@ db.exec(`
     created_at     TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS bug_reports (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id          INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    category         TEXT NOT NULL,
+    message          TEXT NOT NULL,
+    contact          TEXT,
+    page             TEXT,
+    user_agent       TEXT,
+    screenshot_path  TEXT,
+    resolved_at      TEXT,
+    created_at       TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS app_meta (
     key    TEXT PRIMARY KEY,
     value  TEXT

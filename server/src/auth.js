@@ -78,16 +78,22 @@ export function publicUser(u) {
   };
 }
 
-export function requireAuth(req, res, next) {
+const AUTH_ERRORS = {
+  AUTH_REQUIRED: 'ต้องเข้าสู่ระบบก่อน',
+  USER_NOT_FOUND: 'ไม่พบบัญชีผู้ใช้',
+  SESSION_EXPIRED: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่',
+};
+
+// Resolves the request's Bearer token to { user, sessionId }, or { code }
+// naming why it couldn't (one of AUTH_ERRORS).
+function resolveAuth(req) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token)
-    return res.status(401).json({ error: 'ต้องเข้าสู่ระบบก่อน', error_code: 'AUTH_REQUIRED' });
+  if (!token) return { code: 'AUTH_REQUIRED' };
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.uid);
-    if (!user)
-      return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้', error_code: 'USER_NOT_FOUND' });
+    if (!user) return { code: 'USER_NOT_FOUND' };
     // The token's own session must still be an un-revoked login_history
     // row — gone (revoked via "log out this device" / "log out other
     // devices", or a token signed before sessions existed) means treat it
@@ -95,16 +101,27 @@ export function requireAuth(req, res, next) {
     const session = db
       .prepare('SELECT id FROM login_history WHERE id = ? AND user_id = ? AND revoked_at IS NULL')
       .get(payload.sid ?? -1, user.id);
-    if (!session)
-      return res
-        .status(401)
-        .json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', error_code: 'SESSION_EXPIRED' });
-    req.user = user;
-    req.sessionId = payload.sid;
-    next();
+    if (!session) return { code: 'SESSION_EXPIRED' };
+    return { user, sessionId: payload.sid };
   } catch {
-    return res
-      .status(401)
-      .json({ error: 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่', error_code: 'SESSION_EXPIRED' });
+    return { code: 'SESSION_EXPIRED' };
   }
+}
+
+export function requireAuth(req, res, next) {
+  const { user, sessionId, code } = resolveAuth(req);
+  if (code) return res.status(401).json({ error: AUTH_ERRORS[code], error_code: code });
+  req.user = user;
+  req.sessionId = sessionId;
+  next();
+}
+
+// For routes open to guests too: sets req.user when a valid token is sent,
+// and otherwise carries on as a guest — a stale token never blocks the
+// request.
+export function optionalAuth(req, res, next) {
+  const { user, sessionId } = resolveAuth(req);
+  req.user = user || null;
+  req.sessionId = sessionId;
+  next();
 }

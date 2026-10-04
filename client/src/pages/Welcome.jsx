@@ -717,6 +717,13 @@ export default function Welcome() {
         </div>
 
         <Reveal className="landing-divider" />
+
+        <Reveal className="landing-report">
+          {t('report.footer')}{' '}
+          <button className="link" type="button" onClick={() => nav('/report', { state: { from: '/' } })}>
+            {t('report.footerCta')}
+          </button>
+        </Reveal>
       </div>
     </>
   );

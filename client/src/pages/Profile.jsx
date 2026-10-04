@@ -275,6 +275,15 @@ export default function Profile() {
         </button>
       </div>
 
+      <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
+        <p className="faint" style={{ margin: '0 0 12px' }}>
+          {t('report.teaser')}
+        </p>
+        <button className="btn btn--ghost" onClick={() => nav('/report', { state: { from: '/app/profile' } })}>
+          {t('report.cta')}
+        </button>
+      </div>
+
       <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
         <h2 className="h2" style={{ marginBottom: 14, fontSize: 17 }}>
           {t('profile.myInfo')}

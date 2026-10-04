@@ -7,4 +7,5 @@ server/deeptalk.db-wal
 server/deeptalk.db-shm
 server/.tmp-test-*.db*
 server/uploads/
+server/private-uploads/
 .DS_Store

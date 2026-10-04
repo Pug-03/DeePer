@@ -22,6 +22,7 @@ import AccountSettings from './pages/AccountSettings.jsx';
 import LoginHistory from './pages/LoginHistory.jsx';
 import Support from './pages/Support.jsx';
 import Social from './pages/Social.jsx';
+import Report from './pages/Report.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -69,6 +70,8 @@ export default function App() {
               <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
               <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
               <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+              {/* Open to guests and signed-in users alike. */}
+              <Route path="/report" element={<Report />} />
 
               <Route path="/app" element={<Protected><TabLayout /></Protected>}>
                 <Route index element={<Navigate to="home" replace />} />

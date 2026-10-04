@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import questionRoutes from './routes/questions.js';
 import dataRoutes from './routes/data.js';
 import supportRoutes from './routes/support.js';
+import reportRoutes from './routes/reports.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const app = express();
@@ -72,6 +73,7 @@ app.get('/api/stats', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api', dataRoutes);
 
 // Serve the built client in production (client/dist), if present.
