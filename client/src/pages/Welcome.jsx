@@ -5,9 +5,20 @@ import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
-import { IcSparkle, IcMousePointer, IcCards, IcUser, IcShare, IcHistory, IcFileText } from '../components/icons.jsx';
+import {
+  IcSparkle,
+  IcMousePointer,
+  IcCards,
+  IcUser,
+  IcShare,
+  IcHistory,
+  IcFileText,
+  IcInstagram,
+  IcTikTok,
+} from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
 import { SPONSORS, SPONSOR_TIERS, SUPPORTERS } from '../sponsors-info.js';
+import { socialLinks } from '../social-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
 // production build dead-code-eliminates the branch that reads this import —
 // this fixture (and its placeholder strings) never reaches the shipped
@@ -19,6 +30,8 @@ import { makeMockSupportersDevOnly } from '../dev/mockSupporters.js';
 // landing page's scroll-reveal reads as the same motion language, not a
 // different one bolted on.
 const EASE = [0.16, 1, 0.3, 1];
+
+const SOCIAL_ICONS = { instagram: IcInstagram, tiktok: IcTikTok };
 
 // Fades + rises one landing element in as it crosses into view — each
 // heading, paragraph, row and tier gets its own, so they arrive one by one
@@ -442,6 +455,7 @@ function DevTeamCard({ dev, lang, nav }) {
 export default function Welcome() {
   const nav = useNavigate();
   const { t, lang } = useI18n();
+  const socials = socialLinks();
   const [userCount, setUserCount] = useState(null);
   const mockSupporterCount = useMockSupporterCountForPreview();
   // Donors whose transfer proof the maintainer approved (npm run approve),
@@ -595,6 +609,47 @@ export default function Welcome() {
           <Reveal delay={0.2}>
             <div className="stat-label">{t('welcome.stats.label')}</div>
           </Reveal>
+        </div>
+
+        <Reveal className="landing-divider" />
+
+        {/* Where news and events get announced — right after the user count,
+            so "this many people use it" leads straight into "follow along". */}
+        <div className="landing-section">
+          <Reveal>
+            <p className="eyebrow">{t('welcome.social.eyebrow')}</p>
+            <h2 className="h2">{t('welcome.social.title')}</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="sub">{t('social.msg')}</p>
+          </Reveal>
+          <div className="social-links">
+            {socials.map(({ key, handle, url }, i) => {
+              const Icon = SOCIAL_ICONS[key];
+              const body = (
+                <>
+                  <span className="feature-ic">
+                    <Icon size={19} />
+                  </span>
+                  <span className="social-link-text">
+                    <span className="feature-title">{t(`social.${key}`)}</span>
+                    <span className="feature-desc">{url ? `@${handle}` : t('social.soon')}</span>
+                  </span>
+                </>
+              );
+              return (
+                <Reveal key={key} delay={0.08 * i}>
+                  {url ? (
+                    <a className="social-link glass" href={url} target="_blank" rel="noopener noreferrer">
+                      {body}
+                    </a>
+                  ) : (
+                    <div className="social-link glass social-link--soon">{body}</div>
+                  )}
+                </Reveal>
+              );
+            })}
+          </div>
         </div>
 
         <Reveal className="landing-divider" />

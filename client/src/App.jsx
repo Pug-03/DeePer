@@ -21,6 +21,7 @@ import Profile from './pages/Profile.jsx';
 import AccountSettings from './pages/AccountSettings.jsx';
 import LoginHistory from './pages/LoginHistory.jsx';
 import Support from './pages/Support.jsx';
+import Social from './pages/Social.jsx';
 
 function Protected({ children }) {
   const { user, loading } = useAuth();
@@ -81,6 +82,7 @@ export default function App() {
               <Route path="/app/profile/settings" element={<Protected><AccountSettings /></Protected>} />
               <Route path="/app/profile/login-history" element={<Protected><LoginHistory /></Protected>} />
               <Route path="/app/profile/support" element={<Protected><Support /></Protected>} />
+              <Route path="/app/profile/social" element={<Protected><Social /></Protected>} />
               <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
               <Route path="*" element={<Navigate to="/" replace />} />

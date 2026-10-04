@@ -259,6 +259,15 @@ export default function Profile() {
 
       <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
         <p className="faint" style={{ margin: '0 0 12px' }}>
+          {t('social.teaser')}
+        </p>
+        <button className="btn btn--ghost" onClick={() => nav('/app/profile/social')}>
+          {t('social.cta')}
+        </button>
+      </div>
+
+      <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
+        <p className="faint" style={{ margin: '0 0 12px' }}>
           {t('support.teaser')}
         </p>
         <button className="btn btn--primary" onClick={() => nav('/app/profile/support')}>
