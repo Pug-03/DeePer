@@ -1722,12 +1722,24 @@ a.btn {
 .social-link:active {
   transform: scale(0.98);
 }
-.social-link--soon {
-  opacity: 0.6;
-}
 .social-link-text {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.social-link-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.social-link-head .feature-title {
+  margin: 0;
+}
+.social-link-handle {
+  font-size: 12.5px;
+  color: var(--text-faint);
 }
 /* ---------- Supporters marquee ---------- */
 /* One column of independently-scrolling rows. */

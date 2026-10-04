@@ -632,8 +632,11 @@ export default function Welcome() {
                     <Icon size={19} />
                   </span>
                   <span className="social-link-text">
-                    <span className="feature-title">{t(`social.${key}`)}</span>
-                    <span className="feature-desc">{url ? `@${handle}` : t('social.soon')}</span>
+                    <span className="social-link-head">
+                      <span className="feature-title">{t(`social.${key}`)}</span>
+                      <span className="social-link-handle">{url ? `@${handle}` : t('social.soon')}</span>
+                    </span>
+                    <span className="feature-desc">{t(`social.${key}Desc`)}</span>
                   </span>
                 </>
               );
@@ -644,7 +647,7 @@ export default function Welcome() {
                       {body}
                     </a>
                   ) : (
-                    <div className="social-link glass social-link--soon">{body}</div>
+                    <div className="social-link glass">{body}</div>
                   )}
                 </Reveal>
               );
