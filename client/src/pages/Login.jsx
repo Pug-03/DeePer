@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
+import { setAdminToken } from '../admin/adminApi.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
@@ -24,6 +25,11 @@ export default function Login() {
     setBusy(true);
     try {
       const d = await api.post('/auth/login', { email, password }, { auth: false });
+      if (d.admin_token) {
+        setAdminToken(d.admin_token);
+        nav('/admin', { replace: true });
+        return;
+      }
       applyAuth(d.token, d.user);
       nav('/app/welcome', { replace: true, state: { isNew: false } });
     } catch (e2) {

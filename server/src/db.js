@@ -90,6 +90,14 @@ db.exec(`
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  -- One row per signed-in user per Bangkok calendar day they used the app,
+  -- for the admin dashboard's daily-active count.
+  CREATE TABLE IF NOT EXISTS user_activity (
+    day      TEXT NOT NULL,
+    user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (day, user_id)
+  );
+
   CREATE TABLE IF NOT EXISTS app_meta (
     key    TEXT PRIMARY KEY,
     value  TEXT

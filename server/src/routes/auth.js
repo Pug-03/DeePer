@@ -15,6 +15,8 @@ import {
   validatePassword,
   publicUser,
   requireAuth,
+  checkAdminLogin,
+  signAdminToken,
 } from '../auth.js';
 
 const router = Router();
@@ -249,6 +251,10 @@ router.post('/login', authLimiter, (req, res) => {
     return res
       .status(400)
       .json({ error: 'กรุณากรอกอีเมลและรหัสผ่าน', error_code: 'EMAIL_PASSWORD_REQUIRED' });
+
+  // The admin signs in on this same form: their credentials (from env, not
+  // the users table) get an admin token instead of a user session.
+  if (checkAdminLogin(email, password)) return res.json({ admin_token: signAdminToken() });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
   if (!user || !verifyPassword(password, user.password_hash))

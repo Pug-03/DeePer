@@ -108,11 +108,17 @@ function resolveAuth(req) {
   }
 }
 
+// Marks the user active today (Bangkok time) — feeds the admin dashboard.
+const markActive = db.prepare(
+  `INSERT OR IGNORE INTO user_activity (day, user_id) VALUES (date('now', '+7 hours'), ?)`,
+);
+
 export function requireAuth(req, res, next) {
   const { user, sessionId, code } = resolveAuth(req);
   if (code) return res.status(401).json({ error: AUTH_ERRORS[code], error_code: code });
   req.user = user;
   req.sessionId = sessionId;
+  markActive.run(user.id);
   next();
 }
 
@@ -124,4 +130,36 @@ export function optionalAuth(req, res, next) {
   req.user = user || null;
   req.sessionId = sessionId;
   next();
+}
+
+// ---- Admin ----
+// A single admin login, separate from user accounts: the email and a bcrypt
+// hash of the password come from ADMIN_EMAIL / ADMIN_PASSWORD_HASH (never
+// from the repo, which is public), so it also survives DB wipes. Generate
+// the hash with:  node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 10))" '<password>'
+const ADMIN_TTL = '12h';
+
+export const adminConfigured = () => !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD_HASH);
+
+export function checkAdminLogin(email, password) {
+  if (!adminConfigured()) return false;
+  const emailOk = String(email || '').trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase();
+  // Always run the bcrypt compare so a wrong email takes as long as a wrong password.
+  const passOk = bcrypt.compareSync(String(password || ''), process.env.ADMIN_PASSWORD_HASH);
+  return emailOk && passOk;
+}
+
+export function signAdminToken() {
+  return jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: ADMIN_TTL });
+}
+
+export function requireAdmin(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  try {
+    if (token && jwt.verify(token, JWT_SECRET).admin === true) return next();
+  } catch {
+    /* fall through */
+  }
+  res.status(401).json({ error: 'ต้องเข้าสู่ระบบแอดมินก่อน', error_code: 'ADMIN_AUTH_REQUIRED' });
 }
