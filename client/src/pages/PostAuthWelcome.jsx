@@ -3,6 +3,10 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { displayName } from '../util.js';
+import { IcInstagram, IcTikTok } from '../components/icons.jsx';
+import { socialLinks } from '../social-info.js';
+
+const SOCIAL_ICONS = { instagram: IcInstagram, tiktok: IcTikTok };
 
 const EASE = [0.16, 1, 0.3, 1];
 const CIRCLE_DURATION = 0.9;
@@ -117,6 +121,35 @@ export default function PostAuthWelcome() {
           </motion.div>
         </div>
       </div>
+
+      {/* Small follow-us nudge; a channel without a handle yet shows dimmed
+          and isn't clickable. */}
+      <motion.div className="postauth-social" {...rise(1.83)}>
+        <span>{t('postAuth.follow')}</span>
+        {socialLinks().map(({ key, url }) => {
+          const Icon = SOCIAL_ICONS[key];
+          return url ? (
+            <a
+              key={key}
+              className="postauth-social-link"
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t(`social.${key}`)}
+            >
+              <Icon size={17} />
+            </a>
+          ) : (
+            <span
+              key={key}
+              className="postauth-social-link postauth-social-link--soon"
+              title={`${t(`social.${key}`)} · ${t('social.soon')}`}
+            >
+              <Icon size={17} />
+            </span>
+          );
+        })}
+      </motion.div>
     </div>
   );
 }

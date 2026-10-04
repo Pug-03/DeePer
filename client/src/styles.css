@@ -1519,6 +1519,30 @@ a {
 }
 
 /* ---------- Follow us (IG / TikTok) ---------- */
+/* Small nudge under the post-login welcome buttons */
+.postauth-social {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+.postauth-social-link {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--border-red);
+  color: var(--red-bright);
+}
+.postauth-social-link--soon {
+  opacity: 0.45;
+}
 .social-perks {
   list-style: none;
   margin: 0;

@@ -191,6 +191,7 @@ export const STRINGS = {
     'postAuth.tutAsk': 'อยากให้เราแนะนำวิธีใช้งานเบื้องต้นไหม?',
     'postAuth.tutYes': 'ต้องการเลย',
     'postAuth.tutNo': 'ข้าม ไปเลย',
+    'postAuth.follow': 'อย่าลืมติดตามเราทาง IG และ TikTok นะ',
 
     // สอนการใช้งาน (หน้าหลัก → บันทึกไว้ → ประวัติ)
     'tut.next': 'ถัดไป',
@@ -643,6 +644,7 @@ export const STRINGS = {
     'postAuth.tutAsk': 'Want a quick walkthrough of how it works?',
     'postAuth.tutYes': 'Yes, show me',
     'postAuth.tutNo': 'No, skip',
+    'postAuth.follow': "Don't forget to follow us on IG and TikTok",
 
     // Onboarding tour (Home -> Saved -> History)
     'tut.next': 'Next',
