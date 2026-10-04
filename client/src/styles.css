@@ -1774,28 +1774,6 @@ a {
 }
 
 /* ---------- Report a problem / bug ---------- */
-.report-done {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.report-done-ic {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 12px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(52, 211, 153, 0.14);
-  color: var(--green);
-}
-.report-done-title {
-  margin: 0 0 6px;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--text);
-}
 /* Quiet one-line footer on Welcome, below the supporters */
 .landing-report {
   padding: 0 20px 12px;

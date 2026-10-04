@@ -462,6 +462,7 @@ export const STRINGS = {
     'report.submitting': 'กำลังส่ง...',
     'report.doneTitle': 'ได้รับแล้ว ขอบคุณมาก!',
     'report.doneMsg': 'ทีมจะอ่านและรีบแก้ไขให้เร็วที่สุด',
+    'report.again': 'แจ้งเรื่องอื่นเพิ่ม',
 
     // วันที่
     'date.today': 'วันนี้',
@@ -904,6 +905,7 @@ export const STRINGS = {
     'report.submitting': 'Sending...',
     'report.doneTitle': 'Got it — thank you!',
     'report.doneMsg': "We'll read it and fix things as soon as we can",
+    'report.again': 'Report something else',
 
     'date.today': 'Today',
   },
