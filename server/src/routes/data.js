@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { db } from '../db.js';
+import rateLimit from 'express-rate-limit';
+import { db, bumpStat } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CATEGORIES } from '../questions-bank.js';
 
@@ -39,6 +40,7 @@ router.post('/saved', (req, res) => {
       `INSERT INTO saved_questions (user_id, question_text, category) VALUES (?, ?, ?)`,
     )
     .run(req.user.id, text, category);
+  bumpStat('saved');
   res.json({ saved: { id: Number(info.lastInsertRowid) } });
 });
 
@@ -47,6 +49,24 @@ router.delete('/saved/:id', (req, res) => {
     Number(req.params.id),
     req.user.id,
   );
+  res.json({ ok: true });
+});
+
+// ---------------- Swipes ----------------
+
+// The deck pings this on every card swiped away, either direction, for the
+// landing page's public swipe total. Capped so one account can't pump the
+// number — well above what a person can swipe by hand.
+const swipeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 60,
+  keyGenerator: (req) => String(req.user.id),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/swipes', swipeLimiter, (_req, res) => {
+  bumpStat('swiped');
   res.json({ ok: true });
 });
 
@@ -108,6 +128,8 @@ router.post('/history', (req, res) => {
       partner_name != null ? String(partner_name) : fallback.name,
       partner_color != null ? String(partner_color) : fallback.color,
     );
+
+  bumpStat('answered');
 
   // If this came from a saved question, remove it from the saved list.
   if (saved_id) {

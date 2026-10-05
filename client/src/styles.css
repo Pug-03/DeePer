@@ -2034,6 +2034,23 @@ a.btn {
   color: var(--text-dim);
   font-size: 14px;
 }
+/* Activity totals under the user count — one row of three, smaller and
+   quieter so the user count stays the headline. */
+.stat-grid {
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 400px;
+}
+.stat-cell .stat-number--sm {
+  margin-top: 0;
+  font-size: 26px;
+}
+.stat-cell .stat-label {
+  margin-top: 6px;
+  font-size: 12.5px;
+}
 /* Feature highlights, below About — same centered-block-of-left-aligned-
    rows treatment as .dev-team-list, so the two read as one page language
    rather than two different list styles. */

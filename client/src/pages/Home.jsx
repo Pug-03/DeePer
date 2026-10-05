@@ -818,6 +818,11 @@ export default function Home() {
   };
 
   const advance = useCallback(() => setIdx((i) => i + 1), []);
+  // Feeds the landing page's public "cards swiped" total. Fire-and-forget:
+  // a failed ping just goes uncounted, never in the user's way.
+  const countSwipe = () => {
+    api.post('/swipes').catch(() => {});
+  };
   const doSkip = () => {
     if (flyRegistry.current?.id === current?.id) flyRegistry.current.fly('skip');
   };
@@ -1072,8 +1077,14 @@ export default function Home() {
                 <DeckStack
                   current={current}
                   next={deck[idx + 1]}
-                  onSkip={advance}
-                  onAnswer={goAnswer}
+                  onSkip={() => {
+                    countSwipe();
+                    advance();
+                  }}
+                  onAnswer={() => {
+                    countSwipe();
+                    goAnswer();
+                  }}
                   onSave={save}
                   enterDir={enterDir}
                   flyRegistry={flyRegistry}

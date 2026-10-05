@@ -317,6 +317,29 @@ if (!reportCols.some((c) => c.name === 'replied_at')) {
   db.exec(`ALTER TABLE bug_reports ADD COLUMN replied_at TEXT`);
 }
 
+// Running totals for the public landing-page stats. Kept as counters rather
+// than COUNT(*) over history/saved_questions because those rows go away
+// (a user deletes an entry, answering a saved question removes it), and a
+// public "so far" number should never go down. Seeded once from whatever
+// rows exist when the table is first created; skips were never stored, so
+// swipes start from the answered count.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS stat_counters (
+    key    TEXT PRIMARY KEY,
+    value  INTEGER NOT NULL DEFAULT 0
+  );
+`);
+{
+  const seed = db.prepare('INSERT OR IGNORE INTO stat_counters (key, value) VALUES (?, ?)');
+  const answered = db.prepare('SELECT COUNT(*) AS c FROM history').get().c;
+  seed.run('answered', answered);
+  seed.run('saved', db.prepare('SELECT COUNT(*) AS c FROM saved_questions').get().c);
+  seed.run('swiped', answered);
+}
+
+const bumpStmt = db.prepare('UPDATE stat_counters SET value = value + 1 WHERE key = ?');
+export const bumpStat = (key) => bumpStmt.run(key);
+
 // Seed the curated question bank once.
 const count = db.prepare(`SELECT COUNT(*) AS c FROM questions WHERE source = 'bank'`).get();
 if (count.c === 0) {

@@ -68,10 +68,18 @@ fs.mkdirSync(join(uploadsDir, 'slips'), { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
-// Public landing-page stat — total signups only, no per-user data.
+// Public landing-page stats — site-wide totals only, no per-user data.
 app.get('/api/stats', (_req, res) => {
   const { c } = db.prepare('SELECT COUNT(*) AS c FROM users').get();
-  res.json({ user_count: c });
+  const counters = Object.fromEntries(
+    db.prepare('SELECT key, value FROM stat_counters').all().map((r) => [r.key, r.value]),
+  );
+  res.json({
+    user_count: c,
+    swipe_count: counters.swiped ?? 0,
+    answer_count: counters.answered ?? 0,
+    save_count: counters.saved ?? 0,
+  });
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);

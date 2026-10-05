@@ -57,7 +57,7 @@ function Reveal({ children = null, delay = 0, className }) {
 // The landing user count: "···" until the stat loads, then counts up from 0
 // on a gentle ease-out the first time it scrolls into view, and pops when it
 // lands — same timing as the iOS app's CountUpNumber (WelcomeView.swift).
-function CountUpNumber({ target }) {
+function CountUpNumber({ target, className = 'stat-number' }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
   const reduceMotion = useReducedMotion();
@@ -85,12 +85,12 @@ function CountUpNumber({ target }) {
   return (
     <motion.div
       ref={ref}
-      className="stat-number"
+      className={className}
       // Landing pop: swell out, then spring back to size.
       animate={landed ? { scale: [1, 1.22, 1] } : { scale: 1 }}
       transition={{ duration: 0.66, times: [0, 0.25, 1], ease: ['easeOut', [0.34, 1.56, 0.64, 1]] }}
     >
-      {target == null ? '···' : `${value}+`}
+      {target == null ? '···' : `${value.toLocaleString('en-US')}+`}
     </motion.div>
   );
 }
@@ -396,6 +396,14 @@ function LaunchCountdown({ t }) {
   );
 }
 
+// Smaller totals under the user count: every card swiped, answered and
+// saved.
+const ACTIVITY_STATS = [
+  { key: 'swipes', field: 'swipe_count' },
+  { key: 'answers', field: 'answer_count' },
+  { key: 'saves', field: 'save_count' },
+];
+
 function SponsorTiers({ t, sponsors }) {
   const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
   return (
@@ -472,7 +480,7 @@ export default function Welcome() {
   const nav = useNavigate();
   const { t, lang } = useI18n();
   const socials = socialLinks();
-  const [userCount, setUserCount] = useState(null);
+  const [stats, setStats] = useState(null);
   const mockSupporterCount = useMockSupporterCountForPreview();
   // Donors whose transfer proof the maintainer approved (npm run approve),
   // on top of any names hard-coded in SUPPORTERS. Empty until it loads; the
@@ -522,7 +530,7 @@ export default function Welcome() {
       api
         .get('/stats', { auth: false })
         .then((data) => {
-          if (!cancelled) setUserCount(data.user_count);
+          if (!cancelled) setStats(data);
         })
         .catch(() => {
           if (!cancelled) timer = setTimeout(load, 5000);
@@ -635,13 +643,21 @@ export default function Welcome() {
           </Reveal>
           <Reveal delay={0.1}>
             <div className="stat-number-wrap">
-              <CountUpNumber target={userCount} />
+              <CountUpNumber target={stats?.user_count ?? null} />
               <Sparkles points={STAT_SPARKLES} />
             </div>
           </Reveal>
           <Reveal delay={0.2}>
             <div className="stat-label">{t('welcome.stats.label')}</div>
           </Reveal>
+          <div className="stat-grid">
+            {ACTIVITY_STATS.map(({ key, field }, i) => (
+              <Reveal className="stat-cell" key={key} delay={0.25 + 0.08 * i}>
+                <CountUpNumber target={stats?.[field] ?? null} className="stat-number stat-number--sm" />
+                <div className="stat-label">{t(`welcome.stats.${key}`)}</div>
+              </Reveal>
+            ))}
+          </div>
         </div>
 
         <Reveal className="landing-divider" />
