@@ -2342,14 +2342,14 @@ a.btn {
 .sponsor-tier .supporters-marquee-group {
   margin-top: 0;
 }
-/* Pre-launch: sponsor logos blurred behind two crossed strips of red
+/* Pre-launch: sponsor logos and supporter names blurred behind two crossed strips of red
    "caution tape" (police-tape look, in the brand red instead of yellow). */
-.sponsor-sealed {
+.sealed {
   position: relative;
   overflow: hidden;
   padding: 8px 0;
 }
-.sponsor-sealed .sponsor-tiers {
+.sealed-content {
   filter: blur(12px) saturate(0.6);
   opacity: 0.7;
   user-select: none;
@@ -2384,6 +2384,10 @@ a.btn {
 .sponsor-tape--b {
   transform: translateY(-50%) rotate(5deg);
   opacity: 0.92;
+}
+/* The supporters row is only one chip tall: one flat strip across it. */
+.sealed--single .sponsor-tape--a {
+  transform: translateY(-50%) rotate(-1.5deg);
 }
 /* Individual supporters: the lowest tier, a sibling below .sponsor-tiers
    (not inside it), so it adds the tiers' own 28px gap itself. Plain dim

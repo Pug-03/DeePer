@@ -400,43 +400,53 @@ const ACTIVITY_STATS = [
   { key: 'shares', field: 'share_count' },
 ];
 
-// Until launch the sponsors are `sealed`: logos blurred out behind two
-// strips of red "caution tape", and not clickable. Flips open on its own
-// when the clock passes LAUNCH_AT.
-function SponsorTiers({ t, sponsors, sealed }) {
-  const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
-  const tiers = (
-    <div className="sponsor-tiers" aria-hidden={sealed || undefined} inert={sealed ? '' : undefined}>
-      {byTier.map(([tier, items]) => {
-        if (items.length === 0) return null;
-        return (
-          // Each tier reveals on its own as it scrolls into view.
-          <Reveal className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
-            {/* Gold / silver / bronze: metallic gradient label between two
-                gem glyphs (see .sponsor-tier-label--<tier> in styles.css). */}
-            <p className={`sponsor-tier-label sponsor-tier-label--${tier}`}>
-              <span className="tier-gem" aria-hidden="true">✦</span>
-              {t(`welcome.supporters.tier.${tier}`)}
-              <span className="tier-gem" aria-hidden="true">✦</span>
-            </p>
-            <div className="sponsor-wall">{items.map(renderSponsorLogo)}</div>
-          </Reveal>
-        );
-      })}
-    </div>
-  );
-  if (!sealed) return tiers;
+// Until launch, sponsors and individual supporters are `sealed`: blurred out
+// behind red "caution tape" (two crossed strips, or one flat strip for the
+// short supporters row), and not clickable. Flips open on its own when the
+// clock passes LAUNCH_AT.
+function Sealed({ t, sealed, single = false, children }) {
+  if (!sealed) return children;
   const tapeText = Array.from({ length: 8 }, () => t('welcome.supporters.sealed')).join('  ✦  ');
   return (
-    <div className="sponsor-sealed">
-      {tiers}
-      <div className="sponsor-tape sponsor-tape--a" aria-hidden="true">
+    <div className={`sealed${single ? ' sealed--single' : ''}`}>
+      <div className="sealed-content" aria-hidden="true" inert="">
+        {children}
+      </div>
+      <div className="sponsor-tape sponsor-tape--a">
         <span>{tapeText}</span>
       </div>
-      <div className="sponsor-tape sponsor-tape--b">
-        <span>{tapeText}</span>
-      </div>
+      {!single && (
+        <div className="sponsor-tape sponsor-tape--b" aria-hidden="true">
+          <span>{tapeText}</span>
+        </div>
+      )}
     </div>
+  );
+}
+
+function SponsorTiers({ t, sponsors, sealed }) {
+  const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
+  return (
+    <Sealed t={t} sealed={sealed}>
+      <div className="sponsor-tiers">
+        {byTier.map(([tier, items]) => {
+          if (items.length === 0) return null;
+          return (
+            // Each tier reveals on its own as it scrolls into view.
+            <Reveal className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
+              {/* Gold / silver / bronze: metallic gradient label between two
+                  gem glyphs (see .sponsor-tier-label--<tier> in styles.css). */}
+              <p className={`sponsor-tier-label sponsor-tier-label--${tier}`}>
+                <span className="tier-gem" aria-hidden="true">✦</span>
+                {t(`welcome.supporters.tier.${tier}`)}
+                <span className="tier-gem" aria-hidden="true">✦</span>
+              </p>
+              <div className="sponsor-wall">{items.map(renderSponsorLogo)}</div>
+            </Reveal>
+          );
+        })}
+      </div>
+    </Sealed>
   );
 }
 
@@ -778,7 +788,9 @@ export default function Welcome() {
                 {t('welcome.supporters.tier.individual')}
                 <span className="tier-gem" aria-hidden="true">✦</span>
               </p>
-              <SupportersMarquee items={activeSupporters} rowCount={1} />
+              <Sealed t={t} sealed={!launch.launched} single>
+                <SupportersMarquee items={activeSupporters} rowCount={1} />
+              </Sealed>
             </Reveal>
           ) : sponsors.length > 0 ? null : (
             <Reveal className="supporters-placeholder">
