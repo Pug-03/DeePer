@@ -2395,25 +2395,60 @@ a.btn {
   color: var(--text);
   margin: 0;
 }
-button.dev-team-name-clickable {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.dev-team-row-clickable {
   background: none;
   border: none;
-  padding: 0;
+  padding: 6px 10px;
+  margin: -6px -10px;
+  border-radius: 14px;
   font: inherit;
   color: inherit;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, transform 0.15s ease;
 }
-button.dev-team-name-clickable:hover,
-button.dev-team-name-clickable:focus-visible {
-  opacity: 0.7;
+.dev-team-row-clickable * {
+  cursor: pointer;
+}
+.dev-team-row-clickable .dev-team-text,
+.dev-team-row-clickable .dev-team-name,
+.dev-team-row-clickable .dev-team-role {
+  display: block;
+}
+.dev-team-row-clickable .dev-team-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.dev-team-row-clickable:hover,
+.dev-team-row-clickable:focus-visible {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+.dev-team-row-clickable:active {
+  transform: scale(0.98);
 }
 .dev-team-name-icon {
   color: var(--text-dim);
   flex-shrink: 0;
+  transform-origin: 30% 30%;
+  animation: dev-team-tap 2.4s ease-in-out infinite;
+}
+.dev-team-row-clickable:hover .dev-team-name-icon {
+  color: var(--text);
+  animation-duration: 1s;
+}
+/* A small "tap" bounce on the mouse icon, hinting the row opens a page. */
+@keyframes dev-team-tap {
+  0%, 60%, 100% { transform: translate(0, 0) scale(1); }
+  70% { transform: translate(-2px, -2px) scale(1); }
+  80% { transform: translate(0, 0) scale(0.85); }
+  90% { transform: translate(0, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dev-team-name-icon { animation: none; }
 }
 .dev-team-role {
   font-size: 13px;

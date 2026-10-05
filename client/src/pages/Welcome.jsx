@@ -438,36 +438,47 @@ function DevTeamCard({ dev, lang, nav }) {
   const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
   const showPhoto = dev.avatar && !imgFailed;
 
+  const avatar = showPhoto ? (
+    <img
+      className="dev-team-avatar-img"
+      src={dev.avatar}
+      alt=""
+      style={{ objectPosition: dev.avatarPosition || 'center' }}
+      onError={() => setImgFailed(true)}
+      draggable={false}
+    />
+  ) : (
+    <span className="supporter-avatar dev-team-avatar-fallback">{initials(name)}</span>
+  );
+
   return (
     <div className="dev-team-entry">
-      <div className="dev-team-row">
-        {showPhoto ? (
-          <img
-            className="dev-team-avatar-img"
-            src={dev.avatar}
-            alt={name}
-            style={{ objectPosition: dev.avatarPosition || 'center' }}
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <span className="supporter-avatar dev-team-avatar-fallback">{initials(name)}</span>
-        )}
-        <div className="dev-team-text">
-          {dev.awardsHref ? (
-            <button
-              type="button"
-              className="dev-team-name dev-team-name-clickable"
-              onClick={() => nav(dev.awardsHref)}
-            >
+      {dev.awardsHref ? (
+        // The whole row (avatar, name and role) is one button, so a tap
+        // anywhere on it opens the profile instead of only on the name text.
+        <button
+          type="button"
+          className="dev-team-row dev-team-row-clickable"
+          onClick={() => nav(dev.awardsHref)}
+        >
+          {avatar}
+          <span className="dev-team-text">
+            <span className="dev-team-name">
               {name}
               <IcMousePointer size={17} className="dev-team-name-icon" />
-            </button>
-          ) : (
+            </span>
+            <span className="dev-team-role">{role}</span>
+          </span>
+        </button>
+      ) : (
+        <div className="dev-team-row">
+          {avatar}
+          <div className="dev-team-text">
             <p className="dev-team-name">{name}</p>
-          )}
-          <p className="dev-team-role">{role}</p>
+            <p className="dev-team-role">{role}</p>
+          </div>
         </div>
-      </div>
+      )}
       {dev.link && (
         <a className="link dev-team-link" href={dev.link} target="_blank" rel="noreferrer">
           {dev.link.replace(/^https?:\/\//, '')}
