@@ -54,7 +54,7 @@ export default function SponsorInquiry() {
         <motion.h1 className="h1" {...rise(1.05)}>
           {t('sponsorForm.doneTitle')}
         </motion.h1>
-        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto' }} {...rise(1.2)}>
+        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(1.2)}>
           {t('sponsorForm.doneMsg')}
         </motion.p>
         <motion.div style={{ marginTop: 36 }} {...rise(1.38)}>

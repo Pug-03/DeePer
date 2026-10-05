@@ -56,7 +56,7 @@ export default function Report() {
         <motion.h1 className="h1" {...rise(1.05)}>
           {t('report.doneTitle')}
         </motion.h1>
-        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto' }} {...rise(1.2)}>
+        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(1.2)}>
           {t('report.doneMsg')}
         </motion.p>
         <div className="stack" style={{ marginTop: 36 }}>

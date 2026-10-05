@@ -482,7 +482,7 @@ export const STRINGS = {
     'sponsorForm.submit': 'ส่งข้อมูลให้ทีม DeePer',
     'sponsorForm.submitting': 'กำลังส่ง...',
     'sponsorForm.doneTitle': 'ได้รับข้อมูลแล้ว ขอบคุณมาก!',
-    'sponsorForm.doneMsg': 'ทีม DeePer จะติดต่อกลับตามช่องทางที่ให้ไว้โดยเร็วที่สุด',
+    'sponsorForm.doneMsg': 'ทีม DeePer จะติดต่อกลับ\nตามช่องทางที่ให้ไว้โดยเร็วที่สุด',
 
     // วันที่
     'date.today': 'วันนี้',
