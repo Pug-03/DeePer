@@ -2196,7 +2196,8 @@ a.btn {
    gradient, plus a soft glow in the metal's own color. */
 .sponsor-tier-label--high,
 .sponsor-tier-label--medium,
-.sponsor-tier-label--general {
+.sponsor-tier-label--general,
+.sponsor-tier-label--individual {
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2212,6 +2213,15 @@ a.btn {
 .sponsor-tier-label--general {
   background-image: linear-gradient(120deg, #ffd2b0 0%, #cd7f32 40%, #8b4513 70%, #f0a878 100%);
   filter: drop-shadow(0 0 10px rgba(205, 127, 50, 0.3));
+}
+/* Individual supporters: lowest tier, so a quieter finish than the
+   metals — a soft rose-gray sheen, no glow, slightly smaller. */
+.sponsor-tier-label--individual {
+  font-size: 13px;
+  background-image: linear-gradient(120deg, #e9dfe2 0%, #bfaeb4 45%, #8f7d84 75%, #dccfd3 100%);
+}
+.sponsor-tier-label--individual .tier-gem {
+  font-size: 15px;
 }
 .tier-gem {
   font-size: 18px;

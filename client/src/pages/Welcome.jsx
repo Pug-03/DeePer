@@ -669,7 +669,11 @@ export default function Welcome() {
             // even with only a couple of names, since short rows repeat
             // their items into a longer set (see SupportersRow).
             <Reveal className="sponsor-tier sponsor-tier-individual">
-              <p className="sponsor-tier-label">{t('welcome.supporters.tier.individual')}</p>
+              <p className="sponsor-tier-label sponsor-tier-label--individual">
+                <span className="tier-gem" aria-hidden="true">✦</span>
+                {t('welcome.supporters.tier.individual')}
+                <span className="tier-gem" aria-hidden="true">✦</span>
+              </p>
               <SupportersMarquee items={activeSupporters} rowCount={1} />
             </Reveal>
           ) : sponsors.length > 0 ? null : (
