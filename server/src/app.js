@@ -79,6 +79,7 @@ app.get('/api/stats', (_req, res) => {
     swipe_count: counters.swiped ?? 0,
     answer_count: counters.answered ?? 0,
     save_count: counters.saved ?? 0,
+    share_count: counters.shared ?? 0,
   });
 });
 app.use('/api/auth', authRoutes);

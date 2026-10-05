@@ -52,12 +52,13 @@ router.delete('/saved/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------------- Swipes ----------------
+// ---------------- Swipes & shares ----------------
 
-// The deck pings this on every card swiped away, either direction, for the
-// landing page's public swipe total. Capped so one account can't pump the
-// number — well above what a person can swipe by hand.
-const swipeLimiter = rateLimit({
+// The deck pings these on every card swiped away (either direction) and
+// every share card sent or saved, for the landing page's public totals.
+// One shared cap so an account can't pump either number — well above what
+// a person can do by hand.
+const pingLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: process.env.NODE_ENV === 'test' ? 1000 : 60,
   keyGenerator: (req) => String(req.user.id),
@@ -65,8 +66,13 @@ const swipeLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.post('/swipes', swipeLimiter, (_req, res) => {
+router.post('/swipes', pingLimiter, (_req, res) => {
   bumpStat('swiped');
+  res.json({ ok: true });
+});
+
+router.post('/shares', pingLimiter, (_req, res) => {
+  bumpStat('shared');
   res.json({ ok: true });
 });
 

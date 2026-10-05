@@ -2034,18 +2034,18 @@ a.btn {
   color: var(--text-dim);
   font-size: 14px;
 }
-/* Activity totals under the user count — one row of three, smaller and
-   quieter so the user count stays the headline. */
+/* Activity totals under the user count — 2×2, smaller and quieter so the
+   user count stays the headline. */
 .stat-grid {
   margin: 28px auto 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  max-width: 400px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 16px;
+  max-width: 360px;
 }
 .stat-cell .stat-number--sm {
   margin-top: 0;
-  font-size: 26px;
+  font-size: 30px;
 }
 .stat-cell .stat-label {
   margin-top: 6px;

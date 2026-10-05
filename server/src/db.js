@@ -321,8 +321,8 @@ if (!reportCols.some((c) => c.name === 'replied_at')) {
 // than COUNT(*) over history/saved_questions because those rows go away
 // (a user deletes an entry, answering a saved question removes it), and a
 // public "so far" number should never go down. Seeded once from whatever
-// rows exist when the table is first created; skips were never stored, so
-// swipes start from the answered count.
+// rows exist when the table is first created; skips and shares were never
+// stored, so swipes start from the answered count and shares from zero.
 db.exec(`
   CREATE TABLE IF NOT EXISTS stat_counters (
     key    TEXT PRIMARY KEY,
@@ -335,6 +335,7 @@ db.exec(`
   seed.run('answered', answered);
   seed.run('saved', db.prepare('SELECT COUNT(*) AS c FROM saved_questions').get().c);
   seed.run('swiped', answered);
+  seed.run('shared', 0);
 }
 
 const bumpStmt = db.prepare('UPDATE stat_counters SET value = value + 1 WHERE key = ?');

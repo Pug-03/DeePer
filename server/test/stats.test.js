@@ -15,7 +15,7 @@ after(() => {
 
 const stats = async () => (await api(base).get('/stats')).body;
 
-test('public stats count swipes, answers and saves, and never go down', async () => {
+test('public stats count swipes, shares, answers and saves, and never go down', async () => {
   const { token } = await registerUser(base);
   const user = api(base, token);
   const start = await stats();
@@ -23,6 +23,8 @@ test('public stats count swipes, answers and saves, and never go down', async ()
   assert.equal((await api(base).post('/swipes')).status, 401);
   await user.post('/swipes');
   await user.post('/swipes');
+  assert.equal((await api(base).post('/shares')).status, 401);
+  await user.post('/shares');
 
   const saved = await user.post('/saved', { question_text: 'คำถามทดสอบ', category: 'friends' });
   // A duplicate save of the same question isn't counted twice.
@@ -37,6 +39,7 @@ test('public stats count swipes, answers and saves, and never go down', async ()
 
   const mid = await stats();
   assert.equal(mid.swipe_count, start.swipe_count + 2);
+  assert.equal(mid.share_count, start.share_count + 1);
   assert.equal(mid.save_count, start.save_count + 1);
   assert.equal(mid.answer_count, start.answer_count + 1);
 

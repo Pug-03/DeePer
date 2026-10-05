@@ -38,6 +38,11 @@ const MEMORY_SHOWN_KEY = 'dt_memory_shown_date';
 // Web Share API only exists on (most) mobile browsers — desktop gets just the
 // "save to device" option in the sheet instead of a share button that can't
 // do anything there.
+// Feeds the landing page's public "cards shared" total once a share card
+// actually goes out (sent, saved to photos, or downloaded). Fire-and-forget.
+const countShare = () => {
+  api.post('/shares').catch(() => {});
+};
 const canShareFiles = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
 const SWIPE_THRESHOLD = 110;
@@ -208,6 +213,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
         // navigator.share but not attaching files.
         await navigator.share({ title: 'DeePer', text: t('home.shareCaption'), url: window.location.origin });
       }
+      countShare();
       setShareFlash(true);
       setTimeout(() => setShareFlash(false), 900);
     } catch (e) {
@@ -230,6 +236,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     if (canShareFiles && navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file] });
+        countShare();
         setShareFlash(true);
         setTimeout(() => setShareFlash(false), 900);
       } catch (e) {
@@ -240,6 +247,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       return;
     }
     downloadBlob(shareBlob, 'deeper-question.png');
+    countShare();
     toast(t('home.shareSaved'));
     closeShareSheet();
   };

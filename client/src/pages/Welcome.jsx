@@ -396,12 +396,13 @@ function LaunchCountdown({ t }) {
   );
 }
 
-// Smaller totals under the user count: every card swiped, answered and
-// saved.
+// Smaller totals under the user count: every card swiped, answered, saved
+// and shared.
 const ACTIVITY_STATS = [
   { key: 'swipes', field: 'swipe_count' },
   { key: 'answers', field: 'answer_count' },
   { key: 'saves', field: 'save_count' },
+  { key: 'shares', field: 'share_count' },
 ];
 
 function SponsorTiers({ t, sponsors }) {
