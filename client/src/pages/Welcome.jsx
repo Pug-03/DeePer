@@ -507,8 +507,11 @@ export default function Welcome() {
   }, []);
   const launch = useLaunch();
   // Sponsor logos added from the admin dashboard, after the hard-coded ones.
+  // Sponsors stay under wraps until launch: not fetched, not shown, and the
+  // section flips on by itself when the clock passes LAUNCH_AT.
   const [adminSponsors, setAdminSponsors] = useState([]);
   useEffect(() => {
+    if (!launch.launched) return undefined;
     let cancelled = false;
     api
       .get('/support/sponsors', { auth: false })
@@ -519,8 +522,8 @@ export default function Welcome() {
     return () => {
       cancelled = true;
     };
-  }, []);
-  const sponsors = [...SPONSORS, ...adminSponsors];
+  }, [launch.launched]);
+  const sponsors = launch.launched ? [...SPONSORS, ...adminSponsors] : [];
   const activeSupporters =
     mockSupporterCount > 0
       ? makeMockSupportersDevOnly(mockSupporterCount)
