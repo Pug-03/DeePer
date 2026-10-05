@@ -2020,6 +2020,31 @@ a.btn {
   font-size: 12px;
   color: var(--text-faint);
 }
+/* Smaller countdown inside the "not open yet" note on sign-up / log-in. */
+.countdown--small {
+  margin-top: 10px;
+  gap: 14px;
+}
+.countdown--small .countdown-cell {
+  min-width: 40px;
+}
+.countdown--small .countdown-num {
+  font-size: 24px;
+}
+.countdown--small .countdown-unit {
+  margin-top: 4px;
+  font-size: 11px;
+}
+.launch-notice {
+  margin-top: 28px;
+  text-align: center;
+}
+.launch-notice-text {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
 /* Twinkle accent used by <Sparkles/> — independent of the onboarding
    tour's own .tut-sparkle (different component, different trigger, left
    untouched). */

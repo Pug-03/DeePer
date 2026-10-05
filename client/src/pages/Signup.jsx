@@ -6,6 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
+import LaunchNotice from '../components/LaunchNotice.jsx';
 import OtpInput from '../components/OtpInput.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
@@ -586,6 +587,8 @@ export default function Signup() {
           </button>
         </form>
       )}
+
+      <LaunchNotice t={t} />
     </div>
   );
 }

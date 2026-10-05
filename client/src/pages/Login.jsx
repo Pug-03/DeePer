@@ -6,6 +6,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
+import LaunchNotice from '../components/LaunchNotice.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import { IcBack, IcGoogle } from '../components/icons.jsx';
 
@@ -140,6 +141,8 @@ export default function Login() {
           </button>
         </p>
       </form>
+
+      <LaunchNotice t={t} />
     </div>
   );
 }
