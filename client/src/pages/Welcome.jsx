@@ -17,6 +17,8 @@ import {
   IcTikTok,
 } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
+import { useLaunch } from '../launch.js';
+import Countdown from '../components/Countdown.jsx';
 import { SPONSORS, SPONSOR_TIERS, SUPPORTERS } from '../sponsors-info.js';
 import { socialLinks } from '../social-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
@@ -336,37 +338,8 @@ const renderSponsorLogo = (s, i) =>
 
 // Sponsors grouped by tier, largest logos first. Each tier uses a static
 // centered wall so every logo stays visible.
-// Official launch: 11.11.2569 at 11:11 Bangkok time. Pinned to +07:00 so
-// every visitor counts down to the same instant whatever their timezone.
-const LAUNCH_AT = new Date('2026-11-11T11:11:00+07:00').getTime();
-const COUNTDOWN_UNITS = ['days', 'hours', 'minutes', 'seconds'];
-
-function splitRemaining(ms) {
-  const s = Math.floor(ms / 1000);
-  return {
-    days: Math.floor(s / 86400),
-    hours: Math.floor(s / 3600) % 24,
-    minutes: Math.floor(s / 60) % 60,
-    seconds: s % 60,
-  };
-}
-
-// Ticks once a second until launch, then returns null so the section
-// disappears on its own — no follow-up deploy needed to take it down.
-function useLaunchCountdown() {
-  const [now, setNow] = useState(() => Date.now());
-  const done = now >= LAUNCH_AT;
-  useEffect(() => {
-    if (done) return undefined;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [done]);
-  return done ? null : splitRemaining(LAUNCH_AT - now);
-}
-
-function LaunchCountdown({ t }) {
-  const remaining = useLaunchCountdown();
-  if (!remaining) return null;
+function LaunchCountdown({ t, launch }) {
+  if (launch.launched) return <LaunchOpened t={t} />;
   return (
     <>
       <div className="landing-section">
@@ -375,20 +348,42 @@ function LaunchCountdown({ t }) {
           <h2 className="h2">{t('welcome.launch.title')}</h2>
         </Reveal>
         <Reveal delay={0.1}>
-          <div className="countdown" role="timer" aria-live="off">
-            {COUNTDOWN_UNITS.map((unit) => (
-              <div className="countdown-cell" key={unit}>
-                <span className="countdown-num">
-                  {String(remaining[unit]).padStart(2, '0')}
-                </span>
-                <span className="countdown-unit">{t(`welcome.launch.${unit}`)}</span>
-              </div>
-            ))}
-          </div>
+          <Countdown remaining={launch.remaining} t={t} />
         </Reveal>
         <Reveal delay={0.2}>
           <p className="stat-label">{t('welcome.launch.when')}</p>
         </Reveal>
+      </div>
+
+      <Reveal className="landing-divider" />
+    </>
+  );
+}
+
+// Takes the countdown's place once launch time passes: springs up from
+// below with a little overshoot when scrolled into view (or right away if
+// the visitor is already looking at it when the clock hits zero).
+function LaunchOpened({ t }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { amount: 0.4, once: true });
+  const reduceMotion = useReducedMotion();
+  return (
+    <>
+      <div className="landing-section" ref={ref}>
+        <motion.div
+          initial={reduceMotion ? false : { opacity: 0, y: 70, scale: 0.85 }}
+          animate={inView ? { opacity: 1, y: 0, scale: 1 } : undefined}
+          transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+        >
+          <p className="eyebrow">{t('welcome.launch.openEyebrow')}</p>
+          <h2 className="h2">
+            <span className="sparkle-anchor">
+              {t('welcome.launch.openTitle')}
+              <Sparkles points={STAT_SPARKLES} />
+            </span>
+          </h2>
+          <p className="stat-label">{t('welcome.launch.openSub')}</p>
+        </motion.div>
       </div>
 
       <Reveal className="landing-divider" />
@@ -510,6 +505,7 @@ export default function Welcome() {
       cancelled = true;
     };
   }, []);
+  const launch = useLaunch();
   // Sponsor logos added from the admin dashboard, after the hard-coded ones.
   const [adminSponsors, setAdminSponsors] = useState([]);
   useEffect(() => {
@@ -613,7 +609,7 @@ export default function Welcome() {
       <div className="landing-more">
         <Reveal className="landing-divider" />
 
-        <LaunchCountdown t={t} />
+        <LaunchCountdown t={t} launch={launch} />
 
         <div className="landing-section">
           <Reveal>
