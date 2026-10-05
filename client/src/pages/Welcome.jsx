@@ -400,10 +400,13 @@ const ACTIVITY_STATS = [
   { key: 'shares', field: 'share_count' },
 ];
 
-function SponsorTiers({ t, sponsors }) {
+// Until launch the sponsors are `sealed`: logos blurred out behind two
+// strips of red "caution tape", and not clickable. Flips open on its own
+// when the clock passes LAUNCH_AT.
+function SponsorTiers({ t, sponsors, sealed }) {
   const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
-  return (
-    <div className="sponsor-tiers">
+  const tiers = (
+    <div className="sponsor-tiers" aria-hidden={sealed || undefined} inert={sealed ? '' : undefined}>
       {byTier.map(([tier, items]) => {
         if (items.length === 0) return null;
         return (
@@ -420,6 +423,19 @@ function SponsorTiers({ t, sponsors }) {
           </Reveal>
         );
       })}
+    </div>
+  );
+  if (!sealed) return tiers;
+  const tapeText = Array.from({ length: 8 }, () => t('welcome.supporters.sealed')).join('  ✦  ');
+  return (
+    <div className="sponsor-sealed">
+      {tiers}
+      <div className="sponsor-tape sponsor-tape--a" aria-hidden="true">
+        <span>{tapeText}</span>
+      </div>
+      <div className="sponsor-tape sponsor-tape--b">
+        <span>{tapeText}</span>
+      </div>
     </div>
   );
 }
@@ -507,11 +523,8 @@ export default function Welcome() {
   }, []);
   const launch = useLaunch();
   // Sponsor logos added from the admin dashboard, after the hard-coded ones.
-  // Sponsors stay under wraps until launch: not fetched, not shown, and the
-  // section flips on by itself when the clock passes LAUNCH_AT.
   const [adminSponsors, setAdminSponsors] = useState([]);
   useEffect(() => {
-    if (!launch.launched) return undefined;
     let cancelled = false;
     api
       .get('/support/sponsors', { auth: false })
@@ -522,8 +535,8 @@ export default function Welcome() {
     return () => {
       cancelled = true;
     };
-  }, [launch.launched]);
-  const sponsors = launch.launched ? [...SPONSORS, ...adminSponsors] : [];
+  }, []);
+  const sponsors = [...SPONSORS, ...adminSponsors];
   const activeSupporters =
     mockSupporterCount > 0
       ? makeMockSupportersDevOnly(mockSupporterCount)
@@ -750,7 +763,9 @@ export default function Welcome() {
           <Reveal delay={0.1}>
             <p className="sub">{t('welcome.supporters.body')}</p>
           </Reveal>
-          {sponsors.length > 0 && <SponsorTiers t={t} sponsors={sponsors} />}
+          {sponsors.length > 0 && (
+            <SponsorTiers t={t} sponsors={sponsors} sealed={!launch.launched} />
+          )}
           {activeSupporters.length > 0 ? (
             // Lowest tier, below bronze: "ผู้สนับสนุนรายบุคคล", people who
             // donated through the site (approved proofs, plus SUPPORTERS),

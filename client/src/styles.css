@@ -2342,6 +2342,49 @@ a.btn {
 .sponsor-tier .supporters-marquee-group {
   margin-top: 0;
 }
+/* Pre-launch: sponsor logos blurred behind two crossed strips of red
+   "caution tape" (police-tape look, in the brand red instead of yellow). */
+.sponsor-sealed {
+  position: relative;
+  overflow: hidden;
+  padding: 8px 0;
+}
+.sponsor-sealed .sponsor-tiers {
+  filter: blur(12px) saturate(0.6);
+  opacity: 0.7;
+  user-select: none;
+  pointer-events: none;
+}
+.sponsor-tape {
+  position: absolute;
+  left: -25%;
+  width: 150%;
+  top: 50%;
+  padding: 7px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background:
+    repeating-linear-gradient(-45deg, #120a0e 0 9px, transparent 9px 18px) top / 100% 5px no-repeat,
+    repeating-linear-gradient(-45deg, #120a0e 0 9px, transparent 9px 18px) bottom / 100% 5px no-repeat,
+    linear-gradient(var(--red-deep), var(--red));
+  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.7);
+}
+.sponsor-tape span {
+  display: block;
+  padding: 3px 0;
+}
+.sponsor-tape--a {
+  transform: translateY(-50%) rotate(-7deg);
+}
+.sponsor-tape--b {
+  transform: translateY(-50%) rotate(5deg);
+  opacity: 0.92;
+}
 /* Individual supporters: the lowest tier, a sibling below .sponsor-tiers
    (not inside it), so it adds the tiers' own 28px gap itself. Plain dim
    label — no metal, these are people rather than sponsor packages. */
