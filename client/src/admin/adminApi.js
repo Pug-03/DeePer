@@ -54,4 +54,7 @@ export const adminApi = {
   proofs: () => request('/proofs'),
   setProof: (id, action) => request(`/proofs/${id}/${action}`, { method: 'POST' }),
   rejectProof: (id) => request(`/proofs/${id}/reject`, { method: 'POST' }),
+  trash: (kind, id) => request(`/${kind}/${id}/trash`, { method: 'POST' }),
+  restore: (kind, id) => request(`/${kind}/${id}/restore`, { method: 'POST' }),
+  purge: (kind, id) => request(`/${kind}/${id}`, { method: 'DELETE' }),
 };

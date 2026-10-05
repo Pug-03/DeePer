@@ -33,7 +33,7 @@ export function approvedSupporterNames() {
     .prepare(
       `SELECT display_name AS name, MIN(approved_at) AS since, MIN(id) AS first_id
        FROM support_proofs
-       WHERE approved_at IS NOT NULL
+       WHERE approved_at IS NOT NULL AND deleted_at IS NULL
        GROUP BY display_name
        ORDER BY since DESC, first_id DESC`,
     )

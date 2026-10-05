@@ -242,3 +242,46 @@ test('a sponsorship inquiry is validated, listed for the admin and can be marked
   assert.equal((await admin.get('/admin/stats')).body.inquiries_open, before);
   assert.equal((await api(base).get('/admin/inquiries')).status, 401);
 });
+
+test('trash hides items from counts and the public list, restores, and only deletes for good from the trash', async () => {
+  const token = await adminToken();
+  const admin = api(base, token);
+  const del = (path) => fetch(`${base}${path}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+
+  // A report: trash -> not counted, still listed with deleted_at; restore; trash again; delete.
+  const form = new FormData();
+  form.append('category', 'bug');
+  form.append('message', 'รายงานที่จะลบทิ้ง');
+  await fetch(`${base}/reports`, { method: 'POST', body: form });
+  const report = (await admin.get('/admin/reports')).body.reports.find((r) => r.message === 'รายงานที่จะลบทิ้ง');
+  const open = (await admin.get('/admin/stats')).body.reports_open;
+
+  assert.equal((await del(`/admin/reports/${report.id}`)).status, 409); // not in the trash yet
+  assert.equal((await admin.post(`/admin/reports/${report.id}/trash`)).status, 200);
+  assert.equal((await admin.get('/admin/stats')).body.reports_open, open - 1);
+  assert.ok((await admin.get('/admin/reports')).body.reports.find((r) => r.id === report.id).deleted_at);
+
+  await admin.post(`/admin/reports/${report.id}/restore`);
+  assert.equal((await admin.get('/admin/stats')).body.reports_open, open);
+
+  await admin.post(`/admin/reports/${report.id}/trash`);
+  assert.equal((await del(`/admin/reports/${report.id}`)).status, 204);
+  assert.equal((await admin.get('/admin/reports')).body.reports.find((r) => r.id === report.id), undefined);
+
+  // An approved proof in the trash drops off the public supporter list.
+  const { db } = await import('../src/db.js');
+  const { lastInsertRowid: proofId } = db
+    .prepare(
+      `INSERT INTO support_proofs (display_name, transfer_date, transfer_time, amount, slip_path, approved_at)
+       VALUES ('ถังขยะ', '2026-10-05', '10:00', 50, '/uploads/slips/none.png', datetime('now'))`,
+    )
+    .run();
+  const names = async () => (await api(base).get('/support/supporters')).body.supporters;
+  assert.ok((await names()).includes('ถังขยะ'));
+  await admin.post(`/admin/proofs/${proofId}/trash`);
+  assert.ok(!(await names()).includes('ถังขยะ'));
+  await admin.post(`/admin/proofs/${proofId}/restore`);
+  assert.ok((await names()).includes('ถังขยะ'));
+
+  assert.equal((await admin.post('/admin/inquiries/999999/trash')).status, 404);
+});

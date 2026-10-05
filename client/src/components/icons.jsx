@@ -55,9 +55,13 @@ export const IcPlus = (p) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
+// Lid, rounded bin and two ribs — same geometry as lucide's trash-2.
 export const IcTrash = (p) => (
-  <svg {...S({ ...p, sw: 1.8 })}>
-    <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+  <svg {...S({ ...p, sw: p.sw || 1.8 })}>
+    <path d="M3 6h18" />
+    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+    <path d="M10 11v6M14 11v6" />
   </svg>
 );
 export const IcMousePointer = (p) => (

@@ -5,6 +5,7 @@ import { Loading, ErrorState, useConfirm, useToast } from '../components/ui.jsx'
 import { SPONSORS } from '../sponsors-info.js';
 import { useI18n } from '../store/i18n.jsx';
 import { CATS } from '../util.js';
+import { IcTrash } from '../components/icons.jsx';
 
 // Owner-only back office at /admin (not linked from anywhere in the app).
 // Thai-only on purpose: its one reader is the maintainer.
@@ -252,6 +253,7 @@ function Reports({ onLogout, onChange }) {
   const [filter, setFilter] = useState('open');
   const [shots, setShots] = useState({}); // id -> loaded image URL (kept once fetched)
   const [openShots, setOpenShots] = useState({}); // id -> currently shown
+  const trash = useTrash('reports', 'รายงาน', { reload, onChange, onLogout });
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data) return <Loading />;
@@ -296,23 +298,20 @@ function Reports({ onLogout, onChange }) {
   };
 
 
-  const list = data.reports.filter((r) =>
-    filter === 'all' ? true : filter === 'open' ? !r.resolved_at : !!r.resolved_at,
-  );
+  const list = inFilter(data.reports, filter, (r) => (r.resolved_at ? 'done' : 'open'));
 
   return (
     <>
-      <div className="filter-row">
-        {[
+      <FilterRow
+        items={data.reports}
+        filter={filter}
+        setFilter={setFilter}
+        statusOf={(r) => (r.resolved_at ? 'done' : 'open')}
+        filters={[
           ['open', 'ยังไม่แก้'],
           ['done', 'แก้แล้ว'],
-          ['all', 'ทั้งหมด'],
-        ].map(([k, l]) => (
-          <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
-            {l}
-          </button>
-        ))}
-      </div>
+        ]}
+      />
       {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
       {list.map((r) => (
         <div key={r.id} className="glass admin-card">
@@ -320,6 +319,7 @@ function Reports({ onLogout, onChange }) {
             <span className={`admin-tag admin-tag--${r.category}`}>{REPORT_LABEL[r.category] || r.category}</span>
             <span className="admin-meta">
               #{r.id} · {fmtTime(r.created_at)}
+              {!r.deleted_at && <TrashButton onClick={() => trash.toTrash(r)} />}
             </span>
           </div>
           <p className="admin-message">{r.message}</p>
@@ -357,14 +357,20 @@ function Reports({ onLogout, onChange }) {
               )}
             </>
           )}
-          <button
-            className={`btn ${r.resolved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
-            type="button"
-            onClick={() => act(r.id, r.resolved_at ? 'reopen' : 'resolve')}
-          >
-            {r.resolved_at ? `แก้แล้ว ${fmtTime(r.resolved_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าแก้แล้ว'}
-          </button>
-          <ReplyButton r={r} onReply={reply} />
+          {r.deleted_at ? (
+            <TrashedActions item={r} trash={trash} />
+          ) : (
+            <>
+              <button
+                className={`btn ${r.resolved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
+                type="button"
+                onClick={() => act(r.id, r.resolved_at ? 'reopen' : 'resolve')}
+              >
+                {r.resolved_at ? `แก้แล้ว ${fmtTime(r.resolved_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าแก้แล้ว'}
+              </button>
+              <ReplyButton r={r} onReply={reply} />
+            </>
+          )}
         </div>
       ))}
     </>
@@ -376,19 +382,13 @@ function Proofs({ onLogout, onChange }) {
   const toast = useToast();
   const { data, error, reload } = useAdminData(adminApi.proofs, onLogout);
   const [filter, setFilter] = useState('pending');
+  const trash = useTrash('proofs', 'หลักฐาน', { reload, onChange, onLogout });
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data) return <Loading />;
 
   const statusOf = (p) => (p.approved_at ? 'approved' : p.rejected_at ? 'rejected' : 'pending');
-  const filters = [
-    ['pending', 'รออนุมัติ'],
-    ['approved', 'ขึ้นหน้าเว็บแล้ว'],
-    ['rejected', 'ไม่ขึ้นชื่อ'],
-    ['all', 'ทั้งหมด'],
-  ];
-  const countOf = (k) => (k === 'all' ? data.proofs.length : data.proofs.filter((p) => statusOf(p) === k).length);
-  const list = filter === 'all' ? data.proofs : data.proofs.filter((p) => statusOf(p) === filter);
+  const list = inFilter(data.proofs, filter, statusOf);
 
   const act = async (id, action) => {
     try {
@@ -425,23 +425,29 @@ function Proofs({ onLogout, onChange }) {
   return (
     <>
       <p className="admin-note">ตรวจสลิปว่ายอดและเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "ผู้สนับสนุนรายบุคคล" บนหน้าเว็บทันที ถ้าชื่อไม่เหมาะสม กด "ไม่ขึ้นชื่อ" ระบบจะส่งอีเมลขอบคุณไปที่อีเมลที่เขาใช้สมัครแทน</p>
-      <div className="filter-row">
-        {filters.map(([k, l]) => (
-          <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
-            {l}
-            <span className="admin-badge">{countOf(k)}</span>
-          </button>
-        ))}
-      </div>
+      <FilterRow
+        items={data.proofs}
+        filter={filter}
+        setFilter={setFilter}
+        statusOf={statusOf}
+        filters={[
+          ['pending', 'รออนุมัติ'],
+          ['approved', 'ขึ้นหน้าเว็บแล้ว'],
+          ['rejected', 'ไม่ขึ้นชื่อ'],
+        ]}
+      />
       {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
       {list.map((p) => (
         <div key={p.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">{p.display_name}</span>
-            <span
-              className={`admin-tag ${p.approved_at ? 'admin-tag--ok' : p.rejected_at ? '' : 'admin-tag--wait'}`}
-            >
-              {p.approved_at ? 'ขึ้นหน้าเว็บแล้ว' : p.rejected_at ? 'ไม่ขึ้นชื่อ' : 'รออนุมัติ'}
+            <span className="admin-meta">
+              <span
+                className={`admin-tag ${p.approved_at ? 'admin-tag--ok' : p.rejected_at ? '' : 'admin-tag--wait'}`}
+              >
+                {p.approved_at ? 'ขึ้นหน้าเว็บแล้ว' : p.rejected_at ? 'ไม่ขึ้นชื่อ' : 'รออนุมัติ'}
+              </span>
+              {!p.deleted_at && <TrashButton onClick={() => trash.toTrash(p)} />}
             </span>
           </div>
           <dl className="admin-dl">
@@ -459,19 +465,27 @@ function Proofs({ onLogout, onChange }) {
           <a href={p.slip_path} target="_blank" rel="noreferrer">
             <img className="admin-img" src={p.slip_path} alt={`สลิปของ ${p.display_name}`} />
           </a>
-          <button
-            className={`btn ${p.approved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
-            type="button"
-            onClick={() => act(p.id, p.approved_at ? 'revoke' : 'approve')}
-          >
-            {p.approved_at ? 'ซ่อนชื่อออกจากหน้าเว็บ' : 'อนุมัติ ให้ชื่อขึ้นหน้าเว็บ'}
-          </button>
-          {p.rejected_at ? (
-            <p className="admin-note admin-replied">ไม่ขึ้นชื่อเมื่อ {fmtTime(p.rejected_at)} · กดอนุมัติด้านบนถ้าเปลี่ยนใจ</p>
+          {p.deleted_at ? (
+            <TrashedActions item={p} trash={trash} />
           ) : (
-            <button className="btn btn--ghost admin-action admin-reply" type="button" onClick={() => reject(p)}>
-              ไม่ขึ้นชื่อ · ส่งอีเมลขอบคุณแทน
-            </button>
+            <>
+              <button
+                className={`btn ${p.approved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
+                type="button"
+                onClick={() => act(p.id, p.approved_at ? 'revoke' : 'approve')}
+              >
+                {p.approved_at ? 'ซ่อนชื่อออกจากหน้าเว็บ' : 'อนุมัติ ให้ชื่อขึ้นหน้าเว็บ'}
+              </button>
+              {p.rejected_at ? (
+                <p className="admin-note admin-replied">
+                  ไม่ขึ้นชื่อเมื่อ {fmtTime(p.rejected_at)} · กดอนุมัติด้านบนถ้าเปลี่ยนใจ
+                </p>
+              ) : (
+                <button className="btn btn--ghost admin-action admin-reply" type="button" onClick={() => reject(p)}>
+                  ไม่ขึ้นชื่อ · ส่งอีเมลขอบคุณแทน
+                </button>
+              )}
+            </>
           )}
         </div>
       ))}
@@ -662,8 +676,13 @@ function Sponsors({ onLogout }) {
 // mark handled.
 function Inquiries({ onLogout, onChange }) {
   const { data, error, reload } = useAdminData(adminApi.inquiries, onLogout);
+  const [filter, setFilter] = useState('open');
+  const trash = useTrash('inquiries', 'คำขอ', { reload, onChange, onLogout });
   if (error) return <ErrorState message={error} onRetry={reload} />;
   if (!data) return <Loading />;
+
+  const statusOf = (q) => (q.handled_at ? 'done' : 'open');
+  const list = inFilter(data.inquiries, filter, statusOf);
 
   const act = async (id, action) => {
     try {
@@ -680,13 +699,26 @@ function Inquiries({ onLogout, onChange }) {
       <p className="admin-note">
         องค์กรที่กด "สนใจร่วมเป็นสปอนเซอร์กับ DeePer? ติดต่อเรา" ในหน้าแรก แล้วกรอกฟอร์มเข้ามา
       </p>
-      {data.inquiries.length === 0 && <p className="admin-note">ยังไม่มีองค์กรติดต่อเข้ามา</p>}
-      {data.inquiries.map((q) => (
+      <FilterRow
+        items={data.inquiries}
+        filter={filter}
+        setFilter={setFilter}
+        statusOf={statusOf}
+        filters={[
+          ['open', 'ยังไม่ได้ติดต่อ'],
+          ['done', 'ติดต่อแล้ว'],
+        ]}
+      />
+      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.map((q) => (
         <div key={q.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">{q.org_name}</span>
-            <span className={`admin-tag ${q.handled_at ? 'admin-tag--ok' : 'admin-tag--wait'}`}>
-              {q.handled_at ? 'ติดต่อแล้ว' : 'ยังไม่ได้ติดต่อ'}
+            <span className="admin-meta">
+              <span className={`admin-tag ${q.handled_at ? 'admin-tag--ok' : 'admin-tag--wait'}`}>
+                {q.handled_at ? 'ติดต่อแล้ว' : 'ยังไม่ได้ติดต่อ'}
+              </span>
+              {!q.deleted_at && <TrashButton onClick={() => trash.toTrash(q)} />}
             </span>
           </div>
           <p className="admin-message">{q.message}</p>
@@ -700,15 +732,95 @@ function Inquiries({ onLogout, onChange }) {
             <dt>ส่งเมื่อ</dt>
             <dd>{fmtTime(q.created_at)}</dd>
           </dl>
-          <button
-            className={`btn ${q.handled_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
-            type="button"
-            onClick={() => act(q.id, q.handled_at ? 'reopen' : 'handled')}
-          >
-            {q.handled_at ? `ติดต่อแล้ว ${fmtTime(q.handled_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าติดต่อแล้ว'}
-          </button>
+          {q.deleted_at ? (
+            <TrashedActions item={q} trash={trash} />
+          ) : (
+            <button
+              className={`btn ${q.handled_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
+              type="button"
+              onClick={() => act(q.id, q.handled_at ? 'reopen' : 'handled')}
+            >
+              {q.handled_at ? `ติดต่อแล้ว ${fmtTime(q.handled_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าติดต่อแล้ว'}
+            </button>
+          )}
         </div>
       ))}
+    </>
+  );
+}
+
+// ---- Trash (shared by reports, proofs and inquiries) ----
+// Trashed items drop out of every status filter and the counts, and live
+// under the "ถังขยะ" filter until restored or deleted for good.
+function inFilter(items, filter, statusOf) {
+  if (filter === 'trash') return items.filter((i) => i.deleted_at);
+  const live = items.filter((i) => !i.deleted_at);
+  return filter === 'all' ? live : live.filter((i) => statusOf(i) === filter);
+}
+
+function FilterRow({ items, filter, setFilter, statusOf, filters }) {
+  const all = [...filters, ['all', 'ทั้งหมด'], ['trash', 'ถังขยะ']];
+  return (
+    <div className="filter-row">
+      {all.map(([k, l]) => (
+        <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+          {k === 'trash' && <IcTrash size={14} />}
+          {l}
+          <span className="admin-badge">{inFilter(items, k, statusOf).length}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function useTrash(kind, noun, { reload, onChange, onLogout }) {
+  const confirm = useConfirm();
+  const toast = useToast();
+  const run = async (fn, done) => {
+    try {
+      await fn();
+      if (done) toast(done);
+      reload();
+      onChange?.();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+      else toast(e.message);
+    }
+  };
+  return {
+    toTrash: (item) => run(() => adminApi.trash(kind, item.id), `ย้าย${noun}ไปถังขยะแล้ว`),
+    restore: (item) => run(() => adminApi.restore(kind, item.id), `กู้คืน${noun}แล้ว`),
+    purge: async (item) => {
+      const ok = await confirm({
+        title: 'ลบถาวร',
+        message: `ลบ${noun}นี้ถาวร? กู้คืนไม่ได้อีก${kind === 'reports' || kind === 'proofs' ? ' และไฟล์รูปจะถูกลบด้วย' : ''}`,
+        confirmText: 'ลบถาวร',
+      });
+      if (ok) run(() => adminApi.purge(kind, item.id), `ลบ${noun}ถาวรแล้ว`);
+    },
+  };
+}
+
+function TrashButton({ onClick }) {
+  return (
+    <button className="admin-trash-btn" type="button" onClick={onClick} aria-label="ย้ายไปถังขยะ" title="ย้ายไปถังขยะ">
+      <IcTrash size={16} />
+    </button>
+  );
+}
+
+function TrashedActions({ item, trash }) {
+  return (
+    <>
+      <p className="admin-note admin-replied">อยู่ในถังขยะตั้งแต่ {fmtTime(item.deleted_at)}</p>
+      <div className="admin-trash-actions">
+        <button className="btn btn--ghost admin-action" type="button" onClick={() => trash.restore(item)}>
+          กู้คืน
+        </button>
+        <button className="btn btn--danger admin-action" type="button" onClick={() => trash.purge(item)}>
+          ลบถาวร
+        </button>
+      </div>
     </>
   );
 }

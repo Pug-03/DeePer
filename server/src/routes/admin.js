@@ -11,6 +11,7 @@ import { sendMail } from '../mailer.js';
 import { REPORT_DIR } from './reports.js';
 
 const router = Router();
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Days are Bangkok calendar days; timestamps in the DB are UTC.
 const BKK = "'+7 hours'";
@@ -48,9 +49,11 @@ router.get('/stats', (req, res) => {
     active_today: count(`SELECT COUNT(*) AS c FROM user_activity WHERE day = ${today}`),
     logins_today: count(`SELECT COUNT(*) AS c FROM login_history WHERE date(created_at, ${BKK}) = ${today}`),
     answers_today: count(`SELECT COUNT(*) AS c FROM history WHERE date(created_at, ${BKK}) = ${today}`),
-    reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL'),
-    inquiries_open: count('SELECT COUNT(*) AS c FROM sponsor_inquiries WHERE handled_at IS NULL'),
-    proofs_pending: count('SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL'),
+    reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL AND deleted_at IS NULL'),
+    inquiries_open: count('SELECT COUNT(*) AS c FROM sponsor_inquiries WHERE handled_at IS NULL AND deleted_at IS NULL'),
+    proofs_pending: count(
+      'SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL AND deleted_at IS NULL',
+    ),
     days: days.map((d) => ({
       day: d,
       visitors: visitors[d] || 0,
@@ -99,7 +102,7 @@ router.get('/insights', (req, res) => {
 router.get('/reports', (req, res) => {
   const rows = db
     .prepare(
-      `SELECT r.id, r.category, r.message, r.contact, r.page, r.user_agent, r.resolved_at, r.replied_at, r.created_at,
+      `SELECT r.id, r.category, r.message, r.contact, r.page, r.user_agent, r.resolved_at, r.replied_at, r.deleted_at, r.created_at,
               r.screenshot_path IS NOT NULL AS has_screenshot, u.nickname, u.email
        FROM bug_reports r LEFT JOIN users u ON u.id = r.user_id
        ORDER BY r.resolved_at IS NOT NULL, r.created_at DESC`,
@@ -167,7 +170,7 @@ router.get('/proofs', (req, res) => {
   const rows = db
     .prepare(
       `SELECT p.id, p.display_name, p.transfer_date, p.transfer_time, p.amount, p.slip_path,
-              p.approved_at, p.rejected_at, p.created_at, u.nickname, u.email
+              p.approved_at, p.rejected_at, p.deleted_at, p.created_at, u.nickname, u.email
        FROM support_proofs p LEFT JOIN users u ON u.id = p.user_id
        ORDER BY p.approved_at IS NOT NULL OR p.rejected_at IS NOT NULL, p.created_at DESC`,
     )
@@ -234,9 +237,44 @@ router.post('/inquiries/:id/:action(handled|reopen)', (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- Trash: reports, sponsor inquiries and transfer proofs ----
+// Moving to the trash only sets deleted_at (the item stays viewable under
+// the trash filter and can be restored). Deleting for good is allowed only
+// from the trash, and also removes the uploaded screenshot or slip.
+const UPLOADS_DIR = join(__dirname, '..', '..', 'uploads');
+const TRASHABLE = {
+  reports: { table: 'bug_reports', file: (r) => r.screenshot_path && join(REPORT_DIR, basename(r.screenshot_path)) },
+  inquiries: { table: 'sponsor_inquiries', file: () => null },
+  proofs: { table: 'support_proofs', file: (r) => join(UPLOADS_DIR, 'slips', basename(r.slip_path)) },
+};
+
+router.post('/:kind(reports|inquiries|proofs)/:id/:action(trash|restore)', (req, res) => {
+  const { table } = TRASHABLE[req.params.kind];
+  const { changes } = db
+    .prepare(
+      req.params.action === 'trash'
+        ? `UPDATE ${table} SET deleted_at = COALESCE(deleted_at, datetime('now')) WHERE id = ?`
+        : `UPDATE ${table} SET deleted_at = NULL WHERE id = ?`,
+    )
+    .run(Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบรายการ', error_code: 'NOT_FOUND' });
+  res.json({ ok: true });
+});
+
+router.delete('/:kind(reports|inquiries|proofs)/:id', (req, res) => {
+  const { table, file } = TRASHABLE[req.params.kind];
+  const row = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(Number(req.params.id));
+  if (!row) return res.status(404).json({ error: 'ไม่พบรายการ', error_code: 'NOT_FOUND' });
+  if (!row.deleted_at)
+    return res.status(409).json({ error: 'ย้ายไปถังขยะก่อน จึงจะลบถาวรได้', error_code: 'NOT_IN_TRASH' });
+  db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(row.id);
+  const path = file(row);
+  if (path) fs.rm(path, { force: true }, () => {});
+  res.status(204).end();
+});
+
 // ---- Sponsor logos ----
 const SPONSOR_TIERS = ['high', 'medium', 'general'];
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const SPONSOR_DIR = join(__dirname, '..', '..', 'uploads', 'sponsors');
 fs.mkdirSync(SPONSOR_DIR, { recursive: true });
 

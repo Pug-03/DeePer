@@ -302,6 +302,14 @@ if (proofCols.length) {
   }
 }
 
+// Migration: deleted_at on the admin-managed inboxes — set when the admin
+// moves an item to the trash (still viewable there, restorable), cleared
+// on restore; a permanent delete removes the row itself.
+for (const table of ['bug_reports', 'sponsor_inquiries', 'support_proofs']) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!cols.some((c) => c.name === 'deleted_at')) db.exec(`ALTER TABLE ${table} ADD COLUMN deleted_at TEXT`);
+}
+
 // Migration: bug_reports.replied_at — set when the admin emails the
 // reporter a thank-you from the dashboard.
 const reportCols = db.prepare(`PRAGMA table_info(bug_reports)`).all();
