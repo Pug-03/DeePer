@@ -336,6 +336,66 @@ const renderSponsorLogo = (s, i) =>
 
 // Sponsors grouped by tier, largest logos first. Each tier uses a static
 // centered wall so every logo stays visible.
+// Official launch: 11.11.2569 at 11:11 Bangkok time. Pinned to +07:00 so
+// every visitor counts down to the same instant whatever their timezone.
+const LAUNCH_AT = new Date('2026-11-11T11:11:00+07:00').getTime();
+const COUNTDOWN_UNITS = ['days', 'hours', 'minutes', 'seconds'];
+
+function splitRemaining(ms) {
+  const s = Math.floor(ms / 1000);
+  return {
+    days: Math.floor(s / 86400),
+    hours: Math.floor(s / 3600) % 24,
+    minutes: Math.floor(s / 60) % 60,
+    seconds: s % 60,
+  };
+}
+
+// Ticks once a second until launch, then returns null so the section
+// disappears on its own — no follow-up deploy needed to take it down.
+function useLaunchCountdown() {
+  const [now, setNow] = useState(() => Date.now());
+  const done = now >= LAUNCH_AT;
+  useEffect(() => {
+    if (done) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [done]);
+  return done ? null : splitRemaining(LAUNCH_AT - now);
+}
+
+function LaunchCountdown({ t }) {
+  const remaining = useLaunchCountdown();
+  if (!remaining) return null;
+  return (
+    <>
+      <div className="landing-section">
+        <Reveal>
+          <p className="eyebrow">{t('welcome.launch.eyebrow')}</p>
+          <h2 className="h2">{t('welcome.launch.title')}</h2>
+        </Reveal>
+        <Reveal delay={0.1}>
+          <div className="countdown" role="timer" aria-live="off">
+            {COUNTDOWN_UNITS.map((unit) => (
+              <div className="countdown-cell" key={unit}>
+                <span className="countdown-num">
+                  {String(remaining[unit]).padStart(2, '0')}
+                </span>
+                <span className="countdown-unit">{t(`welcome.launch.${unit}`)}</span>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+        <Reveal delay={0.2}>
+          <p className="stat-label">{t('welcome.launch.when')}</p>
+        </Reveal>
+      </div>
+
+      <Reveal className="landing-divider" />
+    </>
+  );
+}
+
 function SponsorTiers({ t, sponsors }) {
   const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
   return (
@@ -532,6 +592,8 @@ export default function Welcome() {
           section at once (same as the iOS app's WelcomeView). */}
       <div className="landing-more">
         <Reveal className="landing-divider" />
+
+        <LaunchCountdown t={t} />
 
         <div className="landing-section">
           <Reveal>
