@@ -60,33 +60,132 @@ function splitToFit(ctx, run, maxWidth) {
   return chunks;
 }
 
-// Greedy word-wrap on spaces first (matches how the real .qcard breaks
-// English/spaced text) — but Thai sentences are routinely written with NO
-// spaces between words at all, which would otherwise hand back the entire
-// question as one unbreakable "word" and run it off both edges of the card.
-// Any run still wider than the card after the space-split falls back to
-// character-level wrapping instead.
-function wrapLines(ctx, text, maxWidth) {
-  const words = text.split(/\s+/).filter(Boolean);
+// Marks that must never start a line (they belong to the word before:
+// the Thai repetition mark ๆ, closing quotes and punctuation) and marks
+// that must never end one (opening quotes / brackets).
+const NO_LINE_START = /^[ๆฯ?!.,:;…)\]}”’"'»]+$/;
+const NO_LINE_END = /^[“‘(\[{«]+$/;
+
+// Splits text into the pieces a line may break between. Thai is written
+// without spaces between words, so breaking only on spaces either kept a
+// whole sentence on one line or (the old fallback) cut mid-word; the
+// browser's dictionary word segmenter finds real word boundaries instead.
+// Spaces stay as their own tokens so they can be dropped at a break.
+function breakTokens(text) {
+  const segs =
+    typeof Intl !== 'undefined' && Intl.Segmenter
+      ? Array.from(new Intl.Segmenter('th', { granularity: 'word' }).segment(text), (s) => s.segment)
+      : text.split(/(\s+)/).filter(Boolean);
+  const tokens = [];
+  let glueNext = '';
+  for (const seg of segs) {
+    if (/^\s+$/.test(seg)) {
+      if (tokens.length && !glueNext) tokens.push(' ');
+      continue;
+    }
+    if (NO_LINE_START.test(seg) && tokens.length) {
+      // Re-attach to the previous word, keeping any space between them
+      // ("เล็ก ๆ" stays together).
+      const space = tokens[tokens.length - 1] === ' ' ? tokens.pop() : '';
+      tokens[tokens.length - 1] += space + seg;
+      continue;
+    }
+    if (NO_LINE_END.test(seg)) {
+      glueNext += seg;
+      continue;
+    }
+    tokens.push(glueNext + seg);
+    glueNext = '';
+  }
+  if (glueNext) tokens.push(glueNext);
+  return tokens;
+}
+
+// Thai writers put spaces between phrases, not words, so a space is the
+// most natural place to break. Each space-separated phrase that fits on a
+// line by itself is kept whole; only a phrase too long for one line is
+// broken at its inner word boundaries.
+function phraseTokens(ctx, tokens, maxWidth) {
+  const out = [];
+  let phrase = [];
+  const flush = () => {
+    if (!phrase.length) return;
+    const whole = phrase.join('');
+    if (ctx.measureText(whole).width <= maxWidth) out.push(whole);
+    else out.push(...phrase);
+    phrase = [];
+  };
+  for (const tok of tokens) {
+    if (tok === ' ') {
+      flush();
+      out.push(' ');
+    } else {
+      phrase.push(tok);
+    }
+  }
+  flush();
+  return out;
+}
+
+// Greedy fill: as many whole phrases / words per line as fit. A single
+// word wider than the card on its own still falls back to character-level
+// chunks.
+function greedyLines(ctx, tokens, maxWidth) {
   const lines = [];
   let line = '';
-  for (const word of words) {
-    const attempt = line ? `${line} ${word}` : word;
+  let space = false;
+  for (const tok of tokens) {
+    if (tok === ' ') {
+      space = !!line;
+      continue;
+    }
+    const attempt = line + (space ? ' ' : '') + tok;
+    space = false;
     if (ctx.measureText(attempt).width <= maxWidth) {
       line = attempt;
       continue;
     }
     if (line) lines.push(line);
-    if (ctx.measureText(word).width <= maxWidth) {
-      line = word;
+    if (ctx.measureText(tok).width <= maxWidth) {
+      line = tok;
     } else {
-      const chunks = splitToFit(ctx, word, maxWidth);
+      const chunks = splitToFit(ctx, tok, maxWidth);
       for (let i = 0; i < chunks.length - 1; i++) lines.push(chunks[i]);
       line = chunks[chunks.length - 1] ?? '';
     }
   }
   if (line) lines.push(line);
   return lines;
+}
+
+// Word-wraps at phrase / word boundaries, then balances the lines: keeps
+// the same number of lines but narrows the wrap width a little, so the
+// text reads as an even block instead of a full line followed by a lonely
+// last word. The narrowing never goes below the widest phrase/word (that
+// would re-split what was just kept whole) nor below 75% of the card.
+function wrapLines(ctx, text, maxWidth) {
+  const tokens = phraseTokens(ctx, breakTokens(text), maxWidth);
+  const lines = greedyLines(ctx, tokens, maxWidth);
+  if (lines.length < 2) return lines;
+  const widest = Math.max(
+    0,
+    ...tokens.map((t) => ctx.measureText(t).width).filter((w) => w <= maxWidth),
+  );
+  let lo = Math.max(widest, maxWidth * 0.75);
+  let hi = maxWidth;
+  if (lo >= hi) return lines;
+  let best = lines;
+  for (let i = 0; i < 12; i++) {
+    const mid = (lo + hi) / 2;
+    const attempt = greedyLines(ctx, tokens, mid);
+    if (attempt.length <= lines.length) {
+      best = attempt;
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return best;
 }
 
 // Shrinks the font until the wrapped question fits the card's text area,
@@ -130,10 +229,12 @@ export async function renderShareCard({ text, label: pillText }) {
 
   // The question card itself — same glass-card language as the app
   // (rounded panel, soft red border glow) at wallpaper scale.
-  const cardX = 90;
-  const cardY = 430;
+  // Portrait proportions (about 7:10, like the card in the app) rather than
+  // a near-square block across the whole width.
+  const cardX = 160;
+  const cardY = 380;
   const cardW = W - cardX * 2;
-  const cardH = 980;
+  const cardH = 1080;
   const radius = 56;
 
   ctx.save();
@@ -170,7 +271,7 @@ export async function renderShareCard({ text, label: pillText }) {
   }
 
   // Question text, centred in the remaining card area.
-  const textPadX = 90;
+  const textPadX = 70;
   const textMaxWidth = cardW - textPadX * 2;
   const textMaxHeight = cardH - 260;
   const { size, lines } = fitText(ctx, text, textMaxWidth, textMaxHeight);
