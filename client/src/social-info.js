@@ -6,7 +6,7 @@ export const SOCIAL_INFO = {
     handle: 'deeper.th.app',
   },
   tiktok: {
-    handle: '',
+    handle: 'deeper.th.app',
   },
 };
 
