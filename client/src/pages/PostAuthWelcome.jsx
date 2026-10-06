@@ -68,29 +68,33 @@ export default function PostAuthWelcome() {
           and isn't clickable. */}
       <motion.div className="postauth-social" {...rise(1.83)}>
         <span>{t('postAuth.follow')}</span>
-        {socialLinks().map(({ key, url }) => {
-          const Icon = SOCIAL_ICONS[key];
-          return url ? (
-            <a
-              key={key}
-              className="postauth-social-link"
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t(`social.${key}`)}
-            >
-              <Icon size={17} />
-            </a>
-          ) : (
-            <span
-              key={key}
-              className="postauth-social-link postauth-social-link--soon"
-              title={`${t(`social.${key}`)} · ${t('social.soon')}`}
-            >
-              <Icon size={17} />
-            </span>
-          );
-        })}
+        {/* The icons stay together, so on a narrow screen they move to the
+            next line as a pair instead of one being left behind. */}
+        <span className="postauth-social-icons">
+          {socialLinks().map(({ key, url }) => {
+            const Icon = SOCIAL_ICONS[key];
+            return url ? (
+              <a
+                key={key}
+                className="postauth-social-link"
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t(`social.${key}`)}
+              >
+                <Icon size={17} />
+              </a>
+            ) : (
+              <span
+                key={key}
+                className="postauth-social-link postauth-social-link--soon"
+                title={`${t(`social.${key}`)} · ${t('social.soon')}`}
+              >
+                <Icon size={17} />
+              </span>
+            );
+          })}
+        </span>
       </motion.div>
     </div>
   );

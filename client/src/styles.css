@@ -1433,7 +1433,9 @@ html[data-tour] .fade-up {
 }
 .acct-number {
   display: block;
-  font-size: 21px;
+  /* One line always — the number must never break at a hyphen. */
+  white-space: nowrap;
+  font-size: clamp(17px, 5.6vw, 21px);
   font-weight: 700;
   letter-spacing: 1.5px;
   line-height: 1.1;
@@ -1836,6 +1838,10 @@ html[data-tour] .fade-up {
   gap: 8px;
   font-size: 13px;
   color: var(--text-faint);
+}
+.postauth-social-icons {
+  display: inline-flex;
+  gap: 8px;
 }
 .postauth-social-link {
   width: 32px;
@@ -3043,6 +3049,7 @@ a.btn {
   margin-bottom: 20px;
 }
 .google-note {
+  white-space: pre-line;
   font-size: 12px;
   color: var(--text-faint);
   text-align: center;
@@ -3310,3 +3317,15 @@ html[data-tour] .form-page * {
   }
 }
 
+/* ---------- Line breaks ---------- */
+/* No word left alone on the last line of a paragraph (Thai or English):
+   the browser rebalances the last few lines instead. Headings, buttons and
+   short centered lines are balanced across all their lines. */
+p, li, blockquote, figcaption, label, .sub, .faint, .feature-desc, .dev-team-role,
+.social-link-text, .ci-q, .q-text, .toast {
+  text-wrap: pretty;
+}
+h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-result,
+.social-link .feature-desc {
+  text-wrap: balance;
+}

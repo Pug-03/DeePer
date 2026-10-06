@@ -162,7 +162,9 @@ export const STRINGS = {
     'signup.emailMethodSub': 'รับรหัส OTP ทางอีเมล แล้วตั้งรหัสผ่าน',
     // Non-breaking space before "ให้" so it can't wrap onto its own
     // line as a lone orphan word.
-    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง Google ดูแลการยืนยันตัวตน ให้',
+    // Broken by hand into two balanced lines (.google-note is pre-line), so
+    // the browser never splits a word like ยืนยัน/ตัวตน or strands ให้.
+    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง\nGoogle ดูแลการยืนยันตัวตนให้',
     'signup.emailTitle': 'กรอกอีเมล',
     'signup.emailSub': 'เราจะส่งรหัส OTP 4 หลักไปที่อีเมลของคุณ',
     'signup.sendOtp': 'ส่งรหัส OTP',
@@ -347,7 +349,7 @@ export const STRINGS = {
     'answer.save': 'บันทึกคำตอบ',
     'answer.saving': 'กำลังบันทึก...',
     // Non-breaking space before the trailing "นะ" so it can't be
-    // stranded alone on its own line (same widow fix as signup.googleNote).
+    // stranded alone on its own line.
     'answer.needOne': 'กรอกคำตอบอย่างน้อยหนึ่งช่องก่อน นะ',
     'answer.saved': 'บันทึกคำตอบลงประวัติแล้ว',
 
@@ -671,7 +673,7 @@ export const STRINGS = {
     'signup.sub': 'Choose how you’d like to sign up',
     'signup.emailMethod': 'Sign up with email',
     'signup.emailMethodSub': 'Get an OTP by email, then set a password',
-    'signup.googleNote': 'Signing up with Google needs no password — Google handles verification',
+    'signup.googleNote': 'Signing up with Google needs no password\nGoogle handles verification for you',
     'signup.emailTitle': 'Enter your email',
     'signup.emailSub': 'We’ll send a 4-digit OTP to your email',
     'signup.sendOtp': 'Send OTP',
