@@ -2020,6 +2020,42 @@ a.btn {
   font-size: 12px;
   color: var(--text-faint);
 }
+/* Fewer columns left (days, then hours, then minutes run out) → bigger
+   numbers; the last minute is a single big seconds count. */
+.countdown--n4 .countdown-num { font-size: 54px; }
+.countdown--n3 .countdown-num { font-size: 76px; }
+.countdown--n2 .countdown-num { font-size: 96px; }
+.countdown--n1 .countdown-num { font-size: 136px; }
+.countdown--n3 { gap: 26px; }
+.countdown--n2 { gap: 34px; }
+.countdown--small.countdown--n4 .countdown-num { font-size: 30px; }
+.countdown--small.countdown--n3 .countdown-num { font-size: 40px; }
+.countdown--small.countdown--n2 .countdown-num { font-size: 52px; }
+.countdown--small.countdown--n1 .countdown-num { font-size: 68px; }
+/* A changed digit drops in from above and settles, like a flip clock. */
+.countdown-num:has(.cd-digit) {
+  /* The gradient lives on each digit instead, or the box's own clipped
+     text would leave a ghost of the old digit behind while one moves. */
+  background: none;
+}
+.cd-digit {
+  display: inline-block;
+  background: linear-gradient(120deg, #fff 20%, var(--red-bright) 140%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cd-tick 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes cd-tick {
+  from {
+    opacity: 0;
+    transform: translateY(-40%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 /* Smaller countdown inside the "not open yet" note on sign-up / log-in. */
 .countdown--small {
   margin-top: 10px;
