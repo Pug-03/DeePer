@@ -66,7 +66,7 @@ export default function SponsorInquiry() {
     );
 
   return (
-    <div className="page stagger">
+    <div className="page stagger form-page">
       <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav(-1)}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}

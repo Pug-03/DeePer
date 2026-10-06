@@ -3217,3 +3217,96 @@ a.btn {
   color: var(--text);
 }
 
+/* Report / contact forms are trimmed to fit one phone screen (no extra
+   scroll below the send button): tighter top spacing, a shorter
+   screenshot drop zone and message box. */
+.form-page.page {
+  padding-top: 14px;
+}
+.form-page > .back-btn {
+  margin-bottom: 8px !important;
+}
+.form-page > .header {
+  margin-bottom: 14px;
+}
+.form-page .slip-drop-cta {
+  min-height: 70px;
+}
+.form-page .textarea {
+  min-height: 96px;
+}
+.form-page .support-card {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.form-page .support-head-ic {
+  width: 44px;
+  height: 44px;
+}
+.form-page .support-head-ic svg {
+  width: 23px;
+  height: 23px;
+}
+.form-page .support-head-title {
+  font-size: 16px;
+}
+/* Report form's topic pills stay on one line in both languages. */
+.form-page .support-proof-form .filter-row {
+  flex-wrap: nowrap;
+}
+.form-page .support-proof-form .filter-row .pill {
+  white-space: nowrap;
+}
+@media (max-width: 360px) {
+  .form-page .support-proof-form .filter-row {
+    gap: 6px;
+  }
+  .form-page .support-proof-form .filter-row .pill {
+    padding-inline: 11px;
+    font-size: 13px;
+  }
+}
+/* ---------- Report / sponsor-contact form entrance ---------- */
+/* On top of the page's own stagger (back → title → card): the card's icon
+   pops in with one soft pulse, the title and its line rise a beat apart,
+   and the form's fields rise one after another, the send button last. */
+.form-page .header > * {
+  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.form-page .header > :nth-child(1) { animation-delay: 0.12s; }
+.form-page .header > :nth-child(2) { animation-delay: 0.22s; }
+.form-page .support-head-ic {
+  animation:
+    formIconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both,
+    iconPulse 1.6s ease-out 1s 1;
+}
+@keyframes formIconPop {
+  from { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  to { opacity: 1; transform: none; }
+}
+.form-page .support-head-title {
+  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both;
+}
+.form-page .support-proof-form > * {
+  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.form-page .support-proof-form > :nth-child(1) { animation-delay: 0.55s; }
+.form-page .support-proof-form > :nth-child(2) { animation-delay: 0.63s; }
+.form-page .support-proof-form > :nth-child(3) { animation-delay: 0.71s; }
+.form-page .support-proof-form > :nth-child(4) { animation-delay: 0.79s; }
+.form-page .support-proof-form > :nth-child(5) { animation-delay: 0.87s; }
+.form-page .support-proof-form > :nth-child(6) { animation-delay: 0.95s; }
+.form-page .support-proof-form > :nth-child(n + 7) { animation-delay: 1.03s; }
+html[data-returning] .form-page *,
+html[data-tour] .form-page * {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .form-page .header > *,
+  .form-page .support-head-ic,
+  .form-page .support-head-title,
+  .form-page .support-proof-form > * {
+    animation: none;
+  }
+}
+
