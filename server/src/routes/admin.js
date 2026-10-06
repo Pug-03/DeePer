@@ -51,6 +51,7 @@ router.get('/stats', (req, res) => {
     answers_today: count(`SELECT COUNT(*) AS c FROM history WHERE date(created_at, ${BKK}) = ${today}`),
     reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL AND deleted_at IS NULL'),
     inquiries_open: count('SELECT COUNT(*) AS c FROM sponsor_inquiries WHERE handled_at IS NULL AND deleted_at IS NULL'),
+    reviews_pending: count(`SELECT COUNT(*) AS c FROM reviews WHERE status = 'pending'`),
     proofs_pending: count(
       'SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL AND deleted_at IS NULL',
     ),
@@ -234,6 +235,38 @@ router.post('/inquiries/:id/:action(handled|reopen)', (req, res) => {
     )
     .run(Number(req.params.id));
   if (!changes) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
+  res.json({ ok: true });
+});
+
+// ---- Reviews: approve before they show on the landing page ----
+router.get('/reviews', (req, res) => {
+  res.json({
+    reviews: db
+      .prepare(
+        `SELECT r.*, u.nickname, u.nickname_en, u.email
+         FROM reviews r JOIN users u ON u.id = r.user_id
+         ORDER BY r.status = 'pending' DESC, r.updated_at DESC`,
+      )
+      .all(),
+  });
+});
+
+router.post('/reviews/:id/:action(approve|reject|pending)', (req, res) => {
+  const status = { approve: 'approved', reject: 'rejected', pending: 'pending' }[req.params.action];
+  const { changes } = db
+    .prepare(
+      `UPDATE reviews SET status = ?,
+         approved_at = CASE WHEN ? = 'approved' THEN datetime('now') ELSE NULL END
+       WHERE id = ?`,
+    )
+    .run(status, status, Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบรีวิว', error_code: 'NOT_FOUND' });
+  res.json({ ok: true });
+});
+
+router.delete('/reviews/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM reviews WHERE id = ?').run(Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบรีวิว', error_code: 'NOT_FOUND' });
   res.json({ ok: true });
 });
 

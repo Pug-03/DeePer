@@ -74,6 +74,7 @@ function AdminDashboard({ onLogout }) {
     { key: 'reports', label: 'แจ้งปัญหา', badge: stats?.reports_open },
     { key: 'proofs', label: 'ผู้สนับสนุน', badge: stats?.proofs_pending },
     { key: 'inquiries', label: 'ติดต่อเป็นสปอนเซอร์', badge: stats?.inquiries_open },
+    { key: 'reviews', label: 'รีวิว', badge: stats?.reviews_pending },
     { key: 'sponsors', label: 'โลโก้สปอนเซอร์' },
   ];
 
@@ -106,6 +107,7 @@ function AdminDashboard({ onLogout }) {
       {tab === 'reports' && <Reports onLogout={onLogout} onChange={reload} />}
       {tab === 'proofs' && <Proofs onLogout={onLogout} onChange={reload} />}
       {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
+      {tab === 'reviews' && <Reviews onLogout={onLogout} onChange={reload} />}
       {tab === 'sponsors' && <Sponsors onLogout={onLogout} />}
     </div>
   );
@@ -123,6 +125,7 @@ function Overview({ stats }) {
     ['แจ้งปัญหาที่ยังไม่แก้', stats.reports_open],
     ['องค์กรติดต่อเป็นสปอนเซอร์ (ยังไม่ได้ติดต่อกลับ)', stats.inquiries_open],
     ['สลิปรออนุมัติ', stats.proofs_pending],
+    ['รีวิวรออนุมัติ', stats.reviews_pending ?? 0],
   ];
   return (
     <>
@@ -743,6 +746,82 @@ function Inquiries({ onLogout, onChange }) {
               {q.handled_at ? `ติดต่อแล้ว ${fmtTime(q.handled_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าติดต่อแล้ว'}
             </button>
           )}
+        </div>
+      ))}
+    </>
+  );
+}
+
+// User reviews from the profile page. Approved ones show on the landing
+// page with the reviewer's nickname; editing a review sends it back here.
+const REVIEW_STATUS = { pending: 'รอตรวจ', approved: 'ขึ้นหน้าแรกแล้ว', rejected: 'ไม่แสดง' };
+const RELATION_LABEL = { couple: 'ใช้กับแฟน', friends: 'ใช้กับเพื่อน', family: 'ใช้กับครอบครัว' };
+function Reviews({ onLogout, onChange }) {
+  const { data, error, reload } = useAdminData(adminApi.reviews, onLogout);
+  const confirm = useConfirm();
+  const [filter, setFilter] = useState('pending');
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (!data) return <Loading />;
+
+  const counts = (k) => data.reviews.filter((r) => k === 'all' || r.status === k).length;
+  const list = data.reviews.filter((r) => filter === 'all' || r.status === filter);
+  const run = async (fn) => {
+    try {
+      await fn();
+      reload();
+      onChange();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+    }
+  };
+  const remove = async (r) => {
+    if (await confirm({ title: 'ลบรีวิว', message: 'ลบรีวิวนี้ถาวร? ผู้ใช้เขียนใหม่ได้', confirmText: 'ลบ', danger: true })) run(() => adminApi.deleteReview(r.id));
+  };
+
+  return (
+    <>
+      <p className="admin-note">รีวิวที่ผู้ใช้เขียนในหน้าโปรไฟล์ อนุมัติแล้วจะขึ้นหน้าแรกพร้อมชื่อเล่น ถ้าผู้ใช้แก้ไข รีวิวจะกลับมารอตรวจใหม่</p>
+      <div className="filter-row">
+        {[['pending', 'รอตรวจ'], ['approved', 'ขึ้นหน้าแรกแล้ว'], ['rejected', 'ไม่แสดง'], ['all', 'ทั้งหมด']].map(([k, l]) => (
+          <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+            {l}
+            <span className="admin-badge">{counts(k)}</span>
+          </button>
+        ))}
+      </div>
+      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.map((r) => (
+        <div key={r.id} className="glass admin-card">
+          <div className="admin-card-head">
+            <span className="admin-proof-name">
+              {r.nickname} / {r.nickname_en}
+            </span>
+            <span className="admin-meta">
+              <span className={`admin-tag ${r.status === 'approved' ? 'admin-tag--ok' : 'admin-tag--wait'}`}>{REVIEW_STATUS[r.status]}</span>
+              <TrashButton onClick={() => remove(r)} />
+            </span>
+          </div>
+          <p className="admin-message">“{r.text}”</p>
+          <dl className="admin-dl">
+            <dt>ใช้กับ</dt>
+            <dd>{RELATION_LABEL[r.relation]}</dd>
+            <dt>อีเมล</dt>
+            <dd>{r.email}</dd>
+            <dt>ส่งล่าสุด</dt>
+            <dd>{fmtTime(r.updated_at)}</dd>
+          </dl>
+          <div className="admin-trash-actions">
+            {r.status !== 'approved' && (
+              <button className="btn btn--primary admin-action" type="button" onClick={() => run(() => adminApi.setReview(r.id, 'approve'))}>
+                อนุมัติ ให้ขึ้นหน้าแรก
+              </button>
+            )}
+            {r.status !== 'rejected' && (
+              <button className="btn btn--ghost admin-action" type="button" onClick={() => run(() => adminApi.setReview(r.id, 'reject'))}>
+                {r.status === 'approved' ? 'เอาออกจากหน้าแรก' : 'ไม่แสดง'}
+              </button>
+            )}
+          </div>
         </div>
       ))}
     </>
