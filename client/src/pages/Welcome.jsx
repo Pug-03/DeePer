@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useReturning } from '../components/ScrollToTop.jsx';
 import { motion, useInView, useReducedMotion, animate } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
@@ -41,15 +42,18 @@ const SOCIAL_ICONS = { instagram: IcInstagram, tiktok: IcTikTok };
 // while scrolling. Replays only once: unlike Saved's cards this isn't a
 // scrolling feed, so a repeat-on-every-pass would read as fidgety rather
 // than lively.
+// Coming back to this page (Back / browser back) shows each section in place
+// right away instead of replaying its fade-in — see useReturning.
 function Reveal({ children = null, delay = 0, className }) {
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.3, once: true });
+  const returning = useReturning();
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 26 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
+      initial={returning ? false : { opacity: 0, y: 26 }}
+      animate={returning || inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
       transition={{ duration: 0.6, delay, ease: EASE }}
     >
       {children}
@@ -63,7 +67,10 @@ function Reveal({ children = null, delay = 0, className }) {
 function CountUpNumber({ target, className = 'stat-number' }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.6 });
-  const reduceMotion = useReducedMotion();
+  // Coming back to the page shows the final number instead of recounting.
+  const prefersReduced = useReducedMotion();
+  const returning = useReturning();
+  const reduceMotion = prefersReduced || returning;
   const [value, setValue] = useState(0);
   const [landed, setLanded] = useState(false);
 
@@ -601,43 +608,48 @@ function DevTeamCard({ dev, lang, nav }) {
   );
 }
 
+// Landing-page data kept for the rest of the visit. Coming back from another
+// page (Back from report / contact / awards) then renders at full height
+// straight away, so the old scroll spot can be restored in one go instead of
+// jumping again as each list loads in. Still refreshed in the background.
+const landingCache = {};
+function useLandingData(key, path, pick, initial) {
+  const [value, setValue] = useState(key in landingCache ? landingCache[key] : initial);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get(path, { auth: false })
+      .then((d) => {
+        landingCache[key] = pick(d);
+        if (!cancelled) setValue(landingCache[key]);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, path]);
+  return value;
+}
+
 export default function Welcome() {
   const nav = useNavigate();
   const { t, lang } = useI18n();
   const socials = socialLinks();
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(landingCache.stats ?? null);
   const mockSupporterCount = useMockSupporterCountForPreview();
   // Donors whose transfer proof the maintainer approved (npm run approve),
   // on top of any names hard-coded in SUPPORTERS. Empty until it loads; the
   // tier simply stays hidden if the request fails.
-  const [approvedSupporters, setApprovedSupporters] = useState([]);
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .get('/support/supporters', { auth: false })
-      .then((d) => {
-        if (!cancelled) setApprovedSupporters(d.supporters.map((name) => ({ name })));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const approvedSupporters = useLandingData(
+    'supporters',
+    '/support/supporters',
+    (d) => d.supporters.map((name) => ({ name })),
+    [],
+  );
   const launch = useLaunch();
   // Sponsor logos added from the admin dashboard, after the hard-coded ones.
-  const [adminSponsors, setAdminSponsors] = useState([]);
-  useEffect(() => {
-    let cancelled = false;
-    api
-      .get('/support/sponsors', { auth: false })
-      .then((d) => {
-        if (!cancelled) setAdminSponsors(d.sponsors);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const adminSponsors = useLandingData('sponsors', '/support/sponsors', (d) => d.sponsors, []);
   const sponsors = [...SPONSORS, ...adminSponsors];
   const activeSupporters =
     mockSupporterCount > 0
@@ -656,6 +668,7 @@ export default function Welcome() {
       api
         .get('/stats', { auth: false })
         .then((data) => {
+          landingCache.stats = data;
           if (!cancelled) setStats(data);
         })
         .catch(() => {

@@ -134,6 +134,12 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .app-shell > .page { animation: none; }
 }
+/* Coming back to a page (see ScrollToTop): show it as it was left. */
+html[data-returning] .app-shell > .page,
+html[data-returning] .stagger > *,
+html[data-returning] .fade-up {
+  animation: none;
+}
 
 /* Staggered entrance — direct children of a `.stagger` container rise & fade
    in one after another, top to bottom (1 → 2 → 3 → 4 …). Transform is only

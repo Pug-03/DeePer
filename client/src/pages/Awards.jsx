@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
 import Sparkles from '../components/Sparkles.jsx';
 import { ContactReveal, ContactLink } from '../components/ContactReveal.jsx';
@@ -78,6 +78,9 @@ const TITLE_SPARKLES = [
 
 export default function Awards() {
   const nav = useNavigate();
+  // Back returns to the landing page where the visitor left it (scroll
+  // kept by ScrollToTop); opened directly, it just goes home.
+  const location = useLocation();
   const { t } = useI18n();
   const [awardsRevealed, setAwardsRevealed] = useState(false);
 
@@ -86,7 +89,7 @@ export default function Awards() {
       <button
         className="link back-btn"
         style={{ alignSelf: 'flex-start', marginBottom: 18 }}
-        onClick={() => nav('/')}
+        onClick={() => (location.key !== 'default' ? nav(-1) : nav('/'))}
       >
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
