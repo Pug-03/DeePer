@@ -588,7 +588,9 @@ export default function Signup() {
         </form>
       )}
 
-      <LaunchNotice t={t} />
+      {/* Keyed by step: each step's form plays its own stagger-in, so the
+          notice remounts with it and rises in last, below the new form. */}
+      <LaunchNotice key={step} t={t} />
     </div>
   );
 }
