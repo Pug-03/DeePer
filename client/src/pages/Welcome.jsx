@@ -5,6 +5,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
 import Sparkles from '../components/Sparkles.jsx';
+import Fireworks from '../components/Fireworks.jsx';
 import {
   IcSparkle,
   IcMousePointer,
@@ -366,17 +367,22 @@ function LaunchCountdown({ t, launch }) {
 function LaunchOpened({ t }) {
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.4, once: true });
+  // Fireworks keep going the whole time this is on screen, and start again
+  // whenever the visitor scrolls back to it.
+  const onScreen = useInView(ref, { amount: 0.2 });
   const reduceMotion = useReducedMotion();
   return (
     <>
-      <div className="landing-section" ref={ref}>
+      <div className="landing-section launch-opened" ref={ref}>
+        <Fireworks play={onScreen} />
         <motion.div
+          style={{ position: 'relative' }}
           initial={reduceMotion ? false : { opacity: 0, y: 70, scale: 0.85 }}
           animate={inView ? { opacity: 1, y: 0, scale: 1 } : undefined}
-          transition={{ type: 'spring', stiffness: 260, damping: 16 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.15 }}
         >
           <p className="eyebrow">{t('welcome.launch.openEyebrow')}</p>
-          <h2 className="h2">
+          <h2 className="h2 launch-opened-title">
             <span className="sparkle-anchor">
               {t('welcome.launch.openTitle')}
               <Sparkles points={STAT_SPARKLES} />

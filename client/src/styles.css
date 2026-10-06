@@ -2020,6 +2020,23 @@ a.btn {
   font-size: 12px;
   color: var(--text-faint);
 }
+/* Launch moment on the landing page (replaces the countdown). */
+.launch-opened {
+  position: relative;
+}
+.fireworks {
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  top: -120px;
+  bottom: -40px;
+  width: calc(100% + 40px);
+  height: calc(100% + 160px);
+  pointer-events: none;
+}
+.launch-opened-title {
+  font-size: 34px;
+}
 /* Fewer columns left (days, then hours, then minutes run out) → bigger
    numbers; the last minute is a single big seconds count. */
 .countdown--n4 .countdown-num { font-size: 54px; }
