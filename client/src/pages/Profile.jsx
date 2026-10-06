@@ -9,6 +9,7 @@ import { IcCamera, IcCheck, IcPlayCircle, IcSettings, IcTrash } from '../compone
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
+import ReviewForm from '../components/ReviewForm.jsx';
 import { CATS, displayName, nicknameThError, nicknameEnError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
 
@@ -274,6 +275,8 @@ export default function Profile() {
           {t('support.cta')}
         </button>
       </div>
+
+      <ReviewForm />
 
       <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
         <p className="faint" style={{ margin: '0 0 12px' }}>

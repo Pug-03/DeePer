@@ -28,6 +28,7 @@ import { socialLinks } from '../social-info.js';
 // this fixture (and its placeholder strings) never reaches the shipped
 // bundle. See client/src/dev/mockSupporters.js for the full explanation.
 import { makeMockSupportersDevOnly } from '../dev/mockSupporters.js';
+import { makeMockReviewsDevOnly } from '../dev/mockReviews.js';
 
 // Same easing the rest of the app's motion uses (page-load stagger, Saved's
 // scroll-pop, OnboardingTour, PostAuthWelcome) — kept identical here so the
@@ -608,6 +609,9 @@ function DevTeamCard({ dev, lang, nav }) {
   );
 }
 
+// Approved user reviews, between the stats and "follow us": numbers first,
+// then what people say about it. Renders nothing until at least one review
+// has been approved in the admin dashboard.
 // Landing-page data kept for the rest of the visit. Coming back from another
 // page (Back from report / contact / awards) then renders at full height
 // straight away, so the old scroll spot can be restored in one go instead of
@@ -630,6 +634,48 @@ function useLandingData(key, path, pick, initial) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, path]);
   return value;
+}
+
+// Dev-only preview of the reviews section: needs a dev build AND
+// `?mockReviews=<count>` (e.g. ?mockReviews=5). Production folds this to 0.
+function useMockReviewCountForPreview() {
+  if (!import.meta.env.DEV) return 0;
+  const n = Number(new URLSearchParams(window.location.search).get('mockReviews'));
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 20) : 0;
+}
+
+function ReviewsSection({ t, lang }) {
+  const fetched = useLandingData('reviews', '/reviews', (d) => d.reviews, []);
+  const mockCount = useMockReviewCountForPreview();
+  // The literal import.meta.env.DEV lets production builds drop the mock entirely.
+  const reviews = import.meta.env.DEV && mockCount > 0 ? makeMockReviewsDevOnly(mockCount, lang) : fetched;
+  if (reviews.length === 0) return null;
+  return (
+    <>
+      <div className="landing-section">
+        <Reveal>
+          <p className="eyebrow">{t('welcome.reviews.eyebrow')}</p>
+          <h2 className="h2">{t('welcome.reviews.title')}</h2>
+        </Reveal>
+        <Reveal delay={0.1}>
+          <div className="review-row">
+            {reviews.map((r) => (
+              <figure className="review-card glass" key={r.id}>
+                <blockquote>“{r.text}”</blockquote>
+                <figcaption>
+                  <b>{(lang === 'en' ? r.nickname_en : r.nickname) || r.nickname}</b>
+                  {' · '}
+                  {t(`welcome.reviews.with.${r.relation}`)}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+
+      <Reveal className="landing-divider" />
+    </>
+  );
 }
 
 export default function Welcome() {
@@ -800,6 +846,8 @@ export default function Welcome() {
         </div>
 
         <Reveal className="landing-divider" />
+
+        <ReviewsSection t={t} lang={lang} />
 
         {/* Where news and events get announced — right after the user count,
             so "this many people use it" leads straight into "follow along". */}

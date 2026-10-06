@@ -3135,3 +3135,72 @@ a.btn {
 .fade-up {
   animation: fadeUp 0.35s ease both;
 }
+
+/* ---------- Reviews ---------- */
+/* Landing page: a sideways row of quote cards (swipe / scroll). */
+.review-row {
+  margin: 18px -20px 0;
+  padding: 4px 20px 10px;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  text-align: left;
+}
+.review-row::-webkit-scrollbar {
+  display: none;
+}
+.review-row:has(.review-card:only-child) {
+  justify-content: center;
+}
+.review-card {
+  flex: 0 0 min(78%, 280px);
+  margin: 0;
+  padding: 18px 18px 16px;
+  border-radius: var(--radius-sm);
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+.review-card blockquote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.review-card figcaption {
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.review-card figcaption b {
+  color: var(--red-bright);
+  font-weight: 700;
+}
+/* Profile page: write / edit your review. */
+.review-form-foot {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.review-short {
+  color: var(--red-bright);
+}
+.review-status {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.review-status--pending { color: #fbbf24; }
+.review-status--approved { color: var(--green); }
+.review-status--rejected { color: var(--text-dim); }
+.review-mine {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
