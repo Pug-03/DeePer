@@ -10,6 +10,7 @@ import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
 import ReviewForm from '../components/ReviewForm.jsx';
+import { useTutorial } from '../store/tutorial.jsx';
 import { CATS, displayName, nicknameThError, nicknameEnError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
 
@@ -20,6 +21,7 @@ export default function Profile() {
   const nav = useNavigate();
   const toast = useToast();
   const confirm = useConfirm();
+  const tutorial = useTutorial();
   const { user, setUser } = useAuth();
   const { t, lang } = useI18n();
 
@@ -196,8 +198,13 @@ export default function Profile() {
       pulse: false,
     });
     if (!ok) return;
-    localStorage.setItem('dt_tutorial_pending', '1');
-    nav('/app/home');
+    // Start the tour right away (its overlay dims the screen as the confirm
+    // dialog closes) instead of flagging it for Home to start once loaded —
+    // that showed the plain home page first, then dimmed it, in two jumps.
+    tutorial.start();
+    // Switch pages once the screen has mostly dimmed, so the swap (and the
+    // jump back to the top) happens out of sight.
+    setTimeout(() => nav('/app/home'), 280);
   };
 
   const initial = (displayName(user, lang) || '?').trim().charAt(0).toUpperCase();

@@ -140,6 +140,13 @@ html[data-returning] .stagger > *,
 html[data-returning] .fade-up {
   animation: none;
 }
+/* Starting / running the app tour (see markTourStarting): no entrance
+   animations, so the first step shows right away. */
+html[data-tour] .app-shell > .page,
+html[data-tour] .stagger > *,
+html[data-tour] .fade-up {
+  animation: none;
+}
 
 /* Staggered entrance — direct children of a `.stagger` container rise & fade
    in one after another, top to bottom (1 → 2 → 3 → 4 …). Transform is only
@@ -2815,6 +2822,12 @@ a.btn {
   position: fixed;
   inset: 0;
   z-index: 95;
+}
+.tut-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 4, 6, 0.8);
+  pointer-events: none;
 }
 .tut-spot {
   position: fixed;

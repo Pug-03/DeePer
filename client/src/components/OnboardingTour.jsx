@@ -165,6 +165,9 @@ function useTargetRect(selector) {
       if (!el) {
         setRect(null);
         settledStreak = 0;
+        // The target's page may still be on its way in (the tour can start
+        // on another page and navigate here), so keep looking for a moment.
+        if (performance.now() - start < 1500) id = requestAnimationFrame(measure);
         return;
       }
 
@@ -360,7 +363,10 @@ export default function OnboardingTour() {
       {!closing && (
         <motion.div
           className="tut-overlay"
-          initial={{ opacity: 0 }}
+          // Appears at full strength: the dim layer inside already starts
+          // dark to take over from the confirm dialog's backdrop, and fading
+          // the whole overlay in on top of that let the page flash through.
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45, ease: EASE }}
@@ -387,6 +393,18 @@ export default function OnboardingTour() {
               </div>
             ))}
           </div>
+
+          {/* Plain dim layer while there's no spotlight yet (tour just
+              started, its first page still coming in). Starts fully dark —
+              it picks up right where the confirm dialog's own backdrop
+              leaves off, so nothing flashes bright in between — then
+              crossfades into the spotlight's dim as the hole opens. */}
+          <motion.div
+            className="tut-dim"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: spot ? 0 : 1 }}
+            transition={{ duration: 0.4, ease: EASE }}
+          />
 
           {spot && (
             <motion.div

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import CheckBadge, { rise } from '../components/CheckBadge.jsx';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import { useTutorial } from '../store/tutorial.jsx';
 import { displayName } from '../util.js';
 import { IcInstagram, IcTikTok } from '../components/icons.jsx';
 import { socialLinks } from '../social-info.js';
@@ -11,6 +12,7 @@ const SOCIAL_ICONS = { instagram: IcInstagram, tiktok: IcTikTok };
 
 export default function PostAuthWelcome() {
   const nav = useNavigate();
+  const tutorial = useTutorial();
   const loc = useLocation();
   const { user } = useAuth();
   const { t, lang } = useI18n();
@@ -19,8 +21,10 @@ export default function PostAuthWelcome() {
   if (!user) return <Navigate to="/app/home" replace />;
 
   const choose = (wantTutorial) => {
-    if (wantTutorial) localStorage.setItem('dt_tutorial_pending', '1');
-    else localStorage.removeItem('dt_tutorial_pending');
+    // Starting the tour here (not flagging it for Home) means Home opens
+    // already dimmed under the tour instead of flashing in plain first.
+    localStorage.removeItem('dt_tutorial_pending');
+    if (wantTutorial) tutorial.start();
     nav('/app/home', { replace: true });
   };
 

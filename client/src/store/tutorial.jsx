@@ -9,6 +9,18 @@ import { api } from '../api.js';
 // owns step navigation and calls stop() when finished or skipped.
 const TutorialContext = createContext(null);
 
+// While the tour is about to start or running, pages skip their entrance
+// (fade / rise) animations — the overlay covers them anyway, and the tour
+// waits for its target to stop moving before showing a step, so those
+// animations only left a blank, dimmed screen for the first second.
+// See html[data-tour] in styles.css.
+export function markTourStarting() {
+  document.documentElement.dataset.tour = '';
+}
+function clearTourMark() {
+  delete document.documentElement.dataset.tour;
+}
+
 export function TutorialProvider({ children }) {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
@@ -21,6 +33,7 @@ export function TutorialProvider({ children }) {
   const [historyHasItems, setHistoryHasItems] = useState(null);
 
   const start = useCallback(() => {
+    markTourStarting();
     setStep(0);
     setActive(true);
     // The tour goes straight from the Home nav step to savedItem/historyItem,
@@ -39,6 +52,7 @@ export function TutorialProvider({ children }) {
   }, []);
 
   const stop = useCallback(() => {
+    clearTourMark();
     setActive(false);
     localStorage.removeItem('dt_tutorial_pending');
   }, []);
