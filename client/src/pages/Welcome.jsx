@@ -406,24 +406,109 @@ const ACTIVITY_STATS = [
   { key: 'shares', field: 'share_count' },
 ];
 
-// Until launch, sponsors and individual supporters are `sealed`: blurred out
-// behind red "caution tape" (two crossed strips, or one flat strip for the
-// short supporters row), and not clickable. Flips open on its own when the
-// clock passes LAUNCH_AT.
-function Sealed({ t, sealed, single = false, children }) {
-  if (!sealed) return children;
-  const tapeText = Array.from({ length: 8 }, () => t('welcome.supporters.sealed')).join('  ✦  ');
+// Until launch, sponsor logos and individual supporters are `sealed`:
+// blurred out behind a strip of red "caution tape", and not clickable.
+// Flips open on its own when the clock passes LAUNCH_AT.
+// The tape's text: drifts slowly on its own, and can be dragged sideways by
+// hand (mouse or finger); let go and it glides on, easing back to its drift.
+// Holds the text twice and wraps by half its width, so it loops seamlessly.
+function TapeTrack({ text, dir }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    // The whole strip (stripes included) is the drag handle, not just the text.
+    const handle = el.parentElement;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const drift = still ? 0 : 10 * dir; // px per second
+    let x = 0;
+    let v = drift;
+    let dragging = false;
+    let lastX = 0;
+    let lastT = 0;
+    let frame = 0;
+    let prev = performance.now();
+    const half = () => el.scrollWidth / 2 || 1;
+    const place = () => {
+      const h = half();
+      x = ((x % h) + h) % h - h; // keep within [-half, 0)
+      el.style.transform = `translateX(${x}px)`;
+    };
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - prev) / 1000);
+      prev = now;
+      if (!dragging) {
+        v += (drift - v) * Math.min(1, dt * 1.5); // ease back to the drift
+        x += v * dt;
+        place();
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    const down = (e) => {
+      dragging = true;
+      lastX = e.clientX;
+      lastT = performance.now();
+      v = 0;
+      handle.setPointerCapture?.(e.pointerId);
+    };
+    const move = (e) => {
+      if (!dragging) return;
+      const now = performance.now();
+      const dx = e.clientX - lastX;
+      x += dx;
+      v = dx / Math.max(0.016, (now - lastT) / 1000);
+      lastX = e.clientX;
+      lastT = now;
+      place();
+    };
+    const up = () => {
+      dragging = false;
+    };
+    handle.addEventListener('pointerdown', down);
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      handle.removeEventListener('pointerdown', down);
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+    };
+  }, [dir]);
   return (
-    <div className={`sealed${single ? ' sealed--single' : ''}`}>
-      <div className="sealed-content" aria-hidden="true" inert="">
+    <div className="sponsor-tape-track" ref={ref}>
+      <span>{text}</span>
+      <span aria-hidden="true">{text}</span>
+    </div>
+  );
+}
+
+function Sealed({ t, sealed, index = 0, children }) {
+  // sealed → (launch passes while the page is open) → opening → open.
+  // While opening, the tape peels off and the logos come into focus; the
+  // wrapper stays the same element throughout so nothing inside remounts.
+  const [phase, setPhase] = useState(sealed ? 'sealed' : 'open');
+  useEffect(() => {
+    if (sealed || phase !== 'sealed') return undefined;
+    setPhase('opening');
+    const id = setTimeout(() => setPhase('open'), 2200 + index * 280);
+    return () => clearTimeout(id);
+  }, [sealed, phase, index]);
+  const half = Array.from({ length: 12 }, () => `${t('welcome.supporters.sealed')}   ✦   `).join('');
+  const open = phase === 'open';
+  return (
+    // Tapes peel off in alternating directions: left→right, then right→left.
+    <div
+      className={`sealed${index % 2 ? ' peel-rev' : ''}${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
+      style={{ '--i': index }}
+    >
+      <div className="sealed-content" aria-hidden={open ? undefined : 'true'} inert={open ? undefined : ''}>
         {children}
       </div>
-      <div className="sponsor-tape sponsor-tape--a">
-        <span>{tapeText}</span>
-      </div>
-      {!single && (
-        <div className="sponsor-tape sponsor-tape--b" aria-hidden="true">
-          <span>{tapeText}</span>
+      {!open && (
+        <div className="sponsor-tape">
+          <TapeTrack text={half} dir={index % 2 ? 1 : -1} />
         </div>
       )}
     </div>
@@ -431,28 +516,29 @@ function Sealed({ t, sealed, single = false, children }) {
 }
 
 function SponsorTiers({ t, sponsors, sealed }) {
-  const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]);
+  const byTier = SPONSOR_TIERS.map((tier) => [tier, sponsors.filter((s) => s.tier === tier)]).filter(([, items]) => items.length);
   return (
-    <Sealed t={t} sealed={sealed}>
-      <div className="sponsor-tiers">
-        {byTier.map(([tier, items]) => {
-          if (items.length === 0) return null;
-          return (
-            // Each tier reveals on its own as it scrolls into view.
-            <Reveal className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
-              {/* Gold / silver / bronze: metallic gradient label between two
-                  gem glyphs (see .sponsor-tier-label--<tier> in styles.css). */}
-              <p className={`sponsor-tier-label sponsor-tier-label--${tier}`}>
-                <span className="tier-gem" aria-hidden="true">✦</span>
-                {t(`welcome.supporters.tier.${tier}`)}
-                <span className="tier-gem" aria-hidden="true">✦</span>
-              </p>
+    <div className="sponsor-tiers">
+      {byTier.map(([tier, items], i) => {
+        return (
+          // Each tier reveals on its own as it scrolls into view.
+          <Reveal className={`sponsor-tier sponsor-tier-${tier}`} key={tier}>
+            {/* Gold / silver / bronze: metallic gradient label between two
+                gem glyphs (see .sponsor-tier-label--<tier> in styles.css). */}
+            <p className={`sponsor-tier-label sponsor-tier-label--${tier}`}>
+              <span className="tier-gem" aria-hidden="true">✦</span>
+              {t(`welcome.supporters.tier.${tier}`)}
+              <span className="tier-gem" aria-hidden="true">✦</span>
+            </p>
+            {/* Before launch only the logos are taped over; the tier
+                label above stays readable. */}
+            <Sealed t={t} sealed={sealed} index={i}>
               <div className="sponsor-wall">{items.map(renderSponsorLogo)}</div>
-            </Reveal>
-          );
-        })}
-      </div>
-    </Sealed>
+            </Sealed>
+          </Reveal>
+        );
+      })}
+    </div>
   );
 }
 
@@ -794,7 +880,7 @@ export default function Welcome() {
                 {t('welcome.supporters.tier.individual')}
                 <span className="tier-gem" aria-hidden="true">✦</span>
               </p>
-              <Sealed t={t} sealed={!launch.launched} single>
+              <Sealed t={t} sealed={!launch.launched} index={3}>
                 <SupportersMarquee items={activeSupporters} rowCount={1} />
               </Sealed>
             </Reveal>

@@ -56,6 +56,11 @@ html {
      up with the page, so other screens showed a stray band.) */
   background: var(--bg-bottom);
   overscroll-behavior: none;
+  /* Full-bleed bits (the landing page's caution tape) may overhang the
+     screen; clip them rather than letting the page scroll sideways. Set on
+     both html and body: on body alone it's propagated to the viewport (which
+     still scrolls), and on html alone body's overflow isn't clipped. */
+  overflow-x: clip;
 }
 
 body {
@@ -66,6 +71,7 @@ body {
   background: transparent;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  overflow-x: clip; /* see html */
 }
 
 /* The decorative page backdrop: a fixed viewport-sized layer with the red glow
@@ -2395,52 +2401,98 @@ a.btn {
 .sponsor-tier .supporters-marquee-group {
   margin-top: 0;
 }
-/* Pre-launch: sponsor logos and supporter names blurred behind two crossed strips of red
-   "caution tape" (police-tape look, in the brand red instead of yellow). */
+/* Pre-launch: sponsor logos and supporter names blurred behind red
+   "caution tape" (police-tape look, in the brand red instead of yellow),
+   one strip per tier so the tier labels stay readable. The strips run edge
+   to edge across the whole screen; html clips the overhang so the page
+   never scrolls sideways. */
 .sealed {
   position: relative;
-  overflow: hidden;
-  padding: 8px 0;
+  padding: 10px 0;
 }
 .sealed-content {
-  filter: blur(12px) saturate(0.6);
-  opacity: 0.7;
   user-select: none;
   pointer-events: none;
+  filter: blur(12px) saturate(0.6);
+  opacity: 0.7;
+  transition: filter 1.1s ease, opacity 1.1s ease;
+}
+/* Launch reveal: each tier's tape peels away left to right (one tier after
+   another, via --i), then its logos come into focus. */
+.sealed.is-opening .sealed-content,
+.sealed.is-open .sealed-content {
+  filter: none;
+  opacity: 1;
+  user-select: auto;
+  pointer-events: auto;
+}
+.sealed.is-opening .sealed-content {
+  transition-delay: calc(0.5s + var(--i) * 0.28s);
+}
+.sealed.is-opening .sponsor-tape {
+  animation: tape-peel 1.4s cubic-bezier(0.55, 0, 0.25, 1) both;
+  animation-delay: calc(var(--i) * 0.28s);
+}
+.sealed.peel-rev.is-opening .sponsor-tape {
+  animation-name: tape-peel-rev;
+}
+@keyframes tape-peel-rev {
+  0% { clip-path: inset(-20px 18% -20px -20px); }
+  12% { clip-path: inset(-20px 18% -20px -20px); filter: brightness(1.2); }
+  100% { clip-path: inset(-20px 82% -20px -20px); filter: brightness(1); margin-top: -8px; }
+}
+@keyframes tape-peel {
+  /* The strip is 160vw wide and centred, so only ~18%–82% of it is on
+     screen; peel across that span so the whole duration is visible. */
+  0% { clip-path: inset(-20px -20px -20px 18%); }
+  12% { clip-path: inset(-20px -20px -20px 18%); filter: brightness(1.2); }
+  100% { clip-path: inset(-20px -20px -20px 82%); filter: brightness(1); margin-top: -8px; }
 }
 .sponsor-tape {
   position: absolute;
-  left: -25%;
-  width: 150%;
   top: 50%;
-  padding: 7px 0;
+  left: 50%;
+  width: 160vw;
+  padding: 11px 0;
   overflow: hidden;
-  white-space: nowrap;
-  text-align: center;
-  font-size: 12px;
+  white-space: pre;
+  font-size: 12.5px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   color: #fff;
+  /* Plain brand red, no glow, so the tape doesn't shout on the dark page. */
   background:
-    repeating-linear-gradient(-45deg, #120a0e 0 9px, transparent 9px 18px) top / 100% 5px no-repeat,
-    repeating-linear-gradient(-45deg, #120a0e 0 9px, transparent 9px 18px) bottom / 100% 5px no-repeat,
-    linear-gradient(var(--red-deep), var(--red));
-  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.7);
+    /* hazard stripes along both edges */
+    repeating-linear-gradient(-45deg, #140a0f 0 8px, transparent 8px 16px) top / 100% 6px no-repeat,
+    repeating-linear-gradient(-45deg, #140a0f 0 8px, transparent 8px 16px) bottom / 100% 6px no-repeat,
+    var(--red-deep);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.7);
+  transform: translate(-50%, -50%) rotate(-2.5deg);
 }
-.sponsor-tape span {
-  display: block;
-  padding: 3px 0;
+/* The tape text: moved by TapeTrack (Welcome.jsx) — a slow drift, and it
+   can be dragged sideways. pan-y keeps vertical page scrolling working on
+   touch screens while a sideways swipe moves the tape. */
+.sponsor-tape-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
 }
-.sponsor-tape--a {
-  transform: translateY(-50%) rotate(-7deg);
+.sealed .sponsor-tape {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.sponsor-tape--b {
-  transform: translateY(-50%) rotate(5deg);
-  opacity: 0.92;
+.sealed .sponsor-tape:active {
+  cursor: grabbing;
 }
-/* The supporters row is only one chip tall: one flat strip across it. */
-.sealed--single .sponsor-tape--a {
-  transform: translateY(-50%) rotate(-1.5deg);
+/* Alternate the tilt and the drift direction from tier to tier. */
+.sponsor-tier:nth-child(even) .sponsor-tape {
+  transform: translate(-50%, -50%) rotate(2.5deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sealed.is-opening .sponsor-tape { animation: none; opacity: 0; }
+  .sealed-content { transition: none; }
 }
 /* Individual supporters: the lowest tier, a sibling below .sponsor-tiers
    (not inside it), so it adds the tiers' own 28px gap itself. Plain dim
