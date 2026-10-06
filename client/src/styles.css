@@ -2200,10 +2200,19 @@ a.btn {
 .social-links {
   margin: 18px auto 0;
   max-width: 340px;
-  display: flex;
-  flex-direction: column;
+  /* Equal-height rows, so a channel with a one-line description is still
+     the same size as one whose description wraps. */
+  display: grid;
+  grid-auto-rows: 1fr;
   gap: 10px;
   text-align: left;
+}
+.social-links > * {
+  height: 100%;
+}
+.social-links .social-link {
+  height: 100%;
+  box-sizing: border-box;
 }
 .social-link {
   display: flex;
