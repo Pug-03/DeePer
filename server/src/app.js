@@ -15,6 +15,7 @@ import reportRoutes from './routes/reports.js';
 import adminRoutes from './routes/admin.js';
 import visitRoutes from './routes/visits.js';
 import inquiryRoutes from './routes/inquiries.js';
+import reviewRoutes from './routes/reviews.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const app = express();
@@ -89,6 +90,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/visits', visitRoutes);
 app.use('/api/sponsor-inquiries', inquiryRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api', dataRoutes);
 
 // Serve the built client in production (client/dist), if present.

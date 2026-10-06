@@ -317,6 +317,23 @@ if (!reportCols.some((c) => c.name === 'replied_at')) {
   db.exec(`ALTER TABLE bug_reports ADD COLUMN replied_at TEXT`);
 }
 
+// User reviews of DeePer, one per user (editing resubmits it). Only rows the
+// admin has approved show on the landing page; editing an approved review
+// sends it back to pending.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reviews (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id      INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    text         TEXT NOT NULL,
+    relation     TEXT NOT NULL,
+    status       TEXT NOT NULL DEFAULT 'pending',
+    created_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    approved_at  TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews(status, approved_at DESC);
+`);
+
 // Running totals for the public landing-page stats. Kept as counters rather
 // than COUNT(*) over history/saved_questions because those rows go away
 // (a user deletes an entry, answering a saved question removes it), and a
