@@ -463,7 +463,10 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   const reveal = useMotionValue(0);
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
   const backY = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
-  const backOpacity = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.6, 1]);
+  // Hidden while it sits fully under the top card: through the top card's
+  // translucent glass its edge and shadow showed as a faint second outline
+  // just inside the top card's border. It fades in as the top card moves off.
+  const backOpacity = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0, 1]);
   // The preview card behind is plain (no red glow) at rest, so fading its
   // glow in from fully-hidden as it rises — same `reveal` value, same
   // timing — is what actually reads as "the red edge gradually appears"
@@ -473,7 +476,12 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   // Its question stays hidden while it sits under the top card and fades in
   // as the top card moves off it — otherwise the text showed through the
   // top card's translucent glass.
-  const backText = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0.5, 0, 0.5]);
+  // Waits until the top card is halfway off before it starts to show.
+  const backText = useTransform(
+    reveal,
+    [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD / 2, 0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
+    [0.5, 0, 0, 0, 0.5],
+  );
 
   useEffect(() => {
     if (saved) {
