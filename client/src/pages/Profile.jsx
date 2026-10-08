@@ -4,12 +4,22 @@ import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
-import LangToggle from '../components/LangToggle.jsx';
-import { IcCamera, IcCheck, IcPlayCircle, IcSettings, IcTrash } from '../components/icons.jsx';
+import {
+  IcAlertCircle,
+  IcBack,
+  IcCamera,
+  IcChat,
+  IcCheck,
+  IcInstagram,
+  IcPlayCircle,
+  IcSettings,
+  IcTranslate,
+  IcTrash,
+} from '../components/icons.jsx';
+import { Heart } from 'lucide-react';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
-import ReviewForm from '../components/ReviewForm.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
 import { CATS, displayName, nicknameThError, nicknameEnError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
@@ -23,7 +33,7 @@ export default function Profile() {
   const confirm = useConfirm();
   const tutorial = useTutorial();
   const { user, setUser } = useAuth();
-  const { t, lang } = useI18n();
+  const { t, lang, setLang } = useI18n();
 
   const [nickname, setNickname] = useState(user?.nickname || '');
   const [nicknameEn, setNicknameEn] = useState(user?.nickname_en || '');
@@ -255,45 +265,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Language */}
-      <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
-        <div className="row-between">
-          <h2 className="h2" style={{ fontSize: 17 }}>
-            {t('profile.language')}
-          </h2>
-          <LangToggle />
-        </div>
-      </div>
-
-      <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
-        <p className="faint" style={{ margin: '0 0 12px' }}>
-          {t('social.teaser')}
-        </p>
-        <button className="btn btn--ghost" onClick={() => nav('/app/profile/social')}>
-          {t('social.cta')}
-        </button>
-      </div>
-
-      <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
-        <p className="faint" style={{ margin: '0 0 12px' }}>
-          {t('support.teaser')}
-        </p>
-        <button className="btn btn--primary" onClick={() => nav('/app/profile/support')}>
-          {t('support.cta')}
-        </button>
-      </div>
-
-      <ReviewForm />
-
-      <div className="glass" style={{ padding: 18, marginBottom: 14, textAlign: 'center' }}>
-        <p className="faint" style={{ margin: '0 0 12px' }}>
-          {t('report.teaser')}
-        </p>
-        <button className="btn btn--ghost" onClick={() => nav('/report', { state: { from: '/app/profile' } })}>
-          {t('report.cta')}
-        </button>
-      </div>
-
       <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
         <h2 className="h2" style={{ marginBottom: 14, fontSize: 17 }}>
           {t('profile.myInfo')}
@@ -353,9 +324,12 @@ export default function Profile() {
             ))}
           </select>
         </div>
+        <button className="btn btn--primary btn--sm" onClick={save} disabled={busy} style={{ marginTop: 18 }}>
+          {busy ? t('profile.saving') : t('profile.save')}
+        </button>
       </div>
 
-      <div className="glass" style={{ padding: 18, marginBottom: 18 }}>
+      <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
         <h2 className="h2" style={{ marginBottom: 6, fontSize: 17 }}>
           {t('profile.partnerSection')}
         </h2>
@@ -440,7 +414,7 @@ export default function Profile() {
         <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
           {t('answer.color')}
         </label>
-        <div className="color-swatches" style={{ marginTop: 8, marginBottom: 18 }}>
+        <div className="color-swatches color-swatches--row" style={{ marginTop: 8, marginBottom: 18 }}>
           {COLORS.map((c) => (
             <button
               key={c}
@@ -457,17 +431,66 @@ export default function Profile() {
         </button>
       </div>
 
-      <button className="btn btn--primary" onClick={save} disabled={busy} style={{ marginBottom: 14 }}>
-        {busy ? t('profile.saving') : t('profile.save')}
-      </button>
+      {/* Settings and the DeePer links as two short lists of rows — the
+          longer pitches for each live on the page the row opens. */}
+      <div className="glass profile-list">
+        <h2 className="profile-list-title">{t('profile.settingsGroup')}</h2>
+        <div className="profile-row profile-row--static">
+          <span className="profile-row-ic">
+            <IcTranslate size={17} />
+          </span>
+          <span className="profile-row-label">{t('profile.language')}</span>
+          {/* Both languages on show, the current one lit — clearer here than
+              the lone translate icon used on the other pages. */}
+          <div className="lang-seg" role="group" aria-label={t('profile.language')}>
+            {[
+              ['th', 'ไทย'],
+              ['en', 'EN'],
+            ].map(([code, label]) => (
+              <button
+                key={code}
+                type="button"
+                className={lang === code ? 'active' : ''}
+                aria-pressed={lang === code}
+                onClick={() => setLang(code)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <ProfileRow Icon={IcPlayCircle} label={t('profile.appTutorial')} onClick={replayTutorial} />
+        <ProfileRow
+          Icon={IcSettings}
+          label={t('profile.accountSettings')}
+          onClick={() => nav('/app/profile/settings')}
+        />
+      </div>
 
-      <button className="btn btn--ghost" onClick={replayTutorial} style={{ marginBottom: 14 }}>
-        <IcPlayCircle size={18} /> {t('profile.appTutorial')}
-      </button>
-
-      <button className="btn btn--ghost" onClick={() => nav('/app/profile/settings')}>
-        <IcSettings size={18} /> {t('profile.accountSettings')}
-      </button>
+      <div className="glass profile-list">
+        <h2 className="profile-list-title">DeePer</h2>
+        <ProfileRow Icon={IcInstagram} label={t('social.cta')} onClick={() => nav('/app/profile/social')} />
+        <ProfileRow Icon={Heart} label={t('support.cta')} accent onClick={() => nav('/app/profile/support')} />
+        <ProfileRow Icon={IcChat} label={t('review.cta')} onClick={() => nav('/app/profile/review')} />
+        <ProfileRow
+          Icon={IcAlertCircle}
+          label={t('report.cta')}
+          onClick={() => nav('/report', { state: { from: '/app/profile' } })}
+        />
+      </div>
     </div>
+  );
+}
+
+// One tappable row in a profile list: icon chip, label, chevron.
+function ProfileRow({ Icon, label, onClick, accent = false }) {
+  return (
+    <button type="button" className={`profile-row${accent ? ' profile-row--accent' : ''}`} onClick={onClick}>
+      <span className="profile-row-ic">
+        <Icon size={17} />
+      </span>
+      <span className="profile-row-label">{label}</span>
+      <IcBack size={18} className="profile-row-chev" />
+    </button>
   );
 }
