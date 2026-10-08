@@ -33,6 +33,25 @@
   --safe-t: env(safe-area-inset-top, 0px);
 }
 
+/* Wide-color screens (iPhone, recent Macs): the brand reds in Display P3,
+   a little more saturated than sRGB can show, so they look as vivid as in
+   the iOS app instead of slightly washed out. Other screens keep the sRGB
+   values above. */
+@supports (color: color(display-p3 1 0 0)) {
+  @media (color-gamut: p3) {
+    :root {
+      --red: color(display-p3 0.97 0.2 0.36);
+      --red-bright: color(display-p3 1 0.3 0.43);
+      --red-deep: color(display-p3 0.76 0.03 0.22);
+      --hot: color(display-p3 1 0.05 0.34);
+      --hot-deep: color(display-p3 0.85 0 0.21);
+      --border-red: color(display-p3 0.97 0.2 0.36 / 0.38);
+      --glow-red: 0 0 40px -6px color(display-p3 0.97 0.2 0.36 / 0.55);
+      --glow-hot: 0 0 40px -6px color(display-p3 1 0.05 0.34 / 0.65);
+    }
+  }
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
