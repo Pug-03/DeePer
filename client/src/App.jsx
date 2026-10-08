@@ -22,6 +22,7 @@ import AccountSettings from './pages/AccountSettings.jsx';
 import LoginHistory from './pages/LoginHistory.jsx';
 import Support from './pages/Support.jsx';
 import Social from './pages/Social.jsx';
+import Review from './pages/Review.jsx';
 import Report from './pages/Report.jsx';
 import Admin from './pages/Admin.jsx';
 import SponsorInquiry from './pages/SponsorInquiry.jsx';
@@ -93,6 +94,7 @@ export default function App() {
               <Route path="/app/profile/login-history" element={<Protected><LoginHistory /></Protected>} />
               <Route path="/app/profile/support" element={<Protected><Support /></Protected>} />
               <Route path="/app/profile/social" element={<Protected><Social /></Protected>} />
+              <Route path="/app/profile/review" element={<Protected><Review /></Protected>} />
               <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
               <Route path="*" element={<Navigate to="/" replace />} />

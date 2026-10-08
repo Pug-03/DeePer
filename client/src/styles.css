@@ -3218,7 +3218,21 @@ a.btn {
   color: var(--red-bright);
   font-weight: 700;
 }
-/* Profile page: write / edit your review. */
+/* Review page: write / edit your review. */
+.review-with-label {
+  display: block;
+  margin: 0 0 8px 4px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.review-with {
+  flex-wrap: nowrap;
+}
+.review-with .pill {
+  flex: 1 1 0;
+  padding: 0 10px;
+  white-space: nowrap;
+}
 .review-form-foot {
   margin-top: 10px;
   display: flex;

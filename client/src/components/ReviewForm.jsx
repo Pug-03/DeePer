@@ -3,13 +3,14 @@ import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from './ui.jsx';
 import { CATS } from '../util.js';
+import { IcChat } from './icons.jsx';
 
 const MIN = 10;
 const MAX = 200;
 
-// "Review DeePer" card on the profile page. One review per user; saving
-// (a new one or an edit) sends it to the admin, and it only appears on the
-// landing page once approved.
+// The "Review DeePer" form, on its own page (pages/Review.jsx, opened from
+// Profile). One review per user; saving (a new one or an edit) sends it to
+// the admin, and it only appears on the landing page once approved.
 export default function ReviewForm() {
   const { t } = useI18n();
   const toast = useToast();
@@ -51,19 +52,22 @@ export default function ReviewForm() {
   const showForm = !mine || editing;
 
   return (
-    <div className="glass review-form" style={{ padding: 18, marginBottom: 14 }}>
-      <h2 className="h2" style={{ marginBottom: 6, fontSize: 17 }}>
-        {t('review.title')}
-      </h2>
+    <div className="glass support-card review-form">
+      <div className="support-head">
+        <span className="support-head-ic">
+          <IcChat size={18} />
+        </span>
+        <span className="support-head-title">{t('review.formTitle')}</span>
+      </div>
       {showForm ? (
         <>
-          <p className="faint" style={{ margin: '0 0 14px' }}>
-            {t('review.hint')}
-          </p>
-          <div className="filter-row" style={{ marginBottom: 12 }}>
+          {/* Short deck names (คู่รัก / เพื่อน ๆ / ครอบครัว) under one label, so
+              all three fit on a single row like Home's category tabs. */}
+          <label className="review-with-label">{t('review.withLabel')}</label>
+          <div className="filter-row review-with" style={{ marginBottom: 12 }}>
             {CATS.map((c) => (
               <button key={c} type="button" className={`pill ${relation === c ? 'active' : ''}`} onClick={() => setRelation(c)}>
-                {t(`review.with.${c}`)}
+                {t(`cat.${c}`)}
               </button>
             ))}
           </div>
