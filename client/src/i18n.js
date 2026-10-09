@@ -1,6 +1,8 @@
 // ระบบ 2 ภาษา (ไทย / อังกฤษ) — คำแปลทั้งหมดอยู่ที่นี่
 // ใช้ t('key', { var }) ในคอมโพเนนต์ ผ่าน hook useI18n()
 
+import { keepWord } from './utils/thai.js';
+
 export const LANGS = [
   { code: 'th', label: 'ไทย', short: 'TH' },
   { code: 'en', label: 'English', short: 'EN' },
@@ -48,7 +50,7 @@ export const STRINGS = {
     'err.EMAIL_NOT_FOUND': 'ไม่พบบัญชีที่ใช้อีเมลนี้',
     'err.ACCOUNT_IS_GOOGLE': 'บัญชีนี้สมัครด้วย Google กรุณาเข้าสู่ระบบด้วย Google แทน',
     'err.OTP_NOT_VERIFIED_RESET': 'ต้องยืนยัน OTP ก่อนตั้งรหัสผ่านใหม่',
-    'err.GOOGLE_DISABLED': 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google',
+    'err.GOOGLE_DISABLED': `ยังไม่ได้เปิด${keepWord('ใช้งาน')}การเข้าสู่ระบบด้วย Google`,
     'err.GOOGLE_CREDENTIAL_MISSING': 'ไม่พบข้อมูลรับรองจาก Google',
     'err.GOOGLE_AUTH_FAILED': 'ยืนยันตัวตนกับ Google ไม่สำเร็จ',
     'err.PASSWORD_REQUIRED': 'กรุณากรอกรหัสผ่าน',
@@ -58,7 +60,7 @@ export const STRINGS = {
     'err.SESSION_EXPIRED': 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่',
     'err.RATE_LIMITED': 'พยายามมากเกินไป กรุณาลองใหม่ภายหลัง',
     'err.INVALID_CATEGORY': 'หมวดไม่ถูกต้อง',
-    'err.AI_DISABLED': 'ยังไม่ได้เปิดใช้งานการสร้างคำถามด้วย AI',
+    'err.AI_DISABLED': `ยังไม่ได้เปิด${keepWord('ใช้งาน')}การสร้างคำถามด้วย AI`,
     'err.QUESTION_TOO_SHORT': 'คำถามสั้นเกินไป',
     'err.AI_GENERATE_EMPTY': 'AI ไม่ได้สร้างคำถามใหม่ กรุณาลองอีกครั้ง',
     'err.AI_GENERATE_FAILED': 'สร้างคำถามด้วย AI ไม่สำเร็จ',
@@ -68,10 +70,10 @@ export const STRINGS = {
     'err.QUESTION_TEXT_REQUIRED': 'ไม่มีคำถามให้บันทึก',
     'err.AVATAR_TOO_LARGE': 'ไฟล์รูปใหญ่เกินไป (สูงสุด 5MB)',
     'err.AVATAR_TYPE_INVALID': 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP',
-    'err.AVATAR_UPLOAD_FAILED': 'อัปโหลดรูปไม่สำเร็จ',
+    'err.AVATAR_UPLOAD_FAILED': `${keepWord('อัปโหลด')}รูปไม่สำเร็จ`,
     'err.REPORT_CATEGORY_INVALID': 'กรุณาเลือกประเภทของรายงาน',
     'err.REPORT_MESSAGE_REQUIRED': 'กรุณาเล่ารายละเอียดอย่างน้อย 5 ตัวอักษร',
-    'err.REPORT_UPLOAD_FAILED': 'อัปโหลดรูปไม่สำเร็จ (ไฟล์ใหญ่เกิน 5MB หรือชนิดไม่รองรับ)',
+    'err.REPORT_UPLOAD_FAILED': `${keepWord('อัปโหลด')}รูปไม่สำเร็จ (ไฟล์ใหญ่เกิน 5MB หรือชนิดไม่รองรับ)`,
     'err.REPORT_RATE_LIMITED': 'ส่งรายงานบ่อยเกินไป กรุณาลองใหม่ภายหลัง',
     'err.INQUIRY_RATE_LIMITED': 'ส่งบ่อยเกินไป กรุณาลองใหม่ภายหลัง',
     'err.INQUIRY_MESSAGE_REQUIRED': 'กรุณาเล่ารายละเอียดอย่างน้อย 5 ตัวอักษร',
@@ -208,7 +210,7 @@ export const STRINGS = {
     'postAuth.backTitle': 'ยินดีต้อนรับกลับมา {name}',
     'postAuth.backSub': 'คิดถึงจัง ไปคุยกันต่อเลย',
     'postAuth.newTitle': 'ยินดีต้อนรับ {name}',
-    'postAuth.newSub': 'เริ่มต้นบทสนทนาแรกของเรากันเลย',
+    'postAuth.newSub': `${keepWord('เริ่มต้น')}บทสนทนาแรกของเรากันเลย`,
     'postAuth.tutAsk': 'อยากให้เราแนะนำวิธีใช้งานเบื้องต้นไหม?',
     'postAuth.tutYes': 'ต้องการเลย',
     'postAuth.tutNo': 'ข้าม ไปเลย',
@@ -348,13 +350,13 @@ export const STRINGS = {
     'answer.partnerNameHint': 'เปลี่ยนชื่อได้ที่โปรไฟล์',
     'answer.color': 'สีประจำตัว',
     'profile.partnerPicture': 'รูปหรือไอคอนของอีกฝ่าย',
-    'profile.partnerPictureHint': 'อัปโหลดรูป หรือเลือกไอคอนแทนตัว',
+    'profile.partnerPictureHint': `${keepWord('อัปโหลด')}รูป หรือเลือกไอคอนแทนตัว`,
     'profile.partnerPictureRemove': 'ลบรูป',
     'answer.save': 'บันทึกคำตอบ',
     'answer.saving': 'กำลังบันทึก...',
     // Non-breaking space before the trailing "นะ" so it can't be
     // stranded alone on its own line.
-    'answer.needOne': 'กรอกคำตอบอย่างน้อยหนึ่งช่องก่อน นะ',
+    'answer.needOne': `กรอกคำตอบอย่างน้อย${keepWord('หนึ่ง')}ช่องก่อน นะ`,
     'answer.saved': 'บันทึกคำตอบลงประวัติแล้ว',
 
     // บันทึกไว้
@@ -396,7 +398,7 @@ export const STRINGS = {
     'profile.saved': 'บันทึกข้อมูลแล้ว',
     'profile.appTutorial': 'แนะนำการใช้แอป',
     'profile.tutorialConfirmTitle': 'เริ่มแนะนำการใช้แอปอีกครั้ง?',
-    'profile.tutorialConfirmMessage': 'ระบบจะพากลับหน้าหลักและแนะนำการใช้งานทีละขั้น',
+    'profile.tutorialConfirmMessage': `ระบบจะพา${keepWord('กลับ')}หน้าหลักและแนะนำการ${keepWord('ใช้งาน')}ทีละขั้น`,
     'profile.tutorialStart': 'เริ่มแนะนำ',
     'profile.accountSettings': 'ตั้งค่าความปลอดภัยขั้นสูง',
     'profile.settingsTitle': 'ตั้งค่าความปลอดภัยขั้นสูง',
@@ -482,7 +484,7 @@ export const STRINGS = {
     'social.soon': 'เร็ว ๆ นี้',
 
     // แจ้งปัญหา / บัค
-    'report.teaser': 'เจอบัค ใช้งานติดขัด หรืออยากให้ปรับอะไร บอกเราได้เลย',
+    'report.teaser': `เจอ${keepWord('บัค')} ${keepWord('ใช้งาน')}ติดขัด หรืออยากให้ปรับอะไร บอกเราได้เลย`,
     'report.cta': 'แจ้งปัญหาหรือเสนอแนะ',
     'report.footer': 'มีปัญหาหรืออยากแนะนำอะไร?',
     'report.footerCta': 'บอกเรา →',
@@ -508,9 +510,9 @@ export const STRINGS = {
     'report.again': 'แจ้งเรื่องอื่นเพิ่ม',
 
     // ร่วมเป็นสปอนเซอร์
-    'sponsorForm.teaser': 'สนใจร่วมเป็นสปอนเซอร์กับ DeePer?',
+    'sponsorForm.teaser': `สนใจร่วมเป็น${keepWord('สปอนเซอร์')}กับ DeePer?`,
     'sponsorForm.teaserCta': 'ติดต่อเรา →',
-    'sponsorForm.title': 'ร่วมเป็นสปอนเซอร์กับ DeePer',
+    'sponsorForm.title': `ร่วมเป็น${keepWord('สปอนเซอร์')}กับ DeePer`,
     'sponsorForm.msg': 'ขอบคุณที่สนใจสนับสนุนแอปชวนคุยลึก ๆ ของเรา ฝากข้อมูลไว้ แล้วทีมจะติดต่อกลับโดยเร็ว',
     'sponsorForm.formTitle': 'ข้อมูลสำหรับติดต่อกลับ',
     'sponsorForm.org': 'ชื่อองค์กร / บริษัท',
@@ -519,7 +521,7 @@ export const STRINGS = {
     'sponsorForm.contact': 'อีเมลหรือเบอร์โทร',
     'sponsorForm.contactPh': 'เช่น name@company.com หรือ 08x-xxx-xxxx',
     'sponsorForm.message': 'อยากร่วมงานกับเราแบบไหน',
-    'sponsorForm.messagePh': 'เช่น สนใจเป็นสปอนเซอร์ระดับเงิน หรืออยากทำกิจกรรมร่วมกัน',
+    'sponsorForm.messagePh': `เช่น สนใจเป็น${keepWord('สปอนเซอร์')}ระดับเงิน หรืออยากทำกิจกรรมร่วมกัน`,
     'sponsorForm.submit': 'ส่งข้อมูลให้ทีม DeePer',
     'sponsorForm.submitting': 'กำลังส่ง...',
     'sponsorForm.doneTitle': 'ได้รับข้อมูลแล้ว ขอบคุณมาก!',
