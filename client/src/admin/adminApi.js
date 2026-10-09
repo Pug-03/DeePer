@@ -1,6 +1,8 @@
 // Requests for the /admin dashboard. Kept apart from api.js: the admin token
 // is its own login (not a user session), so a 401 here only ends the admin
 // session and never logs the regular user out.
+import { keepWord } from '../utils/thai.js';
+
 const TOKEN_KEY = 'deeper_admin_token';
 
 export const getAdminToken = () => localStorage.getItem(TOKEN_KEY);
@@ -29,7 +31,7 @@ async function request(path, { method = 'GET', body, raw = false } = {}) {
   }
   if (res.status === 401) {
     setAdminToken(null);
-    throw new AdminAuthError('เซสชันแอดมินหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+    throw new AdminAuthError(`เซสชัน${keepWord('แอดมิน')}หมดอายุ กรุณาเข้าสู่ระบบใหม่`);
   }
   if (raw && res.ok) return res.blob();
   if (res.status === 204) return null;

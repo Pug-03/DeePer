@@ -6,6 +6,7 @@ import { SPONSORS } from '../sponsors-info.js';
 import { useI18n } from '../store/i18n.jsx';
 import { CATS } from '../util.js';
 import { IcTrash } from '../components/icons.jsx';
+import { keepWord } from '../utils/thai.js';
 
 // Owner-only back office at /admin (not linked from anywhere in the app).
 // Thai-only on purpose: its one reader is the maintainer.
@@ -73,15 +74,15 @@ function AdminDashboard({ onLogout }) {
     { key: 'insights', label: 'การใช้งาน' },
     { key: 'reports', label: 'แจ้งปัญหา', badge: stats?.reports_open },
     { key: 'proofs', label: 'ผู้สนับสนุน', badge: stats?.proofs_pending },
-    { key: 'inquiries', label: 'ติดต่อเป็นสปอนเซอร์', badge: stats?.inquiries_open },
+    { key: 'inquiries', label: `ติดต่อเป็น${keepWord('สปอนเซอร์')}`, badge: stats?.inquiries_open },
     { key: 'reviews', label: 'รีวิว', badge: stats?.reviews_pending },
-    { key: 'sponsors', label: 'โลโก้สปอนเซอร์' },
+    { key: 'sponsors', label: `โลโก้${keepWord('สปอนเซอร์')}` },
   ];
 
   return (
     <div className="page admin">
       <div className="row-between" style={{ marginBottom: 18 }}>
-        <h1 className="h1" style={{ margin: 0 }}>แอดมิน DeePer</h1>
+        <h1 className="h1" style={{ margin: 0 }}>{keepWord('แอดมิน')} DeePer</h1>
         <button className="link" type="button" onClick={onLogout}>
           ออกจากระบบ
         </button>
@@ -123,7 +124,7 @@ function Overview({ stats }) {
     ['ตอบคำถามวันนี้', stats.answers_today],
     ['ผู้ใช้ทั้งหมด', stats.users_total],
     ['แจ้งปัญหาที่ยังไม่แก้', stats.reports_open],
-    ['องค์กรติดต่อเป็นสปอนเซอร์ (ยังไม่ได้ติดต่อกลับ)', stats.inquiries_open],
+    [`องค์กรติดต่อเป็น${keepWord('สปอนเซอร์')} (ยังไม่ได้ติดต่อกลับ)`, stats.inquiries_open],
     ['สลิปรออนุมัติ', stats.proofs_pending],
     ['รีวิวรออนุมัติ', stats.reviews_pending ?? 0],
   ];
@@ -225,7 +226,7 @@ function Insights({ onLogout }) {
       <BarList title="หมวดที่บันทึกคำถามมากที่สุด" rows={catRows(data.saved_by_category)} unit="ครั้ง" empty="ยังไม่มีข้อมูล" />
       <TopQuestions title="คำถามที่ถูกบันทึกมากที่สุด" rows={data.top_saved} t={t} />
       <TopQuestions title="คำถามที่ถูกตอบมากที่สุด" rows={data.top_answered} t={t} />
-      <p className="admin-note">คำถามที่ถูกบันทึกเยอะคือคำถามที่คนชอบ เอาไปทำคอนเทนต์ลง IG / TikTok ได้</p>
+      <p className="admin-note">คำถามที่ถูกบันทึกเยอะคือคำถามที่คนชอบ เอาไปทำ{keepWord('คอนเทนต์')}ลง IG / TikTok ได้</p>
     </>
   );
 }
@@ -427,7 +428,7 @@ function Proofs({ onLogout, onChange }) {
 
   return (
     <>
-      <p className="admin-note">ตรวจสลิปว่ายอดและเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "ผู้สนับสนุนรายบุคคล" บนหน้าเว็บทันที ถ้าชื่อไม่เหมาะสม กด "ไม่ขึ้นชื่อ" ระบบจะส่งอีเมลขอบคุณไปที่อีเมลที่เขาใช้สมัครแทน</p>
+      <p className="admin-note">ตรวจสลิปว่า{keepWord('ยอด')}และเวลาตรงกับที่โอนเข้าจริง แล้วกดอนุมัติ ชื่อจะขึ้นในระดับ "ผู้สนับสนุนรายบุคคล" บนหน้าเว็บทันที ถ้าชื่อไม่เหมาะสม กด "ไม่ขึ้นชื่อ" ระบบจะส่งอีเมลขอบคุณไปที่อีเมลที่เขาใช้สมัครแทน</p>
       <FilterRow
         items={data.proofs}
         filter={filter}
@@ -552,7 +553,7 @@ function Sponsors({ onLogout }) {
       setLink('');
       setLogo(null);
       setPreview('');
-      toast('เพิ่มสปอนเซอร์แล้ว');
+      toast(`เพิ่ม${keepWord('สปอนเซอร์')}แล้ว`);
       reload();
     } catch (e2) {
       fail(e2);
@@ -571,7 +572,7 @@ function Sponsors({ onLogout }) {
   };
 
   const remove = async (s) => {
-    const ok = await confirm({ title: 'ลบสปอนเซอร์', message: `ลบ ${s.name} ออกจากหน้าเว็บ?`, confirmText: 'ลบ', danger: true });
+    const ok = await confirm({ title: `ลบ${keepWord('สปอนเซอร์')}`, message: `ลบ ${s.name} ออกจากหน้าเว็บ?`, confirmText: 'ลบ', danger: true });
     if (!ok) return;
     try {
       await adminApi.deleteSponsor(s.id);
@@ -584,12 +585,12 @@ function Sponsors({ onLogout }) {
   return (
     <>
       <p className="admin-note">
-        โลโก้สปอนเซอร์ที่เพิ่มตรงนี้จะขึ้นในหน้าเว็บต่อจากที่อยู่ในโค้ด ใช้โลโก้พื้นหลังโปร่งใส (PNG หรือ SVG) ที่อ่านออกบนพื้นดำ
+        โลโก้{keepWord('สปอนเซอร์')}ที่เพิ่มตรงนี้จะขึ้นในหน้าเว็บต่อจากที่อยู่ในโค้ด ใช้โลโก้พื้นหลังโปร่งใส (PNG หรือ SVG) ที่อ่านออกบนพื้นดำ
         บน Render แบบฟรี โลโก้ที่เพิ่มจะหายเมื่อ deploy ใหม่
       </p>
 
       <form className="glass admin-card" onSubmit={add}>
-        <p className="admin-chart-title">เพิ่มสปอนเซอร์</p>
+        <p className="admin-chart-title">เพิ่ม{keepWord('สปอนเซอร์')}</p>
         <label className="admin-logo-drop">
           <input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden onChange={pickLogo} />
           {preview ? <img src={preview} alt="ตัวอย่างโลโก้" /> : <span>แนบโลโก้ (ไม่เกิน 2MB)</span>}
@@ -620,7 +621,7 @@ function Sponsors({ onLogout }) {
           />
         </div>
         <button className="btn btn--primary admin-action" type="submit" disabled={!logo || !name.trim() || busy}>
-          {busy ? 'กำลังเพิ่ม...' : 'เพิ่มสปอนเซอร์'}
+          {busy ? 'กำลังเพิ่ม...' : `เพิ่ม${keepWord('สปอนเซอร์')}`}
         </button>
       </form>
 
@@ -700,7 +701,7 @@ function Inquiries({ onLogout, onChange }) {
   return (
     <>
       <p className="admin-note">
-        องค์กรที่กด "สนใจร่วมเป็นสปอนเซอร์กับ DeePer? ติดต่อเรา" ในหน้าแรก แล้วกรอกฟอร์มเข้ามา
+        องค์กรที่กด "สนใจร่วมเป็น{keepWord('สปอนเซอร์')}กับ DeePer? ติดต่อเรา" ในหน้าแรก แล้ว{keepWord('กรอก')}ฟอร์มเข้ามา
       </p>
       <FilterRow
         items={data.inquiries}
