@@ -3469,3 +3469,7 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
 .social-link .feature-desc {
   text-wrap: balance;
 }
+/* A phrase that must not be split across lines (see unbreakablePhrases). */
+.nowrap {
+  white-space: nowrap;
+}

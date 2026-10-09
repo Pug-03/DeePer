@@ -608,6 +608,15 @@ function SponsorTiers({ t, sponsors, sealed }) {
   );
 }
 
+// Thai has no spaces between words, so the browser guesses where a line may
+// break and gets loanwords wrong ("เลย์เอา|ต์"). Keep each space-separated
+// phrase whole so a role only wraps at its spaces (and at '\n').
+function unbreakablePhrases(text) {
+  return text.split(/( +|\n)/).map((part, i) =>
+    i % 2 ? part : part && <span key={i} className="nowrap">{part}</span>
+  );
+}
+
 // Plain text, no box/border — matches the rest of the page's text-based
 // feel rather than reading as another boxed component. Just a small avatar
 // added to the left of each name+role line.
@@ -646,7 +655,7 @@ function DevTeamCard({ dev, lang, nav }) {
               {name}
               <IcMousePointer size={17} className="dev-team-name-icon" />
             </span>
-            <span className="dev-team-role">{role}</span>
+            <span className="dev-team-role">{unbreakablePhrases(role)}</span>
           </span>
         </button>
       ) : (
@@ -654,7 +663,7 @@ function DevTeamCard({ dev, lang, nav }) {
           {avatar}
           <div className="dev-team-text">
             <p className="dev-team-name">{name}</p>
-            <p className="dev-team-role">{role}</p>
+            <p className="dev-team-role">{unbreakablePhrases(role)}</p>
           </div>
         </div>
       )}
