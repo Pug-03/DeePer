@@ -1164,14 +1164,6 @@ html[data-tour] .fade-up {
   border: 2px solid transparent;
   transition: transform 0.12s, border-color 0.15s;
 }
-.swatch:active {
-  transform: scale(0.9);
-}
-.swatch.sel {
-  border-color: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
-}
-
 /* Partner colours: all seven on one row, each circle shrinking a little on
    narrow screens instead of wrapping the last one onto its own line. */
 .color-swatches--row {
@@ -1184,6 +1176,14 @@ html[data-tour] .fade-up {
   height: auto;
   aspect-ratio: 1;
 }
+.swatch:active {
+  transform: scale(0.9);
+}
+.swatch.sel {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
 /* ---------- Bottom nav ---------- */
 .bottom-nav {
   position: fixed;
@@ -2554,14 +2554,6 @@ a.btn {
   box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.7);
   transform: translate(-50%, -50%) rotate(-2.5deg);
 }
-/* The tape text: moved by TapeTrack (Welcome.jsx) — a slow drift, and it
-   can be dragged sideways. pan-y keeps vertical page scrolling working on
-   touch screens while a sideways swipe moves the tape. */
-.sponsor-tape-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
 /* Stars shooting out from a sponsor tier as it's revealed (StarBurst). */
 .star-burst {
   position: absolute;
@@ -2579,6 +2571,14 @@ a.btn {
   display: block;
   translate: -50% -50%;
   filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.6));
+}
+/* The tape text: moved by TapeTrack (Welcome.jsx) — a slow drift, and it
+   can be dragged sideways. pan-y keeps vertical page scrolling working on
+   touch screens while a sideways swipe moves the tape. */
+.sponsor-tape-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
 }
 .sealed .sponsor-tape {
   cursor: grab;
@@ -3160,25 +3160,6 @@ a.btn {
   gap: 16px;
   text-align: left;
 }
-.profile-header-info {
-  flex: 1;
-  min-width: 0;
-}
-.avatar-edit--lg {
-  width: 104px;
-  flex-shrink: 0;
-}
-.avatar--lg {
-  width: 104px;
-  height: 104px;
-  font-size: 40px;
-}
-.avatar-edit--lg .avatar-edit__btn {
-  width: 34px;
-  height: 34px;
-}
-.link-btn {
-  background: none;
 /* Profile: settings and DeePer links as short lists of rows. */
 .profile-list {
   padding: 4px 0 6px;
@@ -3263,6 +3244,25 @@ button.profile-row:active {
   color: var(--text-faint);
   transform: rotate(180deg);
 }
+.profile-header-info {
+  flex: 1;
+  min-width: 0;
+}
+.avatar-edit--lg {
+  width: 104px;
+  flex-shrink: 0;
+}
+.avatar--lg {
+  width: 104px;
+  height: 104px;
+  font-size: 40px;
+}
+.avatar-edit--lg .avatar-edit__btn {
+  width: 34px;
+  height: 34px;
+}
+.link-btn {
+  background: none;
   border: none;
   padding: 0;
   color: var(--text-dim);
