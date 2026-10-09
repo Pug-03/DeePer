@@ -17,10 +17,12 @@ import depa from './assets/sponsors/depa.png';
 // DotTH keeps its vector paths, with a tight viewBox and white ink.
 import dotth from './assets/sponsors/dotth.svg';
 import microsoft from './assets/sponsors/microsoft.png';
+import tedFund from './assets/sponsors/ted-fund.png';
 import twa from './assets/sponsors/twa.png';
 import yeah from './assets/sponsors/yeah.png';
 
 export const SPONSORS = [
+  { name: 'TED Fund', logo: tedFund, tier: 'high' },
   { name: 'depa', logo: depa, tier: 'high' },
   { name: 'Microsoft', logo: microsoft, tier: 'medium' },
   { name: 'AWS', logo: aws, tier: 'medium' },
