@@ -75,6 +75,14 @@ html {
      up with the page, so other screens showed a stray band.) */
   background: var(--bg-bottom);
   overscroll-behavior: none;
+  /* iOS Safari ignores maximum-scale in the viewport meta, so a quick double
+     tap (e.g. on the profile photo's camera button) zooms the page in and
+     leaves it stuck zoomed. This turns off double-tap zoom everywhere while
+     keeping pinch-zoom for people who need it. */
+  touch-action: manipulation;
+  /* Don't let iOS/Android enlarge text on rotation or in in-app browsers. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   /* Full-bleed bits (the landing page's caution tape) may overhang the
      screen; clip them rather than letting the page scroll sideways. Set on
      both html and body: on body alone it's propagated to the viewport (which
@@ -3368,7 +3376,8 @@ button.profile-row:active {
    scroll below the send button): tighter top spacing, a shorter
    screenshot drop zone and message box. */
 .form-page.page {
-  padding-top: 14px;
+  /* Keep clear of the iPhone notch / status bar (safe area), like .page. */
+  padding-top: calc(14px + var(--safe-t));
 }
 .form-page > .back-btn {
   margin-bottom: 8px !important;
