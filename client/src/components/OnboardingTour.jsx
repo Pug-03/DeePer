@@ -1,41 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
-import { IcBack, IcCheck, IcSparkle } from './icons.jsx';
-
-// Ambient twinkle around the tip box — one instance per corner, each on its
-// own staggered loop so they never blink in sync. Lives on the persistent
-// .tut-tip wrapper (not the per-step .tut-tip-inner that AnimatePresence
-// swaps out), so it plays continuously across steps instead of restarting
-// every time the tooltip text changes.
-const SPARKLE_CORNERS = [
-  { top: -8, left: -8, delay: 0 },
-  { top: -8, right: -8, delay: 0.6 },
-  { bottom: -8, left: -8, delay: 1.2 },
-  { bottom: -8, right: -8, delay: 1.8 },
-];
-function TipSparkles() {
-  const reduceMotion = useReducedMotion();
-  if (reduceMotion) return null;
-  return (
-    <>
-      {SPARKLE_CORNERS.map((pos, i) => (
-        <motion.span
-          key={i}
-          className="tut-sparkle"
-          style={{ top: pos.top, left: pos.left, right: pos.right, bottom: pos.bottom }}
-          initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
-          animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5], rotate: [0, 25, 0] }}
-          transition={{ duration: 2.4, delay: pos.delay, repeat: Infinity, repeatDelay: 1.2, ease: 'easeInOut' }}
-        >
-          <IcSparkle size={14} />
-        </motion.span>
-      ))}
-    </>
-  );
-}
+import { IcBack, IcCheck } from './icons.jsx';
 
 // Each step's `route` says which page its target lives on. Steps stay in
 // one flat list (not grouped per page) so the progress dots below count
@@ -439,7 +407,6 @@ export default function OnboardingTour() {
               transition={TIP_TRANSITION}
               style={{ left: '50%', x: '-50%', height: tipH }}
             >
-              <TipSparkles />
               <AnimatePresence mode="wait">
                 <motion.div
                   key={id}

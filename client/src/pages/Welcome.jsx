@@ -492,25 +492,83 @@ function TapeTrack({ text, dir }) {
   );
 }
 
+// A small burst of stars shooting out from the middle of a sponsor tier,
+// once, as its logos are revealed. Each `burst` change fires a new one.
+const BURST_COLORS = ['#ff5a72', '#ffd2d9', '#fbbf24', '#ffffff'];
+function StarBurst({ burst }) {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => {
+        const a = (i / 10) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+        const r = 70 + Math.random() * 60;
+        return {
+          x: Math.cos(a) * r * 1.6,
+          y: Math.sin(a) * r * 0.55,
+          size: 9 + Math.random() * 7,
+          color: BURST_COLORS[i % BURST_COLORS.length],
+          delay: Math.random() * 0.12,
+        };
+      }),
+    // A fresh scatter for every burst.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [burst],
+  );
+  if (!burst) return null;
+  return (
+    <div className="star-burst" aria-hidden="true" key={burst}>
+      {stars.map((st, i) => (
+        <motion.span
+          key={i}
+          style={{ color: st.color }}
+          initial={{ x: 0, y: 0, scale: 0.2, opacity: 0, rotate: 0 }}
+          animate={{ x: st.x, y: st.y, scale: [0.2, 1, 0.6], opacity: [0, 1, 0], rotate: 120 }}
+          transition={{ duration: 1.1, delay: st.delay, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <IcSparkle size={st.size} />
+        </motion.span>
+      ))}
+    </div>
+  );
+}
+
 function Sealed({ t, sealed, index = 0, children }) {
   // sealed → (launch passes while the page is open) → opening → open.
   // While opening, the tape peels off and the logos come into focus; the
   // wrapper stays the same element throughout so nothing inside remounts.
   const [phase, setPhase] = useState(sealed ? 'sealed' : 'open');
+  // Stars shoot out as the logos come into focus — at the reveal, or (when
+  // the page opens after launch) the first time the tier scrolls into view.
+  const [burst, setBurst] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
-    if (sealed || phase !== 'sealed') return undefined;
-    setPhase('opening');
+    if (!sealed && phase === 'sealed') setPhase('opening');
+  }, [sealed, phase]);
+  // Timers live in their own effect keyed on the opening phase: in the one
+  // above they'd be cleared again by the very re-render setPhase causes.
+  useEffect(() => {
+    if (phase !== 'opening') return undefined;
     const id = setTimeout(() => setPhase('open'), 2200 + index * 280);
-    return () => clearTimeout(id);
-  }, [sealed, phase, index]);
+    const starsId = setTimeout(() => setBurst((b) => b + 1), 1100 + index * 280);
+    return () => {
+      clearTimeout(id);
+      clearTimeout(starsId);
+    };
+  }, [phase, index]);
+  useEffect(() => {
+    if (inView && !sealed && phase === 'open' && burst === 0) setBurst(1);
+  }, [inView]); // eslint-disable-line react-hooks/exhaustive-deps
   const half = Array.from({ length: 12 }, () => `${t('welcome.supporters.sealed')}   ✦   `).join('');
   const open = phase === 'open';
   return (
     // Tapes peel off in alternating directions: left→right, then right→left.
     <div
+      ref={ref}
       className={`sealed${index % 2 ? ' peel-rev' : ''}${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
       style={{ '--i': index }}
     >
+      {!reduceMotion && <StarBurst burst={burst} />}
       <div className="sealed-content" aria-hidden={open ? undefined : 'true'} inert={open ? undefined : ''}>
         {children}
       </div>

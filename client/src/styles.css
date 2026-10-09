@@ -2554,6 +2554,24 @@ a.btn {
   width: max-content;
   will-change: transform;
 }
+/* Stars shooting out from a sponsor tier as it's revealed (StarBurst). */
+.star-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.star-burst span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  translate: -50% -50%;
+  filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.6));
+}
 .sealed .sponsor-tape {
   cursor: grab;
   touch-action: pan-y;
@@ -2883,13 +2901,6 @@ a.btn {
 }
 /* Ambient corner twinkle — .tut-tip is already position:fixed, so it's a
    valid containing block for these without an extra wrapper. */
-.tut-sparkle {
-  position: absolute;
-  display: block;
-  color: var(--red-bright);
-  filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.55));
-  pointer-events: none;
-}
 /* Wraps TipBody inside the real (non-measuring) tip — stretched to fill the
    fixed tip height so tut-tip-foot's auto margin below can pin it to the
    bottom instead of sitting right under the desc text. */
