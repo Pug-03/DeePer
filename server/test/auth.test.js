@@ -147,10 +147,11 @@ test('login history reports device info parsed from the User-Agent', async () =>
   assert.match(history.body.login_history[0].user_agent, /Chrome/);
 });
 
-test('the page may show blob: images it makes itself', async () => {
+test('the CSP lets in blob: previews and the Google button stylesheet', async () => {
   const res = await fetch(`${base}/health`);
   const csp = res.headers.get('content-security-policy');
   assert.match(csp, /img-src[^;]*blob:/);
+  assert.match(csp, /style-src[^;]*https:\/\/accounts\.google\.com\/gsi\/style/);
 });
 
 test('changing the password signs out every other device but keeps this one', async () => {

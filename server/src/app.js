@@ -50,7 +50,8 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", 'https://accounts.google.com'],
-        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        // gsi/style: the Google Sign-In button's own stylesheet.
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com/gsi/style'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         // blob: for previews made in the page itself (the share-card image,
         // a report screenshot or payment slip picked for upload).
