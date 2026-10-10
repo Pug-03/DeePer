@@ -722,7 +722,7 @@ export default function Home() {
   const firstLoad = useRef(true);
   const flyRegistry = useRef(null);
 
-  const fetchBatch = useCallback(async (cat, { reset = false, silent = false } = {}) => {
+  const fetchBatch = useCallback(async (cat, { reset = false, silent = false, stale } = {}) => {
     try {
       if (reset) {
         seen.current = new Set();
@@ -730,6 +730,7 @@ export default function Home() {
       }
       const exclude = [...seen.current].join(',');
       const d = await api.get(`/questions/?category=${cat}&limit=20&exclude=${exclude}`);
+      if (stale?.()) return 0;
       setAiEnabled(d.ai_enabled);
       const fresh = d.questions.filter((q) => !seen.current.has(q.id));
       fresh.forEach((q) => seen.current.add(q.id));
@@ -746,9 +747,16 @@ export default function Home() {
     }
   }, []);
 
+  // A reply for a category we've already left (or, in dev, StrictMode's
+  // throwaway first mount) is dropped: applying it showed one question and
+  // then swapped it for another a moment later.
   useEffect(() => {
-    fetchBatch(category, { reset: true, silent: !firstLoad.current });
+    let left = false;
+    fetchBatch(category, { reset: true, silent: !firstLoad.current, stale: () => left });
     firstLoad.current = false;
+    return () => {
+      left = true;
+    };
   }, [category, fetchBatch]);
 
   // "On this day"-style memory notification — pops up as a toast once per
