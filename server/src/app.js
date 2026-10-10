@@ -52,7 +52,9 @@ app.use(
         scriptSrc: ["'self'", 'https://accounts.google.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:'],
+        // blob: for previews made in the page itself (the share-card image,
+        // a report screenshot or payment slip picked for upload).
+        imgSrc: ["'self'", 'data:', 'blob:'],
         connectSrc: ["'self'", 'https://accounts.google.com'],
         frameSrc: ['https://accounts.google.com'],
       },

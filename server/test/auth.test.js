@@ -146,3 +146,9 @@ test('login history reports device info parsed from the User-Agent', async () =>
   assert.equal(history.status, 200);
   assert.match(history.body.login_history[0].user_agent, /Chrome/);
 });
+
+test('the page may show blob: images it makes itself', async () => {
+  const res = await fetch(`${base}/health`);
+  const csp = res.headers.get('content-security-policy');
+  assert.match(csp, /img-src[^;]*blob:/);
+});
