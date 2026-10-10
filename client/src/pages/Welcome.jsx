@@ -682,11 +682,13 @@ const arrivingPose = (s) => {
   for (const k in SAMPLE_FRONT) p[k] = lerp(SAMPLE_BACK[k], SAMPLE_FRONT[k], e);
   return p;
 };
-// One flip on its own takes CYCLE_S. The further the deck is behind the
-// taps, the faster it runs (up to MAX_SPEED×), so the pace follows the
-// finger: slow taps get the full unhurried swing, quick taps a snappy one.
-// Changes in pace are smoothed over PACE_S so it never lurches.
+// An auto flip takes CYCLE_S; a tapped one TAP_CYCLE_S, so even the first
+// tap answers the finger briskly. The further the deck is behind the taps,
+// the faster it runs (up to MAX_SPEED× an auto flip), so the pace follows the finger:
+// slow taps get a full swing, quick taps a snappy one. Changes in pace are
+// smoothed over PACE_S so it never lurches.
 const BASE_SPEED = 1 / CYCLE_S;
+const TAP_CYCLE_S = 0.8;
 const MAX_SPEED = 3;
 const SPEED_PER_CARD = 1.2;
 const PACE_S = 0.12;
@@ -698,6 +700,7 @@ function SampleCard({ t }) {
   const pos = useRef(0);
   const target = useRef(0);
   const velocity = useRef(0);
+  const baseSpeed = useRef(BASE_SPEED);
   const raf = useRef(0);
   // Re-render only when a flip starts or finishes (to swap the front card's
   // highlight and the questions), never per frame.
@@ -720,7 +723,7 @@ function SampleCard({ t }) {
   const tick = (now, last) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     const behind = target.current - pos.current;
-    const want = BASE_SPEED * Math.min(MAX_SPEED, Math.max(1, 1 + SPEED_PER_CARD * (behind - 1)));
+    const want = Math.min(BASE_SPEED * MAX_SPEED, baseSpeed.current * Math.max(1, 1 + SPEED_PER_CARD * (behind - 1)));
     velocity.current += (want - velocity.current) * (1 - Math.exp(-dt / PACE_S));
     pos.current = Math.min(target.current, pos.current + velocity.current * dt);
     paint();
@@ -730,7 +733,7 @@ function SampleCard({ t }) {
       raf.current = 0;
     }
   };
-  const advance = () => {
+  const advance = (speed = BASE_SPEED) => {
     target.current = Math.min(target.current + 1, Math.floor(pos.current) + MAX_BEHIND);
     if (reduceMotion) {
       // Reduced motion: the cards just trade places, no swing round.
@@ -738,8 +741,10 @@ function SampleCard({ t }) {
       paint();
       return;
     }
+    // A tap during an auto flip lifts it to tap pace too.
+    baseSpeed.current = raf.current ? Math.max(baseSpeed.current, speed) : speed;
     if (!raf.current) {
-      velocity.current = BASE_SPEED;
+      velocity.current = speed;
       raf.current = requestAnimationFrame((now) => tick(now, now));
     }
   };
@@ -765,7 +770,7 @@ function SampleCard({ t }) {
     return SAMPLE_KEYS[q % n];
   };
   return (
-    <button ref={stackRef} type="button" className="sample-stack" onClick={advance} aria-label={t('welcome.sampleNext')}>
+    <button ref={stackRef} type="button" className="sample-stack" onClick={() => advance(1 / TAP_CYCLE_S)} aria-label={t('welcome.sampleNext')}>
       {[0, 1].map((c) => {
         const isFront = c === step.front;
         return (
