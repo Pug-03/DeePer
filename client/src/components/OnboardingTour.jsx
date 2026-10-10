@@ -99,9 +99,15 @@ function isSettled(el) {
   let node = el;
   while (node instanceof Element) {
     if (typeof node.getAnimations === 'function') {
+      // Looping animations (a glow, a twinkle) never finish; waiting on them
+      // held a step back for the full 1.5s fallback before it showed.
       const running = node
         .getAnimations()
-        .some((a) => a.playState === 'running' || a.playState === 'pending');
+        .some(
+          (a) =>
+            (a.playState === 'running' || a.playState === 'pending') &&
+            a.effect?.getTiming?.().iterations !== Infinity,
+        );
       if (running) return false;
     }
     node = node.parentElement;
@@ -132,6 +138,7 @@ function useTargetRect(selector) {
     // final paint, so one extra frame guards against grabbing a rect from
     // that in-between moment.
     let settledStreak = 0;
+    let lastBox = null;
     const start = performance.now();
 
     const measure = () => {
@@ -159,9 +166,21 @@ function useTargetRect(selector) {
       // used to setRect() on every in-flight frame too, so the spotlight
       // visibly chased the target from its mid-animation position to the
       // final one instead of just appearing there.
-      settledStreak = isSettled(el) ? settledStreak + 1 : 0;
+      // Also wait for the box itself to hold still: script-driven animations
+      // (framer-motion springs, e.g. a saved card popping in) don't show up
+      // in getAnimations(), so the spotlight used to lock onto a card still
+      // mid-grow and only snap to its full size once the fallback re-read it.
+      const box = el.getBoundingClientRect();
+      const still =
+        lastBox &&
+        Math.abs(box.left - lastBox.left) < 0.5 &&
+        Math.abs(box.top - lastBox.top) < 0.5 &&
+        Math.abs(box.width - lastBox.width) < 0.5 &&
+        Math.abs(box.height - lastBox.height) < 0.5;
+      lastBox = box;
+      settledStreak = still && isSettled(el) ? settledStreak + 1 : 0;
       if (settledStreak >= 2 || performance.now() - start >= 1500) {
-        setRect(el.getBoundingClientRect());
+        setRect(box);
         return;
       }
       id = requestAnimationFrame(measure);
@@ -372,9 +391,12 @@ export default function OnboardingTour() {
     borderRadius: baseRadius >= 500 ? baseRadius : baseRadius + pad,
   };
   // Keep the old opening and its corner shape until the next target appears,
-  // so the spotlight glides between pages instead of vanishing mid-handoff.
-  if (targetSpot) lastSpot.current = targetSpot;
-  const spot = targetSpot || lastSpot.current;
+  // so the spotlight glides to it on the same page. Across a page change it
+  // doesn't: sliding from a bottom-nav tab up to a card on the new page read
+  // as the spotlight still loading, small and off to one side. There the
+  // old opening is dropped and the new one fades in where it belongs.
+  if (targetSpot) lastSpot.current = { ...targetSpot, path: pathname };
+  const spot = targetSpot || (lastSpot.current?.path === pathname ? lastSpot.current : null);
   const spotRadius = spot?.borderRadius ?? 20;
 
   let tipTop = null;
@@ -442,6 +464,7 @@ export default function OnboardingTour() {
 
           {spot && (
             <motion.div
+              key={pathname}
               className="tut-spot"
               initial={{
                 opacity: 0,
