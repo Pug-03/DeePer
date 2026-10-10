@@ -124,7 +124,7 @@ export function ConfirmProvider({ children }) {
         <div className="modal-overlay fade-in" onClick={() => close(false)}>
           <div
             ref={modalRef}
-            className="modal glass glass--red pop-in"
+            className={`modal glass glass--red pop-in${state.pulse === false ? ' modal--calm' : ''}`}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="confirm-modal-title"
