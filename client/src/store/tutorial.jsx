@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useLayoutEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 
 // Holds the onboarding tour's state at a level that survives route changes —
@@ -23,6 +24,15 @@ function clearTourMark() {
 
 export function TutorialProvider({ children }) {
   const [active, setActive] = useState(false);
+  // The mark stays on after the tour ends until the next page change:
+  // taking it off on the spot let the page under the tour replay its
+  // entrance animation (blank, then rising back in), as if it had reloaded.
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const { key } = useLocation();
+  useLayoutEffect(() => {
+    if (!activeRef.current) clearTourMark();
+  }, [key]);
   const [step, setStep] = useState(0);
   // null = not known yet (page hasn't finished its own fetch), true/false
   // once Saved.jsx / History.jsx report it. OnboardingTour uses this to
@@ -52,7 +62,6 @@ export function TutorialProvider({ children }) {
   }, []);
 
   const stop = useCallback(() => {
-    clearTourMark();
     setActive(false);
     localStorage.removeItem('dt_tutorial_pending');
   }, []);
