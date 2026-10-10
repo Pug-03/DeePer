@@ -2835,6 +2835,44 @@ a.btn {
   align-items: center;
   gap: 14px;
 }
+/* Top of a team member's awards page: whose page this is. */
+.dev-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 28px;
+}
+.dev-profile-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-red);
+  box-shadow: var(--glow-red);
+  font-size: 30px;
+}
+.dev-profile-name {
+  margin: 14px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+  text-wrap: balance;
+}
+.dev-profile-alt {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--text-faint);
+}
+.dev-profile-role {
+  margin: 8px auto 0;
+  max-width: 300px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-line;
+  text-wrap: balance;
+}
+
 .dev-team-avatar-img,
 .dev-team-avatar-fallback {
   width: 48px;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
 import Sparkles from '../components/Sparkles.jsx';
+import DevProfile from '../components/DevProfile.jsx';
 import { ContactReveal, ContactLink } from '../components/ContactReveal.jsx';
 import { IcBack, IcMail, IcPhone, IcGithub } from '../components/icons.jsx';
 
@@ -96,9 +97,11 @@ export default function Awards() {
         </span>
       </button>
 
+      <DevProfile href="/awards" />
+
       <div className="header" style={{ marginBottom: 20 }}>
         <div className="sparkle-anchor">
-          <h1 className="h1">{t('awards.title')}</h1>
+          <h2 className="h1">{t('awards.title')}</h2>
           <Sparkles points={TITLE_SPARKLES} />
         </div>
       </div>

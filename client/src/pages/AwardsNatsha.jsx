@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
 import { ContactReveal, ContactLink } from '../components/ContactReveal.jsx';
+import DevProfile from '../components/DevProfile.jsx';
 import { IcBack, IcMail, IcSparkle } from '../components/icons.jsx';
 
 const CONTACT_EMAIL = 'natsha.nampan@gmail.com';
@@ -27,11 +28,13 @@ export default function AwardsNatsha() {
         </span>
       </button>
 
+      <DevProfile href="/awards/natsha" />
+
       <div className="header" style={{ marginBottom: 20 }}>
-        <h1 className="h1">{t('awards.title')}</h1>
+        <h2 className="h1">{t('awards.title')}</h2>
       </div>
 
-      <div className="supporters-placeholder">
+      <div className="supporters-placeholder" onAnimationEnd={() => setShown(true)}>
         <span className="supporters-placeholder-ic">
           <IcSparkle size={20} />
         </span>

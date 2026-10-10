@@ -20,6 +20,7 @@ import {
   IcTikTok,
 } from '../components/icons.jsx';
 import { DEV_TEAM } from '../dev-team-info.js';
+import { unbreakablePhrases } from '../utils/phrases.jsx';
 import { useLaunch } from '../launch.js';
 import Countdown from '../components/Countdown.jsx';
 import { SPONSORS, SPONSOR_TIERS, SUPPORTERS } from '../sponsors-info.js';
@@ -828,14 +829,6 @@ function ScrollCue({ label }) {
   );
 }
 
-// Thai has no spaces between words, so the browser guesses where a line may
-// break and gets loanwords wrong ("เลย์เอา|ต์"). Keep each space-separated
-// phrase whole so a role only wraps at its spaces (and at '\n').
-function unbreakablePhrases(text) {
-  return text.split(/( +|\n)/).map((part, i) =>
-    i % 2 ? part : part && <span key={i} className="nowrap">{part}</span>
-  );
-}
 
 // Plain text, no box/border — matches the rest of the page's text-based
 // feel rather than reading as another boxed component. Just a small avatar
