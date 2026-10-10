@@ -972,7 +972,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="page page--tab stagger">
+      <div className="page page--tab page--home stagger">
         <div className="row-between" style={{ marginBottom: 16 }}>
           <div className="brand-mark">
             <span className="dot" />

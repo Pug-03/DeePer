@@ -149,6 +149,13 @@ a {
 .page--tab {
   padding-bottom: calc(132px + var(--safe-b));
 }
+/* A skipped card falls past the bottom of the screen; without this its
+   transform grew the page for that moment, so the screen could be dragged
+   and scrolled under the finger mid-fall. clip (not hidden) still lets the
+   page grow with its content and keeps it from becoming a scroll box. */
+.page--home {
+  overflow-y: clip;
+}
 
 /* Make route changes visible without moving the persistent bottom nav. */
 @keyframes pageEnter {
