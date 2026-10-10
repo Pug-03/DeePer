@@ -2067,7 +2067,7 @@ a.btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 52px;
+  min-width: min(52px, 14vw);
 }
 .countdown-num {
   font-size: 40px;
@@ -2103,12 +2103,17 @@ a.btn {
 }
 /* Fewer columns left (days, then hours, then minutes run out) → bigger
    numbers; the last minute is a single big seconds count. */
-.countdown--n4 .countdown-num { font-size: 54px; }
-.countdown--n3 .countdown-num { font-size: 76px; }
-.countdown--n2 .countdown-num { font-size: 96px; }
-.countdown--n1 .countdown-num { font-size: 136px; }
-.countdown--n3 { gap: 26px; }
-.countdown--n2 { gap: 34px; }
+/* Sizes scale down with the screen width so two-digit numbers never wrap
+   onto a second line on narrow phones (each digit is its own inline-block,
+   so without nowrap a tight column split "32" into "3" over "2"). */
+.countdown-num { white-space: nowrap; }
+.countdown--n4 .countdown-num { font-size: min(54px, 12vw); }
+.countdown--n3 .countdown-num { font-size: min(76px, 16vw); }
+.countdown--n2 .countdown-num { font-size: min(96px, 22vw); }
+.countdown--n1 .countdown-num { font-size: min(136px, 34vw); }
+.countdown--n4 { gap: min(18px, 4vw); }
+.countdown--n3 { gap: min(26px, 5vw); }
+.countdown--n2 { gap: min(34px, 7vw); }
 .countdown--small.countdown--n4 .countdown-num { font-size: 30px; }
 .countdown--small.countdown--n3 .countdown-num { font-size: 40px; }
 .countdown--small.countdown--n2 .countdown-num { font-size: 52px; }
