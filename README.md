@@ -10,7 +10,7 @@
 ## ✨ ไฮไลต์
 
 - 🃏 **การ์ดคำถามปัดได้** — ปัดซ้าย = ข้าม, ปัดขวา = ตอบ พร้อมปุ่มลัด ข้าม / บันทึก / ตอบ
-- 🗂️ **3 หมวด × 36 คำถาม** คัดสรร (คู่รัก / เพื่อน / ครอบครัว) + เติมด้วย AI ได้ (Anthropic)
+- 🗂️ **3 หมวด × 36 คำถาม** คัดสรร (คู่รัก / เพื่อน / ครอบครัว)
 - ✍️ **หน้าตอบผลัดกันพิมพ์** ("ถึงตาอีกฝ่าย") ตั้งชื่อ + เลือกสีอีกฝ่ายได้
 - 🔖 **บันทึกไว้ / ประวัติ** เรียงใหม่สุดบนสุด พร้อมวันที่
 - 🔐 **สมัคร/เข้าสู่ระบบ** ด้วยอีเมล + OTP 4 หลัก หรือ Google OAuth
@@ -29,22 +29,20 @@
 | Auth | JWT + bcryptjs, OTP 4 หลัก, Google OAuth (`google-auth-library`) |
 | อีเมล | Nodemailer (fallback = พิมพ์ OTP ลง console) |
 | อัปโหลดรูป | Multer |
-| AI | `@anthropic-ai/sdk` (โมเดล `claude-opus-4-8`) |
 
-> แอปทำงานได้ทันทีโดยไม่ต้องตั้งค่าอะไรเลย — Google, การส่งอีเมล OTP จริง และ AI เป็น **ออปชัน**
+> แอปทำงานได้ทันทีโดยไม่ต้องตั้งค่าอะไรเลย — Google และการส่งอีเมล OTP จริง เป็น **ออปชัน**
 > (ถ้าไม่ตั้งค่า: OTP จะแสดงใน console ของเซิร์ฟเวอร์, ปุ่ม Google ถูกปิด, ใช้เฉพาะคลังคำถามที่คัดสรร)
 
 ---
 
 ## 🏗️ สถาปัตยกรรมระบบ
 
-Client เป็น React SPA (PWA) เรียก REST API ของ Express ตัวเดียว ซึ่งต่อออกไปอีก 3 ทาง: ฐานข้อมูล SQLite (เก็บข้อมูลผู้ใช้/คำถาม), Anthropic API (สร้างคำถามด้วย AI แบบออปชัน), และ Google OAuth (สมัคร/เข้าสู่ระบบด้วย Google แบบออปชัน)
+Client เป็น React SPA (PWA) เรียก REST API ของ Express ตัวเดียว ซึ่งต่อออกไปอีก 2 ทาง: ฐานข้อมูล SQLite (เก็บข้อมูลผู้ใช้/คำถาม) และ Google OAuth (สมัคร/เข้าสู่ระบบด้วย Google แบบออปชัน)
 
 ```mermaid
 flowchart LR
     Client["Client\n(React PWA)"] -->|"REST /api/*"| Server["Express API Server"]
     Server --> DB[("SQLite\n(node:sqlite)")]
-    Server --> AI["Anthropic API\n(สร้างคำถามด้วย AI)"]
     Server --> Google["Google OAuth\n(สมัคร/ล็อกอิน)"]
 ```
 
@@ -214,7 +212,6 @@ npm start               # เซิร์ฟเวอร์เสิร์ฟท
 | `TRUST_PROXY` | ตั้งเป็น `true` ถ้า deploy หลัง reverse proxy (Render/Railway/Fly.io/nginx ฯลฯ) ไม่งั้นระบบกันสแปม login/OTP จะเห็น IP ผู้ใช้ทุกคนเป็นค่าเดียว |
 | `GOOGLE_CLIENT_ID` | เปิดปุ่มเข้าสู่ระบบ/สมัครด้วย Google (สร้างที่ Google Cloud Console, ประเภท Web) |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / … | ส่งอีเมล OTP จริง |
-| `ANTHROPIC_API_KEY` | เปิดปุ่ม "สร้างคำถามด้วย AI" (โมเดล `claude-opus-4-8`) |
 | `PORT` | พอร์ตของเซิร์ฟเวอร์ (ดีฟอลต์ 4000) |
 
 > **Google OAuth:** เพิ่ม origin ของเว็บ (เช่น `http://localhost:5173` และโดเมน production) ใน
@@ -230,7 +227,7 @@ npm start               # เซิร์ฟเวอร์เสิร์ฟท
 flowchart TD
     Root["Dee_Per/"] --> Server["server/"]
     Root --> Client["client/"]
-    Server --> ServerSrc["src/\n(routes, db, auth, ai, mailer)"]
+    Server --> ServerSrc["src/\n(routes, db, auth, mailer)"]
     Server --> ServerEnv[".env.example"]
     Client --> ClientSrc["src/\n(pages, components, store, utils)"]
     Client --> ClientPublic["public/"]
@@ -244,7 +241,6 @@ Dee_Per/
 │   │   ├── db.js              # schema + seed คลังคำถาม (node:sqlite)
 │   │   ├── auth.js            # JWT, bcrypt, กฎรหัสผ่าน
 │   │   ├── mailer.js          # ส่ง OTP (fallback = console)
-│   │   ├── ai.js              # สร้างคำถามด้วย Anthropic
 │   │   ├── questions-bank.js  # คลังคำถาม 3 หมวด × 36
 │   │   └── routes/            # auth · questions · data (saved/history)
 │   └── .env.example

@@ -358,6 +358,10 @@ db.exec(`
 const bumpStmt = db.prepare('UPDATE stat_counters SET value = value + 1 WHERE key = ?');
 export const bumpStat = (key) => bumpStmt.run(key);
 
+// Questions the old AI top-up made (now removed) are no longer shown; clear
+// out any a database still has.
+db.prepare(`DELETE FROM questions WHERE source = 'ai'`).run();
+
 // Seed the curated question bank once.
 const count = db.prepare(`SELECT COUNT(*) AS c FROM questions WHERE source = 'bank'`).get();
 if (count.c === 0) {

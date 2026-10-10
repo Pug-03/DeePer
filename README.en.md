@@ -10,7 +10,7 @@
 ## ✨ Highlights
 
 - 🃏 **Swipeable question cards** — swipe left to skip, right to answer, plus skip / save / answer buttons
-- 🗂️ **3 categories × 36 curated questions** (couple / friends / family) + optional AI top-up (Anthropic)
+- 🗂️ **3 categories × 36 curated questions** (couple / friends / family)
 - ✍️ **Turn-based answering** ("your partner's turn") — set a partner name and color
 - 🔖 **Saved / History** listed newest-first with dates
 - 🔐 **Sign up / log in** with email + 4-digit OTP, or Google OAuth
@@ -29,9 +29,8 @@
 | Auth | JWT + bcryptjs, 4-digit OTP, Google OAuth (`google-auth-library`) |
 | Email | Nodemailer (falls back to printing the OTP to the console) |
 | Uploads | Multer |
-| AI | `@anthropic-ai/sdk` (model `claude-opus-4-8`) |
 
-> The app runs out of the box with zero configuration — Google, real OTP email, and AI are all **optional**.
+> The app runs out of the box with zero configuration — Google and real OTP email are both **optional**.
 > (Without them: the OTP is printed to the server console, the Google button is disabled, and only the
 > curated question bank is used.)
 
@@ -121,7 +120,6 @@ Copy `server/.env.example` to `server/.env` and fill in:
 | `TRUST_PROXY` | Set to `true` when deployed behind a reverse proxy (Render/Railway/Fly.io/nginx, etc.) — otherwise the login/OTP rate limiter sees every visitor as the same IP |
 | `GOOGLE_CLIENT_ID` | Enables Google sign-in/sign-up (create a **Web** OAuth client in Google Cloud Console) |
 | `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / … | Send real OTP emails |
-| `ANTHROPIC_API_KEY` | Enables the "generate questions with AI" button (model `claude-opus-4-8`) |
 | `PORT` | Server port (defaults to 4000) |
 
 > **Google OAuth:** add your web origins (e.g. `http://localhost:5173` and your production domain) to the
@@ -139,7 +137,6 @@ Dee_Per/
 │   │   ├── db.js              # schema + question-bank seed (node:sqlite)
 │   │   ├── auth.js            # JWT, bcrypt, password rules
 │   │   ├── mailer.js          # sends OTP (fallback = console)
-│   │   ├── ai.js              # AI question generation (Anthropic)
 │   │   ├── questions-bank.js  # question bank, 3 categories × 36
 │   │   └── routes/            # auth · questions · data (saved/history)
 │   └── .env.example

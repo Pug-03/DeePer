@@ -22,7 +22,6 @@ import {
   IcBookmark,
   IcPlus,
   IcCards,
-  IcSparkle,
   IcChat,
   IcShare,
   IcDownload,
@@ -351,7 +350,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   };
 
   const srcLabel =
-    q.source === 'ai' ? t('home.srcAi') : q.source === 'user' ? t('home.srcUser') : 'DeePer';
+    q.source === 'user' ? t('home.srcUser') : 'DeePer';
 
   return (
     <>
@@ -747,8 +746,6 @@ export default function Home() {
   const [idx, setIdx] = useState(0);
   const [status, setStatus] = useState('loading'); // loading | ready | error | empty
   const [error, setError] = useState('');
-  const [aiEnabled, setAiEnabled] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [adding, setAdding] = useState(false);
   // The swap wrapper clips x from the moment the swap starts until the deck
   // is back at rest — i.e. the whole time the form is open too, since the
@@ -790,7 +787,6 @@ export default function Home() {
       const exclude = [...seen.current].join(',');
       const d = await api.get(`/questions/?category=${cat}&limit=20&exclude=${exclude}`);
       if (stale?.()) return 0;
-      setAiEnabled(d.ai_enabled);
       const fresh = d.questions.filter((q) => !seen.current.has(q.id));
       fresh.forEach((q) => seen.current.add(q.id));
       setDeck((prev) => (reset ? fresh : [...prev, ...fresh]));
@@ -961,26 +957,6 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const generateAi = async () => {
-    setGenerating(true);
-    try {
-      const d = await api.post('/questions/generate', { category, count: 6 });
-      const fresh = d.questions.filter((q) => !seen.current.has(q.id));
-      fresh.forEach((q) => seen.current.add(q.id));
-      setDeck((prev) => [...prev, ...fresh]);
-      setStatus('ready');
-      toast(
-        <>
-          <IcSparkle size={16} /> {t('home.aiDone')}
-        </>,
-      );
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const addOwn = async (e) => {
     e.preventDefault();
     const text = newQ.trim();
@@ -1129,7 +1105,7 @@ export default function Home() {
               <EmptyState
                 icon={<IcCards size={44} />}
                 title={t('home.emptyTitle')}
-                subtitle={aiEnabled ? t('home.emptySubAi') : t('home.emptySub')}
+                subtitle={t('home.emptySub')}
                 action={
                   <div className="btn-row" style={{ marginTop: 10 }}>
                     <button
@@ -1138,17 +1114,6 @@ export default function Home() {
                     >
                       {t('home.restart')}
                     </button>
-                    {aiEnabled && (
-                      <button className="btn btn--primary btn--sm" onClick={generateAi} disabled={generating}>
-                        {generating ? (
-                          t('home.generating')
-                        ) : (
-                          <>
-                            <IcSparkle size={16} /> {t('home.genAi')}
-                          </>
-                        )}
-                      </button>
-                    )}
                   </div>
                 }
               />
