@@ -83,3 +83,18 @@ test('rejects a missing category or a too-short message', async () => {
   assert.equal(short.status, 400);
   assert.equal(short.body.error_code, 'REPORT_MESSAGE_REQUIRED');
 });
+
+test('a screenshot that is not really an image is turned away and not kept', async () => {
+  // Compare names, not counts: an earlier test's rejected upload may still
+  // be being removed in the background.
+  const before = new Set(fs.readdirSync(REPORT_DIR));
+  const form = new FormData();
+  form.append('category', 'bug');
+  form.append('message', 'แนบไฟล์ปลอม');
+  form.append('screenshot', new Blob([Buffer.from('not really a png')], { type: 'image/png' }), 'shot.png');
+  const res = await fetch(`${base}/reports`, { method: 'POST', body: form });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error_code, 'REPORT_UPLOAD_FAILED');
+  await new Promise((r) => setTimeout(r, 50));
+  assert.deepEqual(fs.readdirSync(REPORT_DIR).filter((f) => !before.has(f)), []);
+});

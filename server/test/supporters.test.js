@@ -108,3 +108,27 @@ test('an unknown review token is a 404 and approves nothing', async () => {
   const post = await fetch(`${base}/support/review/deadbeef/approve`, { method: 'POST', redirect: 'manual' });
   assert.equal(post.status, 404);
 });
+
+test('a slip that is not really an image is turned away and not kept', async () => {
+  const { token } = await registerUser(base);
+  const slipsDir = join(UPLOADS_DIR, 'slips');
+  // Compare names, not counts: an earlier test's rejected upload may still
+  // be being removed in the background.
+  const before = new Set(fs.readdirSync(slipsDir));
+  const form = new FormData();
+  form.append('slip', new Blob([Buffer.from('not really a png')], { type: 'image/png' }), 'slip.png');
+  form.append('display_name', 'ปลอม');
+  form.append('transfer_date', '2026-10-04');
+  form.append('transfer_time', '12:00');
+  form.append('amount', '100');
+  const res = await fetch(`${base}/support/proof`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error_code, 'SLIP_UPLOAD_FAILED');
+  // The file is removed asynchronously; give it a moment.
+  await new Promise((r) => setTimeout(r, 50));
+  assert.deepEqual(fs.readdirSync(slipsDir).filter((f) => !before.has(f)), []);
+});

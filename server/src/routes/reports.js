@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { db } from '../db.js';
+import { isRealImage } from '../images.js';
 import { optionalAuth } from '../auth.js';
 import { sendMail } from '../mailer.js';
 
@@ -40,6 +41,10 @@ const shotUpload = multer({
 // Wrap multer so its errors (too large / rejected type) come back as JSON.
 const handleShot = (req, res, next) =>
   shotUpload.single('screenshot')(req, res, (err) => {
+    if (req.file && !isRealImage(req.file.path)) {
+      fs.rm(req.file.path, { force: true }, () => {});
+      err = true;
+    }
     if (err)
       return res.status(400).json({
         error: 'อัปโหลดรูปไม่สำเร็จ (ไฟล์ใหญ่เกิน 5MB หรือชนิดไม่รองรับ)',

@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { db } from '../db.js';
+import { isRealImage } from '../images.js';
 import { requireAuth } from '../auth.js';
 import { approvedSupporterNames, approveProofs, revokeProofs, proofByToken } from '../supporters.js';
 import { sendMail } from '../mailer.js';
@@ -41,6 +42,10 @@ const slipUpload = multer({
 // Wrap multer so its errors (too large / rejected type) come back as JSON.
 const handleSlip = (req, res, next) =>
   slipUpload.single('slip')(req, res, (err) => {
+    if (req.file && !isRealImage(req.file.path)) {
+      fs.rm(req.file.path, { force: true }, () => {});
+      err = true;
+    }
     if (err)
       return res.status(400).json({
         error: 'อัปโหลดสลิปไม่สำเร็จ (ไฟล์ใหญ่เกิน 5MB หรือชนิดไม่รองรับ)',
