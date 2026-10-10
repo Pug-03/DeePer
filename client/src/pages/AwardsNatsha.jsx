@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
 import { ContactReveal, ContactLink } from '../components/ContactReveal.jsx';
@@ -15,9 +16,11 @@ export default function AwardsNatsha() {
   // kept by ScrollToTop); opened directly, it just goes home.
   const location = useLocation();
   const { t } = useI18n();
+  // Contact comes in last, once the empty-state note has risen in.
+  const [shown, setShown] = useState(false);
 
   return (
-    <div className="page stagger">
+    <div className="page stagger profile-page">
       <button
         className="link back-btn"
         style={{ alignSelf: 'flex-start', marginBottom: 18 }}
@@ -41,7 +44,7 @@ export default function AwardsNatsha() {
         <p className="supporters-placeholder-text">{t('awards.empty')}</p>
       </div>
 
-      <ContactReveal title={t('awards.contactTitle')}>
+      <ContactReveal title={t('awards.contactTitle')} ready={shown}>
         <ContactLink href={`mailto:${CONTACT_EMAIL}`}>
           <IcMail size={18} /> {CONTACT_EMAIL}
         </ContactLink>

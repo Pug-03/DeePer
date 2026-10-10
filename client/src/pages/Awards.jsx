@@ -86,7 +86,7 @@ export default function Awards() {
   const [awardsRevealed, setAwardsRevealed] = useState(false);
 
   return (
-    <div className="page stagger">
+    <div className="page stagger profile-page">
       <button
         className="link back-btn"
         style={{ alignSelf: 'flex-start', marginBottom: 18 }}
@@ -111,7 +111,8 @@ export default function Awards() {
           <div
             className="award-entry"
             key={a.name}
-            style={{ animationDelay: `${0.05 + i * 0.12}s` }}
+            // After the profile header has played in (see .dev-profile).
+            style={{ animationDelay: `${0.95 + i * 0.12}s` }}
             onAnimationEnd={i === AWARDS.length - 1 ? () => setAwardsRevealed(true) : undefined}
           >
             <p className="award-name">{a.name}</p>

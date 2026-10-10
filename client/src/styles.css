@@ -2964,6 +2964,40 @@ a.btn {
 }
 
 /* ---------- Awards page ---------- */
+/* The profile header plays in top to bottom as one sequence: the photo
+   drops in and settles with a glow, then the name, the other-language name
+   and the role follow. The rest of the page waits for it (below). */
+.stagger > .dev-profile {
+  animation: none;
+}
+.dev-profile > * {
+  animation: profileLine 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dev-profile > .dev-profile-photo {
+  animation:
+    profileDrop 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) 0.05s both,
+    profileGlow 1.2s ease-out 0.6s;
+}
+.dev-profile > .dev-profile-name { animation-delay: 0.4s; }
+.dev-profile > .dev-profile-alt { animation-delay: 0.52s; }
+.dev-profile > .dev-profile-role { animation-delay: 0.64s; }
+.profile-page > .header { animation-delay: 0.82s; }
+.profile-page > .supporters-placeholder { animation-delay: 0.95s; }
+@keyframes profileDrop {
+  from { opacity: 0; transform: translateY(-28px) scale(0.6); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes profileGlow {
+  0% { box-shadow: var(--glow-red), 0 0 0 0 rgba(244, 63, 94, 0.55); }
+  100% { box-shadow: var(--glow-red), 0 0 0 18px rgba(244, 63, 94, 0); }
+}
+@keyframes profileLine {
+  from { opacity: 0; transform: translateY(-10px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dev-profile > * { animation: none; }
+}
 
 /* The award list doesn't animate as one block. Each entry gets its own
    index-based delay in Awards.jsx so added awards still appear in order. */
