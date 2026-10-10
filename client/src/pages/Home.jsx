@@ -54,6 +54,11 @@ const FLY_EASE = [0.16, 1, 0.3, 1];
 // the time it unmounts.
 const FLY_DURATION = 0.9;
 const FLY_UNMOUNT_DELAY = 600;
+// A skipped card drops like it was let go: it gathers speed all the way
+// down and is past the bottom of the screen by FLY_UNMOUNT_DELAY. The
+// shared ease-out slowed it to a near stop low on screen, where it hung
+// until the unmount faded it.
+const SKIP_FALL = { duration: FLY_UNMOUNT_DELAY / 1000, ease: [0.3, 0, 0.8, 0.5] };
 // The outgoing card's slide is a spring (bouncy, exact), but its fade should
 // feel soft rather than snap to the spring's precision — ease it out on its
 // own timing instead of tying opacity to the same physics as the slide.
@@ -283,8 +288,8 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     flying.current = true;
     onFlyProgress?.();
     if (dir === 'skip') {
-      animate(y, 600, { duration: FLY_DURATION, ease: FLY_EASE });
-      animate(x, -80, { duration: FLY_DURATION, ease: FLY_EASE });
+      animate(y, window.innerHeight, SKIP_FALL);
+      animate(x, -80, SKIP_FALL);
       setTimeout(onSkip, FLY_UNMOUNT_DELAY);
     } else {
       animate(x, 520, { duration: FLY_DURATION, ease: FLY_EASE });
