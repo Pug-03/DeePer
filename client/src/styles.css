@@ -2458,6 +2458,15 @@ a.btn {
   gap: 10px;
   width: max-content;
 }
+/* Supporter chips scroll sideways nonstop and social links scroll with the
+   page over the fixed backdrop, so a backdrop blur on them is recomputed
+   every frame. The backdrop behind them is a soft gradient, so the blur
+   added nothing visible: drop it and keep the frames smooth. */
+.supporter-chip.glass,
+.social-link.glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 .supporter-chip {
   flex-shrink: 0;
   display: flex;
