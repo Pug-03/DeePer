@@ -110,7 +110,10 @@ function isSettled(el) {
 }
 
 function useTargetRect(selector) {
-  const [rect, setRect] = useState(null);
+  // Tagged with the selector it was measured for, so a measurement for an
+  // earlier step can never stand in for the current one.
+  const [measured, setMeasured] = useState(null);
+  const setRect = (r) => setMeasured(r && { selector, rect: r });
 
   // useLayoutEffect (not useEffect) so the first measurement for a new step
   // lands before the browser paints — otherwise the spotlight briefly paints
@@ -123,6 +126,7 @@ function useTargetRect(selector) {
     target?.scrollIntoView({ block: 'center', behavior: 'instant' });
 
     let id;
+    let cancelled = false;
     // Requires 2 consecutive "settled" frames, not just 1 — playState can
     // flip to 'finished' a frame before the browser actually commits the
     // final paint, so one extra frame guards against grabbing a rect from
@@ -131,6 +135,13 @@ function useTargetRect(selector) {
     const start = performance.now();
 
     const measure = () => {
+      // A scroll or resize starts measuring again; drop the frame already
+      // queued so only one loop runs. With two loops, the cleanup below
+      // could only cancel one, and the other went on to set the previous
+      // step's rect after a quick tap, leaving the spotlight on the wrong
+      // control.
+      cancelAnimationFrame(id);
+      if (cancelled) return;
       const el = document.querySelector(selector);
       if (!el) {
         setRect(null);
@@ -156,16 +167,25 @@ function useTargetRect(selector) {
       id = requestAnimationFrame(measure);
     };
     measure();
+    // Backstop: whatever the frame loop above is doing, take one final
+    // reading once its 1.5s window is over, so a burst of quick taps can't
+    // leave the spotlight on an earlier step's control.
+    const finalRead = setTimeout(() => {
+      const el = document.querySelector(selector);
+      if (!cancelled && el) setRect(el.getBoundingClientRect());
+    }, 1600);
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure, true);
     return () => {
+      cancelled = true;
       cancelAnimationFrame(id);
+      clearTimeout(finalRead);
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure, true);
     };
-  }, [selector]);
+  }, [selector]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return rect;
+  return measured?.selector === selector ? measured.rect : null;
 }
 
 // Measures every step's tooltip height up front (off-screen, same markup/width
@@ -245,6 +265,17 @@ export default function OnboardingTour() {
   const tutorial = useTutorial();
   const step = tutorial.step;
   const [closing, setClosing] = useState(false);
+  // Set the moment the tour starts closing, so taps that land on the
+  // fading-out buttons can't move it to another step (and page) on its way
+  // out.
+  const closingRef = useRef(false);
+  const close = () => {
+    closingRef.current = true;
+    setClosing(true);
+  };
+  // Set when the tour was closed by the browser/phone Back gesture: the
+  // person is leaving on purpose, so don't pull them back to Home.
+  const leftByBack = useRef(false);
   const lastSpot = useRef(null);
   const id = STEPS[step].id;
   const rect = useTargetRect(`[data-tut="${id}"]`);
@@ -276,7 +307,9 @@ export default function OnboardingTour() {
     // this step, not the one before it.
     stepRef.current = idx;
     tutorial.setStep(idx);
-    if (target.route !== window.location.pathname) nav(target.route);
+    // replace: the tour's own page changes don't pile up history entries,
+    // which made Back after the tour step through Saved/History again.
+    if (target.route !== window.location.pathname) nav(target.route, { replace: true });
   };
 
   // Read the step from a ref, not this render's closure: while a step's
@@ -284,12 +317,29 @@ export default function OnboardingTour() {
   // with the old handlers, so a quick tap there used to re-open the step
   // you were already on and feel like the button didn't respond.
   const next = () => {
+    if (closingRef.current) return;
     const cur = stepRef.current;
-    if (cur === STEPS.length - 1) setClosing(true);
+    if (cur === STEPS.length - 1) close();
     else goToStep(cur + 1, 1);
   };
-  const back = () => goToStep(Math.max(0, stepRef.current - 1), -1);
-  const skip = () => setClosing(true);
+  const back = () => {
+    if (closingRef.current) return;
+    goToStep(Math.max(0, stepRef.current - 1), -1);
+  };
+  const skip = () => {
+    if (!closingRef.current) close();
+  };
+
+  // A Back gesture mid-tour left the overlay pointing at a step for a page
+  // that was no longer showing. Treat it as leaving the tour.
+  useEffect(() => {
+    const onPop = () => {
+      leftByBack.current = true;
+      close();
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // Safety net beyond the `requires` check above: if a step's target still
   // hasn't been found once useTargetRect's own ~1.5s stabilization window
@@ -301,8 +351,9 @@ export default function OnboardingTour() {
   useEffect(() => {
     if (rect) return undefined;
     const timer = setTimeout(() => {
-      if (isLast) setClosing(true);
-      else goToStep(step + 1, 1);
+      if (closingRef.current) return;
+      if (stepRef.current === STEPS.length - 1) close();
+      else goToStep(stepRef.current + 1, 1);
     }, 1700);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -340,7 +391,7 @@ export default function OnboardingTour() {
     <AnimatePresence
       onExitComplete={() => {
         tutorial.stop();
-        if (pathname !== '/app/home') nav('/app/home');
+        if (!leftByBack.current && pathname !== '/app/home') nav('/app/home', { replace: true });
       }}
     >
       {!closing && (
