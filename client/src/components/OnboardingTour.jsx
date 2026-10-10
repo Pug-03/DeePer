@@ -264,16 +264,29 @@ export default function OnboardingTour() {
   // with nothing to point at) in the direction the user was already
   // moving, so Back from navHistory lands on navSaved, not on a step
   // that got skipped on the way there.
+  const stepRef = useRef(step);
+  stepRef.current = step;
   const goToStep = (rawIndex, dir) => {
     let idx = rawIndex;
     while (idx > 0 && idx < STEPS.length - 1 && !isStepAllowed(STEPS[idx])) idx += dir;
     const target = STEPS[idx];
+    // Updated right away so a second tap before the re-render builds on
+    // this step, not the one before it.
+    stepRef.current = idx;
     tutorial.setStep(idx);
-    if (target.route !== pathname) nav(target.route);
+    if (target.route !== window.location.pathname) nav(target.route);
   };
 
-  const next = () => (isLast ? setClosing(true) : goToStep(step + 1, 1));
-  const back = () => goToStep(Math.max(0, step - 1), -1);
+  // Read the step from a ref, not this render's closure: while a step's
+  // content cross-fades, the outgoing copy's buttons are still on screen
+  // with the old handlers, so a quick tap there used to re-open the step
+  // you were already on and feel like the button didn't respond.
+  const next = () => {
+    const cur = stepRef.current;
+    if (cur === STEPS.length - 1) setClosing(true);
+    else goToStep(cur + 1, 1);
+  };
+  const back = () => goToStep(Math.max(0, stepRef.current - 1), -1);
   const skip = () => setClosing(true);
 
   // Safety net beyond the `requires` check above: if a step's target still
