@@ -8,6 +8,7 @@ import {
   useMotionValueEvent,
   useTransform,
   useSpring,
+  useReducedMotion,
   animate,
 } from 'framer-motion';
 import { api } from '../api.js';
@@ -67,6 +68,13 @@ const SKIP_FALL = { duration: FLY_UNMOUNT_DELAY / 1000, ease: [0.3, 0, 0.8, 0.5]
 const CARRY_EASE = [1 / 3, 2 / 3, 2 / 3, 1];
 const SKIP_DRIFT_MIN = 80;
 const SKIP_DRIFT_MAX = 400;
+// Saving turns the card over to its DeePer back, holds a beat, then fades it
+// out in place while the next card rises behind it. Home waits SAVE_MS (all
+// three) before handing over to the next card.
+const SAVE_FLIP = { duration: 0.55, ease: [0.45, 0, 0.2, 1] };
+const SAVE_HOLD_S = 0.15;
+const SAVE_FADE = { delay: SAVE_FLIP.duration + SAVE_HOLD_S, duration: 0.5, ease: 'easeInOut' };
+const SAVE_MS = (SAVE_FADE.delay + SAVE_FADE.duration) * 1000;
 // The outgoing card's slide is a spring (bouncy, exact), but its fade should
 // feel soft rather than snap to the spring's precision — ease it out on its
 // own timing instead of tying opacity to the same physics as the slide.
@@ -111,6 +119,17 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   const rotate = useTransform(x, [-220, 220], [-14, 14]);
   const noOp = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0]);
   const yesOp = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1]);
+  // Turned past edge-on, the question side gives way to the saved side.
+  const flip = useMotionValue(0);
+  const frontOp = useTransform(flip, [89.9, 90], [1, 0]);
+  const backOp = useTransform(flip, [89.9, 90], [0, 1]);
+  const reduceMotion = useReducedMotion();
+  const cardOpacity = useMotionValue(1);
+  useEffect(() => {
+    if (!saved) return;
+    animate(flip, 180, reduceMotion ? { duration: 0 } : SAVE_FLIP);
+    animate(cardOpacity, 0, SAVE_FADE);
+  }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Double-tap-to-save, mirroring the "double-tap to like" gesture from
   // photo/video feeds — here it saves the question instead. onTap (rather
@@ -338,7 +357,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     <>
       <motion.div
         className="qcard glass"
-        style={{ x, y, rotate }}
+        style={{ x, y, rotate, rotateY: flip, opacity: cardOpacity, transformPerspective: 1000 }}
         drag
         dragElastic={0.7}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
@@ -364,7 +383,9 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
           animate={{ opacity: 1 }}
           transition={{ duration: seamless ? 0 : 0.45, ease: FLY_EASE }}
         />
-        <span className="q-source">{srcLabel}</span>
+        <motion.span className="q-source" style={{ opacity: frontOp }}>
+          {srcLabel}
+        </motion.span>
         <motion.span
           className="swipe-hint"
           style={{ opacity: noOp, color: '#fff', left: 22, right: 'auto' }}
@@ -374,23 +395,25 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
         <motion.span className="swipe-hint" style={{ opacity: yesOp, color: 'var(--green)' }}>
           <IcCheck size={34} sw={3} />
         </motion.span>
-        <p className="q-text">{q.text}</p>
-        {saved && (
-          // Plain conditional mount, not a framer-motion opacity tween — animating
-          // opacity on an element with backdrop-filter makes the browser
-          // recompute the blur every frame, which showed up as the text behind
-          // it flickering during the fade-in. A straight show/hide has no such
-          // per-frame recompute.
-          <div className="card-saved-overlay">
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 20 }}
-            >
-              <IcBookmark size={64} />
-            </motion.div>
+        <motion.p className="q-text" style={{ opacity: frontOp }}>
+          {q.text}
+        </motion.p>
+        {/* The back of the card: the DeePer card back from the promo
+            videos. Pre-turned 180°, so once the card has turned over it reads
+            the right way round. Opaque, so nothing behind shows through, and
+            no backdrop-filter: blur under a 3D turn is costly and renders
+            unreliably on iOS. */}
+        <motion.div
+          className="card-back"
+          style={{ opacity: backOp }}
+          role="status"
+          aria-label={saved ? t('home.savedForLater') : undefined}
+        >
+          <div className="brand-mark">
+            <span className="dot" />
+            <span className="brand">DeePer</span>
           </div>
-        )}
+        </motion.div>
         {shareFlash && (
           <div className="card-share-overlay">
             <motion.div
@@ -523,9 +546,12 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
 
   useEffect(() => {
     if (saved) {
+      // The card behind rises as the saved card fades (not during the turn,
+      // when it would show round the edge-on card), its question coming up
+      // through it, full by the hand-off.
       progress.set(SWIPE_THRESHOLD);
-      animate(reveal, SWIPE_THRESHOLD, { duration: 0.4, ease: FLY_EASE });
-      animate(backText, 1, { duration: 0.4, ease: FLY_EASE });
+      animate(reveal, SWIPE_THRESHOLD, { delay: SAVE_FADE.delay, duration: SAVE_FADE.duration, ease: FLY_EASE });
+      animate(backText, 1, SAVE_FADE);
     }
   }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -892,9 +918,8 @@ export default function Home() {
     nav('/app/answer', { state: { question: { text: current.text, category } } });
   };
 
-  // Confirmation is a blur-and-icon flash on the card itself instead of a
-  // toast: blur it in, hold briefly so the icon reads, then advance past it.
-  const SAVE_FLASH_MS = 520;
+  // Confirmation is the card itself turning over and fading out (see
+  // SAVE_FLIP / SAVE_FADE) instead of a toast; then advance.
   const save = async () => {
     if (!current || saveFlash) return;
     try {
@@ -903,7 +928,7 @@ export default function Home() {
       setTimeout(() => {
         setSaveFlash(false);
         advance();
-      }, SAVE_FLASH_MS);
+      }, SAVE_MS);
     } catch (e) {
       toast(e.message);
     }

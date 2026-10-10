@@ -892,21 +892,30 @@ html[data-tour] .fade-up {
   opacity: 0;
   pointer-events: none;
 }
-.card-saved-overlay {
+.card-back {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   border-radius: var(--radius);
-  border: 2px solid #eab308;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: #eab308;
+  border: 1px solid var(--border-red);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.3), transparent 62%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 9px, transparent 9px 18px),
+    #170d12;
+  transform: rotateY(180deg);
   pointer-events: none;
 }
-/* Same treatment as .card-saved-overlay (long-press-to-share confirmation),
-   in the brand red instead of the save flow's yellow. */
+/* Dashed inner frame, like the back of a playing card. */
+.card-back::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border-radius: calc(var(--radius) - 10px);
+  border: 1px dashed rgba(244, 63, 94, 0.3);
+}
+/* Long-press-to-share confirmation: a blurred dim with the icon on top, in
+   the brand red. */
 .card-share-overlay {
   position: absolute;
   inset: 0;
