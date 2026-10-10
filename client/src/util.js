@@ -28,26 +28,17 @@ export function formatDate(s) {
   );
 }
 
-// The nickname is kept in Thai (`nickname`) and English (`nickname_en`);
-// show the one matching the app language. Accounts from before English
-// names existed fall back to the Thai one.
+// One nickname, in whatever language the person wrote it. Accounts from
+// when there was a separate English name fall back to it only if the main
+// one is missing. `lang` is kept for callers; the name doesn't change with it.
+// eslint-disable-next-line no-unused-vars
 export function displayName(user, lang) {
   if (!user) return '';
-  return (lang === 'en' && user.nickname_en) || user.nickname || '';
+  return user.nickname || user.nickname_en || '';
 }
 
-// Same rules as the server (nameError in server/src/routes/auth.js): the
-// Thai name needs Thai script and no Latin letters; the English one only
-// Latin letters plus space . ' -. Returns an i18n key, or '' when valid.
-export function nicknameThError(v) {
-  const s = v.trim();
-  if (!s) return 'signup.needNickname';
-  if (!/[\u0E00-\u0E7F]/.test(s) || /[A-Za-z]/.test(s)) return 'signup.nicknameThInvalid';
-  return '';
-}
-export function nicknameEnError(v) {
-  const s = v.trim();
-  if (!s) return 'signup.needNicknameEn';
-  if (!/^[A-Za-z][A-Za-z .'-]*$/.test(s)) return 'signup.nicknameEnInvalid';
-  return '';
+// Same rule as the server (nameError in server/src/routes/auth.js): just
+// required. Returns an i18n key, or '' when valid.
+export function nicknameError(v) {
+  return v.trim() ? '' : 'signup.needNickname';
 }

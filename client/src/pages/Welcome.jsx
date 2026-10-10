@@ -943,7 +943,7 @@ function ReviewsSection({ t, lang }) {
               <figure className="review-card glass" key={r.id}>
                 <blockquote>“{r.text}”</blockquote>
                 <figcaption>
-                  <b>{(lang === 'en' ? r.nickname_en : r.nickname) || r.nickname}</b>
+                  <b>{r.nickname || r.nickname_en}</b>
                   {' · '}
                   {t(`welcome.reviews.with.${r.relation}`)}
                 </figcaption>

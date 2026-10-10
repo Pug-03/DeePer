@@ -839,33 +839,6 @@ html[data-tour] .fade-up {
   display: inline-block;
 }
 
-/* Question depth under the category pills: small, quiet text chips.
-   Only as wide as its chips (centered), so the tour's highlight hugs them
-   instead of spanning the whole screen. */
-.level-row {
-  display: flex;
-  gap: 6px;
-  width: fit-content;
-  max-width: 100%;
-  margin: 4px auto 2px;
-}
-.level-chip {
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: none;
-  color: var(--text-faint);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
-}
-.level-chip.active {
-  color: var(--text);
-  border-color: var(--border-red);
-  background: rgba(244, 63, 94, 0.08);
-}
-
 /* Plain (non-elastic) filter row, e.g. the category filter on Saved/History
    — same pill look as the home category tabs, but each pill carries its own
    active background instead of a shared sliding indicator element. */
@@ -3300,7 +3273,7 @@ a.btn {
 .tut-dots {
   display: flex;
   flex-wrap: wrap;
-  /* 4px keeps all 13 steps on one line beside the Back/Next buttons. */
+  /* 4px keeps every step's dot on one line beside the Back/Next buttons. */
   gap: 4px;
   min-width: 0;
 }
@@ -3532,6 +3505,37 @@ button.profile-row:active {
 }
 .profile-row--accent .profile-row-label {
   color: var(--red-bright);
+}
+/* Question depth row: label on top, the four choices across the full width
+   underneath, a one-line hint below. */
+.profile-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding-block: 14px;
+}
+.profile-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.level-seg {
+  width: 100%;
+  /* On a narrow phone in English the four labels don't fit one line;
+     they wrap to a second row instead of overlapping. */
+  flex-wrap: wrap;
+  border-radius: 18px;
+}
+.level-seg button {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+.profile-row-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
 }
 .lang-seg {
   flex-shrink: 0;

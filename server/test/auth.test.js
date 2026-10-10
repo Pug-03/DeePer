@@ -18,43 +18,45 @@ test('register issues a working session', async () => {
   const me = await api(base, token).get('/auth/me');
   assert.equal(me.status, 200);
   assert.equal(me.body.user.nickname, 'เทสเตอร์');
-  assert.equal(me.body.user.nickname_en, 'Tester');
 });
 
-test('register requires the nickname in both Thai and English', async () => {
+test('the nickname is required but can be in any language', async () => {
   const cases = [
-    [{ nickname: '', nickname_en: 'Tester' }, 'NICKNAME_REQUIRED'],
-    [{ nickname: 'Tester', nickname_en: 'Tester' }, 'NICKNAME_TH_INVALID'],
-    [{ nickname: 'เทสเตอร์', nickname_en: '' }, 'NICKNAME_EN_REQUIRED'],
-    [{ nickname: 'เทสเตอร์', nickname_en: 'เทส' }, 'NICKNAME_EN_INVALID'],
+    ['', 400, 'NICKNAME_REQUIRED'],
+    ['   ', 400, 'NICKNAME_REQUIRED'],
+    ['x'.repeat(41), 400, 'NICKNAME_TOO_LONG'],
+    ['Pluck', 200],
+    ['ปลั๊ก', 200],
+    ['ปลั๊ก Pluck', 200],
   ];
-  for (const [names, code] of cases) {
+  for (const [nickname, status, code] of cases) {
     const email = uniqueEmail('n');
     const anon = api(base);
     const otp = await anon.post('/auth/otp/request', { email });
     const res = await anon.post('/auth/register', {
       email,
       code: otp.body.dev_code,
-      ...names,
+      nickname,
       age: 25,
       gender: 'other',
       password: PASSWORD,
     });
-    assert.equal(res.status, 400);
-    assert.equal(res.body.error_code, code);
+    assert.equal(res.status, status, nickname);
+    if (code) assert.equal(res.body.error_code, code);
+    else assert.equal(res.body.user.nickname, nickname);
   }
 });
 
-test('profile update keeps both names valid', async () => {
+test('changing the nickname on the profile', async () => {
   const { token } = await registerUser(base);
   const me = api(base, token);
-  const ok = await me.patch('/auth/me', { nickname: 'ปลั๊ก', nickname_en: 'Pluck' });
+  const ok = await me.patch('/auth/me', { nickname: 'Pluck' });
   assert.equal(ok.status, 200);
-  assert.equal(ok.body.user.nickname, 'ปลั๊ก');
-  assert.equal(ok.body.user.nickname_en, 'Pluck');
-  const bad = await me.patch('/auth/me', { nickname_en: '' });
+  assert.equal(ok.body.user.nickname, 'Pluck');
+  assert.equal(ok.body.user.nickname_en, null);
+  const bad = await me.patch('/auth/me', { nickname: '' });
   assert.equal(bad.status, 400);
-  assert.equal(bad.body.error_code, 'NICKNAME_EN_REQUIRED');
+  assert.equal(bad.body.error_code, 'NICKNAME_REQUIRED');
 });
 
 test('login with the wrong password is rejected', async () => {

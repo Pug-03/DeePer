@@ -28,6 +28,7 @@ import {
   IcHistory,
 } from '../components/icons.jsx';
 import { CATS, questionText } from '../util.js';
+import { getQuestionLevel } from '../utils/questionLevel.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 import { pickMemory, memoryRelativeLabel } from '../utils/memory.js';
 
@@ -664,30 +665,6 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   );
 }
 
-const LEVEL_OPTIONS = ['all', 'open', 'mid', 'deep'];
-
-// How deep the questions go. Kept small and quiet under the category pills:
-// a filter, not a second set of tabs competing with them.
-function LevelTabs({ level, onSwitch }) {
-  const { t } = useI18n();
-  return (
-    <div className="level-row" data-tut="levels" role="radiogroup" aria-label={t('home.levelLabel')}>
-      {LEVEL_OPTIONS.map((v) => (
-        <button
-          key={v}
-          type="button"
-          role="radio"
-          aria-checked={level === v}
-          className={`level-chip${level === v ? ' active' : ''}`}
-          onClick={() => onSwitch(v)}
-        >
-          {t(`home.level.${v}`)}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 // Elastic "liquid" tab indicator: instead of one spring animating the whole
 // pill box, the edge in the direction of travel races ahead on a snappy
 // spring while the trailing edge lags on a much softer one. That asymmetry
@@ -792,11 +769,9 @@ export default function Home() {
   const { t, lang } = useI18n();
 
   const [category, setCategory] = useState(() => localStorage.getItem('dt_cat') || 'couple');
-  // 'all' runs the deck from light to deep; otherwise just that level.
-  const [level, setLevel] = useState(() => {
-    const saved = localStorage.getItem('dt_level');
-    return LEVEL_OPTIONS.includes(saved) ? saved : 'all';
-  });
+  // How deep the questions go, chosen on the Profile page. Home remounts
+  // whenever its tab is opened, so a change there applies on return.
+  const [level] = useState(getQuestionLevel);
   const levelRef = useRef(level);
   levelRef.current = level;
   const [deck, setDeck] = useState([]);
@@ -971,13 +946,6 @@ export default function Home() {
     setCategory(v);
   };
 
-  const switchLevel = (v) => {
-    if (v === level) return;
-    setEnterDir(LEVEL_OPTIONS.indexOf(v) > LEVEL_OPTIONS.indexOf(level) ? 1 : -1);
-    localStorage.setItem('dt_level', v);
-    setLevel(v);
-  };
-
   const advance = useCallback(() => setIdx((i) => i + 1), []);
   // Set by a quick second tap on ✕: the card that comes up next is skipped as
   // soon as it's on top, so every tap sends exactly one card away.
@@ -1116,7 +1084,6 @@ export default function Home() {
         </div>
 
         <CatTabs category={category} onSwitch={switchCat} />
-        <LevelTabs level={level} onSwitch={switchLevel} />
 
         {/* Form and deck share one grid cell and both stay mounted; `adding`
             only flips which one is shown. Mounting/unmounting them through

@@ -26,6 +26,8 @@ const ForgotPassword = lazyPage(() => import('./pages/ForgotPassword.jsx'));
 const PostAuthWelcome = lazyPage(() => import('./pages/PostAuthWelcome.jsx'));
 const Answer = lazyPage(() => import('./pages/Answer.jsx'));
 const AccountSettings = lazyPage(() => import('./pages/AccountSettings.jsx'));
+const ProfileInfo = lazyPage(() => import('./pages/ProfileInfo.jsx'));
+const PartnerSettings = lazyPage(() => import('./pages/PartnerSettings.jsx'));
 const LoginHistory = lazyPage(() => import('./pages/LoginHistory.jsx'));
 const Support = lazyPage(() => import('./pages/Support.jsx'));
 const Social = lazyPage(() => import('./pages/Social.jsx'));
@@ -101,6 +103,8 @@ export default function App() {
 
                 <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
                 <Route path="/app/profile/settings" element={<Protected><AccountSettings /></Protected>} />
+                <Route path="/app/profile/info" element={<Protected><ProfileInfo /></Protected>} />
+                <Route path="/app/profile/partner" element={<Protected><PartnerSettings /></Protected>} />
                 <Route path="/app/profile/login-history" element={<Protected><LoginHistory /></Protected>} />
                 <Route path="/app/profile/support" element={<Protected><Support /></Protected>} />
                 <Route path="/app/profile/social" element={<Protected><Social /></Protected>} />

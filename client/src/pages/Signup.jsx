@@ -13,7 +13,7 @@ import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { IcBack, IcCamera, IcGoogle, IcMail } from '../components/icons.jsx';
-import { nicknameThError, nicknameEnError } from '../util.js';
+import { nicknameError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
 
 const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
@@ -21,8 +21,6 @@ const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
 function ProfileFields({
   nickname,
   setNickname,
-  nicknameEn,
-  setNicknameEn,
   age,
   setAge,
   gender,
@@ -58,10 +56,9 @@ function ProfileFields({
           {t('signup.addPhoto')}
         </p>
       </div>
-      {/* Nickname in both languages — the app shows whichever matches the
-          language the user has it set to. */}
+      {/* One nickname, in any language. */}
       <div className="field">
-        <label>{t('signup.nicknameTh')}</label>
+        <label htmlFor="pf-nickname">{t('signup.nickname')}</label>
         <input
           id="pf-nickname"
           className="input"
@@ -70,30 +67,11 @@ function ProfileFields({
             setNickname(e.target.value);
             clearError('nickname');
           }}
-          placeholder={t('signup.nicknameThPh')}
+          placeholder={t('signup.nicknamePh')}
           maxLength={40}
-          lang="th"
           {...invalidProps('nickname', errors)}
         />
         <FieldError id="pf-nickname-err" msg={errors.nickname} />
-      </div>
-      <div className="field">
-        <label>{t('signup.nicknameEn')}</label>
-        <input
-          id="pf-nicknameEn"
-          className="input"
-          value={nicknameEn}
-          onChange={(e) => {
-            setNicknameEn(e.target.value);
-            clearError('nicknameEn');
-          }}
-          placeholder={t('signup.nicknameEnPh')}
-          maxLength={40}
-          lang="en"
-          autoCapitalize="words"
-          {...invalidProps('nicknameEn', errors)}
-        />
-        <FieldError id="pf-nicknameEn-err" msg={errors.nicknameEn} />
       </div>
       <div className="field">
         <label>{t('signup.age')}</label>
@@ -145,13 +123,11 @@ function ProfileFields({
 // field instead of in the banner at the top of the form.
 const FIELD_OF_ERROR = {
   NICKNAME_REQUIRED: 'nickname',
-  NICKNAME_TH_INVALID: 'nickname',
-  NICKNAME_EN_REQUIRED: 'nicknameEn',
-  NICKNAME_EN_INVALID: 'nicknameEn',
+  NICKNAME_TOO_LONG: 'nickname',
   AGE_REQUIRED: 'age',
   GENDER_REQUIRED: 'gender',
 };
-const FIELD_ORDER = ['nickname', 'nicknameEn', 'age', 'gender'];
+const FIELD_ORDER = ['nickname', 'age', 'gender'];
 
 export default function Signup() {
   const nav = useNavigate();
@@ -174,12 +150,9 @@ export default function Signup() {
   const [otpMsg, setOtpMsg] = useState('');
 
   const [nickname, setNickname] = useState('');
-  const [nicknameEn, setNicknameEn] = useState('');
-  // Google's suggested name goes into whichever field its script fits.
+  // Google's suggested name prefills the nickname.
   const applySuggestedNickname = (name) => {
-    if (!name) return;
-    if (/[\u0E00-\u0E7F]/.test(name)) setNickname(name);
-    else setNicknameEn(name);
+    if (name) setNickname(name);
   };
   // Per-field validation messages for the profile step, shown under each
   // field (see ProfileFields) rather than as one banner above the form.
@@ -201,11 +174,9 @@ export default function Signup() {
   // Checks every profile field at once; returns {} when all are valid.
   const profileErrors = () => {
     const errs = {};
-    const th = nicknameThError(nickname);
-    const en = nicknameEnError(nicknameEn);
+    const nameErr = nicknameError(nickname);
     const ageNum = Number(age);
-    if (th) errs.nickname = t(th);
-    if (en) errs.nicknameEn = t(en);
+    if (nameErr) errs.nickname = t(nameErr);
     if (!age) errs.age = t('signup.needAge');
     else if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 120) errs.age = t('signup.ageInvalid');
     if (!gender) errs.gender = t('signup.needGender');
@@ -333,7 +304,7 @@ export default function Signup() {
     try {
       const d = await api.post(
         '/auth/register',
-        { email, code: otp.join(''), nickname, nickname_en: nicknameEn, age, gender, password },
+        { email, code: otp.join(''), nickname, age, gender, password },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -375,7 +346,7 @@ export default function Signup() {
     try {
       const d = await api.post(
         '/auth/google',
-        { credential: gCredential, nickname, nickname_en: nicknameEn, age, gender },
+        { credential: gCredential, nickname, age, gender },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -547,8 +518,6 @@ export default function Signup() {
           <ProfileFields
             nickname={nickname}
             setNickname={setNickname}
-            nicknameEn={nicknameEn}
-            setNicknameEn={setNicknameEn}
             age={age}
             setAge={setAge}
             gender={gender}
@@ -584,8 +553,6 @@ export default function Signup() {
           <ProfileFields
             nickname={nickname}
             setNickname={setNickname}
-            nicknameEn={nicknameEn}
-            setNicknameEn={setNicknameEn}
             age={age}
             setAge={setAge}
             gender={gender}
