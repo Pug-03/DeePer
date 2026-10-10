@@ -59,6 +59,13 @@ const FLY_UNMOUNT_DELAY = 600;
 // shared ease-out slowed it to a near stop low on screen, where it hung
 // until the unmount faded it.
 const SKIP_FALL = { duration: FLY_UNMOUNT_DELAY / 1000, ease: [0.3, 0, 0.8, 0.5] };
+// Sideways it carries on from the finger: a quadratic ease-out starts at
+// exactly 2 × distance / duration, so drifting v × duration / 2 further keeps
+// the swipe's own speed at release. A swiped card used to stop dead here and
+// then drift back towards the middle (to a fixed x of -80) as it fell.
+const CARRY_EASE = [1 / 3, 2 / 3, 2 / 3, 1];
+const SKIP_DRIFT_MIN = 80;
+const SKIP_DRIFT_MAX = 400;
 // The outgoing card's slide is a spring (bouncy, exact), but its fade should
 // feel soft rather than snap to the spring's precision — ease it out on its
 // own timing instead of tying opacity to the same physics as the slide.
@@ -280,7 +287,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     if (!flying.current) onDragProgress?.(v);
   });
 
-  const fly = (dir) => {
+  const fly = (dir, velocityX = 0) => {
     // Stop following x — from here the card behind's reveal replays as its
     // own fixed animation (see onFlyProgress in DeckStack) instead of
     // continuing to mirror wherever the drag left it, so a swipe and a
@@ -289,11 +296,14 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     onFlyProgress?.();
     if (dir === 'skip') {
       animate(y, window.innerHeight, SKIP_FALL);
-      animate(x, -80, SKIP_FALL);
+      const drift = Math.min(SKIP_DRIFT_MAX, Math.max(SKIP_DRIFT_MIN, (-velocityX * SKIP_FALL.duration) / 2));
+      animate(x, x.get() - drift, { duration: SKIP_FALL.duration, ease: CARRY_EASE });
       setTimeout(onSkip, FLY_UNMOUNT_DELAY);
     } else {
-      animate(x, 520, { duration: FLY_DURATION, ease: FLY_EASE });
-      animate(y, -20, { duration: FLY_DURATION, ease: FLY_EASE });
+      // Same gentler start as the skip drift: FLY_EASE launched it at about
+      // four times the finger's speed the moment a swipe let go.
+      animate(x, 520, { duration: FLY_DURATION, ease: CARRY_EASE });
+      animate(y, -20, { duration: FLY_DURATION, ease: CARRY_EASE });
       setTimeout(onAnswer, FLY_UNMOUNT_DELAY);
     }
   };
@@ -312,7 +322,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   }); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onDragEnd = (_e, info) => {
-    if (info.offset.x < -SWIPE_THRESHOLD) fly('skip');
+    if (info.offset.x < -SWIPE_THRESHOLD) fly('skip', info.velocity.x);
     else if (info.offset.x > SWIPE_THRESHOLD) fly('yes');
     else {
       animate(x, 0, { type: 'spring', stiffness: 320, damping: 26 });
@@ -556,14 +566,11 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
               reveal.set(v);
             }}
             onFlyProgress={() => {
-              // Reset first: a real drag may have already carried `reveal`
-              // partway (or all the way, elastic-damped) toward the
-              // threshold, so animating from wherever it happened to be
-              // made the reveal's visible length depend on how far the
-              // user had dragged — sometimes a full smooth rise, sometimes
-              // already there and invisible. Restarting from 0 makes every
-              // fly (swipe or button) play the identical reveal.
-              // Also: this has to finish by FLY_UNMOUNT_DELAY, not
+              // Carry on from wherever the drag left `reveal` (a button fly
+              // starts from 0): resetting to 0 for an identical reveal every
+              // time dropped a card the swipe had already risen back down
+              // and faded it out right as the finger let go.
+              // This has to finish by FLY_UNMOUNT_DELAY, not
               // FLY_DURATION — the real TopCard takes over (fully revealed,
               // instantly, since seamless) the moment onSkip/onAnswer fires
               // at FLY_UNMOUNT_DELAY, which is well before the front card's
@@ -572,8 +579,10 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
               // jumped the rest of the way the instant the real card
               // mounted — reads as "rises for a bit, then snaps".
               progress.set(SWIPE_THRESHOLD);
-              reveal.set(0);
-              animate(reveal, SWIPE_THRESHOLD, { duration: FLY_UNMOUNT_DELAY / 1000, ease: FLY_EASE });
+              const from = reveal.get();
+              const to = from < 0 ? -SWIPE_THRESHOLD : SWIPE_THRESHOLD;
+              if (Math.abs(from) >= SWIPE_THRESHOLD) reveal.set(to);
+              else animate(reveal, to, { duration: FLY_UNMOUNT_DELAY / 1000, ease: FLY_EASE });
             }}
             flyRegistry={flyRegistry}
             saved={saved}
