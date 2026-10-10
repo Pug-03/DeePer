@@ -3,6 +3,12 @@ import { currentLang } from './store/i18n.jsx';
 
 export const CATS = ['couple', 'friends', 'family'];
 
+// The question's English when the app is in English and the bank has one
+// (questions people wrote themselves don't), otherwise the stored Thai.
+export function questionText(text, textEn, lang) {
+  return (lang === 'en' && textEn) || text;
+}
+
 export function catLabel(c) {
   return translate(currentLang, `cat.${c}`);
 }

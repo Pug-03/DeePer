@@ -6,7 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
-import { catLabel, formatDate } from '../util.js';
+import { catLabel, formatDate, questionText } from '../util.js';
 import { IcTrash, IcBookmark } from '../components/icons.jsx';
 
 // Same top-to-bottom cascade the page-load stagger uses, but driven by
@@ -15,6 +15,7 @@ import { IcTrash, IcBookmark } from '../components/icons.jsx';
 // (once: false) — so scrolling back up to re-reveal a card plays it again,
 // same as scrolling down into a fresh one below the fold.
 function SavedItem({ it, index, onAnswer, onRemove }) {
+  const { lang } = useI18n();
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.4, once: false });
   const delay = Math.min(index * 0.04, 0.24);
@@ -33,7 +34,7 @@ function SavedItem({ it, index, onAnswer, onRemove }) {
       animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.7, opacity: 0 }}
       transition={{ duration: 0.15, delay, ease: [0.16, 1, 0.3, 1] }}
     >
-      <p className="ci-q">{it.question_text}</p>
+      <p className="ci-q">{questionText(it.question_text, it.question_text_en, lang)}</p>
       <div className="ci-meta">
         <span className="tag">{catLabel(it.category)}</span>
         <span>{formatDate(it.created_at)}</span>
@@ -79,7 +80,10 @@ export default function Saved() {
 
   const answer = (it) => {
     nav('/app/answer', {
-      state: { question: { text: it.question_text, category: it.category }, savedId: it.id },
+      state: {
+        question: { text: it.question_text, text_en: it.question_text_en, category: it.category },
+        savedId: it.id,
+      },
     });
   };
 

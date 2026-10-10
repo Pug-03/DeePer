@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { displayName } from '../util.js';
+import { displayName, questionText } from '../util.js';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcCheck } from '../components/icons.jsx';
 
@@ -83,7 +83,7 @@ export default function Answer() {
       </button>
 
       <div className="glass glass--red" style={{ padding: 22, marginBottom: 18 }}>
-        <p style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>{q.text}</p>
+        <p style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>{questionText(q.text, q.text_en, lang)}</p>
       </div>
 
       {/* turn toggle — one device, take turns */}

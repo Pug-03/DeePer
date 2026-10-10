@@ -809,6 +809,30 @@ html[data-tour] .fade-up {
   display: inline-block;
 }
 
+/* Question depth under the category pills: small, quiet text chips. */
+.level-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin: 4px 0 2px;
+}
+.level-chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+.level-chip.active {
+  color: var(--text);
+  border-color: var(--border-red);
+  background: rgba(244, 63, 94, 0.08);
+}
+
 /* Plain (non-elastic) filter row, e.g. the category filter on Saved/History
    — same pill look as the home category tabs, but each pill carries its own
    active background instead of a shared sliding indicator element. */
@@ -2899,6 +2923,7 @@ a.btn {
 }
 
 /* ---------- Awards page ---------- */
+
 /* The award list doesn't animate as one block. Each entry gets its own
    index-based delay in Awards.jsx so added awards still appear in order. */
 .stagger > .award-list {

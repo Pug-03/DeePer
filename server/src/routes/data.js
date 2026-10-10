@@ -2,7 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { db, bumpStat } from '../db.js';
 import { requireAuth } from '../auth.js';
-import { CATEGORIES } from '../questions-bank.js';
+import { CATEGORIES, englishFor } from '../questions-bank.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -16,7 +16,8 @@ router.get('/saved', (req, res) => {
        FROM saved_questions WHERE user_id = ? ORDER BY created_at DESC, id DESC`,
     )
     .all(req.user.id);
-  res.json({ saved: rows });
+  // English for bank questions, matched on the stored Thai text.
+  res.json({ saved: rows.map((r) => ({ ...r, question_text_en: englishFor(r.question_text) })) });
 });
 
 router.post('/saved', (req, res) => {
@@ -86,7 +87,7 @@ router.get('/history', (req, res) => {
        FROM history WHERE user_id = ? ORDER BY created_at DESC, id DESC`,
     )
     .all(req.user.id);
-  res.json({ history: rows });
+  res.json({ history: rows.map((r) => ({ ...r, question_text_en: englishFor(r.question_text) })) });
 });
 
 router.post('/history', (req, res) => {

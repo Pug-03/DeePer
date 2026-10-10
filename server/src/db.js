@@ -209,6 +209,15 @@ if (userCols.some((c) => c.name === 'token_version')) {
   db.exec(`ALTER TABLE users DROP COLUMN token_version`);
 }
 
+// Migration: question bank levels (open / mid / deep) and English text.
+const questionCols = db.prepare(`PRAGMA table_info(questions)`).all();
+if (!questionCols.some((c) => c.name === 'level')) {
+  db.exec(`ALTER TABLE questions ADD COLUMN level TEXT`);
+}
+if (!questionCols.some((c) => c.name === 'text_en')) {
+  db.exec(`ALTER TABLE questions ADD COLUMN text_en TEXT`);
+}
+
 // Migration: login_history.revoked_at — each row is a session (its id is
 // embedded in that session's JWT as `sid`, see signToken); setting this
 // marks that one session logged out without touching any other session,
@@ -362,17 +371,28 @@ export const bumpStat = (key) => bumpStmt.run(key);
 // out any a database still has.
 db.prepare(`DELETE FROM questions WHERE source = 'ai'`).run();
 
-// Seed the curated question bank once.
-const count = db.prepare(`SELECT COUNT(*) AS c FROM questions WHERE source = 'bank'`).get();
-if (count.c === 0) {
-  const insert = db.prepare(`INSERT INTO questions (category, text, source) VALUES (?, ?, 'bank')`);
-  const rows = bankRows();
-  const tx = db.prepare('BEGIN');
-  tx.run();
+// Keep the bank rows in step with questions-bank.js: (re)written whenever the
+// bank in code differs from what's stored, e.g. after questions are added or
+// reworded. Saved questions and history keep their own copy of the text, so
+// they're unaffected by the bank rows being replaced.
+const bank = bankRows();
+const key = (r) => `${r.category}|${r.level}|${r.text}|${r.text_en}`;
+const stored = db
+  .prepare(`SELECT category, level, text, text_en FROM questions WHERE source = 'bank'`)
+  .all()
+  .map(key)
+  .sort();
+const wanted = bank.map(key).sort();
+if (stored.length !== wanted.length || stored.some((k, i) => k !== wanted[i])) {
+  const insert = db.prepare(
+    `INSERT INTO questions (category, level, text, text_en, source) VALUES (?, ?, ?, ?, 'bank')`,
+  );
+  db.prepare('BEGIN').run();
   try {
-    for (const r of rows) insert.run(r.category, r.text);
+    db.prepare(`DELETE FROM questions WHERE source = 'bank'`).run();
+    for (const r of bank) insert.run(r.category, r.level, r.text, r.text_en);
     db.prepare('COMMIT').run();
-    console.log(`[db] seeded ${rows.length} bank questions`);
+    console.log(`[db] wrote ${bank.length} bank questions`);
   } catch (e) {
     db.prepare('ROLLBACK').run();
     throw e;

@@ -27,7 +27,7 @@ import {
   IcDownload,
   IcHistory,
 } from '../components/icons.jsx';
-import { CATS } from '../util.js';
+import { CATS, questionText } from '../util.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 import { pickMemory, memoryRelativeLabel } from '../utils/memory.js';
 
@@ -111,7 +111,7 @@ const LONG_PRESS_MS = 550;
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
 
 function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, flyRegistry, saved, seamless }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const toast = useToast();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -209,7 +209,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     navigator.vibrate?.(15);
     setSharing(true);
     try {
-      const blob = await renderShareCard({ text: q.text, label: 'DeePer' });
+      const blob = await renderShareCard({ text: questionText(q.text, q.text_en, lang), label: 'DeePer' });
       if (!blob) throw new Error('render failed');
       if (sharePreviewUrlRef.current) URL.revokeObjectURL(sharePreviewUrlRef.current);
       const url = URL.createObjectURL(blob);
@@ -350,7 +350,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   };
 
   const srcLabel =
-    q.source === 'user' ? t('home.srcUser') : 'DeePer';
+    q.source === 'user' ? t('home.srcUser') : `DeePer · ${t(`home.level.${q.level}`)}`;
 
   return (
     <>
@@ -395,7 +395,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
           <IcCheck size={34} sw={3} />
         </motion.span>
         <motion.p className="q-text" style={{ opacity: frontOp }}>
-          {q.text}
+          {questionText(q.text, q.text_en, lang)}
         </motion.p>
         {/* The back of the card: the DeePer card back from the promo
             videos. Pre-turned 180°, so once the card has turned over it reads
@@ -489,6 +489,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
 }
 
 function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegistry, saved }) {
+  const { lang } = useI18n();
   // Split in two: `progress` drives scale, `reveal` drives y/opacity. During
   // a real drag both track the finger together, same as one value would.
   // But animating scale on a backdrop-filter card forces the browser to
@@ -574,7 +575,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
           <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
             <motion.div className="qcard-glow" style={{ opacity: backGlow }} />
             <motion.p className="q-text" style={{ opacity: backText }}>
-              {next.text}
+              {questionText(next.text, next.text_en, lang)}
             </motion.p>
           </motion.div>
         </motion.div>
@@ -634,6 +635,30 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
           />
         </motion.div>
       </AnimatePresence>
+    </div>
+  );
+}
+
+const LEVEL_OPTIONS = ['all', 'open', 'mid', 'deep'];
+
+// How deep the questions go. Kept small and quiet under the category pills:
+// a filter, not a second set of tabs competing with them.
+function LevelTabs({ level, onSwitch }) {
+  const { t } = useI18n();
+  return (
+    <div className="level-row" role="radiogroup" aria-label={t('home.levelLabel')}>
+      {LEVEL_OPTIONS.map((v) => (
+        <button
+          key={v}
+          type="button"
+          role="radio"
+          aria-checked={level === v}
+          className={`level-chip${level === v ? ' active' : ''}`}
+          onClick={() => onSwitch(v)}
+        >
+          {t(`home.level.${v}`)}
+        </button>
+      ))}
     </div>
   );
 }
@@ -739,9 +764,16 @@ export default function Home() {
   const nav = useNavigate();
   const toast = useToast();
   const confirmDlg = useConfirm();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const [category, setCategory] = useState(() => localStorage.getItem('dt_cat') || 'couple');
+  // 'all' runs the deck from light to deep; otherwise just that level.
+  const [level, setLevel] = useState(() => {
+    const saved = localStorage.getItem('dt_level');
+    return LEVEL_OPTIONS.includes(saved) ? saved : 'all';
+  });
+  const levelRef = useRef(level);
+  levelRef.current = level;
   const [deck, setDeck] = useState([]);
   const [idx, setIdx] = useState(0);
   const [status, setStatus] = useState('loading'); // loading | ready | error | empty
@@ -785,7 +817,8 @@ export default function Home() {
         if (!silent) setStatus('loading');
       }
       const exclude = [...seen.current].join(',');
-      const d = await api.get(`/questions/?category=${cat}&limit=20&exclude=${exclude}`);
+      const lv = levelRef.current === 'all' ? '' : `&level=${levelRef.current}`;
+      const d = await api.get(`/questions/?category=${cat}${lv}&limit=20&exclude=${exclude}`);
       if (stale?.()) return 0;
       const fresh = d.questions.filter((q) => !seen.current.has(q.id));
       fresh.forEach((q) => seen.current.add(q.id));
@@ -812,7 +845,7 @@ export default function Home() {
     return () => {
       left = true;
     };
-  }, [category, fetchBatch]);
+  }, [category, level, fetchBatch]);
 
   // "On this day"-style memory notification — pops up as a toast once per
   // calendar day on app entry, then fades on its own like any other toast
@@ -831,8 +864,8 @@ export default function Home() {
           // question text is the one variable-length piece of content
           // here, so it's clipped rather than risk overflowing the fixed,
           // centered toast box on a narrow phone.
-          const text =
-            memory.question_text.length > 60 ? `${memory.question_text.slice(0, 60)}…` : memory.question_text;
+          const full = questionText(memory.question_text, memory.question_text_en, lang);
+          const text = full.length > 60 ? `${full.slice(0, 60)}…` : full;
           toast(
             <>
               <IcHistory size={16} />
@@ -896,6 +929,13 @@ export default function Home() {
     setCategory(v);
   };
 
+  const switchLevel = (v) => {
+    if (v === level) return;
+    setEnterDir(LEVEL_OPTIONS.indexOf(v) > LEVEL_OPTIONS.indexOf(level) ? 1 : -1);
+    localStorage.setItem('dt_level', v);
+    setLevel(v);
+  };
+
   const advance = useCallback(() => setIdx((i) => i + 1), []);
   // Feeds the landing page's public "cards swiped" total. Fire-and-forget:
   // a failed ping just goes uncounted, never in the user's way.
@@ -911,7 +951,7 @@ export default function Home() {
 
   const goAnswer = () => {
     if (!current) return;
-    nav('/app/answer', { state: { question: { text: current.text, category } } });
+    nav('/app/answer', { state: { question: { text: current.text, text_en: current.text_en, category } } });
   };
 
   // Confirmation is the card itself turning over and fading out (see
@@ -1023,6 +1063,7 @@ export default function Home() {
         </div>
 
         <CatTabs category={category} onSwitch={switchCat} />
+        <LevelTabs level={level} onSwitch={switchLevel} />
 
         {/* Form and deck share one grid cell and both stay mounted; `adding`
             only flips which one is shown. Mounting/unmounting them through

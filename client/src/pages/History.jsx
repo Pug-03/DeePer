@@ -6,7 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
-import { catLabel, displayName, formatDate } from '../util.js';
+import { catLabel, displayName, formatDate, questionText } from '../util.js';
 import { IcTrash, IcHistory } from '../components/icons.jsx';
 
 export default function History() {
@@ -103,7 +103,7 @@ export default function History() {
                 data-tut={index === 0 ? 'historyItem' : undefined}
                 onClick={() => setOpen(isOpen ? null : it.id)}
               >
-                <p className="ci-q">{it.question_text}</p>
+                <p className="ci-q">{questionText(it.question_text, it.question_text_en, lang)}</p>
                 <div className="ci-meta">
                   <span className="tag">{catLabel(it.category)}</span>
                   <span>{formatDate(it.created_at)}</span>
