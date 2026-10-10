@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useReturning } from '../components/ScrollToTop.jsx';
-import { motion, useInView, useReducedMotion, animate } from 'framer-motion';
+import { motion, useInView, useReducedMotion, animate, cubicBezier } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
@@ -609,6 +609,151 @@ function SponsorTiers({ t, sponsors, sealed }) {
   );
 }
 
+// The hero's sample question cards: a small deck of two that loops. The
+// front card shows a question; the next one waits behind it, tilted the
+// other way and peeking out. Every SAMPLE_MS (or on a tap) the front card
+// slides out to the left and tucks back in behind the stack, picking up the
+// question after next, while the waiting card comes forward, like flipping
+// through a deck by moving the top card to the bottom.
+//
+// The whole deck runs off one number, `pos`: how many cards have been
+// flipped so far (fractional while one is moving). Each tap or auto-advance
+// raises the target by one and a frame loop moves `pos` toward it, writing
+// both cards' transforms straight to the DOM. One continuous clock means no
+// restarts or handoffs between flips: tapping again mid-swing just speeds the
+// deck up, and it eases back down as it catches up.
+const SAMPLE_KEYS = ['welcome.sample', 'welcome.sample2', 'welcome.sample3', 'welcome.sample4', 'welcome.sample5', 'welcome.sample6'];
+const SAMPLE_MS = 4500;
+const CYCLE_S = 1.15;
+// The leaving card reaches its furthest point (and is clear of the other
+// card) a bit before halfway: out quick, back in slower, like a hand
+// pulling the top card off and tucking it under. That's also when the
+// stacking order flips.
+const PEAK_AT = 0.42;
+const SAMPLE_FRONT = { x: 0, y: 0, rotate: -4, scale: 1 };
+const SAMPLE_BACK = { x: 22, y: 12, rotate: 7, scale: 0.94 };
+// How far the leaving card swings out on its way round; it also shrinks so
+// by the time it drops behind it's clear of the card coming forward and it
+// reads as moving away.
+const SAMPLE_SWING = { x: -250, y: -34, rotate: -16, scale: -0.24 };
+const ease = (s) => 0.5 - Math.cos(Math.PI * s) / 2;
+const lerp = (a, b, s) => a + (b - a) * s;
+const warp = Math.log(0.5) / Math.log(PEAK_AT);
+const comeForward = cubicBezier(0.4, 0, 0.25, 1.2);
+const pose = (p) => `translate(${p.x}px, ${p.y}px) rotate(${p.rotate}deg) scale(${p.scale})`;
+// Where each card sits at phase s (0..1) of a flip.
+const leavingPose = (s) => {
+  const e = ease(s ** warp);
+  const p = {};
+  for (const k in SAMPLE_FRONT) p[k] = lerp(SAMPLE_FRONT[k], SAMPLE_BACK[k], e) + SAMPLE_SWING[k] * Math.sin(Math.PI * e);
+  return p;
+};
+// The waiting card holds still until the top card is clear and has dropped
+// behind (so the two never overlap as the order flips, and it reads as
+// revealed, not pushed), then eases forward (no jolt from standing still) with a slight overshoot.
+const arrivingPose = (s) => {
+  if (s <= PEAK_AT) return SAMPLE_BACK;
+  const e = comeForward((s - PEAK_AT) / (1 - PEAK_AT));
+  const p = {};
+  for (const k in SAMPLE_FRONT) p[k] = lerp(SAMPLE_BACK[k], SAMPLE_FRONT[k], e);
+  return p;
+};
+// One flip on its own takes CYCLE_S. The further the deck is behind the
+// taps, the faster it runs (up to MAX_SPEED×), so the pace follows the
+// finger: slow taps get the full unhurried swing, quick taps a snappy one.
+// Changes in pace are smoothed over PACE_S so it never lurches.
+const BASE_SPEED = 1 / CYCLE_S;
+const MAX_SPEED = 3;
+const SPEED_PER_CARD = 1.2;
+const PACE_S = 0.12;
+const MAX_BEHIND = 3;
+function SampleCard({ t }) {
+  const n = SAMPLE_KEYS.length;
+  const reduceMotion = useReducedMotion();
+  const cards = [useRef(null), useRef(null)];
+  const pos = useRef(0);
+  const target = useRef(0);
+  const velocity = useRef(0);
+  const raf = useRef(0);
+  // Re-render only when a flip starts or finishes (to swap the front card's
+  // highlight and the questions), never per frame.
+  const [step, setStep] = useState({ done: 0, front: 0 });
+  const paint = () => {
+    const p = pos.current;
+    const k = Math.floor(p);
+    const s = p - k;
+    const leaving = k % 2;
+    const [a, b] = [cards[leaving].current, cards[1 - leaving].current];
+    if (!a || !b) return;
+    a.style.transform = pose(leavingPose(s));
+    b.style.transform = pose(arrivingPose(s));
+    a.style.zIndex = s < PEAK_AT ? 2 : 0;
+    b.style.zIndex = s < PEAK_AT ? 0 : 2;
+    const done = k;
+    const front = s > 0 ? 1 - leaving : leaving;
+    setStep((old) => (old.done === done && old.front === front ? old : { done, front }));
+  };
+  const tick = (now, last) => {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    const behind = target.current - pos.current;
+    const want = BASE_SPEED * Math.min(MAX_SPEED, Math.max(1, 1 + SPEED_PER_CARD * (behind - 1)));
+    velocity.current += (want - velocity.current) * (1 - Math.exp(-dt / PACE_S));
+    pos.current = Math.min(target.current, pos.current + velocity.current * dt);
+    paint();
+    if (pos.current < target.current) raf.current = requestAnimationFrame((next) => tick(next, now));
+    else {
+      velocity.current = 0;
+      raf.current = 0;
+    }
+  };
+  const advance = () => {
+    target.current = Math.min(target.current + 1, Math.floor(pos.current) + MAX_BEHIND);
+    if (reduceMotion) {
+      // Reduced motion: the cards just trade places, no swing round.
+      pos.current = target.current;
+      paint();
+      return;
+    }
+    if (!raf.current) {
+      velocity.current = BASE_SPEED;
+      raf.current = requestAnimationFrame((now) => tick(now, now));
+    }
+  };
+  useEffect(() => {
+    paint();
+    return () => cancelAnimationFrame(raf.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Auto-advance only while the cards are on screen and at rest.
+  const stackRef = useRef(null);
+  const inView = useInView(stackRef);
+  useEffect(() => {
+    if (!inView) return undefined;
+    const id = setTimeout(() => {
+      if (!raf.current) advance();
+    }, SAMPLE_MS);
+    return () => clearTimeout(id);
+  }, [step, inView]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Card c holds every other question: the one it shows now, or (once it
+  // has gone round behind) the one after next. The switch happens the moment
+  // a flip completes, while the card is fully covered, so nothing blinks.
+  const question = (c) => {
+    const q = step.done % 2 === c ? step.done : step.done + 1;
+    return SAMPLE_KEYS[q % n];
+  };
+  return (
+    <button ref={stackRef} type="button" className="sample-stack" onClick={advance} aria-label={t('welcome.sampleNext')}>
+      {[0, 1].map((c) => {
+        const isFront = c === step.front;
+        return (
+          <div key={c} ref={cards[c]} className={`glass sample-card${isFront ? ' is-front' : ''}`}>
+            <p aria-hidden={isFront ? undefined : 'true'}>{t(question(c))}</p>
+          </div>
+        );
+      })}
+    </button>
+  );
+}
+
 // Small bobbing chevron under the sign-up buttons: the hero fills the whole
 // screen, so without it nothing hints that the countdown, about and sponsors
 // sit below. Tapping it scrolls there. As the page scrolls it shrinks and
@@ -863,22 +1008,7 @@ export default function Welcome() {
           className="deck-hero fade-up"
           style={{ margin: '36px 0', display: 'grid', placeItems: 'center' }}
         >
-          <div
-            className="glass glass--red"
-            style={{
-              width: 260,
-              height: 300,
-              display: 'grid',
-              placeItems: 'center',
-              padding: 28,
-              textAlign: 'center',
-              transform: 'rotate(-4deg)',
-            }}
-          >
-            <p style={{ fontSize: 22, fontWeight: 600, lineHeight: 1.5, textWrap: 'balance' }}>
-              {t('welcome.sample')}
-            </p>
-          </div>
+          <SampleCard t={t} />
         </div>
 
         <div className="spacer" />

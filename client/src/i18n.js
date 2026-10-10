@@ -83,6 +83,12 @@ export const STRINGS = {
 
     // แบรนด์ / คำโปรย
     'welcome.sample': '“อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”',
+    'welcome.sample2': '“ช่วงเวลาไหนที่เรารู้สึกใกล้กันที่สุด?”',
+    'welcome.sample3': '“ความทรงจำไหนของเราที่ยังทำให้หัวเราะได้ทุกครั้ง?”',
+    'welcome.sample4': '“เรื่องไหนของครอบครัวเราที่อยากเล่าให้คนอื่นฟัง?”',
+    'welcome.sample5': '“ช่วงนี้มีอะไรที่อยากให้เราช่วยมากกว่านี้ไหม?”',
+    'welcome.sample6': '“ถ้าได้ไปเที่ยวด้วยกันอีกครั้ง อยากไปที่ไหน?”',
+    'welcome.sampleNext': 'แตะเพื่อดูคำถามถัดไป',
     'welcome.signup': 'สมัครใหม่',
     'welcome.haveAccount': 'มีบัญชีอยู่แล้ว',
     'welcome.scrollMore': 'เลื่อนลงดูเพิ่มเติม',
@@ -605,6 +611,12 @@ export const STRINGS = {
     'err.INQUIRY_ORG_REQUIRED': 'Please enter the organization name',
 
     'welcome.sample': '“What’s a little thing that makes you smile every day?”',
+    'welcome.sample2': '“When did we feel closest to each other?”',
+    'welcome.sample3': '“Which memory of ours still makes you laugh every time?”',
+    'welcome.sample4': '“What’s a family story you’d love to tell others?”',
+    'welcome.sample5': '“Is there something you’d like more support with lately?”',
+    'welcome.sample6': '“If we could take one more trip together, where would we go?”',
+    'welcome.sampleNext': 'Tap for the next question',
     'welcome.signup': 'Sign up',
     'welcome.haveAccount': 'I already have an account',
     'welcome.scrollMore': 'Scroll down for more',

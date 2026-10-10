@@ -2084,6 +2084,78 @@ a.btn {
   font-size: 12px;
   color: var(--text-faint);
 }
+/* Landing hero: the sample question deck (SampleCard). Both cards sit in
+   the same spot; SampleCard sets their transforms each frame. */
+.sample-stack {
+  position: relative;
+  width: 260px;
+  height: 300px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.sample-card {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  text-align: center;
+  /* The usual glass colour (--glass over the hero's backdrop), made opaque
+     so the waiting card and its question never show through the front one.
+     No backdrop blur: re-blurring the page behind two moving cards every
+     frame made the loop stutter on phones. */
+  background: rgb(25, 18, 24);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: var(--border);
+  box-shadow: var(--shadow-lift);
+  will-change: transform;
+}
+/* The front card's red border and glow live on their own layer and only
+   fade its opacity (cheap), instead of animating box-shadow every frame. */
+.sample-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1px solid var(--border-red);
+  box-shadow: var(--glow-red);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.sample-card.is-front::after {
+  opacity: 1;
+}
+/* Depth: the waiting card sits in shade and brightens as it comes forward. */
+.sample-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: #000;
+  opacity: 0.3;
+  transition: opacity 0.7s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.sample-card.is-front::before {
+  opacity: 0;
+  transition-delay: 0.15s;
+}
+.sample-card p {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-wrap: balance;
+}
 /* Landing hero: chevron hinting there's more below the fold. */
 .scroll-cue-wrap {
   display: flex;
