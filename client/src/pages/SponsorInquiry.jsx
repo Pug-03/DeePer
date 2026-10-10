@@ -105,6 +105,7 @@ export default function SponsorInquiry() {
               id="sp-person"
               className="input"
               maxLength={80}
+              placeholder={t('sponsorForm.namePh')}
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
               required
