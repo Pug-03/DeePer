@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CheckBadge, { rise } from '../components/CheckBadge.jsx';
@@ -9,6 +10,8 @@ import { IcInstagram, IcTikTok } from '../components/icons.jsx';
 import { socialLinks } from '../social-info.js';
 
 const SOCIAL_ICONS = { instagram: IcInstagram, tiktok: IcTikTok };
+// Matches .postauth-leaving in styles.css.
+const LEAVE_MS = 260;
 
 export default function PostAuthWelcome() {
   const nav = useNavigate();
@@ -17,6 +20,7 @@ export default function PostAuthWelcome() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
   const isNew = !!loc.state?.isNew;
+  const [leaving, setLeaving] = useState(false);
 
   if (!user) return <Navigate to="/app/home" replace />;
 
@@ -24,12 +28,26 @@ export default function PostAuthWelcome() {
     // Starting the tour here (not flagging it for Home) means Home opens
     // already dimmed under the tour instead of flashing in plain first.
     localStorage.removeItem('dt_tutorial_pending');
-    if (wantTutorial) tutorial.start();
-    nav('/app/home', { replace: true });
+    if (!wantTutorial) {
+      nav('/app/home', { replace: true });
+      return;
+    }
+    // The tour opens on Home under an already-dark overlay; cutting straight
+    // there from this bright page read as a jump. Fade this page out first
+    // so the dark screen arrives as the end of one motion.
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(() => {
+      tutorial.start();
+      nav('/app/home', { replace: true });
+    }, LEAVE_MS);
   };
 
   return (
-    <div className="page center" style={{ justifyContent: 'center', flex: 1 }}>
+    <div
+      className={`page center${leaving ? ' postauth-leaving' : ''}`}
+      style={{ justifyContent: 'center', flex: 1 }}
+    >
       <CheckBadge />
 
       <motion.h1 className="h1" {...rise(1.05)}>

@@ -190,6 +190,22 @@ html[data-returning] .fade-up {
 }
 /* Starting / running the app tour (see markTourStarting): no entrance
    animations, so the first step shows right away. */
+/* PostAuthWelcome fading out before the tour opens. A CSS animation that
+   takes over from the page's own pageEnter (rather than a framer-motion
+   fade, which pageEnter and the tour's html[data-tour] switch overrode,
+   snapping the page back to full for a frame). */
+html .page.postauth-leaving {
+  animation: postauthLeave 0.26s ease-in forwards;
+}
+/* Stays hidden once the tour mark goes on (which drops page animations)
+   for the frame before Home replaces it. */
+html[data-tour] .app-shell > .page.postauth-leaving {
+  opacity: 0;
+}
+@keyframes postauthLeave {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 html[data-tour] .app-shell > .page,
 html[data-tour] .stagger > *,
 html[data-tour] .fade-up {
