@@ -358,6 +358,11 @@ router.post('/password-reset/confirm', authLimiter, (req, res) => {
     user.id,
   );
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
+  // A reset usually means the old password can't be trusted: sign every
+  // existing session out, so whoever might have it is logged out too.
+  db.prepare(
+    `UPDATE login_history SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL`,
+  ).run(user.id);
 
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
   const sessionId = recordLogin(updated.id, 'password_reset', req);
@@ -626,6 +631,11 @@ router.post('/me/password', requireAuth, (req, res) => {
     });
 
   db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(newPassword), u.id);
+  // Changing the password signs out every other device; this one stays in.
+  db.prepare(
+    `UPDATE login_history SET revoked_at = datetime('now')
+     WHERE user_id = ? AND id != ? AND revoked_at IS NULL`,
+  ).run(u.id, req.sessionId);
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
   res.json({ user: publicUser(updated) });
 });

@@ -152,3 +152,33 @@ test('the page may show blob: images it makes itself', async () => {
   const csp = res.headers.get('content-security-policy');
   assert.match(csp, /img-src[^;]*blob:/);
 });
+
+test('changing the password signs out every other device but keeps this one', async () => {
+  const email = uniqueEmail('pw-change');
+  const { token: here } = await registerUser(base, { email });
+  const other = (await api(base).post('/auth/login', { email, password: PASSWORD })).body.token;
+
+  const res = await api(base, here).post('/auth/me/password', {
+    current_password: PASSWORD,
+    new_password: 'Bb2@bbbb',
+  });
+  assert.equal(res.status, 200);
+  assert.equal((await api(base, here).get('/auth/me')).status, 200);
+  assert.equal((await api(base, other).get('/auth/me')).status, 401);
+});
+
+test('resetting a forgotten password signs out every existing session', async () => {
+  const email = uniqueEmail('pw-reset');
+  const { token: old } = await registerUser(base, { email });
+  const anon = api(base);
+  const req = await anon.post('/auth/password-reset/request', { email });
+  await anon.post('/auth/password-reset/verify', { email, code: req.body.dev_code });
+  const res = await anon.post('/auth/password-reset/confirm', {
+    email,
+    code: req.body.dev_code,
+    password: 'Cc3#cccc',
+  });
+  assert.equal(res.status, 200);
+  assert.equal((await api(base, old).get('/auth/me')).status, 401);
+  assert.equal((await api(base, res.body.token).get('/auth/me')).status, 200);
+});
