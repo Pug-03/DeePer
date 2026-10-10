@@ -7,6 +7,7 @@ import {
   useMotionValue,
   useMotionValueEvent,
   useTransform,
+  useSpring,
   animate,
 } from 'framer-motion';
 import { api } from '../api.js';
@@ -476,6 +477,32 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   // eases smoothly; `progress` jumps straight to its end value.
   const progress = useMotionValue(0);
   const reveal = useMotionValue(0);
+  // Its question stays hidden for the whole drag — through the top card's
+  // translucent glass it showed up faintly under the current question. It
+  // only fades in once the card is let go and the top card is on its way
+  // off, reaching full by the hand-off so the promoted card's text matches.
+  const backText = useMotionValue(0);
+  // A new card on top starts the preview behind it back at rest. This runs
+  // here in render, before the useTransforms below read `reveal`: resetting
+  // from the new TopCard's layout effect instead lost the update (this
+  // component's transforms re-subscribe in the same commit and dropped the
+  // pending recompute), so after every swipe the next preview stayed fully
+  // risen behind the top card's glass, doubling its edge and glow.
+  // Seamless: if the outgoing card actually flew away (a real swipe) or the
+  // save flash eased it up, the card behind has already risen to CARD_REST —
+  // mount it there directly instead of replaying the rise, so the swap reads
+  // as one continuous motion. Read before the reset, while `progress` still
+  // shows how far the outgoing card got.
+  const shown = useRef({ id: current.id, seamless: false });
+  if (shown.current.id !== current.id) {
+    shown.current = { id: current.id, seamless: !enterDir && Math.abs(progress.get()) >= SWIPE_THRESHOLD };
+    reveal.stop();
+    backText.stop();
+    progress.set(0);
+    reveal.set(0);
+    backText.set(0);
+  }
+  const seamless = shown.current.seamless;
   const backScale = useTransform(progress, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0.94, 1]);
   const backY = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [0, 14, 0]);
   // Hidden while it sits fully under the top card: through the top card's
@@ -487,30 +514,20 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   // timing — is what actually reads as "the red edge gradually appears"
   // during the swipe/save reveal, instead of it only showing up later once
   // the card is formally promoted.
-  const backGlow = useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0, 1]);
-  // Its question stays hidden while it sits under the top card and fades in
-  // as the top card moves off it — otherwise the text showed through the
-  // top card's translucent glass.
-  // Waits until the top card is halfway off before it starts to show.
-  const backText = useTransform(
-    reveal,
-    [-SWIPE_THRESHOLD, -SWIPE_THRESHOLD / 2, 0, SWIPE_THRESHOLD / 2, SWIPE_THRESHOLD],
-    [0.5, 0, 0, 0, 0.5],
+  // Eased through a spring: following the finger 1:1 it lit up fully within
+  // the first ~110px of a quick swipe, so the red edge seemed to pop on.
+  const backGlow = useSpring(
+    useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0, 1]),
+    { stiffness: 140, damping: 24 },
   );
 
   useEffect(() => {
     if (saved) {
       progress.set(SWIPE_THRESHOLD);
       animate(reveal, SWIPE_THRESHOLD, { duration: 0.4, ease: FLY_EASE });
+      animate(backText, 1, { duration: 0.4, ease: FLY_EASE });
     }
   }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // If the outgoing card actually flew away (a real swipe) or the save-flash
-  // effect above already eased it up, the card behind has already risen to
-  // CARD_REST by now via the mirrored progress above — mount it there
-  // directly instead of replaying the rise, so the swap reads as one
-  // continuous motion rather than a shrink back to REST_BEHIND and regrow.
-  const seamless = !enterDir && Math.abs(progress.get()) >= SWIPE_THRESHOLD;
 
   return (
     <div className="deck" data-tut="deck">
@@ -564,6 +581,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
             onDragProgress={(v) => {
               progress.set(v);
               reveal.set(v);
+              backText.set(0);
             }}
             onFlyProgress={() => {
               // Carry on from wherever the drag left `reveal` (a button fly
@@ -583,6 +601,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
               const to = from < 0 ? -SWIPE_THRESHOLD : SWIPE_THRESHOLD;
               if (Math.abs(from) >= SWIPE_THRESHOLD) reveal.set(to);
               else animate(reveal, to, { duration: FLY_UNMOUNT_DELAY / 1000, ease: FLY_EASE });
+              animate(backText, 1, { delay: 0.2, duration: FLY_UNMOUNT_DELAY / 1000 - 0.2, ease: 'easeOut' });
             }}
             flyRegistry={flyRegistry}
             saved={saved}
