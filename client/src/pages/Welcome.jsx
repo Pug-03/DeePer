@@ -246,8 +246,20 @@ function SupportersRow({ items, reverse, renderItem = renderSupporterChip }) {
       }
       posRef.current = pos;
       velRef.current = vel;
-      frame = requestAnimationFrame(tick);
+      frame = visible ? requestAnimationFrame(tick) : 0;
     };
+    // Only run while the row is on screen: off screen it would keep moving
+    // scrollLeft (and the page's other rows) every frame for nothing,
+    // costing frames while the visitor scrolls elsewhere.
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible && !frame) {
+        lastTime = 0;
+        frame = requestAnimationFrame(tick);
+      }
+    });
+    io.observe(el);
     frame = requestAnimationFrame(tick);
 
     // Finger or mouse drag. touch-action: pan-y (styles.css) leaves vertical
@@ -299,6 +311,7 @@ function SupportersRow({ items, reverse, renderItem = renderSupporterChip }) {
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       cancelAnimationFrame(frame);
+      io.disconnect();
       el.removeEventListener('pointerdown', onPointerDown);
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', onPointerUp);
@@ -450,8 +463,18 @@ function TapeTrack({ text, dir }) {
         x += v * dt;
         place();
       }
-      frame = requestAnimationFrame(tick);
+      frame = visible ? requestAnimationFrame(tick) : 0;
     };
+    // Drift only while the tape is on screen (same reason as the marquee).
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible && !frame) {
+        prev = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    });
+    io.observe(handle);
     const down = (e) => {
       dragging = true;
       lastX = e.clientX;
@@ -479,6 +502,7 @@ function TapeTrack({ text, dir }) {
     frame = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frame);
+      io.disconnect();
       handle.removeEventListener('pointerdown', down);
       handle.removeEventListener('pointermove', move);
       handle.removeEventListener('pointerup', up);
