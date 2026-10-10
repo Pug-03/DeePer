@@ -212,3 +212,28 @@ test('age must be a whole number from 1 to 120, at signup and on the profile', a
   assert.equal(ok.status, 200);
   assert.equal(ok.body.user.age, 30);
 });
+
+test('a profile picture must really be an image, whatever its type claims', async () => {
+  const { token } = await registerUser(base);
+  const upload = (bytes) => {
+    const form = new FormData();
+    form.append('avatar', new Blob([bytes], { type: 'image/png' }), 'a.png');
+    return fetch(`${base}/auth/me/avatar`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    });
+  };
+  const fake = await upload(Buffer.from('not really a png'));
+  assert.equal(fake.status, 400);
+  assert.equal((await fake.json()).error_code, 'AVATAR_TYPE_INVALID');
+
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  const real = await upload(png);
+  assert.equal(real.status, 200);
+  assert.ok((await real.json()).user.avatar_url);
+  await api(base, token).del('/auth/me/avatar');
+});

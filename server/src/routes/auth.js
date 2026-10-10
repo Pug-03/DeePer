@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, basename } from 'node:path';
 import { db } from '../db.js';
+import { isRealImage } from '../images.js';
 import { CATEGORIES } from '../questions-bank.js';
 import { sendOtpEmail, mailerReady } from '../mailer.js';
 import {
@@ -591,11 +592,13 @@ router.post('/me/partner/:category/avatar', requireAuth, (req, res) => {
         .status(400)
         .json({ error: 'อัปโหลดรูปไม่สำเร็จ', error_code: 'AVATAR_UPLOAD_FAILED' });
     }
-    if (!req.file)
+    if (!req.file || !isRealImage(req.file.path)) {
+      if (req.file) fs.unlink(req.file.path, () => {});
       return res.status(400).json({
         error: 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP',
         error_code: 'AVATAR_TYPE_INVALID',
       });
+    }
 
     const current = getPartnerOrDefault(req.user.id, category);
     const avatar_url = `/uploads/partner_avatars/${req.file.filename}`;
@@ -668,11 +671,13 @@ router.post('/me/avatar', requireAuth, (req, res) => {
         .status(400)
         .json({ error: 'อัปโหลดรูปไม่สำเร็จ', error_code: 'AVATAR_UPLOAD_FAILED' });
     }
-    if (!req.file)
+    if (!req.file || !isRealImage(req.file.path)) {
+      if (req.file) fs.unlink(req.file.path, () => {});
       return res.status(400).json({
         error: 'รองรับเฉพาะไฟล์รูป JPG, PNG, WEBP',
         error_code: 'AVATAR_TYPE_INVALID',
       });
+    }
 
     const u = req.user;
     const oldAvatarUrl = u.avatar_url;
