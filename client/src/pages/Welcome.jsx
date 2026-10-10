@@ -1026,6 +1026,9 @@ export default function Welcome() {
             <span className="dot" />
             <span className="brand">DeePer</span>
           </div>
+          {/* One line on what this is, so a first-time visitor knows before
+              they scroll. */}
+          <p className="hero-tagline">{t('welcome.tagline')}</p>
         </div>
 
         <div

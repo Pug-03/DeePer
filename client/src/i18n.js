@@ -82,6 +82,7 @@ export const STRINGS = {
     'err.INQUIRY_ORG_REQUIRED': 'กรุณากรอกชื่อองค์กร',
 
     // แบรนด์ / คำโปรย
+    'welcome.tagline': `${keepWord('การ์ด')}คำถามชวนคุยลึก ๆ\nสำหรับคู่รัก เพื่อน และครอบครัว`,
     'welcome.sample': '“อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”',
     'welcome.sample2': '“ช่วงเวลาไหนที่เรารู้สึกใกล้กันที่สุด?”',
     'welcome.sample3': '“ความทรงจำไหนของเราที่ยังทำให้หัวเราะได้ทุกครั้ง?”',
@@ -610,6 +611,7 @@ export const STRINGS = {
     'err.INQUIRY_NAME_REQUIRED': 'Please enter a contact name',
     'err.INQUIRY_ORG_REQUIRED': 'Please enter the organization name',
 
+    'welcome.tagline': 'Deep-conversation cards for couples, friends and family',
     'welcome.sample': '“What’s a little thing that makes you smile every day?”',
     'welcome.sample2': '“When did we feel closest to each other?”',
     'welcome.sample3': '“Which memory of ours still makes you laugh every time?”',

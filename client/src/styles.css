@@ -272,6 +272,16 @@ html[data-tour] .fade-up {
   background-clip: text;
   color: transparent;
 }
+.hero-tagline {
+  margin: 8px auto 0;
+  max-width: 300px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  text-wrap: balance;
+  /* Thai copy breaks at its '\n' (after "ลึก ๆ"), not mid-phrase. */
+  white-space: pre-line;
+}
 .brand-mark {
   display: inline-flex;
   align-items: center;
