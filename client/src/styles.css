@@ -2223,11 +2223,13 @@ a.btn {
   place-items: center;
   padding: 28px;
   text-align: center;
-  /* The usual glass colour (--glass over the hero's backdrop), made opaque
-     so the waiting card and its question never show through the front one.
-     No backdrop blur: re-blurring the page behind two moving cards every
-     frame made the loop stutter on phones. */
-  background: rgb(25, 18, 24);
+  /* The colour the old glass card had over the hero's backdrop (measured
+     off it: a touch warmer at the top where the red glow shows through,
+     settling darker below), made opaque so the waiting card and its
+     question never show through the front one. No backdrop blur:
+     re-blurring the page behind two moving cards every frame made the loop
+     stutter on phones. */
+  background: linear-gradient(180deg, rgb(23, 17, 23), rgb(20, 16, 21) 45%);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   border-color: var(--border);
