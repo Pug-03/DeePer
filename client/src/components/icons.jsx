@@ -55,13 +55,12 @@ export const IcPlus = (p) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
-// Lid, rounded bin and two ribs — same geometry as lucide's trash-2.
+// Lucide's "trash": thin rounded lines, a flat lid, no inner bars.
 export const IcTrash = (p) => (
-  <svg {...S({ ...p, sw: p.sw || 1.8 })}>
+  <svg {...S({ ...p, sw: p.sw || 1.6 })}>
     <path d="M3 6h18" />
-    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-    <path d="M10 11v6M14 11v6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
   </svg>
 );
 export const IcMousePointer = (p) => (
@@ -141,10 +140,15 @@ export const IcEyeOff = (p) => (
     <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2" />
   </svg>
 );
+// Change-picture icon (Lucide's "image-plus": a picture with a plus).
+// Kept under the old name so every photo button picks it up.
 export const IcCamera = (p) => (
-  <svg {...S(p)}>
-    <path d="M3 9a2 2 0 0 1 2-2h2l1.5-2.5h7L17 7h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
-    <circle cx="12" cy="12.8" r="3.3" />
+  <svg {...S({ ...p, sw: p.sw || 1.8 })}>
+    <path d="M16 5h6" />
+    <path d="M19 2v6" />
+    <path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5" />
+    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+    <circle cx="9" cy="9" r="2" />
   </svg>
 );
 export const IcBank = (p) => (
