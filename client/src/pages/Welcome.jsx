@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useReturning } from '../components/ScrollToTop.jsx';
 import { motion, useInView, useReducedMotion, animate } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
@@ -608,6 +609,51 @@ function SponsorTiers({ t, sponsors, sealed }) {
   );
 }
 
+// Small bobbing chevron under the sign-up buttons: the hero fills the whole
+// screen, so without it nothing hints that the countdown, about and sponsors
+// sit below. Tapping it scrolls there. As the page scrolls it shrinks and
+// fades out gradually, following the finger (gone by FADE_PX), instead of
+// switching off at one point.
+const SCROLL_CUE_FADE_PX = 140;
+function ScrollCue({ label }) {
+  const ref = useRef(null);
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const p = Math.min(window.scrollY / SCROLL_CUE_FADE_PX, 1);
+      ref.current?.style.setProperty('--cue-p', p);
+      setGone(p >= 1);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  // The wrapper takes the hero's stagger entrance (.stagger > *), which
+  // animates opacity/transform; the button inside is free to fade with scroll.
+  return (
+    <div className="scroll-cue-wrap">
+      <button
+        ref={ref}
+        type="button"
+        className={`scroll-cue${gone ? ' is-gone' : ''}`}
+        aria-label={label}
+        tabIndex={gone ? -1 : undefined}
+        onClick={() => document.querySelector('.landing-more')?.scrollIntoView({ behavior: 'smooth' })}
+      >
+        <ChevronDown size={22} strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
 // Thai has no spaces between words, so the browser guesses where a line may
 // break and gets loanwords wrong ("เลย์เอา|ต์"). Keep each space-separated
 // phrase whole so a role only wraps at its spaces (and at '\n').
@@ -844,6 +890,7 @@ export default function Welcome() {
             {t('welcome.haveAccount')}
           </button>
         </div>
+        <ScrollCue label={t('welcome.scrollMore')} />
       </div>
 
       {/* Below the fold, every piece rises in on its own as it scrolls into

@@ -85,6 +85,7 @@ export const STRINGS = {
     'welcome.sample': '“อะไรคือสิ่งเล็ก ๆ ที่ทำให้เรายิ้มได้ทุกวัน?”',
     'welcome.signup': 'สมัครใหม่',
     'welcome.haveAccount': 'มีบัญชีอยู่แล้ว',
+    'welcome.scrollMore': 'เลื่อนลงดูเพิ่มเติม',
     'welcome.about.eyebrow': 'เกี่ยวกับแอป',
     'welcome.about.title': 'DeePer คืออะไร',
     'welcome.about.body':
@@ -606,6 +607,7 @@ export const STRINGS = {
     'welcome.sample': '“What’s a little thing that makes you smile every day?”',
     'welcome.signup': 'Sign up',
     'welcome.haveAccount': 'I already have an account',
+    'welcome.scrollMore': 'Scroll down for more',
     'welcome.about.eyebrow': 'About the app',
     'welcome.about.title': 'What is DeePer',
     'welcome.about.body':
