@@ -298,6 +298,8 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   // the mirrored value on mount rather than trusting the outgoing card's
   // in-flight fly-out animation to have finished settling it.
   const flying = useRef(false);
+  // The fly-out that's playing and the advance it will make when it ends.
+  const pendingFly = useRef(null);
   useLayoutEffect(() => {
     flying.current = false;
     onDragProgress?.(0);
@@ -307,6 +309,20 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   });
 
   const fly = (dir, velocityX = 0) => {
+    // Tapped again while this card is still flying off: hand over to the next
+    // card right away instead of starting the same fly a second time. Each
+    // extra tap used to schedule another advance from this one card, so
+    // quick taps skipped cards nobody saw and stacked several fly-outs.
+    // Returns 'handedOver' so the caller can send the next card on its way
+    // too: one tap, one card.
+    if (flying.current) {
+      const pending = pendingFly.current;
+      if (!pending) return 'busy';
+      pendingFly.current = null;
+      clearTimeout(pending.timer);
+      pending.done();
+      return 'handedOver';
+    }
     // Stop following x — from here the card behind's reveal replays as its
     // own fixed animation (see onFlyProgress in DeckStack) instead of
     // continuing to mirror wherever the drag left it, so a swipe and a
@@ -317,28 +333,37 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       animate(y, window.innerHeight, SKIP_FALL);
       const drift = Math.min(SKIP_DRIFT_MAX, Math.max(SKIP_DRIFT_MIN, (-velocityX * SKIP_FALL.duration) / 2));
       animate(x, x.get() - drift, { duration: SKIP_FALL.duration, ease: CARRY_EASE });
-      setTimeout(onSkip, FLY_UNMOUNT_DELAY);
     } else {
       // Same gentler start as the skip drift: FLY_EASE launched it at about
       // four times the finger's speed the moment a swipe let go.
       animate(x, 520, { duration: FLY_DURATION, ease: CARRY_EASE });
       animate(y, -20, { duration: FLY_DURATION, ease: CARRY_EASE });
-      setTimeout(onAnswer, FLY_UNMOUNT_DELAY);
     }
+    const done = dir === 'skip' ? onSkip : onAnswer;
+    const timer = setTimeout(() => {
+      pendingFly.current = null;
+      done();
+    }, FLY_UNMOUNT_DELAY);
+    pendingFly.current = { timer, done };
+    return 'started';
   };
 
   // Lets the parent's action buttons (and keyboard shortcuts) trigger the
-  // same fly animation as a swipe. Re-registers every render so it's always
-  // this card's latest fly closure — guarded by q.id so a still-exiting
-  // card's delayed cleanup can never clobber a newer card's registration
-  // (AnimatePresence keeps the outgoing card mounted for its exit animation,
-  // so both can briefly coexist).
-  useEffect(() => {
-    flyRegistry.current = { id: q.id, fly };
-    return () => {
-      if (flyRegistry.current?.id === q.id) flyRegistry.current = null;
-    };
-  }); // eslint-disable-line react-hooks/exhaustive-deps
+  // same fly animation as a swipe. Keyed by question id, because the
+  // outgoing card stays mounted for its exit while the new one is on top:
+  // with a single slot, whichever registered last won, and a quick tap could
+  // land on the card already flying off (or nowhere). A layout effect, so the
+  // new card can be tapped from its very first frame.
+  useLayoutEffect(() => {
+    const registry = (flyRegistry.current ??= {});
+    registry[q.id] = fly;
+  });
+  useLayoutEffect(
+    () => () => {
+      delete flyRegistry.current?.[q.id];
+    },
+    [], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const onDragEnd = (_e, info) => {
     if (info.offset.x < -SWIPE_THRESHOLD) fly('skip', info.velocity.x);
@@ -810,7 +835,17 @@ export default function Home() {
   const firstLoad = useRef(true);
   const flyRegistry = useRef(null);
 
+  // A top-up already on its way: quick skips through the last few cards
+  // used to send one request per card, and the deck could hit 0 and show
+  // "no more questions" before any of them came back.
+  const toppingUp = useRef(false);
+  const [refilling, setRefilling] = useState(false);
   const fetchBatch = useCallback(async (cat, { reset = false, silent = false, stale } = {}) => {
+    if (!reset) {
+      if (toppingUp.current) return 0;
+      toppingUp.current = true;
+      setRefilling(true);
+    }
     try {
       if (reset) {
         seen.current = new Set();
@@ -832,6 +867,11 @@ export default function Home() {
       setError(e.message);
       setStatus('error');
       return 0;
+    } finally {
+      if (!reset) {
+        toppingUp.current = false;
+        setRefilling(false);
+      }
     }
   }, []);
 
@@ -917,10 +957,12 @@ export default function Home() {
     if (status === 'ready' && remaining > 0 && remaining <= 4) {
       fetchBatch(category);
     }
-    if (status === 'ready' && remaining === 0) {
+    // Out of cards while a top-up is still loading: wait for it rather than
+    // flash "no more questions" first.
+    if (status === 'ready' && remaining === 0 && !refilling) {
       setStatus('empty');
     }
-  }, [remaining, status, category, fetchBatch]);
+  }, [remaining, status, category, fetchBatch, refilling]);
 
   const switchCat = (v) => {
     if (v === category) return;
@@ -937,16 +979,27 @@ export default function Home() {
   };
 
   const advance = useCallback(() => setIdx((i) => i + 1), []);
+  // Set by a quick second tap on ✕: the card that comes up next is skipped as
+  // soon as it's on top, so every tap sends exactly one card away.
+  const skipNext = useRef(false);
+  useLayoutEffect(() => {
+    if (!skipNext.current || !current) return;
+    skipNext.current = false;
+    flyRegistry.current?.[current.id]?.('skip');
+  }, [current?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   // Feeds the landing page's public "cards swiped" total. Fire-and-forget:
   // a failed ping just goes uncounted, never in the user's way.
   const countSwipe = () => {
     api.post('/swipes').catch(() => {});
   };
   const doSkip = () => {
-    if (flyRegistry.current?.id === current?.id) flyRegistry.current.fly('skip');
+    if (!current) return;
+    // A tap that lands mid fly-out moves straight on to the next card and
+    // throws that one too (see the layout effect below).
+    if (flyRegistry.current?.[current.id]?.('skip') === 'handedOver') skipNext.current = true;
   };
   const doAnswer = () => {
-    if (flyRegistry.current?.id === current?.id) flyRegistry.current.fly('yes');
+    if (current) flyRegistry.current?.[current.id]?.('yes');
   };
 
   const goAnswer = () => {

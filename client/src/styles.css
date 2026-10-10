@@ -155,6 +155,16 @@ a {
    page grow with its content and keeps it from becoming a scroll box. */
 .page--home {
   overflow-y: clip;
+  /* Home has to fit one screen: the deck takes whatever height is left
+     between the header and the card buttons, and the buttons must stay clear
+     of the fixed bottom nav (16px off the bottom + its 92px + a 14px gap).
+     The top is a little tighter than other pages, which on a notched
+     iPhone left a band of empty space above the header. */
+  padding-top: calc(12px + var(--safe-t));
+  padding-bottom: calc(122px + var(--safe-b));
+}
+.page--home .deck {
+  min-height: 240px;
 }
 
 /* Make route changes visible without moving the persistent bottom nav. */
