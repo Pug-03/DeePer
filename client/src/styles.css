@@ -29,6 +29,10 @@
   --radius-sm: 22px;
   --shadow-lift: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
   --glow-red: 0 0 40px -6px rgba(244, 63, 94, 0.5);
+  /* Category colours for Saved / History entries. */
+  --cat-couple: #ff5a72;
+  --cat-friends: #f5b04c;
+  --cat-family: #4fc3a1;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
 }
@@ -1143,6 +1147,37 @@ html[data-tour] .fade-up {
   color: var(--text-faint);
   font-size: 12px;
 }
+/* Saved and History entries: no box at all, just a hairline between
+   entries. The category is named in its own colour above a large bold
+   question, which carries the page. Plain CSS, nothing to blur or animate. */
+.qitem {
+  padding: 16px 4px 14px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+}
+.qitem:last-child {
+  border-bottom: none;
+}
+.list.stagger:has(.qitem) {
+  gap: 0;
+}
+.qitem-cat {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--cat, var(--red-bright));
+}
+.card-item.qitem .ci-q {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
 .tag {
   font-size: 11px;
   padding: 3px 9px;

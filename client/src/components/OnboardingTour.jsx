@@ -57,8 +57,8 @@ const STEP_RADIUS = {
   navSaved: 16,
   navHistory: 16,
   navProfile: 16,
-  savedItem: 22,
-  historyItem: 22,
+  savedItem: 12,
+  historyItem: 12,
 };
 const HIDDEN_STYLE = { position: 'fixed', top: -9999, left: 0, visibility: 'hidden', pointerEvents: 'none' };
 // Steps that read as one connected set (the three action buttons, the four

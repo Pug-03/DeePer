@@ -97,15 +97,16 @@ export default function History() {
             return (
               <div
                 key={it.id}
-                className="card-item glass"
+                className="card-item qitem"
+                style={{ '--cat': `var(--cat-${it.category})` }}
                 // Anchor for the tour's "here's a real history entry" step —
                 // only the first card (see historyItem in OnboardingTour.jsx).
                 data-tut={index === 0 ? 'historyItem' : undefined}
                 onClick={() => setOpen(isOpen ? null : it.id)}
               >
+                <span className="qitem-cat">{catLabel(it.category)}</span>
                 <p className="ci-q">{questionText(it.question_text, it.question_text_en, lang)}</p>
                 <div className="ci-meta">
-                  <span className="tag">{catLabel(it.category)}</span>
                   <span>{formatDate(it.created_at)}</span>
                   <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="delete">
                     <IcTrash size={18} />
