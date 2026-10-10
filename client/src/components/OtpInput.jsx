@@ -8,7 +8,9 @@ import { IcCheck } from './icons.jsx';
 // clears input. `statusText` renders under the boxes with a state dot,
 // e.g. a hint while idle, the server's error message on 'error', or a
 // success line on 'success'.
-export default function OtpInput({ value, onChange, autoFocus = true, status = 'idle', statusText }) {
+// `statusError` keeps statusText red after an error has played out and the
+// boxes are back to idle, so the message stays readable until they type.
+export default function OtpInput({ value, onChange, autoFocus = true, status = 'idle', statusText, statusError = false }) {
   const refs = useRef([]);
 
   useEffect(() => {
@@ -50,7 +52,11 @@ export default function OtpInput({ value, onChange, autoFocus = true, status = '
         ))}
       </div>
       {statusText && (
-        <p className={`otp-status${status !== 'idle' ? ` otp-status--${status}` : ''}`}>
+        <p
+          className={`otp-status${
+            status !== 'idle' ? ` otp-status--${status}` : statusError ? ' otp-status--error' : ''
+          }`}
+        >
           <span className="otp-status-dot" />
           {statusText}
         </p>

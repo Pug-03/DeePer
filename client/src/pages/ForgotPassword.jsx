@@ -25,6 +25,9 @@ export default function ForgotPassword() {
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpKey, setOtpKey] = useState(0);
   const [otpStatus, setOtpStatus] = useState('idle'); // idle | error | success
+  // The last OTP error, kept under the boxes after the shake until they type
+  // again — it used to vanish with the shake, after 0.7s.
+  const [otpMsg, setOtpMsg] = useState('');
   const [password, setPassword] = useState('');
 
   const { rules, score, valid: pwValid } = pwScore(password);
@@ -32,6 +35,7 @@ export default function ForgotPassword() {
   const requestOtp = async (e) => {
     e.preventDefault();
     setErr('');
+    setOtpMsg('');
     setBusy(true);
     try {
       const d = await api.post('/auth/password-reset/request', { email }, { auth: false });
@@ -54,6 +58,7 @@ export default function ForgotPassword() {
       // Incomplete: flag it (shake + red blink + message) but keep the digits
       // they've typed so far — no clear/remount, just prompt them to finish.
       setErr(t('signup.otpIncomplete'));
+      setOtpMsg(t('signup.otpIncomplete'));
       setOtpStatus('error');
       setTimeout(() => {
         setOtpStatus('idle');
@@ -72,6 +77,7 @@ export default function ForgotPassword() {
       setTimeout(() => setStep('password'), 1300);
     } catch (e2) {
       setErr(e2.message);
+      setOtpMsg(e2.message);
       setOtpStatus('error');
       setTimeout(() => {
         setOtp(['', '', '', '']);
@@ -112,6 +118,7 @@ export default function ForgotPassword() {
   const back = () => {
     setErr('');
     setOtpStatus('idle');
+    setOtpMsg('');
     if (step === 'email') nav('/login');
     else if (step === 'otp') setStep('email');
     else setStep('otp');
@@ -172,11 +179,19 @@ export default function ForgotPassword() {
             <OtpInput
               key={otpKey}
               value={otp}
-              onChange={(i, v) => setOtp((prev) => prev.map((d, idx) => (idx === i ? v : d)))}
+              onChange={(i, v) => {
+                setOtp((prev) => prev.map((d, idx) => (idx === i ? v : d)));
+                setOtpMsg('');
+              }}
               status={otpStatus}
               statusText={
-                otpStatus === 'error' ? err : otpStatus === 'success' ? t('signup.otpVerified') : t('signup.otpHint')
+                otpStatus === 'error'
+                  ? err
+                  : otpStatus === 'success'
+                    ? t('signup.otpVerified')
+                    : otpMsg || t('signup.otpHint')
               }
+              statusError={!!otpMsg}
             />
           </div>
           <button
