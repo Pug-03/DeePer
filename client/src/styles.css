@@ -809,12 +809,15 @@ html[data-tour] .fade-up {
   display: inline-block;
 }
 
-/* Question depth under the category pills: small, quiet text chips. */
+/* Question depth under the category pills: small, quiet text chips.
+   Only as wide as its chips (centered), so the tour's highlight hugs them
+   instead of spanning the whole screen. */
 .level-row {
   display: flex;
-  justify-content: center;
   gap: 6px;
-  margin: 4px 0 2px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 4px auto 2px;
 }
 .level-chip {
   padding: 5px 12px;
@@ -3162,7 +3165,8 @@ a.btn {
 .tut-dots {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  /* 4px keeps all 13 steps on one line beside the Back/Next buttons. */
+  gap: 4px;
   min-width: 0;
 }
 .tut-dots span {

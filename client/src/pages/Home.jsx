@@ -646,7 +646,7 @@ const LEVEL_OPTIONS = ['all', 'open', 'mid', 'deep'];
 function LevelTabs({ level, onSwitch }) {
   const { t } = useI18n();
   return (
-    <div className="level-row" role="radiogroup" aria-label={t('home.levelLabel')}>
+    <div className="level-row" data-tut="levels" role="radiogroup" aria-label={t('home.levelLabel')}>
       {LEVEL_OPTIONS.map((v) => (
         <button
           key={v}

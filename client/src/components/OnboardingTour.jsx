@@ -20,6 +20,7 @@ import { IcBack, IcCheck } from './icons.jsx';
 const STEPS = [
   { id: 'add', route: '/app/home' },
   { id: 'cats', route: '/app/home' },
+  { id: 'levels', route: '/app/home' },
   { id: 'deck', route: '/app/home' },
   { id: 'actionSkip', route: '/app/home' },
   { id: 'actionSave', route: '/app/home' },
@@ -41,12 +42,13 @@ const TIP_CONTENT_TRANSITION = { duration: 0.18, ease: EASE };
 // Matches each target's own corner rounding (.btn, .pill, .qcard, .bottom-nav,
 // .card-item) so the highlight frame hugs the real shape instead of a generic
 // rounded box. Single controls (add, deck, savedItem, historyItem) use their
-// exact real radius; rows of separate round buttons (cats, actions) read best
+// exact real radius; rows of separate round buttons (cats, levels, actions) read best
 // as a full pill wrap around them. Anything unlisted falls through to the
 // default radius below.
 const STEP_RADIUS = {
   add: 22,
   cats: 999,
+  levels: 999,
   deck: 30,
   actionSkip: 999,
   actionSave: 999,
