@@ -2297,6 +2297,13 @@ a.btn {
   color: var(--red-bright);
   filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.55));
   pointer-events: none;
+  /* 2.6s twinkle then 1.4s rest, looping (see components/Sparkles.jsx). */
+  animation: sparkleTwinkle 4s ease-in-out infinite both;
+}
+@keyframes sparkleTwinkle {
+  0% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  32.5% { opacity: 1; transform: scale(1) rotate(20deg); }
+  65%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
 }
 .stat-label {
   margin-top: 12px;

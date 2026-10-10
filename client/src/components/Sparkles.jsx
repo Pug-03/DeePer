@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 import { IcSparkle } from './icons.jsx';
 
 // Small twinkling star accents — originally built for the landing page's
@@ -9,25 +9,21 @@ import { IcSparkle } from './icons.jsx';
 export default function Sparkles({ points }) {
   const reduceMotion = useReducedMotion();
   if (reduceMotion) return null;
+  // A CSS animation (sparkleTwinkle in styles.css), not framer-motion: it
+  // only touches opacity and transform, so the browser runs it off the main
+  // thread, and it costs nothing while scrolled off screen. Driven from JS
+  // it rewrote each star's style every frame, the whole time the page was
+  // open, which ate into scrolling smoothness.
   return (
     <>
       {points.map((pos, i) => (
-        <motion.span
+        <span
           key={i}
           className="sparkle"
-          style={{ top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left }}
-          initial={{ opacity: 0, scale: 0.5, rotate: 0 }}
-          animate={{ opacity: [0, 1, 0], scale: [0.5, 1, 0.5], rotate: [0, 20, 0] }}
-          transition={{
-            duration: 2.6,
-            delay: pos.delay,
-            repeat: Infinity,
-            repeatDelay: 1.4,
-            ease: 'easeInOut',
-          }}
+          style={{ top: pos.top, right: pos.right, bottom: pos.bottom, left: pos.left, animationDelay: `${pos.delay || 0}s` }}
         >
           <IcSparkle size={pos.size} />
-        </motion.span>
+        </span>
       ))}
     </>
   );
