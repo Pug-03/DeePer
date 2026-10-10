@@ -182,3 +182,33 @@ test('resetting a forgotten password signs out every existing session', async ()
   assert.equal((await api(base, old).get('/auth/me')).status, 401);
   assert.equal((await api(base, res.body.token).get('/auth/me')).status, 200);
 });
+
+test('age must be a whole number from 1 to 120, at signup and on the profile', async () => {
+  for (const age of [0, -5, 121, 999, 2.5]) {
+    const email = uniqueEmail('age');
+    const anon = api(base);
+    const otp = await anon.post('/auth/otp/request', { email });
+    const res = await anon.post('/auth/register', {
+      email,
+      code: otp.body.dev_code,
+      nickname: 'เทสเตอร์',
+      nickname_en: 'Tester',
+      age,
+      gender: 'other',
+      password: PASSWORD,
+    });
+    assert.equal(res.status, 400, `register age ${age}`);
+    assert.equal(res.body.error_code, 'AGE_INVALID');
+  }
+
+  const { token } = await registerUser(base);
+  const me = api(base, token);
+  for (const age of [0, 999, -5]) {
+    const bad = await me.patch('/auth/me', { age });
+    assert.equal(bad.status, 400, `profile age ${age}`);
+    assert.equal(bad.body.error_code, 'AGE_INVALID');
+  }
+  const ok = await me.patch('/auth/me', { age: 30 });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.user.age, 30);
+});

@@ -62,9 +62,16 @@ export default function Profile() {
   const save = async () => {
     const thErr = nicknameThError(nickname);
     const enErr = nicknameEnError(nicknameEn);
-    if (thErr || enErr) {
-      setNameErr({ nickname: thErr && t(thErr), nicknameEn: enErr && t(enErr) });
-      document.getElementById(thErr ? 'pf-nickname' : 'pf-nicknameEn')?.focus();
+    // Same age rule as signup; left empty, the saved age stays as it is.
+    const ageNum = Number(age);
+    const ageErr = age !== '' && (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 120);
+    if (thErr || enErr || ageErr) {
+      setNameErr({
+        nickname: thErr && t(thErr),
+        nicknameEn: enErr && t(enErr),
+        age: ageErr && t('signup.ageInvalid'),
+      });
+      document.getElementById(thErr ? 'pf-nickname' : enErr ? 'pf-nicknameEn' : 'pf-age')?.focus();
       return;
     }
     setBusy(true);
@@ -78,7 +85,8 @@ export default function Profile() {
       );
     } catch (e) {
       const code = e.data?.error_code || '';
-      if (code.startsWith('NICKNAME_EN')) setNameErr({ nicknameEn: e.message });
+      if (code.startsWith('AGE')) setNameErr({ age: e.message });
+      else if (code.startsWith('NICKNAME_EN')) setNameErr({ nicknameEn: e.message });
       else if (code.startsWith('NICKNAME')) setNameErr({ nickname: e.message });
       else toast(e.message);
     } finally {
@@ -307,12 +315,18 @@ export default function Profile() {
         <div className="field">
           <label>{t('signup.age')}</label>
           <input
+            id="pf-age"
             className="input"
             type="number"
             inputMode="numeric"
             value={age}
-            onChange={(e) => setAge(e.target.value)}
+            onChange={(e) => {
+              setAge(e.target.value);
+              setNameErr((p) => ({ ...p, age: '' }));
+            }}
+            {...invalidProps('age', nameErr)}
           />
+          <FieldError id="pf-age-err" msg={nameErr.age} />
         </div>
         <div className="field" style={{ marginBottom: 0 }}>
           <label>{t('signup.gender')}</label>

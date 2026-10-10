@@ -185,6 +185,18 @@ function nameError(nickname, nicknameEn) {
   return null;
 }
 
+// Same rule as the signup form (client/src/pages/Signup.jsx): a whole number
+// from 1 to 120. Checked here too, so the profile page or a direct API call
+// can't store 0, 999 or -5.
+function ageError(age) {
+  if (age == null || age === '' || Number.isNaN(Number(age)))
+    return { error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' };
+  const n = Number(age);
+  if (!Number.isInteger(n) || n < 1 || n > 120)
+    return { error: 'อายุต้องเป็นตัวเลข 1–120', error_code: 'AGE_INVALID' };
+  return null;
+}
+
 // --- Step 3: complete email signup ---
 router.post('/register', authLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
@@ -195,8 +207,8 @@ router.post('/register', authLimiter, (req, res) => {
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
   const badName = nameError(nickname, nicknameEn);
   if (badName) return res.status(400).json(badName);
-  if (age == null || age === '' || Number.isNaN(Number(age)))
-    return res.status(400).json({ error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' });
+  const badAge = ageError(age);
+  if (badAge) return res.status(400).json(badAge);
   if (!gender)
     return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
   if (!validatePassword(password))
@@ -421,8 +433,8 @@ router.post('/google', async (req, res) => {
     }
     const badName = nameError(nickname, nicknameEn);
     if (badName) return res.status(400).json(badName);
-    if (age == null || age === '' || Number.isNaN(Number(age)))
-      return res.status(400).json({ error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' });
+    const badAge = ageError(age);
+    if (badAge) return res.status(400).json(badAge);
     if (!gender)
       return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
     const info = db
@@ -505,6 +517,10 @@ router.patch('/me', requireAuth, (req, res) => {
     const badName = nameError(nextTh, nextEn);
     const legacyNoEn = nicknameEn == null && !nextEn && badName?.error_code === 'NICKNAME_EN_REQUIRED';
     if (badName && !legacyNoEn) return res.status(400).json(badName);
+  }
+  if (age != null && age !== '') {
+    const badAge = ageError(age);
+    if (badAge) return res.status(400).json(badAge);
   }
 
   db.prepare(`UPDATE users SET nickname = ?, nickname_en = ?, age = ?, gender = ? WHERE id = ?`).run(

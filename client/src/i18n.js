@@ -42,6 +42,7 @@ export const STRINGS = {
     'err.NICKNAME_EN_REQUIRED': 'กรุณากรอกชื่อเล่นภาษาอังกฤษ',
     'err.NICKNAME_EN_INVALID': 'ชื่อเล่นภาษาอังกฤษใช้ได้เฉพาะตัวอักษร A–Z',
     'err.AGE_REQUIRED': 'กรุณากรอกอายุ',
+    'err.AGE_INVALID': 'อายุต้องเป็นตัวเลข 1–120',
     'err.GENDER_REQUIRED': 'กรุณาเลือกเพศ',
     'err.PASSWORD_WEAK': 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
     'err.OTP_NOT_VERIFIED': 'ต้องยืนยัน OTP ก่อนสมัคร',
@@ -571,6 +572,7 @@ export const STRINGS = {
     'err.NICKNAME_EN_REQUIRED': 'Please enter your nickname in English',
     'err.NICKNAME_EN_INVALID': 'The English nickname can only use the letters A–Z',
     'err.AGE_REQUIRED': 'Please enter your age',
+    'err.AGE_INVALID': 'Age must be a number from 1 to 120',
     'err.GENDER_REQUIRED': 'Please select your gender',
     'err.PASSWORD_WEAK':
       'Password must be at least 8 characters, with an uppercase letter, lowercase letter, number, and special character',
