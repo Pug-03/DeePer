@@ -79,37 +79,49 @@ function AdminDashboard({ onLogout }) {
     { key: 'sponsors', label: `โลโก้${keepWord('สปอนเซอร์')}` },
   ];
 
+  const current = tabs.find((x) => x.key === tab);
+
+  // On a computer: a sticky sidebar of sections on the left (with their
+  // to-do counts) and a wide work area on the right. On a phone the same
+  // nav collapses back into the row of pills above the content.
   return (
     <div className="page admin">
-      <div className="row-between" style={{ marginBottom: 18 }}>
-        <h1 className="h1" style={{ margin: 0 }}>{keepWord('แอดมิน')} DeePer</h1>
-        <button className="link" type="button" onClick={onLogout}>
-          ออกจากระบบ
-        </button>
-      </div>
+      <div className="admin-layout">
+        <aside className="admin-nav">
+          <div className="admin-nav-head">
+            <h1 className="h1 admin-title">{keepWord('แอดมิน')} DeePer</h1>
+            <button className="link admin-logout" type="button" onClick={onLogout}>
+              ออกจากระบบ
+            </button>
+          </div>
+          <nav className="admin-tabs" aria-label="ส่วนของแอดมิน">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                className={`admin-tab ${tab === t.key ? 'active' : ''}`}
+                aria-current={tab === t.key ? 'page' : undefined}
+                onClick={() => setTab(t.key)}
+              >
+                <span className="admin-tab-label">{t.label}</span>
+                {t.badge > 0 && <span className="admin-badge">{t.badge}</span>}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-      <div className="filter-row">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            className={`pill ${tab === t.key ? 'active' : ''}`}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-            {t.badge > 0 && <span className="admin-badge">{t.badge}</span>}
-          </button>
-        ))}
+        <main className="admin-main">
+          <h2 className="admin-section-title">{current.label}</h2>
+          {tab === 'overview' &&
+            (error ? <ErrorState message={error} onRetry={reload} /> : stats ? <Overview stats={stats} /> : <Loading />)}
+          {tab === 'insights' && <Insights onLogout={onLogout} />}
+          {tab === 'reports' && <Reports onLogout={onLogout} onChange={reload} />}
+          {tab === 'proofs' && <Proofs onLogout={onLogout} onChange={reload} />}
+          {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
+          {tab === 'reviews' && <Reviews onLogout={onLogout} onChange={reload} />}
+          {tab === 'sponsors' && <Sponsors onLogout={onLogout} />}
+        </main>
       </div>
-
-      {tab === 'overview' &&
-        (error ? <ErrorState message={error} onRetry={reload} /> : stats ? <Overview stats={stats} /> : <Loading />)}
-      {tab === 'insights' && <Insights onLogout={onLogout} />}
-      {tab === 'reports' && <Reports onLogout={onLogout} onChange={reload} />}
-      {tab === 'proofs' && <Proofs onLogout={onLogout} onChange={reload} />}
-      {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
-      {tab === 'reviews' && <Reviews onLogout={onLogout} onChange={reload} />}
-      {tab === 'sponsors' && <Sponsors onLogout={onLogout} />}
     </div>
   );
 }
@@ -138,14 +150,16 @@ function Overview({ stats }) {
           </div>
         ))}
       </div>
-      <DayChart days={stats.days} field="visitors" title="คนเข้าเว็บต่อวัน (14 วันล่าสุด)" />
-      <DayChart days={stats.days} field="active" title="คนใช้งานที่ล็อกอินต่อวัน (14 วันล่าสุด)" />
-      <BarList
-        title="คนเข้าเว็บมาจากไหน (14 วันล่าสุด)"
-        rows={stats.sources.map((s) => [SOURCE_LABEL[s.source] || s.source, s.c])}
-        unit="คน"
-        empty="ยังไม่มีข้อมูล"
-      />
+      <div className="admin-grid">
+        <DayChart days={stats.days} field="visitors" title="คนเข้าเว็บต่อวัน (14 วันล่าสุด)" />
+        <DayChart days={stats.days} field="active" title="คนใช้งานที่ล็อกอินต่อวัน (14 วันล่าสุด)" />
+        <BarList
+          title="คนเข้าเว็บมาจากไหน (14 วันล่าสุด)"
+          rows={stats.sources.map((s) => [SOURCE_LABEL[s.source] || s.source, s.c])}
+          unit="คน"
+          empty="ยังไม่มีข้อมูล"
+        />
+      </div>
       <p className="admin-note">
         นับคนเข้าเว็บ 1 ครั้งต่อเบราว์เซอร์ต่อวัน (เวลาไทย) ลิงก์ใน bio ให้ต่อท้ายด้วย ?ref=ig หรือ ?ref=tt
         เช่น deeper.in.th/?ref=ig จะได้รู้แน่ชัดว่ามาจาก IG หรือ TikTok
@@ -222,10 +236,12 @@ function Insights({ onLogout }) {
           กลับมาใช้ซ้ำ: {data.returning_14d} จาก {data.active_14d} คนที่ใช้งานใน 14 วันล่าสุด ใช้มากกว่า 1 วัน
         </span>
       </div>
-      <BarList title="หมวดที่ตอบคำถามมากที่สุด" rows={catRows(data.answered_by_category)} unit="ครั้ง" empty="ยังไม่มีข้อมูล" />
-      <BarList title="หมวดที่บันทึกคำถามมากที่สุด" rows={catRows(data.saved_by_category)} unit="ครั้ง" empty="ยังไม่มีข้อมูล" />
-      <TopQuestions title="คำถามที่ถูกบันทึกมากที่สุด" rows={data.top_saved} t={t} />
-      <TopQuestions title="คำถามที่ถูกตอบมากที่สุด" rows={data.top_answered} t={t} />
+      <div className="admin-grid">
+        <BarList title="หมวดที่ตอบคำถามมากที่สุด" rows={catRows(data.answered_by_category)} unit="ครั้ง" empty="ยังไม่มีข้อมูล" />
+        <BarList title="หมวดที่บันทึกคำถามมากที่สุด" rows={catRows(data.saved_by_category)} unit="ครั้ง" empty="ยังไม่มีข้อมูล" />
+        <TopQuestions title="คำถามที่ถูกบันทึกมากที่สุด" rows={data.top_saved} t={t} />
+        <TopQuestions title="คำถามที่ถูกตอบมากที่สุด" rows={data.top_answered} t={t} />
+      </div>
       <p className="admin-note">คำถามที่ถูกบันทึกเยอะคือคำถามที่คนชอบ เอาไปทำ{keepWord('คอนเทนต์')}ลง IG / TikTok ได้</p>
     </>
   );
@@ -317,8 +333,9 @@ function Reports({ onLogout, onChange }) {
         ]}
       />
       {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      <div className="admin-list">
       {list.map((r) => (
-        <div key={r.id} className="glass admin-card">
+          <div key={r.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className={`admin-tag admin-tag--${r.category}`}>{REPORT_LABEL[r.category] || r.category}</span>
             <span className="admin-meta">
@@ -364,7 +381,7 @@ function Reports({ onLogout, onChange }) {
           {r.deleted_at ? (
             <TrashedActions item={r} trash={trash} />
           ) : (
-            <>
+            <div className="admin-actions">
               <button
                 className={`btn ${r.resolved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
                 type="button"
@@ -373,10 +390,11 @@ function Reports({ onLogout, onChange }) {
                 {r.resolved_at ? `แก้แล้ว ${fmtTime(r.resolved_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าแก้แล้ว'}
               </button>
               <ReplyButton r={r} onReply={reply} />
-            </>
+            </div>
           )}
         </div>
       ))}
+      </div>
     </>
   );
 }
@@ -441,8 +459,9 @@ function Proofs({ onLogout, onChange }) {
         ]}
       />
       {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      <div className="admin-list">
       {list.map((p) => (
-        <div key={p.id} className="glass admin-card">
+          <div key={p.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">{p.display_name}</span>
             <span className="admin-meta">
@@ -472,7 +491,7 @@ function Proofs({ onLogout, onChange }) {
           {p.deleted_at ? (
             <TrashedActions item={p} trash={trash} />
           ) : (
-            <>
+            <div className="admin-actions">
               <button
                 className={`btn ${p.approved_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
                 type="button"
@@ -489,10 +508,11 @@ function Proofs({ onLogout, onChange }) {
                   ไม่ขึ้นชื่อ · ส่งอีเมลขอบคุณแทน
                 </button>
               )}
-            </>
+            </div>
           )}
         </div>
       ))}
+      </div>
     </>
   );
 }
@@ -589,7 +609,8 @@ function Sponsors({ onLogout }) {
         บน Render แบบฟรี โลโก้ที่เพิ่มจะหายเมื่อ deploy ใหม่
       </p>
 
-      <form className="glass admin-card" onSubmit={add}>
+      <div className="admin-sponsors">
+      <form className="glass admin-card admin-sponsor-form" onSubmit={add}>
         <p className="admin-chart-title">เพิ่ม{keepWord('สปอนเซอร์')}</p>
         <label className="admin-logo-drop">
           <input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden onChange={pickLogo} />
@@ -625,6 +646,7 @@ function Sponsors({ onLogout }) {
         </button>
       </form>
 
+      <div className="admin-sponsor-tiers">
       {TIERS.map((k) => {
         const fromCode = SPONSORS.filter((s) => s.tier === k);
         const added = data.sponsors.filter((s) => s.tier === k);
@@ -672,6 +694,8 @@ function Sponsors({ onLogout }) {
           </div>
         );
       })}
+      </div>
+      </div>
     </>
   );
 }
@@ -714,8 +738,9 @@ function Inquiries({ onLogout, onChange }) {
         ]}
       />
       {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      <div className="admin-list">
       {list.map((q) => (
-        <div key={q.id} className="glass admin-card">
+          <div key={q.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">{q.org_name}</span>
             <span className="admin-meta">
@@ -739,16 +764,19 @@ function Inquiries({ onLogout, onChange }) {
           {q.deleted_at ? (
             <TrashedActions item={q} trash={trash} />
           ) : (
-            <button
-              className={`btn ${q.handled_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
-              type="button"
-              onClick={() => act(q.id, q.handled_at ? 'reopen' : 'handled')}
-            >
-              {q.handled_at ? `ติดต่อแล้ว ${fmtTime(q.handled_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าติดต่อแล้ว'}
-            </button>
+            <div className="admin-actions">
+              <button
+                className={`btn ${q.handled_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
+                type="button"
+                onClick={() => act(q.id, q.handled_at ? 'reopen' : 'handled')}
+              >
+                {q.handled_at ? `ติดต่อแล้ว ${fmtTime(q.handled_at)} · เปิดใหม่` : 'ทำเครื่องหมายว่าติดต่อแล้ว'}
+              </button>
+            </div>
           )}
         </div>
       ))}
+      </div>
     </>
   );
 }
@@ -791,8 +819,9 @@ function Reviews({ onLogout, onChange }) {
         ))}
       </div>
       {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      <div className="admin-list">
       {list.map((r) => (
-        <div key={r.id} className="glass admin-card">
+          <div key={r.id} className="glass admin-card">
           <div className="admin-card-head">
             <span className="admin-proof-name">
               {r.nickname} / {r.nickname_en}
@@ -811,7 +840,7 @@ function Reviews({ onLogout, onChange }) {
             <dt>ส่งล่าสุด</dt>
             <dd>{fmtTime(r.updated_at)}</dd>
           </dl>
-          <div className="admin-trash-actions">
+          <div className="admin-actions">
             {r.status !== 'approved' && (
               <button className="btn btn--primary admin-action" type="button" onClick={() => run(() => adminApi.setReview(r.id, 'approve'))}>
                 อนุมัติ ให้ขึ้นหน้าแรก
@@ -825,6 +854,7 @@ function Reviews({ onLogout, onChange }) {
           </div>
         </div>
       ))}
+      </div>
     </>
   );
 }
@@ -893,7 +923,7 @@ function TrashedActions({ item, trash }) {
   return (
     <>
       <p className="admin-note admin-replied">อยู่ในถังขยะตั้งแต่ {fmtTime(item.deleted_at)}</p>
-      <div className="admin-trash-actions">
+      <div className="admin-actions">
         <button className="btn btn--ghost admin-action" type="button" onClick={() => trash.restore(item)}>
           กู้คืน
         </button>

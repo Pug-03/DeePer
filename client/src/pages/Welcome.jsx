@@ -420,6 +420,24 @@ function LaunchOpened({ t }) {
   );
 }
 
+// Dev-only preview of the stats at a future size — never on by default:
+// needs a dev build AND `?mockStats=<user count>` in the URL, e.g.
+// ?mockStats=10000 or ?mockStats=100000. The activity totals are scaled
+// from the user count with rough per-person ratios, just to see how big
+// numbers sit in the layout. Production builds fold this to null.
+function useMockStatsForPreview() {
+  if (!import.meta.env.DEV) return null;
+  const n = Number(new URLSearchParams(window.location.search).get('mockStats'));
+  if (!Number.isInteger(n) || n <= 0) return null;
+  return {
+    user_count: n,
+    swipe_count: n * 38,
+    answer_count: n * 9,
+    save_count: n * 6,
+    share_count: Math.round(n * 1.4),
+  };
+}
+
 // Smaller totals under the user count: every card swiped, answered, saved
 // and shared.
 const ACTIVITY_STATS = [
@@ -962,7 +980,9 @@ export default function Welcome() {
   const nav = useNavigate();
   const { t, lang } = useI18n();
   const socials = socialLinks();
-  const [stats, setStats] = useState(landingCache.stats ?? null);
+  const [liveStats, setStats] = useState(landingCache.stats ?? null);
+  const mockStats = useMockStatsForPreview();
+  const stats = mockStats ?? liveStats;
   const mockSupporterCount = useMockSupporterCountForPreview();
   // Donors whose transfer proof the maintainer approved (npm run approve),
   // on top of any names hard-coded in SUPPORTERS. Empty until it loads; the

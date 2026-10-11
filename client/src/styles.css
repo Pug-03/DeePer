@@ -1986,6 +1986,208 @@ html[data-tour] .fade-up {
   font-size: 15px;
 }
 
+/* Admin layout. Phone: the section nav is a scrollable row of pills above
+   the content, and card actions stack full-width. Computer (≥ 960px): the
+   page breaks out of the phone-width app column into a sticky sidebar + a
+   wide work area, cards sit two to a row, and actions line up as a row of
+   normal-sized buttons instead of full-width slabs. */
+.app-shell:has(> .page.admin) {
+  max-width: none;
+}
+.admin-nav-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.admin-title {
+  margin: 0;
+}
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -20px 16px;
+  padding: 0 20px 4px;
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+.admin-tab {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.admin-tab:hover {
+  color: var(--text);
+}
+.admin-tab.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
+}
+.admin-tab .admin-badge {
+  margin-left: 0;
+}
+.admin-section-title {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+}
+.admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.admin-actions .admin-reply,
+.admin-actions .admin-replied {
+  margin: 0;
+}
+.admin-grid > .admin-chart + .admin-chart {
+  margin-top: 0;
+}
+.admin-grid {
+  display: grid;
+  gap: 12px;
+}
+.admin-list {
+  display: grid;
+  gap: 12px;
+}
+.admin-list > .admin-card {
+  margin-bottom: 0;
+}
+.admin-sponsors,
+.admin-sponsor-tiers {
+  display: grid;
+  gap: 12px;
+}
+.admin-sponsors .admin-card {
+  margin-bottom: 0;
+}
+
+@media (min-width: 960px) {
+  .page.admin {
+    padding: 32px 32px 48px;
+  }
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    gap: 32px;
+    max-width: 1320px;
+    margin: 0 auto;
+    width: 100%;
+    align-items: start;
+  }
+  .admin-nav {
+    position: sticky;
+    top: 24px;
+  }
+  .admin-nav-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .admin-title {
+    font-size: 24px;
+  }
+  .admin-logout {
+    font-size: 14px;
+  }
+  .admin-tabs {
+    flex-direction: column;
+    gap: 4px;
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+  .admin-tab {
+    justify-content: space-between;
+    width: 100%;
+    min-height: 42px;
+    padding: 0 12px 0 14px;
+    border-radius: 12px;
+    border-color: transparent;
+    background: none;
+    text-align: left;
+  }
+  .admin-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .admin-tab.active {
+    background: rgba(244, 63, 94, 0.14);
+    color: var(--text);
+    box-shadow: inset 3px 0 0 var(--red);
+  }
+  .admin-tab.active .admin-badge {
+    background: var(--red);
+  }
+  .admin-section-title {
+    font-size: 26px;
+    margin-bottom: 16px;
+  }
+  .admin-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+  }
+  .admin-grid {
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  .admin-list {
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  /* Buttons at their natural size, in a row; the main action first. */
+  .admin-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .admin-actions .btn {
+    width: auto;
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+  .admin-img {
+    max-height: 300px;
+  }
+  .admin-sponsors {
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .admin-sponsor-form {
+    position: sticky;
+    top: 24px;
+  }
+  .admin-sponsor-tiers {
+    gap: 16px;
+  }
+}
+
 /* ---------- Privacy policy (PDPA) ---------- */
 /* "Step 2 of 3" above each signup step after the email check: short bars
    lit up to the current step, with the words beside them. */
@@ -2490,6 +2692,12 @@ a.btn {
 .support-proof-form input[type='number'] {
   appearance: textfield;
 }
+.support-sponsor-link {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-dim);
+}
 .support-proof-note {
   margin: 14px 0 0;
   text-align: center;
@@ -2540,7 +2748,10 @@ a.btn {
 }
 .stat-number {
   margin-top: 10px;
-  font-size: 68px;
+  /* Shrinks a little on narrow phones so a six- or seven-digit count
+     (100,000+ and up) still fits on one line. */
+  font-size: clamp(48px, 17vw, 68px);
+  white-space: nowrap;
   font-weight: 800;
   line-height: 1;
   /* Fixed-width digits so the count-up doesn't jitter sideways. */
@@ -2818,7 +3029,9 @@ a.btn {
 }
 .stat-cell .stat-number--sm {
   margin-top: 0;
-  font-size: 30px;
+  /* Same idea for the totals: "3,800,000+" fits a half-width cell even on
+     a 320px-wide phone. */
+  font-size: clamp(22px, 7.4vw, 30px);
 }
 .stat-cell .stat-label {
   margin-top: 6px;

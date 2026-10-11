@@ -215,6 +215,14 @@ export default function Support() {
 
         <p className="support-proof-note">{t('support.proofUpdate')}</p>
       </div>
+
+      {/* Companies and brands go to the sponsor form instead of a transfer. */}
+      <p className="support-sponsor-link">
+        {t('sponsorForm.supportTeaser')}{' '}
+        <button className="link" type="button" onClick={() => nav('/sponsor')}>
+          {t('sponsorForm.cta')} →
+        </button>
+      </p>
     </div>
   );
 }

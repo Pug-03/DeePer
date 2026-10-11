@@ -541,6 +541,8 @@ export const STRINGS = {
     // ร่วมเป็นสปอนเซอร์
     'sponsorForm.teaser': `สนใจร่วมเป็น${keepWord('สปอนเซอร์')}กับ DeePer?`,
     'sponsorForm.teaserCta': 'ติดต่อเรา →',
+    'sponsorForm.cta': `ร่วมเป็น${keepWord('สปอนเซอร์')}`,
+    'sponsorForm.supportTeaser': 'เป็นองค์กรหรือแบรนด์?',
     'sponsorForm.title': `ร่วมเป็น${keepWord('สปอนเซอร์')}กับ DeePer`,
     'sponsorForm.msg': 'ขอบคุณที่สนใจสนับสนุนแอปชวนคุยลึก ๆ ของเรา ฝากข้อมูลไว้ แล้วทีมจะติดต่อกลับโดยเร็ว',
     'sponsorForm.formTitle': 'ข้อมูลสำหรับติดต่อกลับ',
@@ -1072,6 +1074,8 @@ export const STRINGS = {
 
     'sponsorForm.teaser': 'Interested in sponsoring DeePer?',
     'sponsorForm.teaserCta': 'Get in touch →',
+    'sponsorForm.cta': 'Become a sponsor',
+    'sponsorForm.supportTeaser': 'A company or brand?',
     'sponsorForm.title': 'Sponsor DeePer',
     'sponsorForm.msg': 'Thanks for your interest in supporting our deep-conversation app. Leave your details and the team will get back to you soon',
     'sponsorForm.formTitle': 'How to reach you',
