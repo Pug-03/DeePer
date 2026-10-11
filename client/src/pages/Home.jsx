@@ -98,6 +98,10 @@ const SWAP_LAYER = { gridArea: '1 / 1', minWidth: 0 };
 // reads as a continuous rise instead of an instant pop into place.
 const REST_BEHIND = { scale: 0.94, y: 14, opacity: 0.6 };
 const CARD_REST = { x: '0%', scale: 1, y: 0, opacity: 1 };
+// A card brought up before the one behind finished rising finishes the rise
+// on top over this. A normal skip hands over with that rise all but done, so
+// it changes nothing you can see there.
+const CARRY_ON = { duration: 0.2, ease: 'easeOut' };
 const RISE_SPRING = { type: 'spring', stiffness: 380, damping: 28, mass: 0.8 };
 
 // A second tap within this window counts as a double-tap; slow enough for a
@@ -114,7 +118,7 @@ const LONG_PRESS_MS = 550;
 // and press-and-hold-to-share never fires at all on a MacBook trackpad.
 const LONG_PRESS_MOVE_TOLERANCE_PX = 10;
 
-function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, flyRegistry, saved, seamless }) {
+function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, flyRegistry, saved, seamless, carry }) {
   const { t, lang } = useI18n();
   const toast = useToast();
   const x = useMotionValue(0);
@@ -126,6 +130,14 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   const flip = useMotionValue(0);
   const frontOp = useTransform(flip, [89.9, 90], [1, 0]);
   const backOp = useTransform(flip, [89.9, 90], [0, 1]);
+  // A quick tap can bring this card up before its question and tag have
+  // finished fading in on the card behind. Start them where that card left
+  // off and finish the fade here, instead of snapping them to full.
+  const textIn = useMotionValue(carry?.text ?? 1);
+  useEffect(() => {
+    if (textIn.get() < 1) animate(textIn, 1, CARRY_ON);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const textOp = useTransform([frontOp, textIn], ([f, i]) => f * i);
   const reduceMotion = useReducedMotion();
   const cardOpacity = useMotionValue(1);
   useEffect(() => {
@@ -304,8 +316,13 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   const flying = useRef(false);
   // The fly-out that's playing and the advance it will make when it ends.
   const pendingFly = useRef(null);
+  // Skipped if this card is already flying: a quick second tap on ✕ throws a
+  // new card in the same commit it mounts, and StrictMode (dev) then runs
+  // this again. Clearing `flying` there made the card mirror its own fall
+  // onto the one behind, which kept that card's question blank the whole way
+  // and let it come up from rest a beat after the fall ended.
   useLayoutEffect(() => {
-    flying.current = false;
+    if (flying.current) return;
     onDragProgress?.(0);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useMotionValueEvent(x, 'change', (v) => {
@@ -370,16 +387,18 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   );
 
   const onDragEnd = (_e, info) => {
-    if (info.offset.x < -SWIPE_THRESHOLD) fly('skip', info.velocity.x);
-    else if (info.offset.x > SWIPE_THRESHOLD) fly('yes');
+    // A card mid-save already has its hand-off coming; throwing it as well
+    // would move on two cards. (Turning `drag` off for the save instead left
+    // the saved card stuck in the deck, unseen, after its fade.)
+    if (!saved && info.offset.x < -SWIPE_THRESHOLD) fly('skip', info.velocity.x);
+    else if (!saved && info.offset.x > SWIPE_THRESHOLD) fly('yes');
     else {
       animate(x, 0, { type: 'spring', stiffness: 320, damping: 26 });
       animate(y, 0, { type: 'spring', stiffness: 320, damping: 26 });
     }
   };
 
-  const srcLabel =
-    q.source === 'user' ? t('home.srcUser') : `DeePer · ${t(`home.level.${q.level}`)}`;
+  const srcLabel = sourceLabel(q, t);
 
   return (
     <>
@@ -402,16 +421,18 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
             instantly the moment a new card became top. When this promotion is
             seamless, the preview card behind already faded its own glow in
             during the reveal (see backGlow in DeckStack) — starting this one
-            over from 0 would flash it off and re-fade, undoing that. Only
+            over from 0 would flash it off and re-fade, undoing that, so it
+            carries on from wherever that glow had got to. Only
             category-switch/first-load mounts (not seamless, no preview to
             hand off from) get their own fresh 0.45s fade-in. */}
         <motion.div
           className="qcard-glow"
-          initial={{ opacity: seamless ? 1 : 0 }}
+          initial={{ opacity: seamless ? carry?.glow ?? 1 : 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: seamless ? 0 : 0.45, ease: FLY_EASE }}
+          transition={seamless ? CARRY_ON : { duration: 0.45, ease: FLY_EASE }}
+          onUpdate={KEEP_ON_MAIN_THREAD}
         />
-        <motion.span className="q-source" style={{ opacity: frontOp }}>
+        <motion.span className="q-source" style={{ opacity: textOp }}>
           {srcLabel}
         </motion.span>
         <motion.span
@@ -423,7 +444,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
         <motion.span className="swipe-hint" style={{ opacity: yesOp, color: 'var(--green)' }}>
           <IcCheck size={34} sw={3} />
         </motion.span>
-        <motion.p className="q-text" style={{ opacity: frontOp }}>
+        <motion.p className="q-text" style={{ opacity: textOp }}>
           {questionText(q.text, q.text_en, lang)}
         </motion.p>
         {/* The back of the card: the DeePer card back from the promo
@@ -517,8 +538,13 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
   );
 }
 
+// The tag at the top of a question card: who wrote it, or which depth.
+function sourceLabel(q, t) {
+  return q.source === 'user' ? t('home.srcUser') : `DeePer · ${t(`home.level.${q.level}`)}`;
+}
+
 function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegistry, saved }) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   // Split in two: `progress` drives scale, `reveal` drives y/opacity. During
   // a real drag both track the finger together, same as one value would.
   // But animating scale on a backdrop-filter card forces the browser to
@@ -545,9 +571,27 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
   // mount it there directly instead of replaying the rise, so the swap reads
   // as one continuous motion. Read before the reset, while `progress` still
   // shows how far the outgoing card got.
+  // How far the card behind had got goes along too (`carry`): a quick tap
+  // can bring it up before its rise and fade-in have finished, and it now
+  // finishes them on top instead of snapping to full.
+  const backRef = useRef(null);
+  // Ids of cards sent off by a swipe or button, so their exit can be instant.
+  const thrown = useRef(new Set());
+  const [, markThrown] = useState(0);
   const shown = useRef({ id: current.id, seamless: false });
   if (shown.current.id !== current.id) {
-    shown.current = { id: current.id, seamless: !enterDir && Math.abs(progress.get()) >= SWIPE_THRESHOLD };
+    // Shown again after a reset (same question, new round): not thrown yet.
+    thrown.current.delete(current.id);
+    const seamless = !enterDir && Math.abs(progress.get()) >= SWIPE_THRESHOLD;
+    const back = backRef.current;
+    shown.current = {
+      id: current.id,
+      seamless,
+      carry:
+        seamless && back
+          ? { text: backText.get(), glow: back.glow.get(), opacity: back.opacity.get(), y: back.y.get() }
+          : undefined,
+    };
     reveal.stop();
     backText.stop();
     progress.set(0);
@@ -572,6 +616,8 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
     useTransform(reveal, [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD], [1, 0, 1]),
     { stiffness: 140, damping: 24 },
   );
+  backRef.current = { glow: backGlow, opacity: backOpacity, y: backY };
+  const carry = shown.current.carry;
 
   useEffect(() => {
     if (saved) {
@@ -603,6 +649,11 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
         >
           <motion.div className="qcard glass" style={{ scale: backScale, y: backY, opacity: backOpacity }}>
             <motion.div className="qcard-glow" style={{ opacity: backGlow }} />
+            {/* Its source tag fades in with the question, so the promoted
+                card doesn't pop its tag in only after the hand-off. */}
+            <motion.span className="q-source" style={{ opacity: backText }}>
+              {sourceLabel(next, t)}
+            </motion.span>
             <motion.p className="q-text" style={{ opacity: backText }}>
               {questionText(next.text, next.text_en, lang)}
             </motion.p>
@@ -612,7 +663,13 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
       <AnimatePresence initial={false}>
         <motion.div
           key={current.id}
-          initial={enterDir ? { x: `${-enterDir * 100}%` } : seamless ? CARD_REST : REST_BEHIND}
+          initial={
+            enterDir
+              ? { x: `${-enterDir * 100}%` }
+              : seamless
+                ? { ...CARD_REST, opacity: carry?.opacity ?? 1, y: carry?.y ?? 0 }
+                : REST_BEHIND
+          }
           animate={CARD_REST}
           // Swipes fly the card off-canvas via its own motion values before
           // this unmounts, so this fallback exit never actually shows for
@@ -620,12 +677,22 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
           // still sitting in place (behind its blur overlay) when it's
           // removed. Without it the card behind popped straight to
           // CARD_REST the instant the outgoing one vanished, no crossfade.
+          // A thrown card is already off the bottom or the side when it's
+          // removed, so it leaves at once. AnimatePresence only drops leaving
+          // cards once every exit has finished: with a 0.2s fade each, quick
+          // taps kept restarting that wait and every thrown card (all glass
+          // with a backdrop blur) piled up, unseen, until the tapping stopped.
           exit={
             enterDir
               ? { x: `${enterDir * 100}%`, opacity: 0 }
-              : { opacity: 0, scale: 0.94, transition: { duration: 0.2, ease: FLY_EASE } }
+              : thrown.current.has(current.id)
+                ? { opacity: 0, transition: { duration: 0 } }
+                : { opacity: 0, scale: 0.94, transition: { duration: 0.2, ease: FLY_EASE } }
           }
-          transition={enterDir ? CARD_EXIT_TRANSITION : seamless ? { duration: 0 } : RISE_SPRING}
+          transition={enterDir ? CARD_EXIT_TRANSITION : seamless ? CARRY_ON : RISE_SPRING}
+          // Its short carry-on fade is otherwise handed to the browser,
+          // which can drop it a frame early (see KEEP_ON_MAIN_THREAD).
+          onUpdate={seamless ? KEEP_ON_MAIN_THREAD : undefined}
           style={{ position: 'absolute', inset: 0 }}
         >
           <TopCard
@@ -639,6 +706,9 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
               backText.set(0);
             }}
             onFlyProgress={() => {
+              thrown.current.add(current.id);
+              // Re-render so the exit above is read with this card thrown.
+              markThrown((n) => n + 1);
               // Carry on from wherever the drag left `reveal` (a button fly
               // starts from 0): resetting to 0 for an identical reveal every
               // time dropped a card the swipe had already risen back down
@@ -661,6 +731,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
             flyRegistry={flyRegistry}
             saved={saved}
             seamless={seamless}
+            carry={carry}
           />
         </motion.div>
       </AnimatePresence>
@@ -881,8 +952,11 @@ export default function Home() {
     if (enterDir !== 0) setEnterDir(0);
   }, [current?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Topped up well before the end: quick taps on ✕ get through a few cards
+  // a second, faster than a reply comes back over a phone connection, and
+  // with only 4 left in hand the deck ran dry and sat empty mid-tapping.
   useEffect(() => {
-    if (status === 'ready' && remaining > 0 && remaining <= 4) {
+    if (status === 'ready' && remaining > 0 && remaining <= 12) {
       fetchBatch(category);
     }
     // Out of cards while a top-up is still loading: wait for it rather than
@@ -913,14 +987,17 @@ export default function Home() {
   const countSwipe = () => {
     api.post('/swipes').catch(() => {});
   };
+  // While a save is turning the card over, ✕ and ✓ wait: throwing that card
+  // mid-turn and then letting the save's own hand-off run as well moved on
+  // two cards for one tap.
   const doSkip = () => {
-    if (!current) return;
+    if (!current || saveFlash) return;
     // A tap that lands mid fly-out moves straight on to the next card and
     // throws that one too (see the layout effect below).
     if (flyRegistry.current?.[current.id]?.('skip') === 'handedOver') skipNext.current = true;
   };
   const doAnswer = () => {
-    if (current) flyRegistry.current?.[current.id]?.('yes');
+    if (current && !saveFlash) flyRegistry.current?.[current.id]?.('yes');
   };
 
   const goAnswer = () => {
@@ -1114,7 +1191,9 @@ export default function Home() {
               if (!adding && swapStageRef.current) swapStageRef.current.style.overflowX = '';
             }}
           >
-            {status === 'loading' && <Loading label={t('home.loading')} />}
+            {(status === 'loading' || (status === 'ready' && !current && refilling)) && (
+              <Loading label={t('home.loading')} />
+            )}
 
             {status === 'error' && (
               <ErrorState message={error} onRetry={() => fetchBatch(category, { reset: true })} />
