@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
@@ -10,6 +10,10 @@ import { IcBack, IcHistory, IcCheck } from '../components/icons.jsx';
 
 export default function LoginHistory() {
   const nav = useNavigate();
+  const location = useLocation();
+  // Opened straight from a link or after a reload there's no app page to
+  // go back to, so fall back to the page this one is opened from.
+  const goBack = () => (location.key !== 'default' ? nav(-1) : nav('/app/profile/settings', { replace: true }));
   const { logout } = useAuth();
   const { t } = useI18n();
   const toast = useToast();
@@ -90,7 +94,7 @@ export default function LoginHistory() {
 
   return (
     <div className="page stagger">
-      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>

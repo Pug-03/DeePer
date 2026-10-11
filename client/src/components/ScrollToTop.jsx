@@ -11,22 +11,32 @@ import { useLocation, useNavigationType } from 'react-router-dom';
 // page opened twice keeps two separate spots.
 const KEY = 'dt_scroll_positions';
 
+// Kept in memory while scrolling, written to sessionStorage only once the
+// scrolling stops (and when the tab is hidden), so a reload still returns
+// to the spot. Parsing and rewriting the whole storage entry on every
+// scroll frame, as before, was synchronous work in the middle of each
+// frame and made scrolling stutter, most of all on the long landing page.
+let positions = null;
 function readAll() {
+  if (positions) return positions;
   try {
-    return JSON.parse(sessionStorage.getItem(KEY) || '{}');
+    positions = JSON.parse(sessionStorage.getItem(KEY) || '{}');
   } catch {
-    return {};
+    positions = {};
+  }
+  return positions;
+}
+
+function persist() {
+  try {
+    sessionStorage.setItem(KEY, JSON.stringify(readAll()));
+  } catch {
+    // storage blocked (private mode etc.) — just don't remember
   }
 }
 
 function save(entryKey, y) {
-  try {
-    const all = readAll();
-    all[entryKey] = y;
-    sessionStorage.setItem(KEY, JSON.stringify(all));
-  } catch {
-    // storage blocked (private mode etc.) — just don't remember
-  }
+  readAll()[entryKey] = y;
 }
 
 // The very first page the app renders also reports a POP navigation; only a
@@ -58,15 +68,22 @@ export default function ScrollToTop() {
   // We restore positions ourselves; stop the browser doing its own.
   useEffect(() => {
     if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
-    let frame = 0;
+    let idle = 0;
+    // Just a number into memory now, so no need to batch it into a frame.
     const onScroll = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => save(current.current, window.scrollY));
+      save(current.current, window.scrollY);
+      clearTimeout(idle);
+      idle = setTimeout(persist, 250);
     };
+    const onHide = () => document.visibilityState === 'hidden' && persist();
     window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', persist);
     return () => {
-      cancelAnimationFrame(frame);
+      clearTimeout(idle);
       window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', persist);
     };
   }, []);
 
@@ -85,13 +102,26 @@ export default function ScrollToTop() {
     window.scrollTo(0, target);
     if (!target) return undefined;
     // The page may still be loading content (stats, lists) and be too short
-    // to reach the old spot yet; retry briefly until it's tall enough.
+    // to reach the old spot yet; retry briefly until it's tall enough. But
+    // the moment the visitor scrolls themselves, stop: a retry landing
+    // mid-swipe yanked the page back to the old spot — the small "warp"
+    // seen scrolling right after coming back from an awards page.
+    let userMoved = false;
+    const stop = () => {
+      userMoved = true;
+    };
+    const opts = { passive: true, capture: true };
+    const events = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
+    events.forEach((ev) => window.addEventListener(ev, stop, opts));
     const timers = [80, 200, 400, 800].map((ms) =>
       setTimeout(() => {
-        if (Math.abs(window.scrollY - target) > 2) window.scrollTo(0, target);
+        if (!userMoved && Math.abs(window.scrollY - target) > 2) window.scrollTo(0, target);
       }, ms),
     );
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timers.forEach(clearTimeout);
+      events.forEach((ev) => window.removeEventListener(ev, stop, opts));
+    };
   }, [location.key, navType]);
 
   return null;

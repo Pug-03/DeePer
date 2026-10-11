@@ -118,6 +118,7 @@ function useTargetRect(selector) {
   // earlier step can never stand in for the current one.
   const [measured, setMeasured] = useState(null);
   const setRect = (r) => setMeasured(r && { selector, rect: r });
+  const prevSelector = useRef(null);
 
   // useLayoutEffect (not useEffect) so the first measurement for a new step
   // lands before the browser paints — otherwise the spotlight briefly paints
@@ -128,6 +129,14 @@ function useTargetRect(selector) {
   useLayoutEffect(() => {
     const target = document.querySelector(selector);
     target?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    // Going back across a page (e.g. a saved card back to the Saved tab on
+    // Home), the previous step's target is already gone, so the spotlight
+    // is framing whatever happens to sit where it was. Waiting for the new
+    // target to settle there held it on that leftover spot for a beat
+    // before it moved — a stutter. Move straight away instead; the target
+    // (a bottom-nav tab) is already in place.
+    const prevGone = prevSelector.current && !document.querySelector(prevSelector.current);
+    prevSelector.current = selector;
 
     let id;
     let cancelled = false;
@@ -177,7 +186,7 @@ function useTargetRect(selector) {
         Math.abs(box.height - lastBox.height) < 0.5;
       lastBox = box;
       settledStreak = still && isSettled(el) ? settledStreak + 1 : 0;
-      if (settledStreak >= 2 || performance.now() - start >= 1500) {
+      if (prevGone || settledStreak >= 2 || performance.now() - start >= 1500) {
         setRect(box);
         return;
       }
@@ -389,12 +398,13 @@ export default function OnboardingTour() {
     borderRadius: baseRadius >= 500 ? baseRadius : baseRadius + pad,
   };
   // Keep the old opening and its corner shape until the next target appears,
-  // so the spotlight glides to it on the same page. Across a page change it
-  // doesn't: sliding from a bottom-nav tab up to a card on the new page read
-  // as the spotlight still loading, small and off to one side. There the
-  // old opening is dropped and the new one fades in where it belongs.
-  if (targetSpot) lastSpot.current = { ...targetSpot, path: pathname };
-  const spot = targetSpot || (lastSpot.current?.path === pathname ? lastSpot.current : null);
+  // so the spotlight glides to it — across a page change too (e.g. the Saved
+  // tab up to the first saved card). Dropping it there made the spotlight
+  // and tip vanish and reappear at the new target, a jump instead of a move.
+  // The page-change steps start from a bottom-nav tab, which is still on
+  // screen on the new page, so holding the old opening there stays truthful.
+  if (targetSpot) lastSpot.current = targetSpot;
+  const spot = targetSpot || lastSpot.current;
   const spotRadius = spot?.borderRadius ?? 20;
 
   let tipTop = null;
@@ -462,7 +472,6 @@ export default function OnboardingTour() {
 
           {spot && (
             <motion.div
-              key={pathname}
               className="tut-spot"
               initial={{
                 opacity: 0,
