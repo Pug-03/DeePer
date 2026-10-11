@@ -870,6 +870,25 @@ html[data-tour] .fade-up {
   box-shadow: none;
   border-color: transparent;
 }
+/* Small dot on a tab with unsaved edits (Partner settings). */
+.pill-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+.filter-row-bg {
+  position: absolute;
+  z-index: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
+  box-shadow: 0 0 20px -6px rgba(244, 63, 94, 0.5);
+  pointer-events: none;
+}
 
 /* ---------- Question card deck ---------- */
 /* Home's swap wrapper has to pass the page's leftover height down, or
@@ -1476,10 +1495,23 @@ html[data-tour] .fade-up {
   white-space: nowrap;
 }
 .btn--danger {
-  background: linear-gradient(120deg, #ef4444, #b91c1c);
+  /* A hotter, more saturated red than the brand gradient, so a destructive
+     action never reads as just another primary button. */
+  background: linear-gradient(120deg, #ff3b3b, #d10f0f);
   border: none;
   color: #fff;
-  box-shadow: 0 12px 30px -8px rgba(239, 68, 68, 0.6);
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 120, 120, 0.35),
+    0 14px 34px -8px rgba(255, 40, 40, 0.75);
+}
+/* The account-deletion card: a red edge and a faint red wash. */
+.danger-zone {
+  border-color: rgba(255, 59, 59, 0.55);
+  background: linear-gradient(180deg, rgba(255, 40, 40, 0.1), rgba(255, 40, 40, 0.03));
+}
+.danger-zone .h2 {
+  color: #ff5b5b;
 }
 .fade-in {
   animation: fadeIn 0.2s ease both;
@@ -3897,11 +3929,86 @@ button.profile-row:active {
   flex-wrap: wrap;
   border-radius: 18px;
 }
+.level-seg,
+.lang-seg--elastic {
+  position: relative;
+  touch-action: none;
+}
+.lang-seg--elastic button {
+  position: relative;
+  z-index: 1;
+}
+.lang-seg--elastic button.active {
+  background: none;
+}
 .level-seg button {
+  position: relative;
+  z-index: 1;
   flex: 1 1 auto;
   min-width: 0;
   padding: 0 10px;
   white-space: nowrap;
+}
+/* The sliding capsule replaces each button's own active fill. */
+.level-seg button.active {
+  background: none;
+}
+/* My-information page: an age box sized for a number rather than
+   stretched like the nickname field. */
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.info-row .field {
+  margin-bottom: 0;
+}
+.info-age-field {
+  flex: 0 0 72px;
+  min-width: 0;
+}
+.input.info-age {
+  width: 100%;
+  text-align: center;
+  padding-inline: 6px;
+}
+.info-gender-field {
+  flex: 1;
+  min-width: 0;
+}
+/* Same height and rounding as the age box beside it, with the four options
+   splitting the width evenly and filling the height, so the sliding capsule
+   reads as a filled cell rather than a small pill floating in a big tray.
+   No wrapping: a long label (English "Prefer not to say") breaks inside its
+   own option instead. */
+.info-gender-field .level-seg {
+  flex-wrap: nowrap;
+  height: 54px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+.info-gender-field .level-seg-bg {
+  border-radius: calc(var(--radius-sm) - 4px);
+}
+.info-gender-field .level-seg button {
+  flex: 1 1 0;
+  height: 100%;
+  padding: 0 4px;
+  font-size: 13px;
+  line-height: 1.15;
+  white-space: normal;
+}
+.level-seg[aria-invalid='true'] {
+  border-color: var(--red);
+}
+.level-seg-bg {
+  position: absolute;
+  z-index: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, var(--red), var(--red-deep));
+  box-shadow: 0 0 16px -4px rgba(244, 63, 94, 0.45);
+  pointer-events: none;
 }
 .profile-row-hint {
   margin: 0;

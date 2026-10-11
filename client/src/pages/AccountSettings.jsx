@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { useToast } from '../components/ui.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
-import { IcBack, IcCheck, IcTrash } from '../components/icons.jsx';
+import { IcBack, IcTrash } from '../components/icons.jsx';
+import SaveButton, { useSavedFlash } from '../components/SaveButton.jsx';
 import { pwScore } from '../utils/password.js';
 
 export default function AccountSettings() {
   const nav = useNavigate();
-  const toast = useToast();
+  const location = useLocation();
+  // Opened straight from a link or after a reload there's no app page to
+  // go back to, so fall back to the page this one is opened from.
+  const goBack = () => (location.key !== 'default' ? nav(-1) : nav('/app/profile', { replace: true }));
   const { user, setUser, logout } = useAuth();
   const { t } = useI18n();
 
@@ -19,6 +22,8 @@ export default function AccountSettings() {
   const [newPassword, setNewPassword] = useState('');
   const [pwErr, setPwErr] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
+  // Brief tick on the button instead of a toast.
+  const pwSaved = useSavedFlash();
   const { rules: newPwRules, score: newPwScore, valid: newPwValid } = pwScore(newPassword);
 
   const [showDelete, setShowDelete] = useState(false);
@@ -38,11 +43,7 @@ export default function AccountSettings() {
       setUser(d.user);
       setCurrentPassword('');
       setNewPassword('');
-      toast(
-        <>
-          <IcCheck size={16} /> {t('profile.passwordSaved')}
-        </>,
-      );
+      pwSaved.flash();
     } catch (e2) {
       setPwErr(e2.message);
     } finally {
@@ -78,7 +79,7 @@ export default function AccountSettings() {
 
   return (
     <div className="page stagger">
-      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>
@@ -115,17 +116,15 @@ export default function AccountSettings() {
             <PasswordStrength rules={newPwRules} score={newPwScore} />
           </PasswordField>
           {pwErr && <div className="err-inline">{pwErr}</div>}
-          <button
-            className="btn btn--primary"
+          <SaveButton
             type="submit"
-            disabled={pwBusy || !newPwValid || (user?.has_password && !currentPassword)}
-          >
-            {pwBusy
-              ? t('profile.passwordSaving')
-              : user?.has_password
-                ? t('profile.changePassword')
-                : t('profile.setPassword')}
-          </button>
+            busy={pwBusy}
+            done={pwSaved.done}
+            disabled={!newPwValid || (user?.has_password && !currentPassword)}
+            label={user?.has_password ? t('profile.changePassword') : t('profile.setPassword')}
+            busyLabel={t('profile.passwordSaving')}
+            doneLabel={t('profile.passwordSaved')}
+          />
         </form>
       </div>
 
@@ -141,7 +140,7 @@ export default function AccountSettings() {
         {t('profile.logout')}
       </button>
 
-      <div className="glass" style={{ padding: 18, borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+      <div className="glass danger-zone" style={{ padding: 18 }}>
         <h2 className="h2" style={{ marginBottom: 6, fontSize: 17 }}>
           {t('profile.dangerZone')}
         </h2>

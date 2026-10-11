@@ -1,14 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { useToast } from '../components/ui.jsx';
-import { IcBack, IcCamera, IcCheck, IcTrash } from '../components/icons.jsx';
+import { useToast, useConfirm } from '../components/ui.jsx';
+import { IcBack, IcCamera, IcTrash } from '../components/icons.jsx';
+import SaveButton, { useSavedFlash } from '../components/SaveButton.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
 import { CATS } from '../util.js';
+import { useElasticIndicator } from '../utils/elasticIndicator.js';
 
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
 
@@ -16,38 +19,55 @@ const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa'
 // on its own page opened from Profile.
 export default function PartnerSettings() {
   const nav = useNavigate();
+  const location = useLocation();
+  // Opened straight from a link or after a reload there's no app page to
+  // go back to, so fall back to the page this one is opened from.
+  const goBack = () => (location.key !== 'default' ? nav(-1) : nav('/app/profile', { replace: true }));
   const toast = useToast();
   const { user, setUser } = useAuth();
   const { t } = useI18n();
 
+  const confirm = useConfirm();
   const [activeCat, setActiveCat] = useState(CATS[0]);
-  const [partnerName, setPartnerName] = useState('');
-  const [partnerColor, setPartnerColor] = useState('#f43f5e');
+  // Unsaved name/colour edits, kept per category. Only what's been typed
+  // or picked lives here; anything else reads from the saved partner. So
+  // switching tabs, or picking an icon/photo (which saves right away and
+  // refreshes the user), never wipes an edit that hasn't been saved yet.
+  const [drafts, setDrafts] = useState({});
   const [partnerBusy, setPartnerBusy] = useState(false);
   const [partnerAvatarBusy, setPartnerAvatarBusy] = useState(false);
   const partnerFileInputRef = useRef(null);
 
-  // Each category has its own partner — reload the name/color draft
-  // whenever the selected tab (or the underlying user data) changes.
-  useEffect(() => {
-    const p = user?.partners?.[activeCat];
-    setPartnerName(p?.name || '');
-    setPartnerColor(p?.color || '#f43f5e');
-  }, [activeCat, user]);
+  const saved = (c) => ({
+    name: user?.partners?.[c]?.name || '',
+    color: user?.partners?.[c]?.color || '#f43f5e',
+  });
+  const current = (c) => ({ ...saved(c), ...drafts[c] });
+  const isDirty = (c) => {
+    const s0 = saved(c);
+    const cur = current(c);
+    return cur.name.trim() !== s0.name || cur.color !== s0.color;
+  };
+  const { name: partnerName, color: partnerColor } = current(activeCat);
+  const setDraft = (patch) => setDrafts((d) => ({ ...d, [activeCat]: { ...d[activeCat], ...patch } }));
+  const setPartnerName = (name) => setDraft({ name });
+  const setPartnerColor = (color) => setDraft({ color });
+
+  const catInd = useElasticIndicator(activeCat, setActiveCat);
+  // Brief tick on the save button instead of a toast.
+  const savedFlash = useSavedFlash();
 
   const savePartner = async () => {
     setPartnerBusy(true);
+    const cat = activeCat;
     try {
-      const d = await api.patch(`/auth/me/partner/${activeCat}`, {
+      const d = await api.patch(`/auth/me/partner/${cat}`, {
         name: partnerName,
         color: partnerColor,
       });
       setUser(d.user);
-      toast(
-        <>
-          <IcCheck size={16} /> {t('profile.saved')}
-        </>,
-      );
+      setDrafts(({ [cat]: _done, ...rest }) => rest);
+      savedFlash.flash();
     } catch (e) {
       toast(e.message);
     } finally {
@@ -83,6 +103,8 @@ export default function PartnerSettings() {
   };
 
   const removePartnerAvatar = async () => {
+    const ok = await confirm({ message: t('confirm.partnerAvatarMsg') });
+    if (!ok) return;
     setPartnerAvatarBusy(true);
     try {
       const d = await api.del(`/auth/me/partner/${activeCat}/avatar`);
@@ -108,7 +130,7 @@ export default function PartnerSettings() {
 
   return (
     <div className="page stagger">
-      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>
@@ -120,17 +142,40 @@ export default function PartnerSettings() {
       </div>
 
       <div className="glass" style={{ padding: 18 }}>
-        <div className="filter-row" style={{ marginBottom: 16 }}>
-          {CATS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className={`pill ${activeCat === c ? 'active' : ''}`}
-              onClick={() => setActiveCat(c)}
-            >
-              {t(`cat.${c}`)}
-            </button>
-          ))}
+        <div
+          className="filter-row filter-row--elastic"
+          style={{ marginBottom: 16 }}
+          ref={catInd.rowRef}
+          {...catInd.dragHandlers}
+        >
+          <motion.span className="filter-row-bg" style={catInd.style} />
+          {CATS.map((c) => {
+            const isActive = activeCat === c;
+            return (
+              <button
+                key={c}
+                ref={catInd.itemRef(c)}
+                data-pick={c}
+                type="button"
+                className={`pill ${isActive ? 'active' : ''}`}
+                onClick={() => setActiveCat(c)}
+              >
+                <motion.span
+                  key={isActive ? 'on' : 'off'}
+                  className="pill-label"
+                  initial={isActive ? { scale: 0.82 } : false}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 14 }}
+                >
+                  {t(`cat.${c}`)}
+                  {/* Edits on this tab that haven't been saved yet. */}
+                  {isDirty(c) && (
+                    <span className="pill-dot" role="img" aria-label={t('profile.unsavedSwitch')} />
+                  )}
+                </motion.span>
+              </button>
+            );
+          })}
         </div>
         <div className="field">
           <label htmlFor="pt-name">{t('answer.partnerName')}</label>
@@ -203,6 +248,7 @@ export default function PartnerSettings() {
           {COLORS.map((c) => (
             <button
               key={c}
+              type="button"
               className={`swatch ${partnerColor === c ? 'sel' : ''}`}
               style={{ background: c }}
               onClick={() => setPartnerColor(c)}
@@ -211,9 +257,15 @@ export default function PartnerSettings() {
           ))}
         </div>
 
-        <button className="btn btn--primary" onClick={savePartner} disabled={partnerBusy}>
-          {partnerBusy ? t('profile.saving') : t('profile.save')}
-        </button>
+        <SaveButton
+          onClick={savePartner}
+          busy={partnerBusy}
+          done={savedFlash.done}
+          disabled={!isDirty(activeCat)}
+          label={t('profile.save')}
+          busyLabel={t('profile.saving')}
+          doneLabel={t('profile.saved')}
+        />
       </div>
     </div>
   );
