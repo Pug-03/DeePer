@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IcHome, IcBookmark, IcHistory, IcUser } from './icons.jsx';
+import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import { prefetchLists } from '../utils/listCache.js';
 
 const TABS = [
   { to: '/app/home', key: 'nav.home', Icon: IcHome, tut: 'navHome' },
@@ -13,6 +16,9 @@ export default function BottomNav() {
   const { pathname } = useLocation();
   const nav = useNavigate();
   const { t } = useI18n();
+  const { user } = useAuth();
+  // Load Saved/History ahead of the first tap so those tabs open instantly.
+  useEffect(() => prefetchLists(user?.id), [user?.id]);
   return (
     <nav className="bottom-nav glass glass--red">
       {TABS.map(({ to, key, Icon, tut }) => {

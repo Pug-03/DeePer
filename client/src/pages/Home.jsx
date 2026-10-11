@@ -12,6 +12,7 @@ import {
   animate,
 } from 'framer-motion';
 import { api } from '../api.js';
+import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
@@ -29,6 +30,8 @@ import {
 } from '../components/icons.jsx';
 import { CATS, questionText } from '../util.js';
 import { getQuestionLevel } from '../utils/questionLevel.js';
+import { noteSaved } from '../utils/listCache.js';
+import { useElasticIndicator } from '../utils/elasticIndicator.js';
 import { renderShareCard, downloadBlob } from '../utils/shareCard.js';
 import { pickMemory, memoryRelativeLabel } from '../utils/memory.js';
 
@@ -670,79 +673,28 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
 // spring while the trailing edge lags on a much softer one. That asymmetry
 // is what makes the capsule visibly stretch across whatever it's passing
 // over before catching up and snapping to width at the target, the same
-// feel as iOS/Instagram segmented-control tab bars — a plain shared-layout
-// spring moves the box as a rigid unit and never produces that stretch.
+// feel as iOS/Instagram segmented-control tab bars. The mechanics live in
+// useElasticIndicator, shared with the other option rows in the app.
 function CatTabs({ category, onSwitch }) {
   const { t } = useI18n();
-  const rowRef = useRef(null);
-  const pillRefs = useRef({});
-  const mountedRef = useRef(false);
-  const leftX = useMotionValue(0);
-  const rightX = useMotionValue(0);
-  const width = useTransform([leftX, rightX], ([l, r]) => Math.max(r - l, 0));
-
-  const moveTo = (cat, animated) => {
-    const rowEl = rowRef.current;
-    const pillEl = pillRefs.current[cat];
-    if (!rowEl || !pillEl) return;
-    const rowRect = rowEl.getBoundingClientRect();
-    const pillRect = pillEl.getBoundingClientRect();
-    const targetLeft = pillRect.left - rowRect.left;
-    const targetRight = pillRect.right - rowRect.left;
-    if (!animated) {
-      leftX.set(targetLeft);
-      rightX.set(targetRight);
-      return;
-    }
-    const movingRight = targetLeft > leftX.get();
-    const LEAD = { type: 'spring', stiffness: 700, damping: 40, mass: 0.6 };
-    const LAG = { type: 'spring', stiffness: 170, damping: 26, mass: 1 };
-    animate(leftX, targetLeft, movingRight ? LAG : LEAD);
-    animate(rightX, targetRight, movingRight ? LEAD : LAG);
-  };
-
-  useLayoutEffect(() => {
-    moveTo(category, false);
-    mountedRef.current = true;
-    // Pill widths depend on the webfont, which can still be loading at
-    // first paint — snap (no animation) to the correct spot once it's in,
-    // otherwise the indicator can start from a slightly wrong position.
-    const reposition = () => moveTo(category, false);
-    window.addEventListener('resize', reposition);
-    document.fonts?.ready?.then(reposition);
-    return () => window.removeEventListener('resize', reposition);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (mountedRef.current) moveTo(category, true);
-  }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Press-and-drag across the pill row, not just tap-per-pill — pointer
-  // capture keeps targeting the pill the press started on, so this looks
-  // up whatever's actually under the finger by coordinate instead of
-  // trusting the event's own target.
-  const dragSwitch = (clientX, clientY) => {
-    const pillEl = document.elementFromPoint(clientX, clientY)?.closest('[data-cat]');
-    if (pillEl) onSwitch(pillEl.dataset.cat);
-  };
+  const ind = useElasticIndicator(category, onSwitch);
 
   return (
     <div
       className="cat-row"
       data-tut="cats"
       style={{ marginBottom: 6 }}
-      ref={rowRef}
-      onPointerDown={(e) => dragSwitch(e.clientX, e.clientY)}
-      onPointerMove={(e) => e.buttons === 1 && dragSwitch(e.clientX, e.clientY)}
+      ref={ind.rowRef}
+      {...ind.dragHandlers}
     >
-      <motion.span className="pill-bg pill-bg--elastic" style={{ left: leftX, width }} />
+      <motion.span className="pill-bg pill-bg--elastic" style={ind.style} />
       {CATS.map((c) => {
         const isActive = category === c;
         return (
           <button
             key={c}
-            ref={(el) => (pillRefs.current[c] = el)}
-            data-cat={c}
+            ref={ind.itemRef(c)}
+            data-pick={c}
             className={`pill ${isActive ? 'active' : ''}`}
             onClick={() => onSwitch(c)}
           >
@@ -764,6 +716,7 @@ function CatTabs({ category, onSwitch }) {
 
 export default function Home() {
   const nav = useNavigate();
+  const { user } = useAuth();
   const toast = useToast();
   const confirmDlg = useConfirm();
   const { t, lang } = useI18n();
@@ -980,7 +933,8 @@ export default function Home() {
   const save = async () => {
     if (!current || saveFlash) return;
     try {
-      await api.post('/saved', { question_text: current.text, category });
+      const res = await api.post('/saved', { question_text: current.text, category });
+      noteSaved(user?.id, res, { text: current.text, text_en: current.text_en, category });
       setSaveFlash(true);
       setTimeout(() => {
         setSaveFlash(false);
@@ -1048,7 +1002,11 @@ export default function Home() {
           state: { question: { text: d.question.text, category: d.question.category } },
         });
       } else {
-        await api.post('/saved', { question_text: d.question.text, category: d.question.category });
+        const res = await api.post('/saved', {
+          question_text: d.question.text,
+          category: d.question.category,
+        });
+        noteSaved(user?.id, res, { text: d.question.text, category: d.question.category });
         toast(
           <>
             <IcBookmark size={16} /> {t('home.savedForLater')}

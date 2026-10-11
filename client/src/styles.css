@@ -859,6 +859,17 @@ html[data-tour] .fade-up {
   background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
   box-shadow: var(--glow-red);
 }
+/* Elastic variant (CatFilter): one shared capsule slides behind the pills
+   instead of each active pill painting its own fill. */
+.filter-row--elastic {
+  position: relative;
+  touch-action: none;
+}
+.filter-row--elastic .pill.active {
+  background: transparent;
+  box-shadow: none;
+  border-color: transparent;
+}
 
 /* ---------- Question card deck ---------- */
 /* Home's swap wrapper has to pass the page's leftover height down, or

@@ -6,6 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
+import { fetchList, getCachedList, setCachedList } from '../utils/listCache.js';
 import { catLabel, displayName, formatDate, questionText } from '../util.js';
 import { IcTrash, IcHistory } from '../components/icons.jsx';
 
@@ -16,26 +17,37 @@ export default function History() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
   const tutorial = useTutorial();
-  const [items, setItems] = useState([]);
-  const [status, setStatus] = useState('loading');
+  // Last list seen this session shows at once; load() refreshes it quietly.
+  const cached = getCachedList(user?.id, 'history');
+  const [items, setItemsState] = useState(cached ?? []);
+  const [status, setStatus] = useState(cached ? (cached.length ? 'ready' : 'empty') : 'loading');
+  const setItems = (update) =>
+    setItemsState((prev) => {
+      const next = typeof update === 'function' ? update(prev) : update;
+      setCachedList(user?.id, 'history', next);
+      return next;
+    });
   const [error, setError] = useState('');
   const [open, setOpen] = useState(null);
   const [catFilter, setCatFilter] = useState('all');
 
   const load = useCallback(async () => {
-    setStatus('loading');
+    const hadCache = getCachedList(user?.id, 'history') !== undefined;
+    if (!hadCache) setStatus('loading');
     try {
-      const d = await api.get('/history');
-      setItems(d.history);
-      setStatus(d.history.length ? 'ready' : 'empty');
-      tutorial.setHistoryHasItems(d.history.length > 0);
+      const list = await fetchList(user?.id, 'history');
+      setItemsState(list);
+      setStatus(list.length ? 'ready' : 'empty');
+      tutorial.setHistoryHasItems(list.length > 0);
     } catch (e) {
+      // A failed background refresh keeps the list already on screen.
+      if (hadCache) return;
       setError(e.message);
       setStatus('error');
     }
     // See Saved.jsx's load() for why this depends on the setter directly
     // rather than the whole `tutorial` object.
-  }, [tutorial.setHistoryHasItems]);
+  }, [tutorial.setHistoryHasItems, user?.id]);
 
   useEffect(() => {
     load();
