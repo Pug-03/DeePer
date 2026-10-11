@@ -36,6 +36,7 @@ const Report = lazyPage(() => import('./pages/Report.jsx'));
 // Owner-only, so never preloaded for visitors.
 const Admin = lazyPage(() => import('./pages/Admin.jsx'), { preload: false });
 const SponsorInquiry = lazyPage(() => import('./pages/SponsorInquiry.jsx'));
+const Privacy = lazyPage(() => import('./pages/Privacy.jsx'));
 import VisitBeacon from './components/VisitBeacon.jsx';
 
 function Protected({ children }) {
@@ -90,6 +91,7 @@ export default function App() {
                 {/* Open to guests and signed-in users alike. */}
                 <Route path="/report" element={<Report />} />
                 <Route path="/sponsor" element={<SponsorInquiry />} />
+                <Route path="/privacy" element={<Privacy />} />
                 {/* Owner-only back office with its own login, separate from user accounts. */}
                 <Route path="/admin" element={<Admin />} />
 

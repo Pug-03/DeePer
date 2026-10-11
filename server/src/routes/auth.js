@@ -90,21 +90,34 @@ const recordLogin = (userId, method, req) => {
   return Number(info.lastInsertRowid);
 };
 
-// Guards the account-takeover-shaped endpoints — OTP request/verify, login,
-// password reset. 10 requests / 15 min per IP is loose enough for a real
-// user retrying a typo, but caps an attacker well short of exhausting the
-// 10,000 possible 4-digit OTP codes within their 10-minute expiry window.
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  // The test suite legitimately registers/logs in far more than 10 times
-  // per run (each test gets its own account) from one machine — raise the
-  // cap in test mode only, so those runs don't trip a limiter meant for a
-  // single real client. Production/dev behavior is unchanged.
-  max: process.env.NODE_ENV === 'test' ? 1000 : 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'พยายามมากเกินไป กรุณาลองใหม่ภายหลัง', error_code: 'RATE_LIMITED' },
-});
+// Rate limits for the account endpoints, per IP over 15 minutes. They used
+// to share one counter of 10 across everything — requesting an OTP,
+// checking it, registering, logging in — so one signup (request + verify +
+// a retried submit) plus a login or two already hit "tried too many times".
+// Now each kind of request has its own counter, and the ones that guard a
+// secret (OTP checks, passwords) only count failed attempts: a correct code
+// or password never uses up the allowance. The caps still stop someone
+// working through the 10,000 possible 4-digit OTPs before they expire.
+//
+// Outside production (local dev) the caps are far higher, so testing the
+// signup flow over and over doesn't lock you out; the test suite likewise.
+const LIMIT_SCALE = process.env.NODE_ENV === 'production' ? 1 : 100;
+const limiter = (max, { failedOnly = false } = {}) =>
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: max * LIMIT_SCALE,
+    skipSuccessfulRequests: failedOnly,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'พยายามมากเกินไป กรุณาลองใหม่ภายหลัง', error_code: 'RATE_LIMITED' },
+  });
+// Sending an email (OTP or reset code): each send counts, to stop mail spam.
+const sendCodeLimiter = limiter(8);
+// Typing a code or password: only wrong ones count.
+const checkSecretLimiter = limiter(10, { failedOnly: true });
+// Creating the account / setting the new password: needs a valid code
+// already, so this only catches a broken client retrying in a loop.
+const submitLimiter = limiter(20, { failedOnly: true });
 
 // --- Config for the client (which auth methods are live) ---
 router.get('/config', (_req, res) => {
@@ -116,7 +129,7 @@ router.get('/config', (_req, res) => {
 });
 
 // --- Step 1: request OTP for email signup ---
-router.post('/otp/request', authLimiter, async (req, res) => {
+router.post('/otp/request', sendCodeLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -146,7 +159,7 @@ router.post('/otp/request', authLimiter, async (req, res) => {
 });
 
 // --- Step 2: verify OTP ---
-router.post('/otp/verify', authLimiter, (req, res) => {
+router.post('/otp/verify', checkSecretLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   if (!isEmail(email) || !/^\d{4}$/.test(code))
@@ -178,23 +191,49 @@ function nameError(nickname) {
   return null;
 }
 
+// The gender choices the app offers (client: gender.* strings). Signup and
+// profile edits both accept only these, so a stray value can't be stored
+// and then shown as a missing translation.
+const GENDERS = ['female', 'male', 'other', 'prefer_not'];
+function genderError(gender) {
+  if (!gender) return { error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' };
+  if (!GENDERS.includes(gender)) return { error: 'เพศไม่ถูกต้อง', error_code: 'GENDER_INVALID' };
+  return null;
+}
+
+// Signing up needs an explicit yes to the privacy policy (PDPA consent).
+// The version is the policy's "last updated" date in the app
+// (client/src/utils/privacyPolicy.js) — bump both together when the
+// wording changes, so it's known which text each person agreed to.
+const PRIVACY_VERSION = '2026-10-11';
+function privacyError(accepted) {
+  if (accepted !== true)
+    return { error: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนสมัคร', error_code: 'PRIVACY_REQUIRED' };
+  return null;
+}
+
+// Partner details: a "#rrggbb" colour (the app's swatches) and a name no
+// longer than the app's own input allows.
+const PARTNER_NAME_MAX = 30;
+const isHexColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
+
 // Same rule as the signup form (client/src/pages/Signup.jsx): a whole number
-// from 1 to 120. Checked here too, so the profile page or a direct API call
+// from 1 to 90. Checked here too, so the profile page or a direct API call
 // can't store 0, 999 or -5.
 function ageError(age) {
   if (age == null || age === '' || Number.isNaN(Number(age)))
     return { error: 'กรุณากรอกอายุ', error_code: 'AGE_REQUIRED' };
   const n = Number(age);
-  if (!Number.isInteger(n) || n < 1 || n > 120)
-    return { error: 'อายุต้องเป็นตัวเลข 1–120', error_code: 'AGE_INVALID' };
+  if (!Number.isInteger(n) || n < 1 || n > 90)
+    return { error: 'อายุต้องเป็นตัวเลข 1–90', error_code: 'AGE_INVALID' };
   return null;
 }
 
 // --- Step 3: complete email signup ---
-router.post('/register', authLimiter, (req, res) => {
+router.post('/register', submitLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
-  const { nickname, age, gender, password } = req.body;
+  const { nickname, age, gender, password, accept_privacy: acceptPrivacy } = req.body;
 
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -202,8 +241,10 @@ router.post('/register', authLimiter, (req, res) => {
   if (badName) return res.status(400).json(badName);
   const badAge = ageError(age);
   if (badAge) return res.status(400).json(badAge);
-  if (!gender)
-    return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
+  const badGender = genderError(gender);
+  if (badGender) return res.status(400).json(badGender);
+  const badPrivacy = privacyError(acceptPrivacy);
+  if (badPrivacy) return res.status(400).json(badPrivacy);
   if (!validatePassword(password))
     return res.status(400).json({
       error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
@@ -229,8 +270,8 @@ router.post('/register', authLimiter, (req, res) => {
 
   const info = db
     .prepare(
-      `INSERT INTO users (email, nickname, age, gender, password_hash)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO users (email, nickname, age, gender, password_hash, privacy_accepted_at, privacy_version)
+       VALUES (?, ?, ?, ?, ?, datetime('now'), ?)`,
     )
     .run(
       email,
@@ -238,6 +279,7 @@ router.post('/register', authLimiter, (req, res) => {
       age ? Number(age) : null,
       gender || null,
       hashPassword(password),
+      PRIVACY_VERSION,
     );
 
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
@@ -248,7 +290,7 @@ router.post('/register', authLimiter, (req, res) => {
 });
 
 // --- Email + password login ---
-router.post('/login', authLimiter, (req, res) => {
+router.post('/login', checkSecretLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   if (!isEmail(email) || !password)
@@ -271,7 +313,7 @@ router.post('/login', authLimiter, (req, res) => {
 });
 
 // --- Forgot password — Step 1: request OTP ---
-router.post('/password-reset/request', authLimiter, async (req, res) => {
+router.post('/password-reset/request', sendCodeLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -305,7 +347,7 @@ router.post('/password-reset/request', authLimiter, async (req, res) => {
 });
 
 // --- Forgot password — Step 2: verify OTP ---
-router.post('/password-reset/verify', authLimiter, (req, res) => {
+router.post('/password-reset/verify', checkSecretLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   if (!isEmail(email) || !/^\d{4}$/.test(code))
@@ -327,7 +369,7 @@ router.post('/password-reset/verify', authLimiter, (req, res) => {
 });
 
 // --- Forgot password — Step 3: set new password (auto-login on success) ---
-router.post('/password-reset/confirm', authLimiter, (req, res) => {
+router.post('/password-reset/confirm', submitLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { password } = req.body;
@@ -415,7 +457,7 @@ router.post('/google', async (req, res) => {
 
   if (!user) {
     // New Google account — needs profile completion (nickname/age/gender).
-    const { nickname, age, gender } = req.body;
+    const { nickname, age, gender, accept_privacy: acceptPrivacy } = req.body;
     if (!nickname || String(nickname).trim().length < 1) {
       return res.json({
         needs_profile: true,
@@ -427,12 +469,14 @@ router.post('/google', async (req, res) => {
     if (badName) return res.status(400).json(badName);
     const badAge = ageError(age);
     if (badAge) return res.status(400).json(badAge);
-    if (!gender)
-      return res.status(400).json({ error: 'กรุณาเลือกเพศ', error_code: 'GENDER_REQUIRED' });
+    const badGender = genderError(gender);
+    if (badGender) return res.status(400).json(badGender);
+    const badPrivacy = privacyError(acceptPrivacy);
+    if (badPrivacy) return res.status(400).json(badPrivacy);
     const info = db
       .prepare(
-        `INSERT INTO users (email, google_sub, nickname, age, gender)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO users (email, google_sub, nickname, age, gender, privacy_accepted_at, privacy_version)
+         VALUES (?, ?, ?, ?, ?, datetime('now'), ?)`,
       )
       .run(
         email || null,
@@ -440,6 +484,7 @@ router.post('/google', async (req, res) => {
         String(nickname).trim(),
         age ? Number(age) : null,
         gender || null,
+        PRIVACY_VERSION,
       );
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   }
@@ -504,9 +549,15 @@ router.patch('/me', requireAuth, (req, res) => {
     const badName = nameError(nickname);
     if (badName) return res.status(400).json(badName);
   }
-  if (age != null && age !== '') {
+  // Age and gender are required at signup, so an edit can change them but
+  // not blank them out; left out of the request, they stay as they are.
+  if (age != null) {
     const badAge = ageError(age);
     if (badAge) return res.status(400).json(badAge);
+  }
+  if (gender != null) {
+    const badGender = genderError(gender);
+    if (badGender) return res.status(400).json(badGender);
   }
 
   // Saving a new nickname clears any old separate English one, so the app
@@ -514,7 +565,7 @@ router.patch('/me', requireAuth, (req, res) => {
   db.prepare(`UPDATE users SET nickname = ?, nickname_en = ?, age = ?, gender = ? WHERE id = ?`).run(
     nextName,
     nickname != null ? null : u.nickname_en,
-    age != null && age !== '' ? Number(age) : u.age,
+    age != null ? Number(age) : u.age,
     gender != null ? gender : u.gender,
     u.id,
   );
@@ -551,6 +602,13 @@ router.patch('/me/partner/:category', requireAuth, (req, res) => {
         .json({ error: 'ไอคอนไม่ถูกต้อง', error_code: 'PARTNER_ICON_INVALID' });
     }
   }
+
+  if (color != null && !isHexColor(color))
+    return res.status(400).json({ error: 'สีไม่ถูกต้อง', error_code: 'PARTNER_COLOR_INVALID' });
+  if (name != null && String(name).trim().length > PARTNER_NAME_MAX)
+    return res
+      .status(400)
+      .json({ error: 'ชื่อยาวได้ไม่เกิน 30 ตัวอักษร', error_code: 'PARTNER_NAME_TOO_LONG' });
 
   upsertPartner(req.user.id, category, {
     name: name != null ? String(name).trim() : current.name,

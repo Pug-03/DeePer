@@ -1241,6 +1241,11 @@ export default function Welcome() {
               {t('report.footerCta')}
             </button>
           </p>
+          <p>
+            <button className="link" type="button" onClick={() => nav('/privacy')}>
+              {t('privacy.link')}
+            </button>
+          </p>
         </Reveal>
       </div>
     </>

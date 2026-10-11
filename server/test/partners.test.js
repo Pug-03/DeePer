@@ -80,3 +80,19 @@ test("answer history stores the category's own partner name/color at save time",
   assert.equal(entry.partner_name, 'พ่อ');
   assert.equal(entry.partner_color, '#34d399');
 });
+
+test('a partner colour must be a hex swatch and the name at most 30 characters', async () => {
+  const { token } = await registerUser(base);
+  const client = api(base, token);
+
+  const badColor = await client.patch('/auth/me/partner/couple', { color: 'red; background:url(x)' });
+  assert.equal(badColor.status, 400);
+  assert.equal(badColor.body.error_code, 'PARTNER_COLOR_INVALID');
+
+  const longName = await client.patch('/auth/me/partner/couple', { name: 'ก'.repeat(31) });
+  assert.equal(longName.status, 400);
+  assert.equal(longName.body.error_code, 'PARTNER_NAME_TOO_LONG');
+
+  const ok = await client.patch('/auth/me/partner/couple', { name: 'ก'.repeat(30), color: '#A78BFA' });
+  assert.equal(ok.status, 200);
+});

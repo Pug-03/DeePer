@@ -1,6 +1,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startServer, cleanupDb, api, registerUser, uniqueEmail, PASSWORD } from '../test-support/helpers.js';
+// Same in-process database the server under test uses (helpers sets DB_PATH first).
+const { db } = await import('../src/db.js');
 
 let server, base;
 
@@ -40,6 +42,7 @@ test('the nickname is required but can be in any language', async () => {
       age: 25,
       gender: 'other',
       password: PASSWORD,
+      accept_privacy: true,
     });
     assert.equal(res.status, status, nickname);
     if (code) assert.equal(res.body.error_code, code);
@@ -186,8 +189,8 @@ test('resetting a forgotten password signs out every existing session', async ()
   assert.equal((await api(base, res.body.token).get('/auth/me')).status, 200);
 });
 
-test('age must be a whole number from 1 to 120, at signup and on the profile', async () => {
-  for (const age of [0, -5, 121, 999, 2.5]) {
+test('age must be a whole number from 1 to 90, at signup and on the profile', async () => {
+  for (const age of [0, -5, 91, 121, 999, 2.5]) {
     const email = uniqueEmail('age');
     const anon = api(base);
     const otp = await anon.post('/auth/otp/request', { email });
@@ -206,10 +209,14 @@ test('age must be a whole number from 1 to 120, at signup and on the profile', a
 
   const { token } = await registerUser(base);
   const me = api(base, token);
-  for (const age of [0, 999, -5]) {
+  for (const age of [0, 91, 999, -5]) {
     const bad = await me.patch('/auth/me', { age });
     assert.equal(bad.status, 400, `profile age ${age}`);
     assert.equal(bad.body.error_code, 'AGE_INVALID');
+  }
+  for (const age of [1, 90]) {
+    const edge = await me.patch('/auth/me', { age });
+    assert.equal(edge.status, 200, `profile age ${age}`);
   }
   const ok = await me.patch('/auth/me', { age: 30 });
   assert.equal(ok.status, 200);
@@ -239,4 +246,44 @@ test('a profile picture must really be an image, whatever its type claims', asyn
   assert.equal(real.status, 200);
   assert.ok((await real.json()).user.avatar_url);
   await api(base, token).del('/auth/me/avatar');
+});
+
+test('profile edits reject a blank age and an unknown gender', async () => {
+  const { token } = await registerUser(base);
+  const me = api(base, token);
+
+  const blankAge = await me.patch('/auth/me', { age: '' });
+  assert.equal(blankAge.status, 400);
+  assert.equal(blankAge.body.error_code, 'AGE_REQUIRED');
+
+  const badGender = await me.patch('/auth/me', { gender: 'robot' });
+  assert.equal(badGender.status, 400);
+  assert.equal(badGender.body.error_code, 'GENDER_INVALID');
+
+  const blankGender = await me.patch('/auth/me', { gender: '' });
+  assert.equal(blankGender.status, 400);
+  assert.equal(blankGender.body.error_code, 'GENDER_REQUIRED');
+
+  const ok = await me.patch('/auth/me', { gender: 'female' });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.body.user.gender, 'female');
+});
+
+test('signing up needs the privacy policy accepted, and records when', async () => {
+  const anon = api(base);
+  const email = uniqueEmail('pdpa');
+  const otp = await anon.post('/auth/otp/request', { email });
+  const body = { email, code: otp.body.dev_code, nickname: 'เทสเตอร์', age: 25, gender: 'other', password: PASSWORD };
+
+  for (const accept_privacy of [undefined, false, 'yes']) {
+    const res = await anon.post('/auth/register', { ...body, accept_privacy });
+    assert.equal(res.status, 400, `accept_privacy ${accept_privacy}`);
+    assert.equal(res.body.error_code, 'PRIVACY_REQUIRED');
+  }
+
+  const ok = await anon.post('/auth/register', { ...body, accept_privacy: true });
+  assert.equal(ok.status, 200);
+  const row = db.prepare('SELECT privacy_accepted_at, privacy_version FROM users WHERE email = ?').get(email);
+  assert.ok(row.privacy_accepted_at);
+  assert.ok(row.privacy_version);
 });

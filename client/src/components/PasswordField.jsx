@@ -14,6 +14,13 @@ export default function PasswordField({
 }) {
   const { t } = useI18n();
   const [show, setShow] = useState(false);
+  // A password being chosen (signup, change, reset) has to be typed by hand:
+  // no copying it out, cutting, pasting or dropping text in — so the person
+  // actually types it, twice where there's a confirm box. Logging in with an
+  // existing password still allows paste.
+  const handTyped = autoComplete === 'new-password';
+  const block = (e) => e.preventDefault();
+  const guard = handTyped ? { onCopy: block, onCut: block, onPaste: block, onDrop: block } : {};
 
   return (
     <div className="field">
@@ -28,6 +35,7 @@ export default function PasswordField({
           onChange={onChange}
           required={required}
           autoFocus={autoFocus}
+          {...guard}
         />
         <button
           type="button"

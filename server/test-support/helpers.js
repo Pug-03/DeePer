@@ -84,7 +84,7 @@ export async function registerUser(
   const code = otpRes.body.dev_code;
   const res = await anon.post(
     '/auth/register',
-    { email, code, nickname, nickname_en, age: 25, gender: 'other', password: PASSWORD },
+    { email, code, nickname, nickname_en, age: 25, gender: 'other', password: PASSWORD, accept_privacy: true },
     userAgent ? { 'User-Agent': userAgent } : undefined,
   );
   return { email, token: res.body.token, user: res.body.user };

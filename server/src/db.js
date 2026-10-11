@@ -194,6 +194,16 @@ if (!userCols.some((c) => c.name === 'partner_icon')) {
   db.exec(`ALTER TABLE users ADD COLUMN partner_icon TEXT`);
 }
 
+// Migration: users.privacy_accepted_at — when the person ticked "I accept
+// the privacy policy (PDPA)" at signup, and privacy_version which wording
+// they accepted. Null for accounts made before the checkbox existed.
+if (!userCols.some((c) => c.name === 'privacy_accepted_at')) {
+  db.exec(`ALTER TABLE users ADD COLUMN privacy_accepted_at TEXT`);
+}
+if (!userCols.some((c) => c.name === 'privacy_version')) {
+  db.exec(`ALTER TABLE users ADD COLUMN privacy_version TEXT`);
+}
+
 // Migration: users.nickname_en — signup now asks for the nickname in both
 // Thai (kept in the existing `nickname` column) and English. Nullable:
 // accounts made before this have no English name until they add one.

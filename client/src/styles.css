@@ -714,6 +714,9 @@ html[data-tour] .fade-up {
 .pw-seg.on-4::before {
   transform: scaleX(1);
 }
+.signup-pw-strength {
+  margin: -4px 0 22px;
+}
 .pw-rules {
   list-style: none;
   padding: 0;
@@ -1938,6 +1941,363 @@ html[data-tour] .fade-up {
 .admin-action {
   min-height: 46px;
   font-size: 15px;
+}
+
+/* ---------- Privacy policy (PDPA) ---------- */
+/* "Step 2 of 3" above each signup step after the email check: short bars
+   lit up to the current step, with the words beside them. */
+.signup-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.signup-progress span {
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background-color 0.25s;
+}
+.signup-progress span.on {
+  background: linear-gradient(90deg, var(--red-bright), var(--red));
+}
+.signup-progress em {
+  margin-left: 6px;
+  font-style: normal;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+/* Signup's consent step: four short points (title over a line of
+   detail, each with a red marker); the full policy opens in a sheet. */
+.consent-card {
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.consent-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.consent-points li {
+  position: relative;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.consent-points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(var(--red-bright), var(--red-deep));
+}
+.consent-point-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.consent-point-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.consent-field {
+  margin-bottom: 18px;
+}
+
+/* Signup consent: a custom tick box beside the sentence, with "read more"
+   inline at its end. The real checkbox stays in the DOM (visually hidden)
+   for keyboard and screen readers. */
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 4px 4px 0;
+  cursor: pointer;
+}
+.consent-check input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.consent-box {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  display: grid;
+  place-items: center;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.consent-check input:checked + .consent-box {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--red), var(--red-deep));
+}
+.consent-check input:checked + .consent-box::after {
+  content: '';
+  width: 6px;
+  height: 11px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2.2px 2.2px 0;
+  transform: rotate(45deg);
+}
+.consent-check input:focus-visible + .consent-box {
+  outline: 2px solid var(--red-bright);
+  outline-offset: 2px;
+}
+.consent-check--error .consent-box {
+  border-color: var(--red);
+}
+.consent-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.consent-more {
+  font-size: inherit;
+  font-weight: 600;
+}
+.privacy-card {
+  padding: 22px 20px;
+}
+/* Long-form reading text: left-aligned everywhere it appears (the signup
+   sheet it sits in centres its own text), comfortable line height, and a
+   little structure — a tinted intro, a hairline between sections, red
+   bullet dots — so ten sections don't read as one grey wall. */
+.privacy {
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+.privacy p {
+  margin: 0 0 10px;
+}
+.privacy ul {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.privacy li {
+  position: relative;
+  padding-left: 18px;
+}
+.privacy li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--red-bright);
+  opacity: 0.85;
+}
+.privacy li + li {
+  margin-top: 6px;
+}
+.privacy-updated {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.05);
+}
+.privacy-intro {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 12px 0 4px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-red);
+  background: linear-gradient(160deg, rgba(244, 63, 94, 0.1), rgba(244, 63, 94, 0.02));
+}
+.privacy .privacy-intro p {
+  margin: 0;
+  color: var(--text);
+}
+.privacy-intro-ic {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: var(--red-bright);
+  background: rgba(244, 63, 94, 0.14);
+}
+.privacy-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.privacy-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+}
+/* Section number in a small ring, instead of a "1." prefix. */
+.privacy-num {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-red);
+  background: rgba(244, 63, 94, 0.08);
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--red-bright);
+}
+
+/* The signup "read more" sheet: a grab handle, the title on the left, the
+   text in its own scroll area that fades out at the bottom edge, and the
+   two actions pinned below it. */
+/* No blur behind or inside this sheet, and only transform/opacity moving:
+   blurring the page under a tall moving panel is what made it stutter on
+   phones. The overlay stays in the page once opened; .is-open slides it. */
+.privacy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(4, 4, 6, 0.74);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* Keeps a swipe on the scrim from scrolling the page underneath. */
+  touch-action: none;
+  overscroll-behavior: contain;
+  transition:
+    opacity 0.22s ease 0.04s,
+    visibility 0s linear 0.3s;
+}
+.privacy-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.22s ease,
+    visibility 0s;
+}
+.privacy-sheet {
+  display: flex;
+  flex-direction: column;
+  /* svh, not dvh: the height stays put while the phone's address bar
+     slides in and out, so the top of the sheet doesn't jump around. */
+  max-height: 88vh;
+  max-height: 88svh;
+  text-align: left;
+  background: linear-gradient(180deg, #1c1318, #130d11 40%);
+  border: 1px solid var(--border-red);
+  border-bottom: none;
+  transform: translate3d(0, 100%, 0);
+  transition: transform 0.24s cubic-bezier(0.4, 0, 1, 1);
+  will-change: transform;
+}
+.privacy-overlay.is-open .privacy-sheet {
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .privacy-sheet,
+  .privacy-overlay.is-open .privacy-sheet {
+    transition-duration: 0.01s;
+  }
+}
+.privacy-sheet::before {
+  content: '';
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  margin: -10px 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.privacy-sheet .share-sheet-title {
+  text-align: left;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.privacy-progress {
+  height: 3px;
+  margin: 0 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.privacy-progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), var(--red-bright));
+  transform: scaleX(0);
+  transform-origin: left;
+  will-change: transform;
+}
+.privacy-accept {
+  transition: box-shadow 0.3s ease, transform 0.12s ease;
+}
+.privacy-accept.is-read {
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.25), var(--glow-red);
+}
+/* A real check icon that pops in. (It used to be a CSS-drawn tick — a
+   border corner turned 45° — but the pop-in animation replaced that turn,
+   so it showed as an "L".) */
+.privacy-accept-tick {
+  display: inline-flex;
+  animation: popIn 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.privacy-sheet-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  margin: 0 -6px;
+  padding: 0 6px 18px;
+}
+/* Soft fade where the text runs under the buttons — a plain gradient
+   strip, not a mask on the scroll area (masks re-composite every frame). */
+.privacy-sheet-actions::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  bottom: 100%;
+  height: 28px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, #130d11);
+}
+.privacy-sheet-actions {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 10px;
+  padding-top: 12px;
 }
 
 /* ---------- Report a problem / bug ---------- */
