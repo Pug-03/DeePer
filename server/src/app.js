@@ -17,6 +17,7 @@ import visitRoutes from './routes/visits.js';
 import inquiryRoutes from './routes/inquiries.js';
 import reviewRoutes from './routes/reviews.js';
 import { UPLOADS_DIR } from './paths.js';
+import { renderPage, PUBLIC_PATHS, SITE } from './seo.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const app = express();
@@ -90,6 +91,14 @@ app.get('/api/stats', (_req, res) => {
     share_count: counters.shared ?? 0,
   });
 });
+// Built from the same list of public pages the SEO titles cover, so a new
+// public page only needs adding in one place.
+app.get('/sitemap.xml', (_req, res) => {
+  const urls = PUBLIC_PATHS.map((p) => `  <url><loc>${SITE}${p}</loc></url>`).join('\n');
+  res
+    .type('application/xml')
+    .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/support', supportRoutes);
@@ -103,10 +112,13 @@ app.use('/api', dataRoutes);
 // Serve the built client in production (client/dist), if present.
 const clientDist = join(__dirname, '..', '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
-  app.use(express.static(clientDist));
+  // index: false so "/" also goes through the fallback below and gets its
+  // page-specific title and content.
+  app.use(express.static(clientDist, { index: false }));
+  const indexHtml = fs.readFileSync(join(clientDist, 'index.html'), 'utf8');
   app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api')) return next();
-    res.sendFile(join(clientDist, 'index.html'));
+    res.type('html').send(renderPage(indexHtml, req.path));
   });
 }
 

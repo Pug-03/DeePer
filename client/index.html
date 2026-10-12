@@ -7,8 +7,8 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#120a0e" />
-    <title>DeePer — การ์ดคำถามชวนคุยลึก ๆ</title>
-    <meta name="description" content="การ์ดคำถามชวนคุยลึก ๆ สำหรับคู่รัก เพื่อน และครอบครัว ใช้ฟรี" />
+    <title>DeePer — การ์ดคำถามชวนคุยลึก ๆ คู่รัก เพื่อน ครอบครัว ใช้ฟรี</title>
+    <meta name="description" content="คำถามถามแฟน คำถามชวนคุยกับเพื่อน และคำถามคุยกับครอบครัว กว่า 1,050 ข้อ ปัดการ์ดแล้วผลัดกันตอบบนมือถือเครื่องเดียว ใช้ฟรี ไม่ต้องดาวน์โหลด" />
 
     <!-- Link previews (LINE, Facebook, Messenger, IG DMs, X). Crawlers need
          absolute URLs, so these point at the production domain. The image
@@ -69,8 +69,10 @@
   <body>
     <!-- Plain-text summary for crawlers that don't run JavaScript (most AI
          bots). React replaces everything inside #root on load; until then it
-         stays visually hidden so the page doesn't flash raw text. -->
-    <div id="root"><div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">
+         stays visually hidden so the page doesn't flash raw text. The server
+         swaps the part between the seo markers (and the title/description)
+         for each public page — see server/src/seo.js. -->
+    <div id="root"><div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"><!--seo-->
       <h1>DeePer — การ์ดคำถามชวนคุยลึก ๆ</h1>
       <p>DeePer คือการ์ดคำถามชวนคุยลึก ๆ ใช้ฟรี สำหรับคู่รัก เพื่อนสนิท และครอบครัว เปิดแอปเดียวกันบนเครื่องเดียวแล้วผลัดกันตอบ ไม่ต้องต่างคนต่างดาวน์โหลด</p>
       <ul>
@@ -82,8 +84,9 @@
         <li>ใช้บนเบราว์เซอร์ได้ทั้งมือถือ แท็บเล็ต และคอมพิวเตอร์ เพิ่มลงหน้าจอโฮมได้</li>
       </ul>
       <p>DeePer is a free web app of deep conversation question cards for couples, friends and family. Two people share one phone and take turns answering. Available in Thai and English.</p>
+      <p><a href="/questions/couple">คำถามถามแฟน</a> · <a href="/questions/friends">คำถามชวนคุยกับเพื่อน</a> · <a href="/questions/family">คำถามคุยกับครอบครัว</a></p>
       <p><a href="/signup">สมัครใช้งานฟรี</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a> · <a href="/sponsor">ร่วมสนับสนุน</a></p>
-    </div></div>
+    <!--/seo--></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
