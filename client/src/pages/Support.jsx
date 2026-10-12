@@ -5,6 +5,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcBank, IcQrCode, IcCopy, IcChat, IcCamera } from '../components/icons.jsx';
 import { SUPPORT_INFO } from '../support-info.js';
+import { shrinkImage, DOCUMENT_SIDE } from '../utils/shrinkImage.js';
 
 export default function Support() {
   const nav = useNavigate();
@@ -50,7 +51,7 @@ export default function Support() {
     setBusy(true);
     try {
       const fd = new FormData();
-      fd.append('slip', slipFile);
+      fd.append('slip', await shrinkImage(slipFile, DOCUMENT_SIDE));
       fd.append('transfer_date', transferDate);
       fd.append('transfer_time', transferTime);
       fd.append('amount', amount);

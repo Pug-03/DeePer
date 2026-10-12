@@ -4,6 +4,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from './avatar.js';
+import { shrinkImage, AVATAR_SIDE } from './shrinkImage.js';
 
 // Changing or removing your own profile photo — shared by Profile and the
 // My-information page. Render a hidden file input with `inputRef` and
@@ -19,13 +20,14 @@ export function useAvatarEdit() {
   const pick = () => inputRef.current?.click();
 
   const onFileChange = async (e) => {
-    const file = e.target.files?.[0];
+    const picked = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    if (!AVATAR_TYPES.includes(file.type)) {
+    if (!picked) return;
+    if (!AVATAR_TYPES.includes(picked.type)) {
       toast(t('err.AVATAR_TYPE_INVALID'));
       return;
     }
+    const file = await shrinkImage(picked, AVATAR_SIDE);
     if (file.size > AVATAR_MAX_BYTES) {
       toast(t('err.AVATAR_TOO_LARGE'));
       return;

@@ -8,6 +8,7 @@ import { useToast, useConfirm } from '../components/ui.jsx';
 import { IcBack, IcCamera, IcTrash } from '../components/icons.jsx';
 import SaveButton, { useSavedFlash } from '../components/SaveButton.jsx';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
+import { shrinkImage, AVATAR_SIDE } from '../utils/shrinkImage.js';
 import { PARTNER_ICONS } from '../utils/partnerIcons.js';
 import PartnerAvatar from '../components/PartnerAvatar.jsx';
 import { CATS } from '../util.js';
@@ -78,13 +79,14 @@ export default function PartnerSettings() {
   const pickPartnerAvatar = () => partnerFileInputRef.current?.click();
 
   const onPartnerAvatarChange = async (e) => {
-    const file = e.target.files?.[0];
+    const picked = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    if (!AVATAR_TYPES.includes(file.type)) {
+    if (!picked) return;
+    if (!AVATAR_TYPES.includes(picked.type)) {
       toast(t('err.AVATAR_TYPE_INVALID'));
       return;
     }
+    const file = await shrinkImage(picked, AVATAR_SIDE);
     if (file.size > AVATAR_MAX_BYTES) {
       toast(t('err.AVATAR_TOO_LARGE'));
       return;

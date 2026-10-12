@@ -7,6 +7,7 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcAlertCircle, IcCamera } from '../components/icons.jsx';
+import { shrinkImage, DOCUMENT_SIDE } from '../utils/shrinkImage.js';
 
 const CATEGORIES = ['idea', 'bug', 'problem'];
 
@@ -85,7 +86,7 @@ export default function Report() {
       if (!user && contact.trim()) fd.append('contact', contact.trim());
       // Where the reporter came from, so the maintainer knows which screen.
       if (location.state?.from) fd.append('page', location.state.from);
-      if (shotFile) fd.append('screenshot', shotFile);
+      if (shotFile) fd.append('screenshot', await shrinkImage(shotFile, DOCUMENT_SIDE));
       await api.upload('/reports', fd);
       if (shotPreview) URL.revokeObjectURL(shotPreview);
       setSent(true);

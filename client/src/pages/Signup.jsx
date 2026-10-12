@@ -13,6 +13,7 @@ import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
 import { AVATAR_MAX_BYTES, AVATAR_TYPES } from '../utils/avatar.js';
+import { shrinkImage, AVATAR_SIDE } from '../utils/shrinkImage.js';
 import { IcBack, IcCamera, IcGoogle, IcMail } from '../components/icons.jsx';
 import { nicknameError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
@@ -315,11 +316,12 @@ export default function Signup() {
 
   const onPickAvatar = () => avatarInputRef.current?.click();
 
-  const onAvatarChange = (e) => {
-    const file = e.target.files?.[0];
+  const onAvatarChange = async (e) => {
+    const picked = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
-    if (!AVATAR_TYPES.includes(file.type)) return toast(t('err.AVATAR_TYPE_INVALID'));
+    if (!picked) return;
+    if (!AVATAR_TYPES.includes(picked.type)) return toast(t('err.AVATAR_TYPE_INVALID'));
+    const file = await shrinkImage(picked, AVATAR_SIDE);
     if (file.size > AVATAR_MAX_BYTES) return toast(t('err.AVATAR_TOO_LARGE'));
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
