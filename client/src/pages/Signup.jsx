@@ -532,8 +532,12 @@ export default function Signup() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
-      await uploadAvatarIfAny();
+      // Straight to the welcome page in the same tick as signing in: while
+      // a photo upload was awaited first, the signed-in user tripped
+      // GuestOnly on this page, which flashed Home before Welcome. The
+      // photo now uploads in the background and appears once it lands.
       nav('/app/welcome', { replace: true, state: { isNew: true } });
+      uploadAvatarIfAny();
     } catch (e2) {
       showSubmitError(e2);
     } finally {
@@ -577,8 +581,12 @@ export default function Signup() {
         { auth: false },
       );
       applyAuth(d.token, d.user);
-      await uploadAvatarIfAny();
+      // Straight to the welcome page in the same tick as signing in: while
+      // a photo upload was awaited first, the signed-in user tripped
+      // GuestOnly on this page, which flashed Home before Welcome. The
+      // photo now uploads in the background and appears once it lands.
       nav('/app/welcome', { replace: true, state: { isNew: true } });
+      uploadAvatarIfAny();
     } catch (e2) {
       showSubmitError(e2);
     } finally {
