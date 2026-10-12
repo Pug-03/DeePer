@@ -26,6 +26,18 @@ export default function Privacy() {
       <div className="glass privacy-card">
         <PrivacyPolicyBody />
       </div>
+      {/* So readers who scrolled to the end can leave without scrolling
+          all the way back up to the Back link — or ask about it. The report
+          form records it came from /privacy, so the question arrives with
+          that context. */}
+      <div className="privacy-actions">
+        <button className="btn btn--ghost" type="button" onClick={() => nav('/report', { state: { from: '/privacy' } })}>
+          {t('privacy.ask')}
+        </button>
+        <button className="btn btn--primary" type="button" onClick={goBack}>
+          {t('privacy.done')}
+        </button>
+      </div>
     </div>
   );
 }
