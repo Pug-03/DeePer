@@ -1,0 +1,8 @@
+# DeePer — let search engines index the public pages only.
+User-agent: *
+Disallow: /app/
+Disallow: /admin
+Disallow: /api/
+Disallow: /uploads/
+
+Sitemap: https://deeper.in.th/sitemap.xml
