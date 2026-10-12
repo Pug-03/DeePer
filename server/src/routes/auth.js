@@ -20,6 +20,7 @@ import {
   signAdminToken,
 } from '../auth.js';
 import { UPLOADS_DIR } from '../paths.js';
+import { inviteRequired, signupGateError } from '../signupGate.js';
 
 const router = Router();
 
@@ -125,7 +126,15 @@ router.get('/config', (_req, res) => {
     google_enabled: !!googleClient,
     google_client_id: GOOGLE_CLIENT_ID || null,
     smtp_enabled: mailerReady,
+    invite_required: inviteRequired(),
   });
+});
+
+// --- Before launch: check an invite code before showing the signup options ---
+router.post('/invite/check', checkSecretLimiter, (req, res) => {
+  const gate = signupGateError(req.body.invite_code, req.ip);
+  if (gate) return res.status(gate.status).json(gate.body);
+  res.json({ ok: true });
 });
 
 // --- Step 1: request OTP for email signup ---
@@ -133,6 +142,10 @@ router.post('/otp/request', sendCodeLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
+  // Checked before any email goes out, so no code is mailed to someone
+  // who couldn't finish signing up anyway.
+  const gate = signupGateError(req.body.invite_code, req.ip);
+  if (gate) return res.status(gate.status).json(gate.body);
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
   if (existing)
@@ -237,6 +250,8 @@ router.post('/register', submitLimiter, (req, res) => {
 
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
+  const gate = signupGateError(req.body.invite_code, req.ip);
+  if (gate) return res.status(gate.status).json(gate.body);
   const badName = nameError(nickname);
   if (badName) return res.status(400).json(badName);
   const badAge = ageError(age);
@@ -459,6 +474,10 @@ router.post('/google', async (req, res) => {
   }
 
   if (!user) {
+    // A Google account we haven't seen is a signup, so it's gated like one
+    // — up front, before the profile form, so nobody fills it in for nothing.
+    const gate = signupGateError(req.body.invite_code, req.ip);
+    if (gate) return res.status(gate.status).json(gate.body);
     // New Google account — needs profile completion (nickname/age/gender)
     // and a password of its own, same as an email signup, so the account
     // can also sign in with email + password.

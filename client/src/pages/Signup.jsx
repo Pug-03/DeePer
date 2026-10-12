@@ -227,6 +227,69 @@ export default function Signup() {
   const [err, setErr] = useState('');
 
   const [email, setEmail] = useState('');
+  // Before launch signing up needs an invite code (server/src/signupGate.js):
+  // the method choice only shows once it's been checked, and it rides along
+  // on every signup request.
+  // Typed into six OTP-style boxes; a wrong code shakes and clears them, and
+  // too many wrong ones lock the boxes for a while (the server decides how
+  // long and counts down from its retry_after).
+  const [inviteDigits, setInviteDigits] = useState(['', '', '', '', '', '']);
+  const [inviteKey, setInviteKey] = useState(0);
+  const [inviteStatus, setInviteStatus] = useState('idle');
+  const [inviteMsg, setInviteMsg] = useState('');
+  const [inviteLockedUntil, setInviteLockedUntil] = useState(0);
+  const [lockLeft, setLockLeft] = useState(0);
+  const [inviteOk, setInviteOk] = useState(false);
+  const inviteCode = inviteDigits.join('');
+  const needInvite = config.invite_required && !inviteOk;
+
+  useEffect(() => {
+    if (!inviteLockedUntil) return undefined;
+    const tick = () => {
+      const left = Math.ceil((inviteLockedUntil - Date.now()) / 1000);
+      if (left <= 0) {
+        setInviteLockedUntil(0);
+        setLockLeft(0);
+        setInviteMsg('');
+        setInviteKey((k) => k + 1);
+      } else setLockLeft(left);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [inviteLockedUntil]);
+
+  const checkInvite = async (digits = inviteDigits) => {
+    const code = digits.join('');
+    if (code.length !== 6 || busy || inviteLockedUntil) return;
+    setBusy(true);
+    try {
+      await api.post('/auth/invite/check', { invite_code: code }, { auth: false });
+      setInviteStatus('success');
+      setInviteMsg('');
+      // Let the six checkmarks play (last starts at 5 × 180 ms) before moving on.
+      setTimeout(() => setInviteOk(true), 1700);
+    } catch (e2) {
+      const d = e2.data || {};
+      if (d.error_code === 'INVITE_LOCKED') {
+        setInviteDigits(['', '', '', '', '', '']);
+        setInviteLockedUntil(Date.now() + (d.retry_after || 30) * 1000);
+        setInviteStatus('idle');
+        return;
+      }
+      setInviteMsg(
+        d.tries_left ? `${e2.message} · ${t('signup.inviteTriesLeft', { n: d.tries_left })}` : e2.message,
+      );
+      setInviteStatus('error');
+      setTimeout(() => {
+        setInviteDigits(['', '', '', '', '', '']);
+        setInviteKey((k) => k + 1);
+        setInviteStatus('idle');
+      }, 700);
+    } finally {
+      setBusy(false);
+    }
+  };
   const emailRef = useRef(null);
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpKey, setOtpKey] = useState(0);
@@ -346,7 +409,7 @@ export default function Signup() {
     setOtpMsg('');
     setBusy(true);
     try {
-      const d = await api.post('/auth/otp/request', { email }, { auth: false });
+      const d = await api.post('/auth/otp/request', { email, invite_code: inviteCode }, { auth: false });
       setStep('otp');
       setOtp(['', '', '', '']);
       setOtpKey((k) => k + 1);
@@ -435,7 +498,7 @@ export default function Signup() {
     try {
       const d = await api.post(
         '/auth/register',
-        { email, code: otp.join(''), nickname, age, gender, password, accept_privacy: consent },
+        { email, code: otp.join(''), nickname, age, gender, password, accept_privacy: consent, invite_code: inviteCode },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -452,7 +515,7 @@ export default function Signup() {
     async (credential) => {
       setErr('');
       try {
-        const d = await api.post('/auth/google', { credential }, { auth: false });
+        const d = await api.post('/auth/google', { credential, invite_code: inviteCode }, { auth: false });
         if (d.admin_token) {
           setAdminToken(d.admin_token);
           nav('/admin', { replace: true });
@@ -471,7 +534,7 @@ export default function Signup() {
         setErr(e2.message);
       }
     },
-    [applyAuth, nav],
+    [applyAuth, nav, inviteCode],
   );
 
   const registerGoogle = async () => {
@@ -480,7 +543,7 @@ export default function Signup() {
     try {
       const d = await api.post(
         '/auth/google',
-        { credential: gCredential, nickname, age, gender, password, accept_privacy: consent },
+        { credential: gCredential, nickname, age, gender, password, accept_privacy: consent, invite_code: inviteCode },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -521,7 +584,49 @@ export default function Signup() {
       {err && !(step === 'otp' && otpStatus === 'error') && <div className="err-inline">{err}</div>}
 
       {/* Step: choose method */}
-      {step === 'method' && (
+      {step === 'method' && needInvite && (
+        <form
+          className="stagger"
+          onSubmit={(e) => {
+            e.preventDefault();
+            checkInvite();
+          }}
+        >
+          <div className="header">
+            <h1 className="h1">{t('signup.title')}</h1>
+            <p className="sub">{t('signup.inviteSub')}</p>
+          </div>
+          <div className="otp-six" style={{ marginBottom: 24 }}>
+            <OtpInput
+              key={inviteKey}
+              value={inviteDigits}
+              onChange={(i, v) => {
+                const next = inviteDigits.map((d, idx) => (idx === i ? v : d));
+                setInviteDigits(next);
+                setInviteMsg('');
+                // Checked as soon as the sixth digit goes in.
+                if (next.every(Boolean)) checkInvite(next);
+              }}
+              status={inviteLockedUntil ? 'locked' : inviteStatus}
+              statusText={
+                inviteLockedUntil
+                  ? t('signup.inviteLocked', { s: lockLeft })
+                  : inviteMsg || (inviteStatus === 'success' ? t('signup.inviteOk') : t('signup.inviteHint'))
+              }
+              statusError={!!inviteMsg || !!inviteLockedUntil}
+            />
+          </div>
+          <button
+            className="btn btn--primary"
+            type="submit"
+            disabled={busy || inviteCode.length !== 6 || !!inviteLockedUntil || inviteStatus !== 'idle'}
+          >
+            {t('signup.inviteSubmit')}
+          </button>
+        </form>
+      )}
+
+      {step === 'method' && !needInvite && (
         <div className="stagger">
           <div className="header">
             <h1 className="h1">{t('signup.title')}</h1>

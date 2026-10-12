@@ -66,6 +66,9 @@ export const STRINGS = {
     // ข้อความผิดพลาดจากเซิร์ฟเวอร์ (ให้ตรงกับ error_code ที่ server ส่งมา — ดู api.js)
     'err.INVALID_EMAIL': 'อีเมลไม่ถูกต้อง',
     'err.EMAIL_TAKEN': 'อีเมลนี้มีบัญชีอยู่แล้ว',
+    'err.INVITE_REQUIRED': 'ยังไม่เปิดรับสมัครทั่วไป ต้องมีรหัสเชิญก่อน (เปิดให้ทุกคน 11/11/2569 เวลา 11:11 น.)',
+    'err.INVITE_INVALID': 'รหัสเชิญไม่ถูกต้อง',
+    'err.INVITE_LOCKED': 'ใส่รหัสเชิญผิดหลายครั้ง กรุณาลองใหม่ภายหลัง',
     'err.OTP_SEND_FAILED': 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่',
     'err.INVALID_INPUT': 'ข้อมูลไม่ถูกต้อง',
     'err.OTP_INVALID': 'รหัส OTP ไม่ถูกต้อง',
@@ -180,7 +183,7 @@ export const STRINGS = {
     'google.loginLabel': 'เข้าสู่ระบบด้วย Google',
     'google.loginSub': 'เลือกบัญชี Google ที่เคยลงทะเบียน',
     'google.signupLabel': 'สมัครด้วย Google',
-    'google.signupSub': 'ไม่ต้องตั้งรหัสผ่านเอง',
+    'google.signupSub': 'ไม่ต้องรอรหัส OTP',
 
     // เข้าสู่ระบบ
     'login.title': 'ยินดีต้อนรับกลับมา',
@@ -202,7 +205,14 @@ export const STRINGS = {
     // line as a lone orphan word.
     // Broken by hand into two balanced lines (.google-note is pre-line), so
     // the browser never splits a word like ยืนยัน/ตัวตน or strands ให้.
-    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องตั้งรหัสผ่านเอง\nGoogle ดูแลการยืนยันตัวตนให้',
+    'signup.googleNote': 'สมัครด้วย Google ไม่ต้องรอรหัส OTP ทางอีเมล\nGoogle ยืนยันอีเมลให้เลย',
+    'signup.inviteSub': 'ตอนนี้อยู่ช่วงทดสอบ สมัครได้เฉพาะผู้ที่มีรหัสเชิญ เปิดให้ทุกคนวันที่ 11/11/2569 เวลา 11:11 น.',
+    'signup.inviteLabel': 'รหัสเชิญ',
+    'signup.inviteHint': 'กรอกรหัสเชิญ 6 หลัก',
+    'signup.inviteOk': 'รหัสถูกต้อง',
+    'signup.inviteTriesLeft': 'ใส่ผิดได้อีก {n} ครั้ง',
+    'signup.inviteLocked': 'ใส่ผิดหลายครั้ง ลองใหม่ได้ในอีก {s} วินาที',
+    'signup.inviteSubmit': 'ถัดไป',
     'signup.emailTitle': 'กรอกอีเมล',
     'signup.emailSub': 'เราจะส่งรหัส OTP 4 หลักไปที่อีเมลของคุณ',
     'signup.sendOtp': 'ส่งรหัส OTP',
@@ -635,6 +645,9 @@ export const STRINGS = {
     // Server error messages (must match the error_code the server sends — see api.js)
     'err.INVALID_EMAIL': 'Invalid email address',
     'err.EMAIL_TAKEN': 'This email already has an account',
+    'err.INVITE_REQUIRED': 'Sign-up isn’t open yet: you need an invite code (opens to everyone 11 Nov 2026 at 11:11)',
+    'err.INVITE_INVALID': 'That invite code isn’t right',
+    'err.INVITE_LOCKED': 'Too many wrong invite codes. Please try again later',
     'err.OTP_SEND_FAILED': 'Failed to send the OTP. Please try again',
     'err.INVALID_INPUT': 'Invalid input',
     'err.OTP_INVALID': 'Invalid OTP code',
@@ -747,7 +760,7 @@ export const STRINGS = {
     'google.loginLabel': 'Sign in with Google',
     'google.loginSub': 'Choose your registered Google account',
     'google.signupLabel': 'Sign up with Google',
-    'google.signupSub': 'No password needed',
+    'google.signupSub': 'No email code needed',
 
     'login.title': 'Welcome back',
     'login.sub': 'Log in to keep talking',
@@ -764,7 +777,14 @@ export const STRINGS = {
     'signup.sub': 'Choose how you’d like to sign up',
     'signup.emailMethod': 'Sign up with email',
     'signup.emailMethodSub': 'Get an OTP by email, then set a password',
-    'signup.googleNote': 'Signing up with Google needs no password\nGoogle handles verification for you',
+    'signup.googleNote': 'Signing up with Google skips the email code\nGoogle verifies your email for you',
+    'signup.inviteSub': 'We’re in testing: sign-up is invite-only until it opens to everyone on 11 Nov 2026 at 11:11',
+    'signup.inviteLabel': 'Invite code',
+    'signup.inviteHint': 'Enter your 6-digit invite code',
+    'signup.inviteOk': 'Code accepted',
+    'signup.inviteTriesLeft': '{n} tries left',
+    'signup.inviteLocked': 'Too many wrong tries. Try again in {s} s',
+    'signup.inviteSubmit': 'Next',
     'signup.emailTitle': 'Enter your email',
     'signup.emailSub': 'We’ll send a 4-digit OTP to your email',
     'signup.sendOtp': 'Send OTP',

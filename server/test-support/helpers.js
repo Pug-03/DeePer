@@ -8,6 +8,9 @@ import fs from 'node:fs';
 // the npm script) so it's unique per process without any coordination.
 const DB_PATH = `./.tmp-test-${process.pid}-${randomUUID()}.db`;
 process.env.DB_PATH = DB_PATH;
+// Signups are invite-only until launch (src/signupGate.js); tests run as if
+// launch has passed unless a test sets its own SIGNUP_OPENS_AT.
+process.env.SIGNUP_OPENS_AT = '2000-01-01T00:00:00Z';
 
 // Dynamic import: app.js -> db.js reads process.env.DB_PATH at the top of
 // its module body, so DB_PATH must already be set (above) before this

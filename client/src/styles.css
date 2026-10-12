@@ -519,6 +519,20 @@ html[data-tour] .fade-up {
   position: relative;
   display: inline-flex;
 }
+/* Six boxes (the signup invite code): narrower boxes sharing the width so
+   the row fits a phone instead of the four-digit OTP's 60px each. */
+.otp-six .otp-row {
+  gap: 8px;
+}
+.otp-six .otp-box-wrap {
+  flex: 1 1 0;
+  max-width: 52px;
+}
+.otp-six .otp-box {
+  width: 100%;
+  height: 62px;
+  font-size: 26px;
+}
 .otp-box {
   width: 60px;
   height: 72px;
@@ -645,11 +659,18 @@ html[data-tour] .fade-up {
   flex-shrink: 0;
   transition: background 0.2s;
 }
-.otp-status--error {
+.otp-status--error,
+.otp-status--locked {
   color: var(--red-bright);
 }
-.otp-status--error .otp-status-dot {
+.otp-status--error .otp-status-dot,
+.otp-status--locked .otp-status-dot {
   background: var(--red-bright);
+}
+/* Locked out after too many wrong invite codes: boxes dimmed until the
+   countdown runs out. */
+.otp-row--locked .otp-box {
+  opacity: 0.45;
 }
 .otp-status--success {
   color: var(--green);
