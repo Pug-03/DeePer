@@ -3668,7 +3668,7 @@ a.btn {
 .stagger > .award-list {
   animation: none;
 }
-.stagger > .award-contact {
+.stagger > .award-contact-wrap {
   animation: none;
 }
 .award-list {
@@ -3720,6 +3720,34 @@ a.btn {
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), var(--glass-strong));
   box-shadow: 0 16px 36px -28px rgba(244, 63, 94, 0.5);
+}
+/* Closed until ContactReveal opens it, then wipes in from the top edge
+   down. The negative insets leave room for the box shadow. A CSS animation
+   (not framer-motion) so the end state is held by `both` — framer's
+   hand-off at the end of a clip-path animation blinked. */
+.award-contact {
+  opacity: 0;
+  clip-path: inset(-40px -40px 100% -40px);
+}
+.award-contact.is-open {
+  animation: boxWipe 0.8s cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .award-contact.is-open {
+    animation: none;
+    opacity: 1;
+    clip-path: none;
+  }
+}
+@keyframes boxWipe {
+  from {
+    opacity: 0;
+    clip-path: inset(-40px -40px 100% -40px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(-40px -40px -60px -40px);
+  }
 }
 .award-contact .eyebrow {
   color: #fff;
