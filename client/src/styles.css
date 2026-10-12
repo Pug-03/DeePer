@@ -4497,3 +4497,39 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
 .nowrap {
   white-space: nowrap;
 }
+
+/* ---------- Public sample questions (/questions) ---------- */
+.samples-card {
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+.samples-level {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.samples-list {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.samples-cta {
+  margin: 6px 0 22px;
+}
+.samples-others {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.samples-others-title {
+  margin: 0;
+  color: var(--text-dim);
+}

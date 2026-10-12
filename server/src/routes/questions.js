@@ -2,10 +2,19 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CATEGORIES, LEVELS } from '../questions-bank.js';
+import { sampleQuestions } from '../seo.js';
 
 const router = Router();
 
 const validCategory = (c) => CATEGORIES.includes(c);
+
+// Public: the fixed sample shown on the /questions/:category pages, open to
+// guests so the page works before anyone signs up.
+router.get('/samples/:category', (req, res) => {
+  if (!validCategory(req.params.category))
+    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
+  res.json({ questions: sampleQuestions(req.params.category) });
+});
 
 // Fetch a batch of questions for a category (bank + this user's own).
 // `level` is one of LEVELS for just that level, or left out for all of them

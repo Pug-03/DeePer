@@ -18,6 +18,9 @@ DeePer (ดีเปอร์) คือการ์ดคำถามชวน�
 ## Links
 
 - [Home](https://deeper.in.th/): what DeePer is and how to start
+- [Questions to ask your partner](https://deeper.in.th/questions/couple) (คำถามถามแฟน): 30 sample questions, light to deep
+- [Questions to ask your friends](https://deeper.in.th/questions/friends) (คำถามชวนคุยกับเพื่อน): 30 sample questions
+- [Questions to ask your family](https://deeper.in.th/questions/family) (คำถามคุยกับครอบครัว): 30 sample questions
 - [Sign up](https://deeper.in.th/signup): create a free account
 - [Privacy policy](https://deeper.in.th/privacy): what data is kept and why
 - [Sponsor](https://deeper.in.th/sponsor): for organisations that want to support or partner

@@ -1262,6 +1262,10 @@ export default function Welcome() {
             </button>
           </p>
           <p>
+            <button className="link" type="button" onClick={() => nav('/questions')}>
+              {t('samples.link')}
+            </button>
+            {' · '}
             <button className="link" type="button" onClick={() => nav('/privacy')}>
               {t('privacy.link')}
             </button>
