@@ -62,6 +62,10 @@ app.use(
       },
     },
     crossOriginEmbedderPolicy: false,
+    // helmet's default (same-origin) cuts the Google Sign-In popup off from
+    // this page, so after picking an account the popup just sits on a blank
+    // white page and the login never comes back.
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
   }),
 );
 app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
