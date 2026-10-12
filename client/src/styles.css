@@ -4239,7 +4239,7 @@ button.profile-row:active {
   margin-bottom: 16px;
 }
 .info-age-field {
-  flex: 0 0 72px;
+  flex: 0 0 80px;
   min-width: 0;
 }
 .input.info-age {
@@ -4254,7 +4254,7 @@ button.profile-row:active {
 /* Same height and rounding as the age box beside it, with the four options
    splitting the width evenly and filling the height, so the sliding capsule
    reads as a filled cell rather than a small pill floating in a big tray.
-   No wrapping: a long label (English "Prefer not to say") breaks inside its
+   No wrapping: a long label (English "Prefer not") breaks inside its
    own option instead. */
 .info-gender-field .level-seg {
   flex-wrap: nowrap;

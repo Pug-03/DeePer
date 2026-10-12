@@ -224,7 +224,7 @@ export const STRINGS = {
     'err.NICKNAME_TOO_LONG': 'ชื่อเล่นยาวได้ไม่เกิน 40 ตัวอักษร',
     'signup.nicknamePh': 'เช่น ปลั๊ก หรือ Pluck',
     'signup.age': 'อายุ',
-    'signup.agePh': 'เช่น 25',
+    'signup.agePh': '25',
     'signup.gender': 'เพศ',
     'signup.genderPh': 'เลือกเพศ',
     'signup.setPassword': 'ตั้งรหัสผ่าน',
@@ -786,7 +786,7 @@ export const STRINGS = {
     'err.NICKNAME_TOO_LONG': 'The nickname can be at most 40 characters',
     'signup.nicknamePh': 'e.g. Pluck or ปลั๊ก',
     'signup.age': 'Age',
-    'signup.agePh': 'e.g. 25',
+    'signup.agePh': '25',
     'signup.gender': 'Gender',
     'signup.genderPh': 'Select gender',
     'signup.setPassword': 'Set a password',
@@ -857,7 +857,7 @@ export const STRINGS = {
     'gender.female': 'Female',
     'gender.male': 'Male',
     'gender.other': 'Other',
-    'gender.prefer_not': 'Prefer not to say',
+    'gender.prefer_not': 'Prefer not',
     'gender.none': 'Not specified',
 
     // Forgot password
