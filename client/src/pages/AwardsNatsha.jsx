@@ -16,7 +16,8 @@ export default function AwardsNatsha() {
   // kept by ScrollToTop); opened directly, it just goes home.
   const location = useLocation();
   const { t } = useI18n();
-  // Contact comes in last, once the empty-state note has risen in.
+  // Contact comes in last, once the empty-state box has opened and its
+  // contents have risen in (their animations bubble up to the box).
   const [shown, setShown] = useState(false);
 
   return (
@@ -37,7 +38,10 @@ export default function AwardsNatsha() {
         <h2 className="h1">{t('awards.title')}</h2>
       </div>
 
-      <div className="supporters-placeholder" onAnimationEnd={() => setShown(true)}>
+      <div
+        className="supporters-placeholder"
+        onAnimationEnd={(e) => e.target !== e.currentTarget && setShown(true)}
+      >
         <span className="supporters-placeholder-ic">
           <IcSparkle size={20} />
         </span>
