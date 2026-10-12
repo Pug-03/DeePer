@@ -459,8 +459,10 @@ router.post('/google', async (req, res) => {
   }
 
   if (!user) {
-    // New Google account — needs profile completion (nickname/age/gender).
-    const { nickname, age, gender, accept_privacy: acceptPrivacy } = req.body;
+    // New Google account — needs profile completion (nickname/age/gender)
+    // and a password of its own, same as an email signup, so the account
+    // can also sign in with email + password.
+    const { nickname, age, gender, password, accept_privacy: acceptPrivacy } = req.body;
     if (!nickname || String(nickname).trim().length < 1) {
       return res.json({
         needs_profile: true,
@@ -476,10 +478,15 @@ router.post('/google', async (req, res) => {
     if (badGender) return res.status(400).json(badGender);
     const badPrivacy = privacyError(acceptPrivacy);
     if (badPrivacy) return res.status(400).json(badPrivacy);
+    if (!validatePassword(password))
+      return res.status(400).json({
+        error: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัว มีพิมพ์ใหญ่ พิมพ์เล็ก ตัวเลข และอักขระพิเศษ',
+        error_code: 'PASSWORD_WEAK',
+      });
     const info = db
       .prepare(
-        `INSERT INTO users (email, google_sub, nickname, age, gender, privacy_accepted_at, privacy_version)
-         VALUES (?, ?, ?, ?, ?, datetime('now'), ?)`,
+        `INSERT INTO users (email, google_sub, nickname, age, gender, password_hash, privacy_accepted_at, privacy_version)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)`,
       )
       .run(
         email || null,
@@ -487,6 +494,7 @@ router.post('/google', async (req, res) => {
         String(nickname).trim(),
         age ? Number(age) : null,
         gender || null,
+        hashPassword(password),
         PRIVACY_VERSION,
       );
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);

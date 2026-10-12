@@ -401,13 +401,14 @@ export default function Signup() {
     }
   };
 
-  // Profile → next step (password for email signups, consent for Google).
+  // Profile → password. Google signups set one too, so every account can
+  // also sign in with email + password.
   const submitProfile = (e) => {
     e.preventDefault();
     setErr('');
     const errs = profileErrors();
     if (Object.keys(errs).length) return showFieldErrors(errs);
-    setStep(flow === 'google' ? 'consent' : 'password');
+    setStep('password');
   };
   const pwMismatch = password2 !== '' && password2 !== password;
   const submitPassword = (e) => {
@@ -479,7 +480,7 @@ export default function Signup() {
     try {
       const d = await api.post(
         '/auth/google',
-        { credential: gCredential, nickname, age, gender, accept_privacy: consent },
+        { credential: gCredential, nickname, age, gender, password, accept_privacy: consent },
         { auth: false },
       );
       applyAuth(d.token, d.user);
@@ -500,8 +501,8 @@ export default function Signup() {
     else if (step === 'otp') setStep('email');
     else if (step === 'profile') setStep('otp');
     else if (step === 'gprofile') setStep('method');
-    else if (step === 'password') setStep('profile');
-    else if (step === 'consent') setStep(flow === 'google' ? 'gprofile' : 'password');
+    else if (step === 'password') setStep(flow === 'google' ? 'gprofile' : 'profile');
+    else if (step === 'consent') setStep('password');
     else setStep('method');
   };
 
@@ -725,7 +726,7 @@ export default function Signup() {
           onContinue={submitConsent}
           busy={busy}
           submitLabel={flow === 'google' ? t('privacy.acceptStart') : t('privacy.acceptSignup')}
-          progress={flow === 'google' ? <StepProgress n={2} of={2} /> : <StepProgress n={3} of={3} />}
+          progress={<StepProgress n={3} of={3} />}
         />
       )}
 
@@ -733,7 +734,7 @@ export default function Signup() {
       {step === 'gprofile' && (
         <form className="stagger" onSubmit={submitProfile} noValidate>
           <div className="header">
-            <StepProgress n={1} of={2} />
+            <StepProgress n={1} of={3} />
             <h1 className="h1">{t('signup.profileTitle')}</h1>
             <p className="sub">{t('signup.gprofileSub')}</p>
           </div>
