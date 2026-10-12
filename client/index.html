@@ -47,9 +47,43 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&text=0123456789&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Structured data for search engines and AI assistants. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "DeePer",
+        "alternateName": "ดีเปอร์",
+        "url": "https://deeper.in.th/",
+        "description": "การ์ดคำถามชวนคุยลึก ๆ สำหรับคู่รัก เพื่อน และครอบครัว ใช้ฟรี — free deep conversation question cards for couples, friends and family.",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web, iOS, Android",
+        "inLanguage": ["th", "en"],
+        "image": "https://deeper.in.th/og-image.jpg",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "THB" },
+        "sameAs": ["https://www.instagram.com/deeper.th.app/", "https://www.tiktok.com/@deeper.th.app"]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Plain-text summary for crawlers that don't run JavaScript (most AI
+         bots). React replaces everything inside #root on load; until then it
+         stays visually hidden so the page doesn't flash raw text. -->
+    <div id="root"><div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">
+      <h1>DeePer — การ์ดคำถามชวนคุยลึก ๆ</h1>
+      <p>DeePer คือการ์ดคำถามชวนคุยลึก ๆ ใช้ฟรี สำหรับคู่รัก เพื่อนสนิท และครอบครัว เปิดแอปเดียวกันบนเครื่องเดียวแล้วผลัดกันตอบ ไม่ต้องต่างคนต่างดาวน์โหลด</p>
+      <ul>
+        <li>คำถามคัดสรรกว่า 1,000 ข้อ ใน 3 หมวด: คู่รัก เพื่อน ๆ ครอบครัว ไล่จากเบา ๆ ไปจนถึงลึก</li>
+        <li>ปัดการ์ด: ซ้ายเพื่อข้าม ขวาเพื่อตอบ หรือบันทึกไว้ทีหลัง</li>
+        <li>ตั้งชื่อ รูป และสีของอีกฝ่ายแยกตามหมวด</li>
+        <li>แชร์คำถามเป็นภาพลง IG Story หรือ LINE</li>
+        <li>เก็บประวัติคำตอบไว้อ่านย้อนหลัง</li>
+        <li>ใช้บนเบราว์เซอร์ได้ทั้งมือถือ แท็บเล็ต และคอมพิวเตอร์ เพิ่มลงหน้าจอโฮมได้</li>
+      </ul>
+      <p>DeePer is a free web app of deep conversation question cards for couples, friends and family. Two people share one phone and take turns answering. Available in Thai and English.</p>
+      <p><a href="/signup">สมัครใช้งานฟรี</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a> · <a href="/sponsor">ร่วมสนับสนุน</a></p>
+    </div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

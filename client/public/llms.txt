@@ -1,0 +1,24 @@
+# DeePer
+
+> DeePer (https://deeper.in.th) is a free Thai web app of deep conversation question cards for couples, friends and family. Two people share one phone, swipe through question cards and take turns answering. Available in Thai and English.
+
+DeePer (ดีเปอร์) คือการ์ดคำถามชวนคุยลึก ๆ ใช้ฟรี สำหรับคู่รัก เพื่อน และครอบครัว เปิดแอปเดียวกันบนเครื่องเดียว แล้วผลัดกันตอบ ไม่ต้องต่างคนต่างดาวน์โหลด
+
+## What it does
+
+- About 1,050 curated questions in 3 categories: couples (คู่รัก), friends (เพื่อน ๆ) and family (ครอบครัว)
+- Each category goes from light to deep: easy openers, memories and values, then deeper personal questions
+- Swipe cards: left to skip, right to answer, or save a question for later
+- Take-turns answering on one device, with a name, photo and colour for the other person in each category
+- Turn a question into an image to share on Instagram Story or LINE
+- Every answer is kept in a history to read again later, and old questions resurface as memories
+- Works in the browser on phone, tablet and computer; can be added to the home screen as an app (PWA)
+- Sign up with email (4-digit code) or Google; free to use
+
+## Links
+
+- [Home](https://deeper.in.th/): what DeePer is and how to start
+- [Sign up](https://deeper.in.th/signup): create a free account
+- [Privacy policy](https://deeper.in.th/privacy): what data is kept and why
+- [Sponsor](https://deeper.in.th/sponsor): for organisations that want to support or partner
+- [Instagram](https://www.instagram.com/deeper.th.app/) and [TikTok](https://www.tiktok.com/@deeper.th.app): news and activities

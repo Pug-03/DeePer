@@ -1,4 +1,7 @@
-# DeePer — let search engines index the public pages only.
+# DeePer — search engines and AI assistants (Googlebot, Google-Extended for
+# Gemini, GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Bingbot...) are
+# all welcome on the public pages; the rules below apply to every one of them.
+# A plain summary for AI assistants lives at /llms.txt.
 User-agent: *
 Disallow: /app/
 Disallow: /admin
