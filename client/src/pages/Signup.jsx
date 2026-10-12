@@ -18,8 +18,7 @@ import { IcBack, IcCamera, IcGoogle, IcMail } from '../components/icons.jsx';
 import { nicknameError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
 import { PrivacySheet } from '../components/PrivacyPolicy.jsx';
-
-const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
+import GenderPicker from '../components/GenderPicker.jsx';
 
 function ProfileFields({
   nickname,
@@ -76,47 +75,35 @@ function ProfileFields({
         />
         <FieldError id="pf-nickname-err" msg={errors.nickname} />
       </div>
-      <div className="field">
-        <label>{t('signup.age')}</label>
-        <input
-          id="pf-age"
-          className="input"
-          type="number"
-          inputMode="numeric"
-          value={age}
-          onChange={(e) => {
-            setAge(e.target.value);
-            clearError('age');
-          }}
-          placeholder={t('signup.agePh')}
-          min={1}
-          max={90}
-          {...invalidProps('age', errors)}
-        />
-        <FieldError id="pf-age-err" msg={errors.age} />
-      </div>
-      <div className="field">
-        <label>{t('signup.gender')}</label>
-        <select
-          id="pf-gender"
-          className="select"
+      {/* Age and gender share a row, same as the My-information page. */}
+      <div className="info-row signup-info-row">
+        <div className="field info-age-field">
+          <label htmlFor="pf-age">{t('signup.age')}</label>
+          <input
+            id="pf-age"
+            className="input info-age"
+            type="number"
+            inputMode="numeric"
+            value={age}
+            onChange={(e) => {
+              setAge(e.target.value);
+              clearError('age');
+            }}
+            placeholder={t('signup.agePh')}
+            min={1}
+            max={90}
+            {...invalidProps('age', errors)}
+          />
+          <FieldError id="pf-age-err" msg={errors.age} />
+        </div>
+        <GenderPicker
           value={gender}
-          onChange={(e) => {
-            setGender(e.target.value);
+          onPick={(g) => {
+            setGender(g);
             clearError('gender');
           }}
-          {...invalidProps('gender', errors)}
-        >
-          <option value="" disabled>
-            {t('signup.genderPh')}
-          </option>
-          {GENDER_VALUES.map((g) => (
-            <option key={g} value={g}>
-              {t(`gender.${g}`)}
-            </option>
-          ))}
-        </select>
-        <FieldError id="pf-gender-err" msg={errors.gender} />
+          errors={errors}
+        />
       </div>
     </>
   );

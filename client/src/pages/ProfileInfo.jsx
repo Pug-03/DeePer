@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
@@ -9,11 +8,8 @@ import { IcBack, IcCamera, IcTrash } from '../components/icons.jsx';
 import { displayName, nicknameError } from '../util.js';
 import FieldError, { invalidProps } from '../components/FieldError.jsx';
 import SaveButton, { useSavedFlash } from '../components/SaveButton.jsx';
-import { useElasticIndicator } from '../utils/elasticIndicator.js';
+import GenderPicker, { GENDER_VALUES } from '../components/GenderPicker.jsx';
 import { useAvatarEdit } from '../utils/useAvatarEdit.js';
-
-// Same choices as signup; gender is required there, so there's no "none".
-const GENDER_VALUES = ['female', 'male', 'other', 'prefer_not'];
 
 // Nickname, age and gender, edited on their own page opened from Profile.
 export default function ProfileInfo() {
@@ -46,7 +42,6 @@ export default function ProfileInfo() {
     setGender(g);
     setErrs((cur) => ({ ...cur, gender: undefined }));
   };
-  const genderInd = useElasticIndicator(gender, pickGender);
 
   const save = async () => {
     const nameErr = nicknameError(nickname);
@@ -190,54 +185,7 @@ export default function ProfileInfo() {
             />
             <FieldError id="pf-age-err" msg={errs.age} />
           </div>
-          <div className="field info-gender-field">
-            <label id="pf-gender-label">{t('signup.gender')}</label>
-            {/* Every option on show at once, with the same sliding capsule as
-              the question-depth picker on Profile — clearer than a select,
-              which here read as just another text box. */}
-            <div
-              id="pf-gender"
-              ref={genderInd.rowRef}
-              className="lang-seg level-seg"
-              role="radiogroup"
-              aria-labelledby="pf-gender-label"
-              tabIndex={-1}
-              {...invalidProps('gender', errs)}
-              {...genderInd.dragHandlers}
-            >
-              <motion.span className="level-seg-bg" style={{ ...genderInd.style, opacity: gender ? 1 : 0 }} />
-              {GENDER_VALUES.map((g) => {
-                const isActive = gender === g;
-                return (
-                  <button
-                    key={g}
-                    ref={genderInd.itemRef(g)}
-                    data-pick={g}
-                    type="button"
-                    role="radio"
-                    aria-checked={isActive}
-                    className={isActive ? 'active' : ''}
-                    onClick={() => pickGender(g)}
-                  >
-                    <motion.span
-                      key={isActive ? 'on' : 'off'}
-                      className="pill-label"
-                      initial={isActive ? { scale: 0.82 } : false}
-                      animate={{ scale: 1 }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 380,
-                        damping: 14,
-                      }}
-                    >
-                      {t(`gender.${g}`)}
-                    </motion.span>
-                  </button>
-                );
-              })}
-            </div>
-            <FieldError id="pf-gender-err" msg={errs.gender} />
-          </div>
+          <GenderPicker value={gender} onPick={pickGender} errors={errs} />
         </div>
         <SaveButton
           onClick={save}

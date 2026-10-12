@@ -4233,6 +4233,11 @@ button.profile-row:active {
 .info-row .field {
   margin-bottom: 0;
 }
+/* Signup's Next button follows straight after the row, so keep the usual
+   field gap below it. */
+.signup-info-row {
+  margin-bottom: 16px;
+}
 .info-age-field {
   flex: 0 0 72px;
   min-width: 0;
