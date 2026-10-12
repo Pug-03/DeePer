@@ -145,7 +145,7 @@ export default function PartnerSettings() {
 
       <div className="glass" style={{ padding: 18 }}>
         <div
-          className="filter-row filter-row--elastic"
+          className="filter-row filter-row--elastic filter-row--fill"
           style={{ marginBottom: 16 }}
           ref={catInd.rowRef}
           {...catInd.dragHandlers}
@@ -227,13 +227,12 @@ export default function PartnerSettings() {
             </button>
           )}
         </div>
-        <div className="color-swatches" style={{ marginBottom: 18 }}>
+        <div className="icon-swatches" style={{ marginBottom: 18 }}>
           {PARTNER_ICONS.map(({ id, Icon }) => (
             <button
               key={id}
               type="button"
               className={`swatch ${user?.partners?.[activeCat]?.icon === id ? 'sel' : ''}`}
-              style={{ background: 'var(--glass)', display: 'grid', placeItems: 'center', color: 'var(--text-dim)' }}
               onClick={() => pickPartnerIcon(id)}
               disabled={partnerAvatarBusy}
               aria-label={id}

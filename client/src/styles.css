@@ -855,6 +855,15 @@ html[data-tour] .fade-up {
   flex: 0 1 auto;
   padding: 0 16px;
 }
+/* Partner settings: the three category tabs share the card's width evenly
+   instead of bunching left with a gap on the right. */
+.filter-row--fill {
+  flex-wrap: nowrap;
+}
+.filter-row--fill .pill {
+  flex: 1 1 0;
+  padding: 0 8px;
+}
 .filter-row .pill.active {
   background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
   box-shadow: var(--glow-red);
@@ -885,8 +894,10 @@ html[data-tour] .fade-up {
   position: absolute;
   z-index: 0;
   border-radius: 999px;
-  background: linear-gradient(120deg, rgba(244, 63, 94, 0.9), rgba(190, 18, 60, 0.9));
-  box-shadow: 0 0 20px -6px rgba(244, 63, 94, 0.5);
+  /* Same solid red as the other sliding pickers (.level-seg-bg) — the old
+     see-through, darker gradient read as a duller red next to them. */
+  background: linear-gradient(120deg, var(--red), var(--red-deep));
+  box-shadow: 0 0 16px -4px rgba(244, 63, 94, 0.45);
   pointer-events: none;
 }
 
@@ -1301,7 +1312,32 @@ html[data-tour] .fade-up {
 }
 .swatch.sel {
   border-color: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.28);
+}
+/* Partner icons: all sixteen in two even rows of eight that span the card,
+   instead of rows of six leaving a gap on the right. The picked one fills
+   with the app's red, like the other pickers' selection. */
+.icon-swatches {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px 4px;
+  justify-items: center;
+}
+.icon-swatches .swatch {
+  width: 100%;
+  max-width: 38px;
+  height: auto;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--glass);
+  color: var(--text-dim);
+}
+.icon-swatches .swatch.sel {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--red), var(--red-deep));
+  color: #fff;
+  box-shadow: 0 0 16px -4px rgba(244, 63, 94, 0.55);
 }
 
 /* ---------- Bottom nav ---------- */
