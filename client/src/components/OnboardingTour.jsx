@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
@@ -287,7 +287,6 @@ function TipBody({ id, step, isLast, t, onBack, onNext, onSkip }) {
 export default function OnboardingTour() {
   const { t } = useI18n();
   const nav = useNavigate();
-  const { pathname } = useLocation();
   const tutorial = useTutorial();
   const step = tutorial.step;
   const [closing, setClosing] = useState(false);
@@ -295,9 +294,13 @@ export default function OnboardingTour() {
   // fading-out buttons can't move it to another step (and page) on its way
   // out.
   const closingRef = useRef(false);
-  const close = () => {
+  // `to`: the page to land on. It's opened right away, under the overlay as
+  // it fades, so the overlay's fade reveals it — navigating only once the
+  // fade had finished cut to the new page with a visible jump.
+  const close = (to) => {
     closingRef.current = true;
     setClosing(true);
+    if (to && to !== window.location.pathname) nav(to, { replace: true });
   };
   // Set when the tour was closed by the browser/phone Back gesture: the
   // person is leaving on purpose, so don't pull them back to Home.
@@ -345,7 +348,8 @@ export default function OnboardingTour() {
   const next = () => {
     if (closingRef.current) return;
     const cur = stepRef.current;
-    if (cur === STEPS.length - 1) close();
+    // The last step points at the Profile tab, so finishing opens Profile.
+    if (cur === STEPS.length - 1) close('/app/profile');
     else goToStep(cur + 1, 1);
   };
   const back = () => {
@@ -353,7 +357,7 @@ export default function OnboardingTour() {
     goToStep(Math.max(0, stepRef.current - 1), -1);
   };
   const skip = () => {
-    if (!closingRef.current) close();
+    if (!closingRef.current) close('/app/home');
   };
 
   // A Back gesture mid-tour left the overlay pointing at a step for a page
@@ -378,7 +382,7 @@ export default function OnboardingTour() {
     if (rect) return undefined;
     const timer = setTimeout(() => {
       if (closingRef.current) return;
-      if (stepRef.current === STEPS.length - 1) close();
+      if (stepRef.current === STEPS.length - 1) close('/app/profile');
       else goToStep(stepRef.current + 1, 1);
     }, 1700);
     return () => clearTimeout(timer);
@@ -416,14 +420,9 @@ export default function OnboardingTour() {
   }
 
   return (
-    // Finishing or skipping the tour lands back on Home — it otherwise ends
-    // on whatever page its last step was on (History, Saved, ...).
-    <AnimatePresence
-      onExitComplete={() => {
-        tutorial.stop();
-        if (!leftByBack.current && pathname !== '/app/home') nav('/app/home', { replace: true });
-      }}
-    >
+    // Finishing lands on Profile and skipping on Home (see close()); both
+    // pages are already showing by the time the overlay is gone.
+    <AnimatePresence onExitComplete={() => tutorial.stop()}>
       {!closing && (
         <motion.div
           className="tut-overlay"
