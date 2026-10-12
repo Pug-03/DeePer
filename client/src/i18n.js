@@ -536,6 +536,8 @@ export const STRINGS = {
     'support.proofSubmit': 'ส่งหลักฐาน',
     'support.proofSubmitting': 'กำลังส่ง...',
     'support.proofSuccess': 'ส่งเรียบร้อย ขอบคุณที่สนับสนุนนะ!',
+    'support.thanksTitle': 'ขอบคุณที่สนับสนุน DeePer นะ',
+    'support.thanksMsg': 'เราได้รับหลักฐานการโอนแล้ว\nทุกการสนับสนุนช่วยให้ DeePer ไปต่อได้\nตรวจสอบเสร็จแล้วจะมีชื่อคุณในหน้าผู้สนับสนุน',
     'support.proofUpdate': 'เราอัปเดตรายชื่อผู้สนับสนุนทุก ๆ 15 วัน',
 
     // ติดตามข่าวสาร (IG / TikTok)
@@ -1113,6 +1115,8 @@ export const STRINGS = {
     'support.proofSubmit': 'Submit proof',
     'support.proofSubmitting': 'Submitting...',
     'support.proofSuccess': 'Submitted — thank you for your support!',
+    'support.thanksTitle': 'Thank you for supporting DeePer',
+    'support.thanksMsg': 'We’ve got your transfer slip.\nEvery bit of support keeps DeePer going.\nOnce it’s checked, your name will appear among our supporters',
     'support.proofUpdate': 'We update the supporter list every 15 days',
 
     'social.teaser': "Don't miss DeePer news and events — follow us on IG and TikTok",

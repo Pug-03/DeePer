@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
@@ -6,6 +7,7 @@ import { useToast } from '../components/ui.jsx';
 import { IcBack, IcBank, IcQrCode, IcCopy, IcChat, IcCamera } from '../components/icons.jsx';
 import { SUPPORT_INFO } from '../support-info.js';
 import { shrinkImage, DOCUMENT_SIDE } from '../utils/shrinkImage.js';
+import CheckBadge, { rise } from '../components/CheckBadge.jsx';
 
 export default function Support() {
   const nav = useNavigate();
@@ -23,6 +25,7 @@ export default function Support() {
   const [amount, setAmount] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const copy = async (text) => {
     try {
@@ -57,7 +60,7 @@ export default function Support() {
       fd.append('amount', amount);
       fd.append('display_name', displayName.trim());
       await api.upload('/support/proof', fd);
-      toast(t('support.proofSuccess'));
+      setSent(true);
       if (slipPreview) URL.revokeObjectURL(slipPreview);
       setSlipFile(null);
       setSlipPreview('');
@@ -73,6 +76,26 @@ export default function Support() {
   };
 
   const { bank, promptPay } = SUPPORT_INFO;
+
+  // Sent: a proper thank-you, same animated check as the report and sponsor
+  // forms, instead of a toast that was gone in a moment.
+  if (sent)
+    return (
+      <div className="page center" style={{ justifyContent: 'center', flex: 1 }}>
+        <CheckBadge />
+        <motion.h1 className="h1" {...rise(1.05)}>
+          {t('support.thanksTitle')}
+        </motion.h1>
+        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(1.2)}>
+          {t('support.thanksMsg')}
+        </motion.p>
+        <motion.div style={{ marginTop: 36 }} {...rise(1.38)}>
+          <button className="btn btn--primary" type="button" onClick={goBack}>
+            {t('common.back')}
+          </button>
+        </motion.div>
+      </div>
+    );
 
   return (
     <div className="page stagger">
