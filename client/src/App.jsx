@@ -1,5 +1,5 @@
-import { Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Suspense, useEffect, useState } from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from './store/auth.jsx';
 import { TutorialProvider, useTutorial } from './store/tutorial.jsx';
 import { ToastProvider, ConfirmProvider, Loading } from './components/ui.jsx';
@@ -52,6 +52,28 @@ function GuestOnly({ children }) {
   if (loading) return <Loading />;
   if (user) return <Navigate to="/app/home" replace />;
   return children;
+}
+
+// A path this build doesn't know may be a page a newer deploy added — a tab
+// left open across a deploy, or a home-screen app still running last
+// week's build. Load it fresh from the server once before giving up and
+// going home, so new pages work without the visitor having to reload.
+function UnknownRoute() {
+  const { pathname, search } = useLocation();
+  const [giveUp] = useState(() => {
+    const key = `route-reload:${pathname}`;
+    try {
+      if (sessionStorage.getItem(key)) return true;
+      sessionStorage.setItem(key, '1');
+      return false;
+    } catch {
+      return true;
+    }
+  });
+  useEffect(() => {
+    if (!giveUp) window.location.replace(pathname + search);
+  }, [giveUp, pathname, search]);
+  return giveUp ? <Navigate to="/" replace /> : <Loading />;
 }
 
 function TabLayout() {
@@ -116,7 +138,7 @@ export default function App() {
                 <Route path="/app/profile/review" element={<Protected><Review /></Protected>} />
                 <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<UnknownRoute />} />
               </Routes>
             </Suspense>
           </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useReturning } from '../components/ScrollToTop.jsx';
 import { motion, useInView, useReducedMotion, animate, cubicBezier } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
@@ -1262,9 +1262,11 @@ export default function Welcome() {
             </button>
           </p>
           <p>
-            <button className="link" type="button" onClick={() => nav('/questions')}>
+            {/* A real link (not a button) so it also works as a plain
+                page load and crawlers follow it. */}
+            <Link className="link" to="/questions">
               {t('samples.link')}
-            </button>
+            </Link>
             {' · '}
             <button className="link" type="button" onClick={() => nav('/privacy')}>
               {t('privacy.link')}
