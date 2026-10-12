@@ -3,20 +3,19 @@ import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
 import { optionalAuth } from '../auth.js';
 import { sendMail } from '../mailer.js';
+import { PRIVATE_UPLOADS_DIR } from '../paths.js';
 
 const router = Router();
 
 // Screenshots can show a user's private answers, so they live outside the
 // publicly served uploads/ folder — only the maintainer sees them (by email,
 // or on disk via `npm run reports`).
-const __dirname = dirname(fileURLToPath(import.meta.url));
-export const REPORT_DIR = join(__dirname, '..', '..', 'private-uploads', 'reports');
+export const REPORT_DIR = join(PRIVATE_UPLOADS_DIR, 'reports');
 fs.mkdirSync(REPORT_DIR, { recursive: true });
 
 const REPORT_CATEGORIES = ['bug', 'problem', 'idea'];

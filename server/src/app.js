@@ -16,6 +16,7 @@ import adminRoutes from './routes/admin.js';
 import visitRoutes from './routes/visits.js';
 import inquiryRoutes from './routes/inquiries.js';
 import reviewRoutes from './routes/reviews.js';
+import { UPLOADS_DIR } from './paths.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const app = express();
@@ -66,10 +67,9 @@ app.use(
 app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
 app.use(express.json({ limit: '256kb' }));
 
-const uploadsDir = join(__dirname, '..', 'uploads');
-fs.mkdirSync(join(uploadsDir, 'avatars'), { recursive: true });
-fs.mkdirSync(join(uploadsDir, 'slips'), { recursive: true });
-app.use('/uploads', express.static(uploadsDir));
+fs.mkdirSync(join(UPLOADS_DIR, 'avatars'), { recursive: true });
+fs.mkdirSync(join(UPLOADS_DIR, 'slips'), { recursive: true });
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 // Public landing-page stats — site-wide totals only, no per-user data.

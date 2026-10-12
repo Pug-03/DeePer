@@ -1,11 +1,10 @@
-import { fileURLToPath } from 'node:url';
-import { dirname, join, basename } from 'node:path';
+import { join, basename } from 'node:path';
 import fs from 'node:fs';
 import { db } from './db.js';
 import { sendMail } from './mailer.js';
+import { UPLOADS_DIR } from './paths.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const SLIP_DIR = join(__dirname, '..', 'uploads', 'slips');
+const SLIP_DIR = join(UPLOADS_DIR, 'slips');
 
 const DIGEST_DAYS = Number(process.env.SUPPORT_DIGEST_DAYS || 15);
 const DIGEST_TO = process.env.SUPPORT_DIGEST_TO || process.env.SMTP_USER || '';

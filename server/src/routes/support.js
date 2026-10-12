@@ -2,13 +2,13 @@ import { Router } from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
 import { randomBytes } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
 import { requireAuth } from '../auth.js';
 import { approvedSupporterNames, approveProofs, revokeProofs, proofByToken } from '../supporters.js';
 import { sendMail } from '../mailer.js';
+import { UPLOADS_DIR } from '../paths.js';
 
 const router = Router();
 
@@ -25,8 +25,7 @@ const publicOrigin = (req) =>
 const escapeHtml = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const SLIP_DIR = join(__dirname, '..', '..', 'uploads', 'slips');
+const SLIP_DIR = join(UPLOADS_DIR, 'slips');
 fs.mkdirSync(SLIP_DIR, { recursive: true });
 
 const SLIP_MIME_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };

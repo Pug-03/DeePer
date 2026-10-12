@@ -1,11 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { randomBytes } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 import { bankRows, CATEGORIES } from './questions-bank.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = process.env.DB_PATH || join(__dirname, '..', 'deeptalk.db');
+import { DB_PATH } from './paths.js';
 
 export const db = new DatabaseSync(DB_PATH);
 

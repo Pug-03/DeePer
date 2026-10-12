@@ -1,15 +1,19 @@
-# Render Blueprint — trial deployment on the free plan.
-# The free plan has no persistent disk: the SQLite DB and uploaded images are
-# wiped on every redeploy/restart, and the service sleeps after ~15 min idle.
+# Render Blueprint. Starter plan with a persistent disk: the SQLite DB and
+# every uploaded picture live under DATA_DIR on that disk, so a redeploy or
+# restart keeps them (the free plan has no disk and wiped them every time).
 services:
   - type: web
     name: deeper
     runtime: node
-    plan: free
+    plan: starter
     region: singapore
     buildCommand: npm --prefix server ci && npm --prefix client ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
+    disk:
+      name: deeper-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: "24"
@@ -17,6 +21,8 @@ services:
         value: production
       - key: TRUST_PROXY
         value: "true"
+      - key: DATA_DIR
+        value: /var/data
       - key: JWT_SECRET
         generateValue: true
       - key: GOOGLE_CLIENT_ID

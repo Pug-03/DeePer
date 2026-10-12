@@ -3,8 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { OAuth2Client } from 'google-auth-library';
 import multer from 'multer';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join, basename } from 'node:path';
+import { join, basename } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
 import { CATEGORIES } from '../questions-bank.js';
@@ -19,16 +18,16 @@ import {
   checkAdminLogin,
   signAdminToken,
 } from '../auth.js';
+import { UPLOADS_DIR } from '../paths.js';
 
 const router = Router();
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const AVATAR_DIR = join(__dirname, '..', '..', 'uploads', 'avatars');
+const AVATAR_DIR = join(UPLOADS_DIR, 'avatars');
 const avatarPath = (avatarUrl) => join(AVATAR_DIR, basename(avatarUrl));
-const PARTNER_AVATAR_DIR = join(__dirname, '..', '..', 'uploads', 'partner_avatars');
+const PARTNER_AVATAR_DIR = join(UPLOADS_DIR, 'partner_avatars');
 const partnerAvatarPath = (avatarUrl) => join(PARTNER_AVATAR_DIR, basename(avatarUrl));
 fs.mkdirSync(PARTNER_AVATAR_DIR, { recursive: true });
 

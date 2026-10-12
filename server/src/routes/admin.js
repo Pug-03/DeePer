@@ -2,16 +2,15 @@ import { Router } from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
-import { dirname, join, basename } from 'node:path';
+import { join, basename } from 'node:path';
 import { db } from '../db.js';
 import { requireAdmin } from '../auth.js';
 import { approveProofs, revokeProofs } from '../supporters.js';
 import { sendMail } from '../mailer.js';
 import { REPORT_DIR } from './reports.js';
+import { UPLOADS_DIR } from '../paths.js';
 
 const router = Router();
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Days are Bangkok calendar days; timestamps in the DB are UTC.
 const BKK = "'+7 hours'";
@@ -274,7 +273,6 @@ router.delete('/reviews/:id', (req, res) => {
 // Moving to the trash only sets deleted_at (the item stays viewable under
 // the trash filter and can be restored). Deleting for good is allowed only
 // from the trash, and also removes the uploaded screenshot or slip.
-const UPLOADS_DIR = join(__dirname, '..', '..', 'uploads');
 const TRASHABLE = {
   reports: { table: 'bug_reports', file: (r) => r.screenshot_path && join(REPORT_DIR, basename(r.screenshot_path)) },
   inquiries: { table: 'sponsor_inquiries', file: () => null },
@@ -308,7 +306,7 @@ router.delete('/:kind(reports|inquiries|proofs)/:id', (req, res) => {
 
 // ---- Sponsor logos ----
 const SPONSOR_TIERS = ['high', 'medium', 'general'];
-const SPONSOR_DIR = join(__dirname, '..', '..', 'uploads', 'sponsors');
+const SPONSOR_DIR = join(UPLOADS_DIR, 'sponsors');
 fs.mkdirSync(SPONSOR_DIR, { recursive: true });
 
 const LOGO_MIME_EXT = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg', 'image/svg+xml': '.svg' };
