@@ -20,6 +20,9 @@ import FieldError, { invalidProps } from '../components/FieldError.jsx';
 import { PrivacySheet } from '../components/PrivacyPolicy.jsx';
 import GenderPicker from '../components/GenderPicker.jsx';
 
+// Where someone heard of DeePer, asked when they request to join the test.
+const TESTER_SOURCES = ['instagram', 'tiktok', 'friend', 'google', 'other'];
+
 function ProfileFields({
   nickname,
   setNickname,
@@ -241,6 +244,32 @@ export default function Signup() {
   const [lockLeft, setLockLeft] = useState(0);
   const [inviteOk, setInviteOk] = useState(false);
   const inviteCode = inviteDigits.join('');
+
+  // No code yet: ask to join the test instead. The admin emails the code.
+  const [req, setReq] = useState({ nickname: '', email: '', source: '', source_other: '' });
+  const [reqErr, setReqErr] = useState({});
+  const setReqField = (k, v) => {
+    setReq((cur) => ({ ...cur, [k]: v }));
+    setReqErr((cur) => ({ ...cur, [k]: undefined }));
+  };
+  const submitTesterRequest = async (e) => {
+    e.preventDefault();
+    setErr('');
+    const errs = {};
+    if (!req.nickname.trim()) errs.nickname = t('err.NICKNAME_REQUIRED');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.email.trim())) errs.email = t('err.INVALID_EMAIL');
+    if (!req.source) errs.source = t('err.TESTER_SOURCE_REQUIRED');
+    if (Object.keys(errs).length) return setReqErr(errs);
+    setBusy(true);
+    try {
+      await api.post('/tester-requests', req, { auth: false });
+      setStep('requested');
+    } catch (e2) {
+      setErr(e2.message);
+    } finally {
+      setBusy(false);
+    }
+  };
   const needInvite = config.invite_required && !inviteOk;
 
   useEffect(() => {
@@ -561,6 +590,7 @@ export default function Signup() {
     setOtpStatus('idle');
     setOtpMsg('');
     if (step === 'method') nav('/');
+    else if (step === 'request' || step === 'requested') setStep('method');
     else if (step === 'otp') setStep('email');
     else if (step === 'profile') setStep('otp');
     else if (step === 'gprofile') setStep('method');
@@ -623,7 +653,100 @@ export default function Signup() {
           >
             {t('signup.inviteSubmit')}
           </button>
+          <p className="faint center" style={{ marginTop: 18, fontSize: 14 }}>
+            {t('tester.noCode')}{' '}
+            <button
+              className="link"
+              type="button"
+              onClick={() => {
+                setErr('');
+                setStep('request');
+              }}
+            >
+              {t('tester.ask')}
+            </button>
+          </p>
         </form>
+      )}
+
+      {/* Step: ask to join the pre-launch test (no invite code yet) */}
+      {step === 'request' && (
+        <form className="stagger" onSubmit={submitTesterRequest} noValidate>
+          <div className="header">
+            <h1 className="h1">{t('tester.title')}</h1>
+            <p className="sub">{t('tester.sub')}</p>
+          </div>
+          <div className="field">
+            <label htmlFor="tr-nickname">{t('signup.nickname')}</label>
+            <input
+              id="tr-nickname"
+              className="input"
+              value={req.nickname}
+              onChange={(e) => setReqField('nickname', e.target.value)}
+              placeholder={t('signup.nicknamePh')}
+              maxLength={40}
+              {...invalidProps('nickname', reqErr)}
+            />
+            <FieldError id="tr-nickname-err" msg={reqErr.nickname} />
+          </div>
+          <div className="field">
+            <label htmlFor="tr-email">{t('login.email')}</label>
+            <input
+              id="tr-email"
+              className="input"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={req.email}
+              onChange={(e) => setReqField('email', e.target.value)}
+              {...invalidProps('email', reqErr)}
+            />
+            <FieldError id="tr-email-err" msg={reqErr.email} />
+          </div>
+          <div className="field">
+            <label id="tr-source-label">{t('tester.source')}</label>
+            <div className="filter-row tester-sources" role="radiogroup" aria-labelledby="tr-source-label">
+              {TESTER_SOURCES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  role="radio"
+                  aria-checked={req.source === s}
+                  className={`pill ${req.source === s ? 'active' : ''}`}
+                  onClick={() => setReqField('source', s)}
+                >
+                  {t(`tester.source.${s}`)}
+                </button>
+              ))}
+            </div>
+            {req.source === 'other' && (
+              <input
+                className="input"
+                value={req.source_other}
+                onChange={(e) => setReqField('source_other', e.target.value)}
+                placeholder={t('tester.sourceOtherPh')}
+                maxLength={100}
+              />
+            )}
+            <FieldError id="tr-source-err" msg={reqErr.source} />
+          </div>
+          <button className="btn btn--primary" type="submit" disabled={busy}>
+            {t('tester.submit')}
+          </button>
+        </form>
+      )}
+
+      {step === 'requested' && (
+        <div className="stagger">
+          <div className="header">
+            <h1 className="h1">{t('tester.doneTitle')}</h1>
+            <p className="sub">{t('tester.doneSub', { email: req.email.trim() })}</p>
+          </div>
+          <button className="btn btn--primary" type="button" onClick={() => nav('/')}>
+            {t('common.back')}
+          </button>
+        </div>
       )}
 
       {step === 'method' && !needInvite && (

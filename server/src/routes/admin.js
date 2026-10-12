@@ -9,6 +9,7 @@ import { approveProofs, revokeProofs } from '../supporters.js';
 import { sendMail } from '../mailer.js';
 import { REPORT_DIR } from './reports.js';
 import { UPLOADS_DIR } from '../paths.js';
+import { testerInviteEmail } from '../testerInvite.js';
 
 const router = Router();
 
@@ -50,6 +51,7 @@ router.get('/stats', (req, res) => {
     answers_today: count(`SELECT COUNT(*) AS c FROM history WHERE date(created_at, ${BKK}) = ${today}`),
     reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL AND deleted_at IS NULL'),
     inquiries_open: count('SELECT COUNT(*) AS c FROM sponsor_inquiries WHERE handled_at IS NULL AND deleted_at IS NULL'),
+    tester_requests_open: count('SELECT COUNT(*) AS c FROM tester_requests WHERE invited_at IS NULL'),
     reviews_pending: count(`SELECT COUNT(*) AS c FROM reviews WHERE status = 'pending'`),
     proofs_pending: count(
       'SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL AND deleted_at IS NULL',
@@ -235,6 +237,42 @@ router.post('/inquiries/:id/:action(handled|reopen)', (req, res) => {
     .run(Number(req.params.id));
   if (!changes) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
   res.json({ ok: true });
+});
+
+// ---- Pre-launch tester requests: email them the invite code ----
+// Each comes with the exact email that will go out, so the admin reads it
+// before pressing send.
+router.get('/tester-requests', (req, res) => {
+  const code = process.env.INVITE_CODE || '';
+  res.json({
+    invite_code_set: !!code,
+    requests: db
+      .prepare('SELECT * FROM tester_requests ORDER BY invited_at IS NOT NULL, created_at DESC')
+      .all()
+      .map((r) => ({ ...r, email_preview: testerInviteEmail({ nickname: r.nickname, code }) })),
+  });
+});
+
+router.post('/tester-requests/:id/invite', async (req, res) => {
+  const r = db.prepare('SELECT * FROM tester_requests WHERE id = ?').get(Number(req.params.id));
+  if (!r) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
+  const code = process.env.INVITE_CODE;
+  if (!code)
+    return res.status(400).json({ error: 'ยังไม่ได้ตั้งค่า INVITE_CODE จึงยังส่งรหัสไม่ได้', error_code: 'INVITE_CODE_MISSING' });
+  const { subject, text } = testerInviteEmail({ nickname: r.nickname, code });
+  // Never mail from the test suite (a real .env may hold SMTP credentials).
+  const { delivered } =
+    process.env.NODE_ENV === 'test' ? { delivered: true } : await sendMail({ to: r.email, subject, text });
+  if (!delivered)
+    return res.status(503).json({ error: 'ยังไม่ได้ตั้งค่า SMTP จึงส่งอีเมลไม่ได้', error_code: 'MAIL_NOT_CONFIGURED' });
+  db.prepare(`UPDATE tester_requests SET invited_at = datetime('now') WHERE id = ?`).run(r.id);
+  res.json({ ok: true });
+});
+
+router.delete('/tester-requests/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM tester_requests WHERE id = ?').run(Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
+  res.status(204).end();
 });
 
 // ---- Reviews: approve before they show on the landing page ----

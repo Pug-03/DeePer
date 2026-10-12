@@ -74,6 +74,7 @@ function AdminDashboard({ onLogout }) {
     { key: 'insights', label: 'การใช้งาน' },
     { key: 'reports', label: 'แจ้งปัญหา', badge: stats?.reports_open },
     { key: 'proofs', label: 'ผู้สนับสนุน', badge: stats?.proofs_pending },
+    { key: 'testers', label: 'คำขอทดสอบ', badge: stats?.tester_requests_open },
     { key: 'inquiries', label: `ติดต่อเป็น${keepWord('สปอนเซอร์')}`, badge: stats?.inquiries_open },
     { key: 'reviews', label: 'รีวิว', badge: stats?.reviews_pending },
     { key: 'sponsors', label: `โลโก้${keepWord('สปอนเซอร์')}` },
@@ -117,6 +118,7 @@ function AdminDashboard({ onLogout }) {
           {tab === 'insights' && <Insights onLogout={onLogout} />}
           {tab === 'reports' && <Reports onLogout={onLogout} onChange={reload} />}
           {tab === 'proofs' && <Proofs onLogout={onLogout} onChange={reload} />}
+          {tab === 'testers' && <TesterRequests onLogout={onLogout} onChange={reload} />}
           {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
           {tab === 'reviews' && <Reviews onLogout={onLogout} onChange={reload} />}
           {tab === 'sponsors' && <Sponsors onLogout={onLogout} />}
@@ -695,6 +697,129 @@ function Sponsors({ onLogout }) {
         );
       })}
       </div>
+      </div>
+    </>
+  );
+}
+
+// People who asked to join the pre-launch test from the signup page. Each
+// card shows the exact invite email (with the current INVITE_CODE) — read
+// it, press send, and it goes out from the app's mailbox.
+const TESTER_SOURCE = {
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  friend: 'เพื่อนแนะนำ',
+  google: 'ค้นหาใน Google',
+  other: 'อื่น ๆ',
+};
+function TesterRequests({ onLogout, onChange }) {
+  const { data, error, reload } = useAdminData(adminApi.testerRequests, onLogout);
+  const [filter, setFilter] = useState('open');
+  const confirm = useConfirm();
+  const toast = useToast();
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (!data) return <Loading />;
+
+  const counts = {
+    open: data.requests.filter((r) => !r.invited_at).length,
+    done: data.requests.filter((r) => r.invited_at).length,
+    all: data.requests.length,
+  };
+  const list = data.requests.filter((r) => filter === 'all' || (filter === 'done') === !!r.invited_at);
+
+  const run = async (fn, success) => {
+    try {
+      await fn();
+      if (success) toast(success);
+      reload();
+      onChange();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+      else toast(e.message);
+    }
+  };
+  const send = async (r) => {
+    const ok = await confirm({
+      title: 'ส่งรหัสเชิญ',
+      message: `ส่งอีเมลพร้อมรหัสเชิญไปที่ ${r.email} ?`,
+      confirmText: 'ส่งเลย',
+      danger: false,
+    });
+    if (ok) run(() => adminApi.inviteTester(r.id), 'ส่งอีเมลแล้ว');
+  };
+  const remove = async (r) => {
+    const ok = await confirm({ title: 'ลบคำขอ', message: `ลบคำขอของ ${r.nickname} ?`, confirmText: 'ลบ' });
+    if (ok) run(() => adminApi.deleteTesterRequest(r.id));
+  };
+
+  return (
+    <>
+      <p className="admin-note">
+        คนที่กด "ขอเข้าร่วมทดสอบ" ในหน้าสมัคร อ่านอีเมลที่จะส่งด้านล่าง แล้วกดส่งรหัสเชิญ
+      </p>
+      {!data.invite_code_set && (
+        <p className="admin-note admin-note--warn">ยังไม่ได้ตั้ง INVITE_CODE ใน Render จึงยังส่งรหัสไม่ได้</p>
+      )}
+      <div className="filter-row">
+        {[
+          ['open', 'ยังไม่ได้ส่ง'],
+          ['done', 'ส่งแล้ว'],
+          ['all', 'ทั้งหมด'],
+        ].map(([k, l]) => (
+          <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+            {l}
+            <span className="admin-badge">{counts[k]}</span>
+          </button>
+        ))}
+      </div>
+      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      <div className="admin-list">
+        {list.map((r) => (
+          <div key={r.id} className="glass admin-card">
+            <div className="admin-card-head">
+              <span className="admin-proof-name">{r.nickname}</span>
+              <span className="admin-meta">
+                <span className={`admin-tag ${r.invited_at ? 'admin-tag--ok' : 'admin-tag--wait'}`}>
+                  {r.invited_at ? 'ส่งแล้ว' : 'ยังไม่ได้ส่ง'}
+                </span>
+                <TrashButton onClick={() => remove(r)} />
+              </span>
+            </div>
+            <dl className="admin-dl">
+              <dt>อีเมล</dt>
+              <dd>
+                <a href={`mailto:${r.email}`}>{r.email}</a>
+              </dd>
+              <dt>รู้จักจาก</dt>
+              <dd>
+                {TESTER_SOURCE[r.source] || r.source}
+                {r.source_other ? ` · ${r.source_other}` : ''}
+              </dd>
+              <dt>ขอเมื่อ</dt>
+              <dd>{fmtTime(r.created_at)}</dd>
+              {r.invited_at && (
+                <>
+                  <dt>ส่งรหัสเมื่อ</dt>
+                  <dd>{fmtTime(r.invited_at)}</dd>
+                </>
+              )}
+            </dl>
+            <details className="admin-email-preview" open={!r.invited_at}>
+              <summary>อีเมลที่จะส่ง · {r.email_preview.subject}</summary>
+              <p className="admin-message">{r.email_preview.text}</p>
+            </details>
+            <div className="admin-actions">
+              <button
+                className={`btn ${r.invited_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
+                type="button"
+                disabled={!data.invite_code_set}
+                onClick={() => send(r)}
+              >
+                {r.invited_at ? 'ส่งรหัสอีกครั้ง' : 'ส่งรหัสเชิญทางอีเมล'}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );

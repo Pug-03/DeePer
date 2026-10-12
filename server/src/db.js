@@ -98,6 +98,19 @@ db.exec(`
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  -- People asking to join the pre-launch test from the signup page's
+  -- invite-code step. The admin emails them the invite code from the
+  -- dashboard (invited_at marks that it went out).
+  CREATE TABLE IF NOT EXISTS tester_requests (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    email         TEXT NOT NULL UNIQUE,
+    nickname      TEXT NOT NULL,
+    source        TEXT NOT NULL,
+    source_other  TEXT,
+    invited_at    TEXT,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
   -- Sponsor logos added from the admin dashboard, shown on the Welcome page
   -- after the ones hard-coded in client/src/sponsors-info.js.
   CREATE TABLE IF NOT EXISTS sponsors (
