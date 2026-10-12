@@ -4531,6 +4531,13 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
   font-size: 15px;
   line-height: 1.6;
 }
+.samples-error {
+  text-align: center;
+}
+.samples-error p {
+  margin: 0 0 12px;
+  color: var(--text-dim);
+}
 .samples-cta {
   margin: 6px 0 22px;
 }

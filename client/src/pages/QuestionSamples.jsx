@@ -21,16 +21,19 @@ export default function QuestionSamples() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
   const [questions, setQuestions] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const valid = !category || CATS.includes(category);
 
   useEffect(() => {
     if (!category || !valid) return;
     setQuestions(null);
+    setFailed(false);
     api
       .get(`/questions/samples/${category}`, { auth: false })
       .then((d) => setQuestions(d.questions))
-      .catch(() => setQuestions([]));
-  }, [category, valid]);
+      .catch(() => setFailed(true));
+  }, [category, valid, attempt]);
 
   useEffect(() => {
     document.title = `${category ? t(`samples.title.${category}`) : t('samples.hubTitle')} | DeePer`;
@@ -55,7 +58,17 @@ export default function QuestionSamples() {
         <p className="sub">{category ? t(`samples.intro.${category}`) : t('samples.hubSub')}</p>
       </div>
 
+      {category && failed && (
+        <div className="glass samples-card samples-error">
+          <p>{t('common.netError')}</p>
+          <button className="btn btn--ghost btn--sm" type="button" onClick={() => setAttempt((n) => n + 1)}>
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+
       {category &&
+        !failed &&
         (questions === null ? (
           <Loading />
         ) : (
