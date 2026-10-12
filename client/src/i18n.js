@@ -66,7 +66,7 @@ export const STRINGS = {
     // ข้อความผิดพลาดจากเซิร์ฟเวอร์ (ให้ตรงกับ error_code ที่ server ส่งมา — ดู api.js)
     'err.INVALID_EMAIL': 'อีเมลไม่ถูกต้อง',
     'err.EMAIL_TAKEN': 'อีเมลนี้มีบัญชีอยู่แล้ว',
-    'err.INVITE_REQUIRED': 'ยังไม่เปิดรับสมัครทั่วไป ต้องมีรหัสเชิญก่อน (เปิดให้ทุกคน 11/11/2569 เวลา 11:11 น.)',
+    'err.INVITE_REQUIRED': 'ยังไม่เปิดรับสมัครทั่วไป ต้องมีรหัสเชิญก่อน\n(เปิดให้ทุกคน 11/11/2569 เวลา 11:11 น.)',
     'err.INVITE_INVALID': 'รหัสเชิญไม่ถูกต้อง',
     'err.INVITE_LOCKED': 'ใส่รหัสเชิญผิดหลายครั้ง กรุณาลองใหม่ภายหลัง',
     'err.OTP_SEND_FAILED': 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่',
@@ -660,7 +660,7 @@ export const STRINGS = {
     // Server error messages (must match the error_code the server sends — see api.js)
     'err.INVALID_EMAIL': 'Invalid email address',
     'err.EMAIL_TAKEN': 'This email already has an account',
-    'err.INVITE_REQUIRED': 'Sign-up isn’t open yet: you need an invite code (opens to everyone 11 Nov 2026 at 11:11)',
+    'err.INVITE_REQUIRED': 'Sign-up isn’t open yet: you need an invite code\n(opens to everyone 11 Nov 2026 at 11:11)',
     'err.INVITE_INVALID': 'That invite code isn’t right',
     'err.INVITE_LOCKED': 'Too many wrong invite codes. Please try again later',
     'err.OTP_SEND_FAILED': 'Failed to send the OTP. Please try again',

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import ErrorBanner from '../components/ErrorBanner.jsx';
 import { useToast } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import OtpInput from '../components/OtpInput.jsx';
@@ -45,7 +46,7 @@ export default function ForgotPassword() {
       setOtpStatus('idle');
       if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
     } finally {
       setBusy(false);
     }
@@ -76,7 +77,7 @@ export default function ForgotPassword() {
       // plus a beat to let it settle.
       setTimeout(() => setStep('password'), 1300);
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
       setOtpMsg(e2.message);
       setOtpStatus('error');
       setTimeout(() => {
@@ -109,7 +110,7 @@ export default function ForgotPassword() {
       );
       nav('/app/home', { replace: true });
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
     } finally {
       setBusy(false);
     }
@@ -136,7 +137,7 @@ export default function ForgotPassword() {
         </span>
       </button>
 
-      {err && !(step === 'otp' && otpStatus === 'error') && <div className="err-inline">{err}</div>}
+      {err && !(step === 'otp' && otpStatus === 'error') && <ErrorBanner err={err} />}
 
       {step === 'email' && (
         <form className="stagger" onSubmit={requestOtp}>
@@ -186,7 +187,7 @@ export default function ForgotPassword() {
               status={otpStatus}
               statusText={
                 otpStatus === 'error'
-                  ? err
+                  ? (typeof err === 'string' ? err : err?.message)
                   : otpStatus === 'success'
                     ? t('signup.otpVerified')
                     : otpMsg || t('signup.otpHint')

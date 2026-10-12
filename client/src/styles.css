@@ -4106,6 +4106,8 @@ html[data-returning] .profile-page > .supporters-placeholder > * {
 .err-inline {
   color: #fca5b4;
   font-size: 14px;
+  /* Some messages break onto a second line on purpose (\n in i18n.js). */
+  white-space: pre-line;
   background: rgba(244, 63, 94, 0.1);
   border: 1px solid var(--border-red);
   padding: 12px 14px;

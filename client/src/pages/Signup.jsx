@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { setAdminToken } from '../admin/adminApi.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import ErrorBanner from '../components/ErrorBanner.jsx';
 import { useToast } from '../components/ui.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
@@ -265,7 +266,7 @@ export default function Signup() {
       await api.post('/tester-requests', req, { auth: false });
       setStep('requested');
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
     } finally {
       setBusy(false);
     }
@@ -381,7 +382,7 @@ export default function Signup() {
       if (field === 'consent') setConsent(false);
       setTimeout(() => showFieldErrors({ [field]: e2.message }), 0);
     }
-    else setErr(e2.message);
+    else setErr(e2);
   };
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
@@ -445,7 +446,7 @@ export default function Signup() {
       setOtpStatus('idle');
       if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
     } finally {
       setBusy(false);
     }
@@ -479,7 +480,7 @@ export default function Signup() {
         setStep('profile');
       }, 1300);
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
       setOtpMsg(e2.message);
       setOtpStatus('error');
       setTimeout(() => {
@@ -560,7 +561,7 @@ export default function Signup() {
         applyAuth(d.token, d.user);
         nav('/app/welcome', { replace: true, state: { isNew: false } });
       } catch (e2) {
-        setErr(e2.message);
+        setErr(e2);
       }
     },
     [applyAuth, nav, inviteCode],
@@ -611,7 +612,7 @@ export default function Signup() {
         </span>
       </button>
 
-      {err && !(step === 'otp' && otpStatus === 'error') && <div className="err-inline">{err}</div>}
+      {err && !(step === 'otp' && otpStatus === 'error') && <ErrorBanner err={err} />}
 
       {/* Step: choose method */}
       {step === 'method' && needInvite && (

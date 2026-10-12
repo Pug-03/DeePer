@@ -4,6 +4,7 @@ import { api } from '../api.js';
 import { setAdminToken } from '../admin/adminApi.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
+import ErrorBanner from '../components/ErrorBanner.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import LaunchNotice from '../components/LaunchNotice.jsx';
@@ -34,7 +35,7 @@ export default function Login() {
       applyAuth(d.token, d.user);
       nav('/app/welcome', { replace: true, state: { isNew: false } });
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2);
     } finally {
       setBusy(false);
     }
@@ -57,7 +58,7 @@ export default function Login() {
         applyAuth(d.token, d.user);
         nav('/app/welcome', { replace: true, state: { isNew: false } });
       } catch (e2) {
-        setErr(e2.message);
+        setErr(e2);
       }
     },
     [applyAuth, nav],
@@ -75,7 +76,7 @@ export default function Login() {
         </span>
       </button>
 
-      {err && <div className="err-inline">{err}</div>}
+      <ErrorBanner err={err} />
 
       {/* one continuous top-to-bottom cascade: title → Google → email → password → button */}
       <form className="stagger" onSubmit={submit}>
