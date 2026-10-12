@@ -16,6 +16,7 @@ import {
   publicUser,
   requireAuth,
   checkAdminLogin,
+  isAdminEmail,
   signAdminToken,
 } from '../auth.js';
 import { UPLOADS_DIR } from '../paths.js';
@@ -443,6 +444,9 @@ router.post('/google', async (req, res) => {
 
   const sub = payload.sub;
   const email = (payload.email || '').toLowerCase();
+  // Same as the password login: the admin's Google account opens the admin
+  // dashboard instead of a user session.
+  if (payload.email_verified && isAdminEmail(email)) return res.json({ admin_token: signAdminToken() });
   let user = db.prepare('SELECT * FROM users WHERE google_sub = ?').get(sub);
 
   if (!user && email) {

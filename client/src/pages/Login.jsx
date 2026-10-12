@@ -45,6 +45,11 @@ export default function Login() {
       setErr('');
       try {
         const d = await api.post('/auth/google', { credential }, { auth: false });
+        if (d.admin_token) {
+          setAdminToken(d.admin_token);
+          nav('/admin', { replace: true });
+          return;
+        }
         if (d.needs_profile) {
           nav('/signup', { state: { google: { credential, ...d } } });
           return;

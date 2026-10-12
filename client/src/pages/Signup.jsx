@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
+import { setAdminToken } from '../admin/adminApi.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useToast } from '../components/ui.jsx';
@@ -462,6 +463,11 @@ export default function Signup() {
       setErr('');
       try {
         const d = await api.post('/auth/google', { credential }, { auth: false });
+        if (d.admin_token) {
+          setAdminToken(d.admin_token);
+          nav('/admin', { replace: true });
+          return;
+        }
         if (d.needs_profile) {
           setGCredential(credential);
           applySuggestedNickname(d.suggested_nickname);

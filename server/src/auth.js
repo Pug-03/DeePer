@@ -149,6 +149,13 @@ export function checkAdminLogin(email, password) {
   return emailOk && passOk;
 }
 
+// For Google sign-in: Google has already proven the person owns this inbox,
+// so a verified ADMIN_EMAIL is enough without the password.
+export function isAdminEmail(email) {
+  if (!adminConfigured()) return false;
+  return String(email || '').trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase();
+}
+
 export function signAdminToken() {
   return jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: ADMIN_TTL });
 }
