@@ -52,6 +52,7 @@ router.get('/stats', (req, res) => {
     reports_open: count('SELECT COUNT(*) AS c FROM bug_reports WHERE resolved_at IS NULL AND deleted_at IS NULL'),
     inquiries_open: count('SELECT COUNT(*) AS c FROM sponsor_inquiries WHERE handled_at IS NULL AND deleted_at IS NULL'),
     tester_requests_open: count('SELECT COUNT(*) AS c FROM tester_requests WHERE invited_at IS NULL'),
+    client_errors_open: count('SELECT COUNT(*) AS c FROM client_errors WHERE resolved_at IS NULL'),
     reviews_pending: count(`SELECT COUNT(*) AS c FROM reviews WHERE status = 'pending'`),
     proofs_pending: count(
       'SELECT COUNT(*) AS c FROM support_proofs WHERE approved_at IS NULL AND rejected_at IS NULL AND deleted_at IS NULL',
@@ -272,6 +273,33 @@ router.post('/tester-requests/:id/invite', async (req, res) => {
 router.delete('/tester-requests/:id', (req, res) => {
   const { changes } = db.prepare('DELETE FROM tester_requests WHERE id = ?').run(Number(req.params.id));
   if (!changes) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
+  res.status(204).end();
+});
+
+// ---- Browser errors caught on visitors' devices ----
+router.get('/client-errors', (req, res) => {
+  res.json({
+    errors: db
+      .prepare('SELECT * FROM client_errors ORDER BY resolved_at IS NOT NULL, last_seen DESC LIMIT 200')
+      .all(),
+  });
+});
+
+router.post('/client-errors/:id/:action(resolve|reopen)', (req, res) => {
+  const { changes } = db
+    .prepare(
+      req.params.action === 'resolve'
+        ? `UPDATE client_errors SET resolved_at = datetime('now') WHERE id = ?`
+        : 'UPDATE client_errors SET resolved_at = NULL WHERE id = ?',
+    )
+    .run(Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบรายการ', error_code: 'NOT_FOUND' });
+  res.json({ ok: true });
+});
+
+router.delete('/client-errors/:id', (req, res) => {
+  const { changes } = db.prepare('DELETE FROM client_errors WHERE id = ?').run(Number(req.params.id));
+  if (!changes) return res.status(404).json({ error: 'ไม่พบรายการ', error_code: 'NOT_FOUND' });
   res.status(204).end();
 });
 

@@ -111,6 +111,23 @@ db.exec(`
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
+  -- Errors caught in visitors' browsers (window error / unhandled promise
+  -- rejection), sent by the client so bugs nobody reports still show up in
+  -- the admin dashboard. The same error from many visitors is one row with
+  -- a count, keyed by its signature (message + where it was thrown).
+  CREATE TABLE IF NOT EXISTS client_errors (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    signature    TEXT NOT NULL UNIQUE,
+    message      TEXT NOT NULL,
+    stack        TEXT,
+    url          TEXT,
+    user_agent   TEXT,
+    count        INTEGER NOT NULL DEFAULT 1,
+    first_seen   TEXT NOT NULL DEFAULT (datetime('now')),
+    last_seen    TEXT NOT NULL DEFAULT (datetime('now')),
+    resolved_at  TEXT
+  );
+
   -- Sponsor logos added from the admin dashboard, shown on the Welcome page
   -- after the ones hard-coded in client/src/sponsors-info.js.
   CREATE TABLE IF NOT EXISTS sponsors (

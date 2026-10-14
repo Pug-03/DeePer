@@ -26,6 +26,34 @@ const SOURCE_LABEL = {
 };
 
 // DB timestamps are UTC "YYYY-MM-DD HH:MM:SS"; show them in Bangkok time.
+// The slip's own date/time ("2026-10-12" + "10:30") in the same Thai style
+// as the other times on the card, so the two can be compared at a glance.
+function fmtTransfer(date, time) {
+  if (!date) return '-';
+  const d = new Date(`${date}T${time || '00:00'}:00+07:00`);
+  if (isNaN(d)) return `${date} ${time || ''}`;
+  return d.toLocaleString('th-TH', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: time ? '2-digit' : undefined,
+    minute: time ? '2-digit' : undefined,
+    timeZone: 'Asia/Bangkok',
+  });
+}
+
+// "Chrome 141 · iPhone" out of a raw user-agent string (the full string is
+// in the tooltip).
+function browserName(ua) {
+  if (!ua) return '-';
+  const os = /iPhone|iPad/.test(ua) ? 'iOS' : /Android/.test(ua) ? 'Android' : /Mac OS X/.test(ua) ? 'macOS' : /Windows/.test(ua) ? 'Windows' : '';
+  const m =
+    ua.match(/(Edg|OPR|CriOS|FxiOS|Firefox|Chrome)\/(\d+)/) || (/Safari/.test(ua) && ua.match(/Version\/(\d+)/) ? ['', 'Safari', ua.match(/Version\/(\d+)/)[1]] : null);
+  const names = { Edg: 'Edge', OPR: 'Opera', CriOS: 'Chrome', FxiOS: 'Firefox' };
+  const br = m ? `${names[m[1]] || m[1]} ${m[2]}` : 'เบราว์เซอร์อื่น';
+  return os ? `${br} · ${os}` : br;
+}
+
 function fmtTime(s) {
   if (!s) return '';
   return new Date(`${s.replace(' ', 'T')}Z`).toLocaleString('th-TH', {
@@ -73,6 +101,7 @@ function AdminDashboard({ onLogout }) {
     { key: 'overview', label: 'ภาพรวม' },
     { key: 'insights', label: 'การใช้งาน' },
     { key: 'reports', label: 'แจ้งปัญหา', badge: stats?.reports_open },
+    { key: 'errors', label: 'ข้อผิดพลาด', badge: stats?.client_errors_open },
     { key: 'proofs', label: 'ผู้สนับสนุน', badge: stats?.proofs_pending },
     { key: 'testers', label: 'คำขอทดสอบ', badge: stats?.tester_requests_open },
     { key: 'inquiries', label: `ติดต่อเป็น${keepWord('สปอนเซอร์')}`, badge: stats?.inquiries_open },
@@ -112,11 +141,25 @@ function AdminDashboard({ onLogout }) {
         </aside>
 
         <main className="admin-main">
+          {/* A short fade as the section changes, instead of a hard cut. */}
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+          >
           <h2 className="admin-section-title">{current.label}</h2>
           {tab === 'overview' &&
-            (error ? <ErrorState message={error} onRetry={reload} /> : stats ? <Overview stats={stats} /> : <Loading />)}
+            (error ? (
+              <ErrorState message={error} onRetry={reload} />
+            ) : stats ? (
+              <Overview stats={stats} onOpen={setTab} />
+            ) : (
+              <Loading />
+            ))}
           {tab === 'insights' && <Insights onLogout={onLogout} />}
           {tab === 'reports' && <Reports onLogout={onLogout} onChange={reload} />}
+          {tab === 'errors' && <ClientErrors onLogout={onLogout} onChange={reload} />}
           {tab === 'proofs' && <Proofs onLogout={onLogout} onChange={reload} />}
           {tab === 'testers' && <TesterRequests onLogout={onLogout} onChange={reload} />}
           {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
@@ -128,10 +171,19 @@ function AdminDashboard({ onLogout }) {
   );
 }
 
-function Overview({ stats }) {
+function Overview({ stats, onOpen }) {
+  // Things waiting on the admin, kept apart from the numbers: each opens its
+  // tab, and turns red while something's waiting.
+  const todo = [
+    ['แจ้งปัญหาที่ยังไม่แก้', stats.reports_open, 'reports'],
+    ['ข้อผิดพลาดที่ยังไม่แก้', stats.client_errors_open ?? 0, 'errors'],
+    ['สลิปรออนุมัติ', stats.proofs_pending, 'proofs'],
+    ['คำขอทดสอบรอส่งรหัส', stats.tester_requests_open ?? 0, 'testers'],
+    [`${keepWord('สปอนเซอร์')}รอติดต่อกลับ`, stats.inquiries_open, 'inquiries'],
+    ['รีวิวรออนุมัติ', stats.reviews_pending ?? 0, 'reviews'],
+  ];
   const tiles = [
-    ['คนเข้าเว็บวันนี้', stats.visitors_today],
-    ['ในนั้นยังไม่ล็อกอิน', stats.guests_today],
+    ['คนเข้าเว็บวันนี้', stats.visitors_today, `ยังไม่ล็อกอิน ${stats.guests_today.toLocaleString('th-TH')}`],
     ['คนใช้งานวันนี้ (ล็อกอิน)', stats.active_today],
     ['สมัครใหม่วันนี้', stats.signups_today],
     ['เข้าสู่ระบบวันนี้', stats.logins_today],
@@ -697,6 +749,107 @@ function Sponsors({ onLogout }) {
         );
       })}
       </div>
+      </div>
+    </>
+  );
+}
+
+// Errors caught in visitors' browsers (utils/errorReporter.js). The same
+// error from many people is one card with a count; mark it fixed once
+// dealt with — it reopens by itself if it happens again.
+function ClientErrors({ onLogout, onChange }) {
+  const { data, error, reload } = useAdminData(adminApi.clientErrors, onLogout);
+  const [filter, setFilter] = useState('open');
+  const confirm = useConfirm();
+  const toast = useToast();
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (!data) return <Loading />;
+
+  const counts = {
+    open: data.errors.filter((e) => !e.resolved_at).length,
+    done: data.errors.filter((e) => e.resolved_at).length,
+    all: data.errors.length,
+  };
+  const list = data.errors.filter((e) => filter === 'all' || (filter === 'done') === !!e.resolved_at);
+  const run = async (fn) => {
+    try {
+      await fn();
+      reload();
+      onChange();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+      else toast(e.message);
+    }
+  };
+  const remove = async (e) => {
+    const ok = await confirm({ title: 'ลบรายการ', message: 'ลบ error นี้ออกจากรายการ?', confirmText: 'ลบ' });
+    if (ok) run(() => adminApi.deleteClientError(e.id));
+  };
+
+  return (
+    <>
+      <p className="admin-note">
+        error ที่เกิดในเบราว์เซอร์ของผู้ใช้ ระบบส่งมาเองโดยไม่ต้องมีใครแจ้ง ไม่มีข้อมูลบัญชี มีแค่ข้อความ หน้าที่เกิด และเบราว์เซอร์
+      </p>
+      <div className="filter-row">
+        {[
+          ['open', 'ยังไม่แก้'],
+          ['done', 'แก้แล้ว'],
+          ['all', 'ทั้งหมด'],
+        ].map(([k, l]) => (
+          <button key={k} type="button" className={`pill ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+            {l}
+            <span className="admin-badge">{counts[k]}</span>
+          </button>
+        ))}
+      </div>
+      {list.length === 0 && <AdminEmpty />}
+      <div className="admin-list">
+        {list.map((e) => (
+          <div key={e.id} className="glass admin-card">
+            <div className="admin-card-head">
+              {/* The error itself is the headline; how often is a tag. */}
+              <span className="admin-meta">
+                <span className="admin-tag">เกิด {e.count.toLocaleString('th-TH')} ครั้ง</span>
+                <span className={`admin-tag ${e.resolved_at ? 'admin-tag--ok' : 'admin-tag--wait'}`}>
+                  {e.resolved_at ? 'แก้แล้ว' : 'ยังไม่แก้'}
+                </span>
+              </span>
+              <TrashButton onClick={() => remove(e)} />
+            </div>
+            <p className="admin-message admin-code admin-error-title">{e.message}</p>
+            <dl className="admin-dl">
+              <dt>หน้า</dt>
+              <dd>{e.url || '-'}</dd>
+              <dt>{e.first_seen === e.last_seen ? 'เกิดเมื่อ' : 'ล่าสุด'}</dt>
+              <dd>{fmtTime(e.last_seen)}</dd>
+              {e.first_seen !== e.last_seen && (
+                <>
+                  <dt>ครั้งแรก</dt>
+                  <dd>{fmtTime(e.first_seen)}</dd>
+                </>
+              )}
+              <dt>เบราว์เซอร์</dt>
+              <dd title={e.user_agent || ''}>{browserName(e.user_agent)}</dd>
+            </dl>
+            {e.stack && (
+              <details className="admin-email-preview">
+                <summary>stack</summary>
+                <p className="admin-message admin-code">{e.stack}</p>
+              </details>
+            )}
+            <div className="admin-actions">
+              {/* Routine, so outlined: red fills are for approve/send. */}
+              <button
+                className="btn btn--ghost admin-action"
+                type="button"
+                onClick={() => run(() => adminApi.setClientError(e.id, e.resolved_at ? 'reopen' : 'resolve'))}
+              >
+                {e.resolved_at ? 'เปิดใหม่' : 'ทำเครื่องหมายว่าแก้แล้ว'}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </>
   );

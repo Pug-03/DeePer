@@ -2112,6 +2112,16 @@ html[data-tour] .fade-up {
   margin: 10px 0 0;
   font-size: 14px;
 }
+/* Error messages and stacks: monospace, long lines wrap anywhere. */
+.admin-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.admin-ua {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
 .admin-note--warn {
   color: var(--red-bright);
 }
@@ -4761,14 +4771,127 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
 .samples-cta {
   margin: 6px 0 22px;
 }
-.samples-others {
+.samples-others-title {
+  margin: 0 0 8px 4px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+/* Category rows on /questions: a colour dot, the category and its sample
+   page's title, a chevron — the same row feel as Profile's lists. */
+.samples-cats {
+  padding: 4px 0;
+  margin-bottom: 18px;
+}
+.samples-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  color: var(--text);
+  text-decoration: none;
+}
+.samples-cat-row + .samples-cat-row {
+  border-top: 1px solid var(--border);
+}
+.samples-cat-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--cat);
+  box-shadow: 0 0 10px var(--cat);
+}
+.samples-cat-text {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
+}
+.samples-cat-name {
+  font-weight: 600;
+  font-size: 16px;
+}
+.samples-cat-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.samples-cat-chev {
+  flex: none;
+  color: var(--text-faint);
+}
+.samples-cta--after {
+  margin-top: 0;
+}
+
+/* Keyboard focus: the app's red ring instead of the browser's blue one. */
+.btn:focus-visible,
+.link:focus-visible,
+.pill:focus-visible {
+  outline: 2px solid var(--red-bright);
+  outline-offset: 2px;
+}
+
+/* Signup's per-step wrapper (fades out between steps): lays its form out
+   the way the page itself would. */
+.signup-step {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A destructive action that isn't the page's main thing (Delete account on
+   the settings page): red outline and text, no fill or glow. */
+.btn--danger-outline {
+  background: transparent;
+  border: 1px solid var(--border-red);
+  color: var(--red-bright);
+  box-shadow: none;
+}
+
+/* Log out: quiet, not the most eye-catching thing in the admin header. */
+.admin-logout {
+  color: var(--text-dim) !important;
+}
+
+.admin-empty {
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
+  padding: 28px 16px;
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
   font-size: 14px;
 }
-.samples-others-title {
-  margin: 0;
-  color: var(--text-dim);
+.admin-empty svg {
+  color: var(--green, #34d399);
+}
+
+.admin-error-title {
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+/* Admin filter pills on a phone: one sideways-scrolling row like the tabs
+   (wrapping took three rows before any content). */
+@media (max-width: 959px) {
+  .admin .filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: -20px;
+    padding-inline: 20px;
+  }
+  .admin .filter-row::-webkit-scrollbar {
+    display: none;
+  }
+  .admin .filter-row .pill {
+    flex-shrink: 0;
+  }
+}
+
+/* On success every box goes green, the focused one too (it kept a ring). */
+.otp-row--success .otp-box:focus {
+  border-color: var(--green, #34d399);
+  box-shadow: none;
 }

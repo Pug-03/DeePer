@@ -17,6 +17,7 @@ import visitRoutes from './routes/visits.js';
 import inquiryRoutes from './routes/inquiries.js';
 import reviewRoutes from './routes/reviews.js';
 import testerRoutes from './routes/testers.js';
+import clientErrorRoutes from './routes/clientErrors.js';
 import { UPLOADS_DIR } from './paths.js';
 import { renderPage, PUBLIC_PATHS, SITE } from './seo.js';
 
@@ -109,6 +110,7 @@ app.use('/api/visits', visitRoutes);
 app.use('/api/sponsor-inquiries', inquiryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/tester-requests', testerRoutes);
+app.use('/api/client-errors', clientErrorRoutes);
 app.use('/api', dataRoutes);
 
 // Serve the built client in production (client/dist), if present.
