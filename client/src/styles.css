@@ -1092,6 +1092,14 @@ html[data-tour] .fade-up {
   opacity: 0;
   pointer-events: none;
 }
+/* "Saved for later" under the logo on the back of a saved card. */
+.card-back-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
 .card-back {
   position: absolute;
   inset: 0;
@@ -4825,8 +4833,12 @@ html[data-tour] .form-page * {
    the browser rebalances the last few lines instead. Headings, buttons and
    short centered lines are balanced across all their lines. */
 p, li, blockquote, figcaption, label, .sub, .faint, .feature-desc, .dev-team-role,
-.social-link-text, .ci-q, .q-text, .toast {
+.social-link-text, .ci-q, .toast {
   text-wrap: pretty;
+}
+/* The question on a card: even line lengths, no short last line. */
+.q-text {
+  text-wrap: balance;
 }
 h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-result,
 .social-link .feature-desc {

@@ -86,7 +86,17 @@ const SAVE_MS = (SAVE_FADE.delay + SAVE_FADE.duration) * 1000;
 // The outgoing card's slide is a spring (bouncy, exact), but its fade should
 // feel soft rather than snap to the spring's precision — ease it out on its
 // own timing instead of tying opacity to the same physics as the slide.
-const CARD_EXIT_TRANSITION = { ...CARD_SPRING, opacity: { duration: 0.32, ease: FLY_EASE } };
+// Category switch: a calmer spring than the deck's own (which overshot the
+// new card by ~38px — lively for this app's quiet feel).
+const CARD_EXIT_TRANSITION = {
+  type: 'spring',
+  stiffness: 380,
+  damping: 32,
+  opacity: { duration: 0.32, ease: FLY_EASE },
+};
+// An answer swipe opens the Answer page this soon after letting go, before
+// the next card has risen — it used to rise fully and then be taken away.
+const ANSWER_NAV_DELAY = 320;
 // Deck <-> add-form swap (Home header "Add question"), matching the iOS
 // app: opening pushes the whole deck off to the right while the form drops
 // in from above the header; closing lifts the form back out the top and
@@ -354,7 +364,7 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     // continuing to mirror wherever the drag left it, so a swipe and a
     // button tap both play the exact same reveal.
     flying.current = true;
-    onFlyProgress?.();
+    onFlyProgress?.(dir);
     if (dir === 'skip') {
       animate(y, window.innerHeight, SKIP_FALL);
       const drift = Math.min(SKIP_DRIFT_MAX, Math.max(SKIP_DRIFT_MIN, (-velocityX * SKIP_FALL.duration) / 2));
@@ -366,10 +376,13 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
       animate(y, -20, { duration: FLY_DURATION, ease: CARRY_EASE });
     }
     const done = dir === 'skip' ? onSkip : onAnswer;
-    const timer = setTimeout(() => {
-      pendingFly.current = null;
-      done();
-    }, FLY_UNMOUNT_DELAY);
+    const timer = setTimeout(
+      () => {
+        pendingFly.current = null;
+        done();
+      },
+      dir === 'skip' ? FLY_UNMOUNT_DELAY : ANSWER_NAV_DELAY,
+    );
     pendingFly.current = { timer, done };
     return 'started';
   };
@@ -395,8 +408,11 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
     // A card mid-save already has its hand-off coming; throwing it as well
     // would move on two cards. (Turning `drag` off for the save instead left
     // the saved card stuck in the deck, unseen, after its fade.)
-    if (!saved && info.offset.x < -SWIPE_THRESHOLD) fly('skip', info.velocity.x);
-    else if (!saved && info.offset.x > SWIPE_THRESHOLD) fly('yes');
+    // Where the card is heading, not just where it is: a quick flick counts
+    // even if the finger only moved a short way.
+    const projected = info.offset.x + info.velocity.x * 0.2;
+    if (!saved && projected < -SWIPE_THRESHOLD) fly('skip', info.velocity.x);
+    else if (!saved && projected > SWIPE_THRESHOLD) fly('yes');
     else {
       animate(x, 0, { type: 'spring', stiffness: 320, damping: 26 });
       animate(y, 0, { type: 'spring', stiffness: 320, damping: 26 });
@@ -411,7 +427,9 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
         className="qcard glass"
         style={{ x, y, rotate, rotateY: flip, opacity: cardOpacity, transformPerspective: 1000 }}
         drag
-        dragElastic={0.7}
+        // Follows the finger closely sideways; up/down it only gives a
+        // little, so a vertical drag no longer lifts the card over the tabs.
+        dragElastic={{ left: 0.9, right: 0.9, top: 0.15, bottom: 0.15 }}
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         onDragEnd={onDragEnd}
         onTap={handleTap}
@@ -467,6 +485,10 @@ function TopCard({ q, onSkip, onAnswer, onSave, onDragProgress, onFlyProgress, f
             <span className="dot" />
             <span className="brand">DeePer</span>
           </div>
+          {/* Says what just happened, not just the logo. */}
+          <span className="card-back-note">
+            <IcBookmark size={14} /> {t('home.savedForLater')}
+          </span>
         </motion.div>
         {shareFlash && (
           <div className="card-share-overlay">
@@ -631,7 +653,9 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
       // through it, full by the hand-off.
       progress.set(SWIPE_THRESHOLD);
       animate(reveal, SWIPE_THRESHOLD, { delay: SAVE_FADE.delay, duration: SAVE_FADE.duration, ease: FLY_EASE });
-      animate(backText, 1, SAVE_FADE);
+      // The question comes up only once the saved card is mostly gone, so
+      // the DeePer logo and the next question don't show through each other.
+      animate(backText, 1, { delay: SAVE_FADE.delay + 0.2, duration: SAVE_FADE.duration - 0.2, ease: 'easeOut' });
     }
   }, [saved]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -669,8 +693,10 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
         <motion.div
           key={current.id}
           initial={
+            // Comes in from the side the tab indicator moved toward, like a
+            // pager (it used to come from the opposite side).
             enterDir
-              ? { x: `${-enterDir * 100}%` }
+              ? { x: `${enterDir * 100}%` }
               : seamless
                 ? { ...CARD_REST, opacity: carry?.opacity ?? 1, y: carry?.y ?? 0 }
                 : REST_BEHIND
@@ -689,7 +715,7 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
           // with a backdrop blur) piled up, unseen, until the tapping stopped.
           exit={
             enterDir
-              ? { x: `${enterDir * 100}%`, opacity: 0 }
+              ? { x: `${-enterDir * 100}%`, opacity: 0 }
               : thrown.current.has(current.id)
                 ? { opacity: 0, transition: { duration: 0 } }
                 : { opacity: 0, scale: 0.94, transition: { duration: 0.2, ease: FLY_EASE } }
@@ -710,10 +736,13 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
               reveal.set(v);
               backText.set(0);
             }}
-            onFlyProgress={() => {
+            onFlyProgress={(dir) => {
               thrown.current.add(current.id);
               // Re-render so the exit above is read with this card thrown.
               markThrown((n) => n + 1);
+              // Answering opens the Answer page right away; the next card
+              // stays put behind instead of rising only to be left.
+              if (dir === 'yes') return;
               // Carry on from wherever the drag left `reveal` (a button fly
               // starts from 0): resetting to 0 for an identical reveal every
               // time dropped a card the swipe had already risen back down
@@ -731,7 +760,8 @@ function DeckStack({ current, next, onSkip, onAnswer, onSave, enterDir, flyRegis
               const to = from < 0 ? -SWIPE_THRESHOLD : SWIPE_THRESHOLD;
               if (Math.abs(from) >= SWIPE_THRESHOLD) reveal.set(to);
               else animate(reveal, to, { duration: FLY_UNMOUNT_DELAY / 1000, ease: FLY_EASE });
-              animate(backText, 1, { delay: 0.2, duration: FLY_UNMOUNT_DELAY / 1000 - 0.2, ease: 'easeOut' });
+              // Text up almost at once (it was blank for ~0.2s, then slow).
+              animate(backText, 1, { delay: 0.05, duration: 0.35, ease: 'easeOut' });
             }}
             flyRegistry={flyRegistry}
             saved={saved}
@@ -1143,13 +1173,7 @@ export default function Home() {
           <button
             className="btn btn--sm btn--ghost"
             data-tut="add"
-            onClick={() =>
-              setAdding((a) => {
-                const next = !a;
-                if (next) setAddCat(category);
-                return next;
-              })
-            }
+            onClick={() => setAdding((a) => !a)}
           >
             <IcPlus size={18} /> {t('home.addQuestion')}
           </button>
@@ -1166,14 +1190,18 @@ export default function Home() {
             width sideways, but the form has to rise up over the tabs. */}
         <div className="swap-stage" ref={swapStageRef}>
           <motion.div
-            style={{ ...SWAP_LAYER, zIndex: 1, alignSelf: 'start' }}
+            // Fills the same space as the deck it replaces, so the page
+            // doesn't go empty below a small form.
+            style={{ ...SWAP_LAYER, zIndex: 1, display: 'flex', flexDirection: 'column' }}
             inert={adding ? undefined : ''}
             aria-hidden={!adding}
-            initial={{ opacity: 0, y: -140, visibility: 'hidden' }}
+            // A short drop with a fade, so it settles in place instead of
+            // sweeping down through the tabs and header.
+            initial={{ opacity: 0, y: -24, visibility: 'hidden' }}
             animate={
               adding
                 ? { opacity: 1, y: 0, visibility: 'visible' }
-                : { opacity: 0, y: -140, transitionEnd: { visibility: 'hidden' } }
+                : { opacity: 0, y: -24, transitionEnd: { visibility: 'hidden' } }
             }
             transition={SWAP_TRANSITION}
             onUpdate={KEEP_ON_MAIN_THREAD}
