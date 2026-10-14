@@ -130,14 +130,26 @@ export function ConfirmProvider({ children }) {
             aria-labelledby="confirm-modal-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className={`modal-icon ${state.pulse === false ? 'modal-icon--static' : ''}`}>
-              {state.icon || <IcTrash size={36} />}
-            </div>
+            {/* `bareIcon`: an icon that brings its own frame (e.g. CheckBadge),
+                shown as is instead of inside the round icon chip. */}
+            {state.bareIcon ? (
+              state.icon
+            ) : (
+              <div className={`modal-icon ${state.pulse === false ? 'modal-icon--static' : ''}`}>
+                {/* The bin only for destructive confirms; anything else gets a
+                    neutral mark (a send/reply showed a bin and read as delete). */}
+                {state.icon || (state.danger === false ? <IcAlertCircle size={34} /> : <IcTrash size={36} />)}
+              </div>
+            )}
             <h3 className="modal-title" id="confirm-modal-title">
               {state.title || t('confirm.deleteTitle')}
             </h3>
+            {/* Optional extra content (e.g. a preview) under the title. */}
+            {state.content}
             {state.message && <p className="modal-msg">{state.message}</p>}
-            <div className="modal-actions">
+            {/* `stacked`: full-width buttons, the main one on top — for
+                a choice between two good options rather than confirm/cancel. */}
+            <div className={`modal-actions${state.stacked ? ' modal-actions--stacked' : ''}`}>
               <button ref={cancelBtnRef} className="btn btn--ghost" onClick={() => close(false)}>
                 {state.cancelText || t('common.cancel')}
               </button>

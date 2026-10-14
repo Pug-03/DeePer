@@ -57,7 +57,9 @@ router.post('/', requireAuth, (req, res) => {
   const text = String(req.body.text || '').trim();
   if (!validCategory(category))
     return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
-  if (text.length < 3)
+  // At least a few real letters: a lone Thai vowel or tone mark (or just
+  // punctuation) passed the length check and showed up as a stray glyph.
+  if (text.length < 3 || (text.match(/\p{L}/gu) || []).length < 2)
     return res
       .status(400)
       .json({ error: 'คำถามสั้นเกินไป', error_code: 'QUESTION_TOO_SHORT' });

@@ -52,6 +52,9 @@ const countShare = () => {
 };
 const canShareFiles = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
+// Same rule as the server: 3+ characters with at least two real letters
+// (not just Thai vowel/tone marks or punctuation).
+const questionLooksReal = (t) => t.length >= 3 && (t.match(/\p{L}/gu) || []).length >= 2;
 const SWIPE_THRESHOLD = 110;
 const CARD_SPRING = { type: 'spring', stiffness: 420, damping: 22, mass: 0.9 };
 const FLY_EASE = [0.16, 1, 0.3, 1];
@@ -820,10 +823,20 @@ export default function Home() {
   useLayoutEffect(() => {
     if (prevAdding.current === adding) return;
     prevAdding.current = adding;
+    // The stage reaches out to the screen edges (see .swap-stage), so this
+    // clip only trims what's past the screen — the cards' glow stays on.
     if (swapStageRef.current) swapStageRef.current.style.overflowX = 'clip';
   }, [adding]);
   const [newQ, setNewQ] = useState('');
-  const [addCat, setAddCat] = useState(() => localStorage.getItem('dt_cat') || 'couple');
+  // The question box grows with its text and sits centred in the card,
+  // like the question on a real card.
+  const addTextRef = useRef(null);
+  useLayoutEffect(() => {
+    const el = addTextRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [newQ, adding]);
   const tutorial = useTutorial();
   const [enterDir, setEnterDir] = useState(0);
   const [saveFlash, setSaveFlash] = useState(false);
@@ -1054,9 +1067,10 @@ export default function Home() {
   const addOwn = async (e) => {
     e.preventDefault();
     const text = newQ.trim();
-    if (text.length < 3) return;
+    if (!questionLooksReal(text)) return;
     try {
-      const d = await api.post('/questions', { category: addCat, text });
+      // Goes into the category picked in the tabs above the form.
+      const d = await api.post('/questions', { category, text });
       // Not inserted into the deck, but still worth excluding from future
       // top-up fetches for this category — otherwise it can resurface as a
       // fresh swipe card later this session even though the user already
@@ -1069,12 +1083,32 @@ export default function Home() {
       // existing "answer it later" list) instead.
       setDialogOpen(true);
       const answerNow = await confirmDlg({
-        icon: <IcChat size={36} />,
+        // The same drawn-in check as the welcome screen.
+        icon: <CheckBadge size={88} />,
+        bareIcon: true,
         title: t('home.addedTitle'),
+        // The new question shown as the card it now is, so the choice is
+        // about something you can see.
+        content: (
+          <div className="added-card">
+            <span className="added-card-cat">{t(`cat.${d.question.category}`)}</span>
+            <p className="added-card-text">{d.question.text}</p>
+          </div>
+        ),
         message: t('home.addedMsg'),
-        confirmText: t('home.answerNow'),
-        cancelText: t('home.saveForLater'),
+        confirmText: (
+          <>
+            <IcChat size={18} /> {t('home.answerNow')}
+          </>
+        ),
+        cancelText: (
+          <>
+            <IcBookmark size={16} /> {t('home.saveForLater')}
+          </>
+        ),
         danger: false,
+        pulse: false,
+        stacked: true,
       }).finally(() => setDialogOpen(false));
       if (answerNow) {
         nav('/app/answer', {
@@ -1144,30 +1178,50 @@ export default function Home() {
             transition={SWAP_TRANSITION}
             onUpdate={KEEP_ON_MAIN_THREAD}
           >
-            <form className="glass" style={{ padding: 14, margin: '14px 0' }} onSubmit={addOwn}>
-              <div className="field">
-                <label>{t('home.addCatLabel')}</label>
-                <select className="select" value={addCat} onChange={(e) => setAddCat(e.target.value)}>
-                  {CATS.map((c) => (
-                    <option key={c} value={c}>
-                      {t(`cat.${c}`)}
-                    </option>
-                  ))}
-                </select>
+            {/* Shaped like the question card it'll become: same space as the
+                deck, the question typed big in the middle, the buttons where
+                the card's action buttons sit. */}
+            <form className="add-card" onSubmit={addOwn}>
+              <div className="glass add-card-body">
+                {/* Same red edge and glow as a question card, lighting up
+                    once the form has slid into place (and going out as it
+                    leaves), instead of a plain grey outline. */}
+                <motion.div
+                  className="qcard-glow"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: adding ? 1 : 0 }}
+                  transition={
+                    adding
+                      ? { duration: 0.7, ease: 'easeOut', delay: SWAP_TRANSITION.duration }
+                      : { duration: 0.2, ease: 'easeOut' }
+                  }
+                  onUpdate={KEEP_ON_MAIN_THREAD}
+                />
+                {/* The category comes from the tabs right above the form —
+                    pick it there, no separate picker in here. */}
+                <p className="add-cat-note">{t('home.addToCat', { cat: t(`cat.${category}`) })}</p>
+                {/* Tapping anywhere in the card's empty middle starts typing. */}
+                <div className="add-card-center" onClick={() => addTextRef.current?.focus()}>
+                  <textarea
+                    ref={addTextRef}
+                    rows={1}
+                    className="add-card-text"
+                    placeholder={t('home.addPh')}
+                    value={newQ}
+                    onChange={(e) => setNewQ(e.target.value)}
+                    maxLength={200}
+                  />
+                </div>
+                <div className="add-card-foot">
+                  <span>{t('home.addTip')}</span>
+                  <span className="add-card-count">{newQ.length}/200</span>
+                </div>
               </div>
-              <textarea
-                className="textarea"
-                style={{ minHeight: 80 }}
-                placeholder={t('home.addPh')}
-                value={newQ}
-                onChange={(e) => setNewQ(e.target.value)}
-                maxLength={200}
-              />
-              <div className="btn-row" style={{ marginTop: 10 }}>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setAdding(false)}>
+              <div className="btn-row add-card-actions">
+                <button type="button" className="btn btn--ghost" onClick={() => setAdding(false)}>
                   {t('common.cancel')}
                 </button>
-                <button type="submit" className="btn btn--primary btn--sm" disabled={newQ.trim().length < 3}>
+                <button type="submit" className="btn btn--primary" disabled={!questionLooksReal(newQ.trim())}>
                   {t('home.add')}
                 </button>
               </div>
@@ -1189,9 +1243,10 @@ export default function Home() {
             transition={SWAP_TRANSITION}
             onUpdate={KEEP_ON_MAIN_THREAD}
             onAnimationComplete={() => {
-              // Only once the deck has come back; while the form is open it
-              // sits off-screen and the clip has to stay.
-              if (!adding && swapStageRef.current) swapStageRef.current.style.overflowX = '';
+              // The clip is only needed while the deck is on its way out to
+              // the right. Once it's parked (off the left edge, which can't
+              // scroll the page) or back in place, lift it.
+              if (swapStageRef.current) swapStageRef.current.style.overflowX = '';
             }}
           >
             {(status === 'loading' || (status === 'ready' && !current && refilling)) && (

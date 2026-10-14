@@ -1644,6 +1644,44 @@ html[data-tour] .fade-up {
   font-size: 15px;
   white-space: nowrap;
 }
+/* Two good options (not confirm/cancel): full-width, the main one on top. */
+.modal-actions--stacked {
+  flex-direction: column-reverse;
+  gap: 10px;
+}
+.modal-actions--stacked .btn {
+  flex: none;
+  width: 100%;
+}
+/* The question just added on Home, shown as a small card in its dialog. */
+.added-card {
+  position: relative;
+  margin: 4px 0 14px;
+  padding: 18px 18px 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border-red);
+  background: linear-gradient(160deg, rgba(244, 63, 94, 0.1), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--glow-red);
+}
+.added-card-cat {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(244, 63, 94, 0.14);
+  color: var(--red-bright);
+  font-size: 12px;
+  font-weight: 600;
+}
+.added-card-text {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
 .btn--danger {
   /* A hotter, more saturated red than the brand gradient, so a destructive
      action never reads as just another primary button. */

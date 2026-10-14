@@ -309,7 +309,11 @@ function TopQuestions({ title, rows, t }) {
       <ol className="admin-toplist">
         {rows.map((q) => (
           <li key={q.text}>
-            <span className="admin-toplist-text">{q.text}</span>
+            {/* A "question" that's only Thai marks or spaces shows as such
+                instead of a stray glyph at the top of the list. */}
+            <span className="admin-toplist-text">
+              {(q.text.match(/\p{L}/gu) || []).length >= 2 ? q.text : <i className="faint">(ข้อความว่าง)</i>}
+            </span>
             <span className="admin-meta">
               {t(`cat.${q.category}`)} · {q.c} ครั้ง
             </span>
