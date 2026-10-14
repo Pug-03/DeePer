@@ -15,6 +15,8 @@ import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { useTutorial } from '../store/tutorial.jsx';
+import TestBadge from '../components/TestBadge.jsx';
+import CheckBadge from '../components/CheckBadge.jsx';
 import { useToast, useConfirm } from '../components/ui.jsx';
 import { Loading, ErrorState, EmptyState } from '../components/ui.jsx';
 import {
@@ -1102,6 +1104,7 @@ export default function Home() {
           <div className="brand-mark">
             <span className="dot" />
             <span style={{ fontSize: 22, fontWeight: 700 }}>DeePer</span>
+            <TestBadge />
           </div>
           <button
             className="btn btn--sm btn--ghost"

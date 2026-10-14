@@ -558,6 +558,9 @@ export const STRINGS = {
     // แจ้งปัญหา / บัค
     'report.teaser': `เจอ${keepWord('บัค')} ${keepWord('ใช้งาน')}ติดขัด หรืออยากให้ปรับอะไร บอกเราได้เลย`,
     'report.cta': 'แจ้งปัญหาหรือเสนอแนะ',
+    'beta.badge': 'ช่วงทดสอบ',
+    'beta.feedback': 'ส่งความเห็นช่วงทดสอบ',
+    'beta.feedbackRow': 'ส่งความเห็นช่วงทดสอบ',
     'report.footer': 'มีปัญหาหรืออยากแนะนำอะไร?',
     'report.footerCta': 'บอกเรา →',
     'report.title': 'แจ้งปัญหาหรือเสนอแนะ',
@@ -1135,6 +1138,9 @@ export const STRINGS = {
 
     'report.teaser': 'Found a bug, got stuck, or want something changed? Tell us',
     'report.cta': 'Report or suggest',
+    'beta.badge': 'Testing',
+    'beta.feedback': 'Send testing feedback',
+    'beta.feedbackRow': 'Send testing feedback',
     'report.footer': 'Got a problem or an idea?',
     'report.footerCta': 'Tell us →',
     'report.title': 'Report or suggest',

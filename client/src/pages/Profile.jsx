@@ -19,6 +19,7 @@ import { LEVEL_OPTIONS, getQuestionLevel, setQuestionLevel } from '../utils/ques
 import { useElasticIndicator } from '../utils/elasticIndicator.js';
 import { useTutorial } from '../store/tutorial.jsx';
 import { displayName } from '../util.js';
+import { useLaunch } from '../launch.js';
 
 export default function Profile() {
   const nav = useNavigate();
@@ -26,6 +27,8 @@ export default function Profile() {
   const tutorial = useTutorial();
   const { user } = useAuth();
   const { t, lang, setLang } = useI18n();
+  // Before launch the report row doubles as the testers' feedback line.
+  const { launched } = useLaunch();
 
   const replayTutorial = async () => {
     const ok = await confirm({
@@ -106,7 +109,7 @@ export default function Profile() {
         <ProfileRow Icon={IcChat} label={t('review.cta')} onClick={() => nav('/app/profile/review')} />
         <ProfileRow
           Icon={IcAlertCircle}
-          label={t('report.cta')}
+          label={launched ? t('report.cta') : t('beta.feedbackRow')}
           onClick={() => nav('/report', { state: { from: '/app/profile' } })}
         />
         <ProfileRow Icon={ShieldCheck} label={t('privacy.link')} onClick={() => nav('/privacy')} />
