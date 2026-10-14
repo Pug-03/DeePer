@@ -34,6 +34,7 @@ export function signToken(user, sessionId) {
 export function validatePassword(pw) {
   if (typeof pw !== 'string') return false;
   return (
+    pw.length >= 8 &&
     /[A-Z]/.test(pw) &&
     /[a-z]/.test(pw) &&
     /[0-9]/.test(pw) &&

@@ -333,6 +333,7 @@ export const STRINGS = {
     'forgot.success': 'เปลี่ยนรหัสผ่านสำเร็จ',
 
     // กฎรหัสผ่าน
+    'pw.length': 'อย่างน้อย 8 ตัว',
     'pw.upper': 'พิมพ์ใหญ่ (A-Z)',
     'pw.lower': 'พิมพ์เล็ก (a-z)',
     'pw.digit': 'ตัวเลข (0-9)',
@@ -925,6 +926,7 @@ export const STRINGS = {
     'forgot.submitBusy': 'Saving...',
     'forgot.success': 'Password changed successfully',
 
+    'pw.length': 'At least 8 characters',
     'pw.upper': 'Uppercase (A-Z)',
     'pw.lower': 'Lowercase (a-z)',
     'pw.digit': 'Number (0-9)',

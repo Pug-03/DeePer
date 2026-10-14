@@ -20,6 +20,9 @@ export default function AccountSettings() {
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  // Typed twice, same as at signup, so a typo can't lock someone out.
+  const [newPassword2, setNewPassword2] = useState('');
+  const pwMismatch = newPassword2 !== '' && newPassword2 !== newPassword;
   const [pwErr, setPwErr] = useState('');
   const [pwBusy, setPwBusy] = useState(false);
   // Brief tick on the button instead of a toast.
@@ -112,15 +115,28 @@ export default function AccountSettings() {
             autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+          />
+          <PasswordField
+            label={t('signup.confirmPassword')}
+            autoComplete="new-password"
+            value={newPassword2}
+            onChange={(e) => setNewPassword2(e.target.value)}
+            invalid={pwMismatch}
+            errorId="acc-password2-err"
           >
-            <PasswordStrength rules={newPwRules} score={newPwScore} />
+            <FieldError id="acc-password2-err" msg={pwMismatch ? t('signup.pwMismatch') : ''} />
           </PasswordField>
+          {/* Strength bars and the rule checklist after both boxes, as on
+              signup, so the two new-password fields sit together. */}
+          <div className="signup-pw-strength">
+            <PasswordStrength rules={newPwRules} score={newPwScore} />
+          </div>
           {pwErr && <div className="err-inline">{pwErr}</div>}
           <SaveButton
             type="submit"
             busy={pwBusy}
             done={pwSaved.done}
-            disabled={!newPwValid || (user?.has_password && !currentPassword)}
+            disabled={!newPwValid || newPassword2 !== newPassword || (user?.has_password && !currentPassword)}
             label={user?.has_password ? t('profile.changePassword') : t('profile.setPassword')}
             busyLabel={t('profile.passwordSaving')}
             doneLabel={t('profile.passwordSaved')}

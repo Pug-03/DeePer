@@ -10,6 +10,9 @@ export default function PasswordField({
   autoComplete,
   required,
   autoFocus,
+  // Field-error state: turns the box red and links it to its message.
+  invalid,
+  errorId,
   children,
 }) {
   const { t } = useI18n();
@@ -35,6 +38,8 @@ export default function PasswordField({
           onChange={onChange}
           required={required}
           autoFocus={autoFocus}
+          aria-invalid={invalid ? true : undefined}
+          aria-describedby={invalid && errorId ? errorId : undefined}
           {...guard}
         />
         <button
