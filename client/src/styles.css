@@ -4506,7 +4506,10 @@ html[data-returning] .profile-page > .supporters-placeholder > * {
   cursor: pointer;
   transition: background-color 0.15s;
 }
-.profile-list-title + .profile-row {
+.profile-list-title + .profile-row,
+.profile-list > .profile-row:first-child {
+  /* No divider above the first row: in a list without a title it doubled
+     up with the card's own top edge. */
   border-top: none;
 }
 button.profile-row:active {
@@ -4816,10 +4819,6 @@ button.profile-row:active {
 /* Report / contact forms are trimmed to fit one phone screen (no extra
    scroll below the send button): tighter top spacing, a shorter
    screenshot drop zone and message box. */
-.form-page.page {
-  /* Keep clear of the iPhone notch / status bar (safe area), like .page. */
-  padding-top: calc(14px + var(--safe-t));
-}
 .form-page > .back-btn {
   margin-bottom: 8px !important;
 }
@@ -4836,14 +4835,7 @@ button.profile-row:active {
   padding-top: 16px;
   padding-bottom: 16px;
 }
-.form-page .support-head-ic {
-  width: 44px;
-  height: 44px;
-}
-.form-page .support-head-ic svg {
-  width: 23px;
-  height: 23px;
-}
+
 .form-page .support-head-title {
   font-size: 16px;
 }

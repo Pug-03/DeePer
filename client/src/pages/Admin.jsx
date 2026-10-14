@@ -901,8 +901,20 @@ function TesterRequests({ onLogout, onChange }) {
       message: `ส่งอีเมลพร้อมรหัสเชิญไปที่ ${r.email} ?`,
       confirmText: 'ส่งเลย',
       danger: false,
+      pulse: false,
     });
-    if (ok) run(() => adminApi.inviteTester(r.id), 'ส่งอีเมลแล้ว');
+    if (!ok) return;
+    setSendErr((cur) => ({ ...cur, [r.id]: '' }));
+    try {
+      await adminApi.inviteTester(r.id);
+      toast('ส่งอีเมลแล้ว');
+      reload();
+      onChange();
+    } catch (e) {
+      if (e instanceof AdminAuthError) onLogout();
+      // Kept on the card (a toast was easy to miss and then gone).
+      else setSendErr((cur) => ({ ...cur, [r.id]: e.message }));
+    }
   };
   const remove = async (r) => {
     const ok = await confirm({ title: 'ลบคำขอ', message: `ลบคำขอของ ${r.nickname} ?`, confirmText: 'ลบ' });

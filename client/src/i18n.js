@@ -478,6 +478,7 @@ export const STRINGS = {
     'profile.tutorialStart': 'เริ่มแนะนำ',
     'profile.accountSettings': 'ตั้งค่าความปลอดภัยขั้นสูง',
     'profile.settingsTitle': 'ตั้งค่าความปลอดภัยขั้นสูง',
+    'profile.settingsSub': 'รหัสผ่าน อุปกรณ์ที่เข้าสู่ระบบ และบัญชีของคุณ',
     'profile.passwordSection': 'รหัสผ่าน',
     'profile.changePassword': 'เปลี่ยนรหัสผ่าน',
     'profile.setPassword': 'ตั้งรหัสผ่าน',
@@ -920,7 +921,7 @@ export const STRINGS = {
     'gender.female': 'Female',
     'gender.male': 'Male',
     'gender.other': 'Other',
-    'gender.prefer_not': 'Prefer not',
+    'gender.prefer_not': 'Skip',
     'gender.none': 'Not specified',
 
     // Forgot password
@@ -981,7 +982,7 @@ export const STRINGS = {
     'home.srcUser': 'Yours',
     'home.levelLabel': 'Question depth',
     'home.levelHint': 'Light → deep: starts easy and goes deeper as you play',
-    'home.level.all': 'Light → deep',
+    'home.level.all': 'Gradual',
     'home.level.open': 'Light',
     'home.level.mid': 'Medium',
     'home.level.deep': 'Deep',
@@ -1068,6 +1069,7 @@ export const STRINGS = {
     'profile.tutorialStart': 'Start tutorial',
     'profile.accountSettings': 'Advanced security settings',
     'profile.settingsTitle': 'Advanced security settings',
+    'profile.settingsSub': 'Your password, signed-in devices and account',
     'profile.passwordSection': 'Password',
     'profile.changePassword': 'Change password',
     'profile.setPassword': 'Set a password',

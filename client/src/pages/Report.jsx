@@ -54,19 +54,19 @@ export default function Report() {
     return (
       <div className="page center" style={{ justifyContent: 'center', flex: 1 }}>
         <CheckBadge />
-        <motion.h1 className="h1" {...rise(1.05)}>
+        <motion.h1 className="h1" {...rise(0.6)}>
           {t('report.doneTitle')}
         </motion.h1>
-        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(1.2)}>
+        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(0.72)}>
           {t('report.doneMsg')}
         </motion.p>
         <div className="stack" style={{ marginTop: 36 }}>
-          <motion.div {...rise(1.38)}>
+          <motion.div {...rise(0.86)}>
             <button className="btn btn--primary" type="button" onClick={() => nav(-1)}>
               {t('common.back')}
             </button>
           </motion.div>
-          <motion.div {...rise(1.53)}>
+          <motion.div {...rise(0.98)}>
             <button className="btn btn--ghost" type="button" onClick={startOver}>
               {t('report.again')}
             </button>

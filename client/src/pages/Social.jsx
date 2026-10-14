@@ -46,7 +46,7 @@ export default function Social() {
         </ul>
       </div>
 
-      {channels.map(({ key, handle, url }) => {
+      {channels.map(({ key, handle, url }, i) => {
         const Icon = ICONS[key];
         return (
           <div key={key} className="glass support-card">
@@ -59,7 +59,8 @@ export default function Social() {
             {url && <p className="social-handle">@{handle}</p>}
             <p className="support-proof-desc">{t(`social.${key}Desc`)}</p>
             {url ? (
-              <a className="btn btn--primary" href={url} target="_blank" rel="noopener noreferrer">
+              // One filled button on the page; the rest outlined.
+              <a className={`btn ${i === 0 ? 'btn--primary' : 'btn--ghost'}`} href={url} target="_blank" rel="noopener noreferrer">
                 {t('social.follow', { name: t(`social.${key}`) })}
               </a>
             ) : (

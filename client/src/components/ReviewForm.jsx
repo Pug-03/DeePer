@@ -82,10 +82,11 @@ export default function ReviewForm() {
             <span className={`faint ${len > 0 && len < MIN ? 'review-short' : ''}`}>
               {len}/{MAX}
             </span>
-            <button className="btn btn--primary btn--sm" type="button" disabled={busy || len < MIN} onClick={submit}>
-              {busy ? t('review.sending') : t('review.send')}
-            </button>
           </div>
+          {/* Full width, like every other form's submit. */}
+          <button className="btn btn--primary" type="button" disabled={busy || len < MIN} onClick={submit}>
+            {busy ? t('review.sending') : t('review.send')}
+          </button>
         </>
       ) : (
         <>

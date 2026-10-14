@@ -51,13 +51,13 @@ export default function SponsorInquiry() {
     return (
       <div className="page center" style={{ justifyContent: 'center', flex: 1 }}>
         <CheckBadge />
-        <motion.h1 className="h1" {...rise(1.05)}>
+        <motion.h1 className="h1" {...rise(0.6)}>
           {t('sponsorForm.doneTitle')}
         </motion.h1>
-        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(1.2)}>
+        <motion.p className="sub" style={{ maxWidth: 320, marginInline: 'auto', whiteSpace: 'pre-line' }} {...rise(0.72)}>
           {t('sponsorForm.doneMsg')}
         </motion.p>
-        <motion.div style={{ marginTop: 36 }} {...rise(1.38)}>
+        <motion.div style={{ marginTop: 36 }} {...rise(0.86)}>
           <button className="btn btn--primary" type="button" onClick={() => nav(-1)}>
             {t('common.back')}
           </button>

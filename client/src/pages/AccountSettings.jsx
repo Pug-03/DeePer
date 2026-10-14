@@ -48,6 +48,7 @@ export default function AccountSettings() {
       setUser(d.user);
       setCurrentPassword('');
       setNewPassword('');
+      setNewPassword2('');
       pwSaved.flash();
     } catch (e2) {
       setPwErr(e2.message);
@@ -92,6 +93,7 @@ export default function AccountSettings() {
 
       <div className="header">
         <h1 className="h1">{t('profile.settingsTitle')}</h1>
+        <p className="sub">{t('profile.settingsSub')}</p>
       </div>
 
       <div className="glass" style={{ padding: 18, marginBottom: 14 }}>
@@ -170,7 +172,9 @@ export default function AccountSettings() {
         <p className="faint" style={{ marginBottom: 14 }}>
           {t('profile.deleteMsg')}
         </p>
-        <button className="btn btn--danger" onClick={openDelete}>
+        {/* Outlined here; the filled red is kept for the confirm dialog, so
+            this isn't the loudest thing on the page. */}
+        <button className="btn btn--danger-outline" onClick={openDelete}>
           <IcTrash size={18} /> {t('profile.deleteAccount')}
         </button>
       </div>
