@@ -41,11 +41,11 @@ export default function OtpInput({ value, onChange, autoFocus = true, status = '
               maxLength={1}
               value={d}
               disabled={status !== 'idle'}
-              style={{ transitionDelay: status === 'success' ? `${i * 180}ms` : '0ms' }}
+              style={{ transitionDelay: status === 'success' ? `${i * 70}ms` : '0ms' }}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
             />
-            <span className="otp-box-check" style={{ transitionDelay: status === 'success' ? `${i * 180}ms` : '0ms' }}>
+            <span className="otp-box-check" style={{ transitionDelay: status === 'success' ? `${i * 70}ms` : '0ms' }}>
               <IcCheck size={20} />
             </span>
           </div>

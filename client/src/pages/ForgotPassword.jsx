@@ -8,6 +8,7 @@ import { useToast } from '../components/ui.jsx';
 import LangToggle from '../components/LangToggle.jsx';
 import OtpInput from '../components/OtpInput.jsx';
 import PasswordField from '../components/PasswordField.jsx';
+import FieldError, { invalidProps } from '../components/FieldError.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
 import { pwScore } from '../utils/password.js';
 import { IcBack, IcCheck } from '../components/icons.jsx';
@@ -30,6 +31,7 @@ export default function ForgotPassword() {
   // again — it used to vanish with the shake, after 0.7s.
   const [otpMsg, setOtpMsg] = useState('');
   const [password, setPassword] = useState('');
+  const [emailErr, setEmailErr] = useState('');
 
   const { rules, score, valid: pwValid } = pwScore(password);
 
@@ -37,6 +39,8 @@ export default function ForgotPassword() {
     e.preventDefault();
     setErr('');
     setOtpMsg('');
+    // The app's own message instead of the browser's validation bubble.
+    if (!email.trim()) return setEmailErr('err.EMAIL_REQUIRED');
     setBusy(true);
     try {
       const d = await api.post('/auth/password-reset/request', { email }, { auth: false });
@@ -73,9 +77,9 @@ export default function ForgotPassword() {
       await api.post('/auth/password-reset/verify', { email, code }, { auth: false });
       setOtpStatus('success');
       // Wait for the staggered checkmarks to finish before leaving: the last
-      // box starts at 3 * 180ms and its spring runs ~0.6s (~1140ms total),
+      // box starts at 3 * 70ms and its spring runs ~0.6s (~810ms total),
       // plus a beat to let it settle.
-      setTimeout(() => setStep('password'), 1300);
+      setTimeout(() => setStep('password'), 950);
     } catch (e2) {
       setErr(e2);
       setOtpMsg(e2.message);
@@ -140,7 +144,7 @@ export default function ForgotPassword() {
       {err && !(step === 'otp' && otpStatus === 'error') && <ErrorBanner err={err} />}
 
       {step === 'email' && (
-        <form className="stagger" onSubmit={requestOtp}>
+        <form className="stagger" onSubmit={requestOtp} noValidate>
           <div className="header">
             <h1 className="h1">{t('forgot.title')}</h1>
             <p className="sub">{t('forgot.emailSub')}</p>
@@ -154,10 +158,14 @@ export default function ForgotPassword() {
               autoComplete="email"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailErr('');
+              }}
               autoFocus
+              {...invalidProps('email', { email: emailErr })}
             />
+            <FieldError id="pf-email-err" msg={emailErr} />
           </div>
           <button className="btn btn--primary" type="submit" disabled={busy}>
             {busy ? t('signup.sendingOtp') : t('signup.sendOtp')}
@@ -168,7 +176,6 @@ export default function ForgotPassword() {
       {step === 'otp' && (
         <form className="stagger" onSubmit={verifyOtp}>
           <div className="header">
-            <p className="eyebrow">{t('signup.otpEyebrow')}</p>
             <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
               {t('signup.otpSub')}

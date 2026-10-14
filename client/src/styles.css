@@ -3309,6 +3309,22 @@ a.btn {
 .launch-notice {
   margin-top: 28px;
   text-align: center;
+  /* Under a form it's a footnote, not the headline: small, dim numbers so
+     it doesn't pull the eye away from what's being filled in. */
+  opacity: 0.8;
+}
+.launch-notice .countdown {
+  gap: 10px;
+}
+.launch-notice .countdown-num {
+  font-size: 18px !important;
+}
+.launch-notice .countdown-cell {
+  min-width: 30px;
+}
+.launch-notice .countdown-unit {
+  font-size: 10.5px;
+  color: var(--text-faint);
 }
 /* Rises in after the form's own stagger, text first, then each digit
    column a beat apart, the same rise the rest of the page uses. */

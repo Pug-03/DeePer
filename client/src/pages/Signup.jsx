@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { setAdminToken } from '../admin/adminApi.js';
@@ -93,7 +94,6 @@ function ProfileFields({
               setAge(e.target.value);
               clearError('age');
             }}
-            placeholder={t('signup.agePh')}
             min={1}
             max={90}
             {...invalidProps('age', errors)}
@@ -257,9 +257,10 @@ export default function Signup() {
     e.preventDefault();
     setErr('');
     const errs = {};
-    if (!req.nickname.trim()) errs.nickname = t('err.NICKNAME_REQUIRED');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.email.trim())) errs.email = t('err.INVALID_EMAIL');
-    if (!req.source) errs.source = t('err.TESTER_SOURCE_REQUIRED');
+    if (!req.nickname.trim()) errs.nickname = 'err.NICKNAME_REQUIRED';
+    if (!req.email.trim()) errs.email = 'err.EMAIL_REQUIRED';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.email.trim())) errs.email = 'err.INVALID_EMAIL';
+    if (!req.source) errs.source = 'err.TESTER_SOURCE_REQUIRED';
     if (Object.keys(errs).length) return setReqErr(errs);
     setBusy(true);
     try {
@@ -297,8 +298,8 @@ export default function Signup() {
       await api.post('/auth/invite/check', { invite_code: code }, { auth: false });
       setInviteStatus('success');
       setInviteMsg('');
-      // Let the six checkmarks play (last starts at 5 × 180 ms) before moving on.
-      setTimeout(() => setInviteOk(true), 1700);
+      // Let the six checkmarks play (last starts at 5 × 70 ms) before moving on.
+      setTimeout(() => setInviteOk(true), 1000);
     } catch (e2) {
       const d = e2.data || {};
       if (d.error_code === 'INVITE_LOCKED') {
@@ -365,10 +366,11 @@ export default function Signup() {
     const errs = {};
     const nameErr = nicknameError(nickname);
     const ageNum = Number(age);
-    if (nameErr) errs.nickname = t(nameErr);
-    if (!age) errs.age = t('signup.needAge');
-    else if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 90) errs.age = t('signup.ageInvalid');
-    if (!gender) errs.gender = t('signup.needGender');
+    // i18n keys, translated by FieldError (so they follow a language switch).
+    if (nameErr) errs.nickname = nameErr;
+    if (!age) errs.age = 'signup.needAge';
+    else if (!Number.isInteger(ageNum) || ageNum < 1 || ageNum > 90) errs.age = 'signup.ageInvalid';
+    if (!gender) errs.gender = 'signup.needGender';
     return errs;
   };
   // A rejected submit: field errors go under their field, anything else
@@ -473,12 +475,12 @@ export default function Signup() {
       await api.post('/auth/otp/verify', { email, code }, { auth: false });
       setOtpStatus('success');
       // Wait for the staggered checkmarks to finish before leaving: the last
-      // box starts at 3 * 180ms and its spring runs ~0.6s (~1140ms total),
+      // box starts at 3 * 70ms and its spring runs ~0.6s (~810ms total),
       // plus a beat to let it settle.
       setTimeout(() => {
         setFlow('email');
         setStep('profile');
-      }, 1300);
+      }, 950);
     } catch (e2) {
       setErr(e2);
       setOtpMsg(e2.message);
@@ -507,14 +509,14 @@ export default function Signup() {
   const submitPassword = (e) => {
     e.preventDefault();
     setErr('');
-    if (!pwValid) return setFieldErr({ password: t('signup.pwNotValid') });
-    if (password2 !== password) return setFieldErr({ password2: t('signup.pwMismatch') });
+    if (!pwValid) return setFieldErr({ password: 'signup.pwNotValid' });
+    if (password2 !== password) return setFieldErr({ password2: 'signup.pwMismatch' });
     setStep('consent');
   };
   // Consent accepted → create the account.
   const submitConsent = () => {
     if (!consent) {
-      setFieldErr((cur) => ({ ...cur, consent: t('privacy.needConsent') }));
+      setFieldErr((cur) => ({ ...cur, consent: 'privacy.needConsent' }));
       document.getElementById('pf-consent')?.focus();
       return;
     }
@@ -623,6 +625,14 @@ export default function Signup() {
       {err && !(step === 'otp' && otpStatus === 'error') && <ErrorBanner err={err} />}
 
       {/* Step: choose method */}
+      {/* Each step fades out before the next one staggers in, instead of
+          cutting to a near-empty frame in between. */}
+      <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={`${step}${needInvite ? '-invite' : ''}`}
+        className="signup-step"
+        exit={{ opacity: 0, y: -6, transition: { duration: 0.16, ease: 'easeIn' } }}
+      >
       {step === 'method' && needInvite && (
         <form
           className="stagger"
@@ -795,10 +805,6 @@ export default function Signup() {
               <div className="m-sub">{t('signup.emailMethodSub')}</div>
             </span>
           </button>
-
-          <p className="google-note" style={{ marginTop: 18 }}>
-            {t('signup.googleNote')}
-          </p>
         </div>
       )}
 
@@ -836,7 +842,6 @@ export default function Signup() {
       {step === 'otp' && (
         <form className="stagger" onSubmit={verifyOtp}>
           <div className="header">
-            <p className="eyebrow">{t('signup.otpEyebrow')}</p>
             <h1 className="h1">{t('signup.otpTitle')}</h1>
             <p className="sub">
               {t('signup.otpSub')}
@@ -937,10 +942,12 @@ export default function Signup() {
               setPassword2(e.target.value);
               clearFieldErr('password2');
             }}
+            invalid={!!fieldErr.password2 || pwMismatch}
+            errorId="pf-password2-err"
           >
             <FieldError
               id="pf-password2-err"
-              msg={fieldErr.password2 || (pwMismatch ? t('signup.pwMismatch') : '')}
+              msg={fieldErr.password2 || (pwMismatch ? 'signup.pwMismatch' : '')}
             />
           </PasswordField>
           {/* Strength bars and the rule checklist after both boxes, so the
@@ -994,6 +1001,9 @@ export default function Signup() {
           </button>
         </form>
       )}
+
+      </motion.div>
+      </AnimatePresence>
 
       {/* Keyed by step: each step's form plays its own stagger-in, so the
           notice remounts with it and rises in last, below the new form.

@@ -5,7 +5,9 @@ import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import PasswordField from '../components/PasswordField.jsx';
 import PasswordStrength from '../components/PasswordStrength.jsx';
-import { IcBack, IcTrash } from '../components/icons.jsx';
+import FieldError from '../components/FieldError.jsx';
+import { IcBack, IcTrash, IcHistory } from '../components/icons.jsx';
+import { LogOut } from 'lucide-react';
 import SaveButton, { useSavedFlash } from '../components/SaveButton.jsx';
 import { pwScore } from '../utils/password.js';
 
@@ -144,17 +146,22 @@ export default function AccountSettings() {
         </form>
       </div>
 
-      <button
-        className="btn btn--ghost"
-        style={{ marginBottom: 14 }}
-        onClick={() => nav('/app/profile/login-history')}
-      >
-        {t('profile.loginHistory')}
-      </button>
-
-      <button className="btn btn--ghost" style={{ marginBottom: 14 }} onClick={doLogout}>
-        {t('profile.logout')}
-      </button>
+      {/* Same list rows as Profile, instead of two loose full-width buttons. */}
+      <div className="glass profile-list" style={{ marginBottom: 14 }}>
+        <button type="button" className="profile-row" onClick={() => nav('/app/profile/login-history')}>
+          <span className="profile-row-ic">
+            <IcHistory size={17} />
+          </span>
+          <span className="profile-row-label">{t('profile.loginHistory')}</span>
+          <IcBack size={18} className="profile-row-chev" />
+        </button>
+        <button type="button" className="profile-row" onClick={doLogout}>
+          <span className="profile-row-ic">
+            <LogOut size={17} />
+          </span>
+          <span className="profile-row-label">{t('profile.logout')}</span>
+        </button>
+      </div>
 
       <div className="glass danger-zone" style={{ padding: 18 }}>
         <h2 className="h2" style={{ marginBottom: 6, fontSize: 17 }}>

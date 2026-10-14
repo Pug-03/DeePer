@@ -88,18 +88,33 @@ export default function QuestionSamples() {
           })
         ))}
 
-      <button className="btn btn--primary samples-cta" type="button" onClick={() => nav(user ? '/app/home' : '/signup')}>
-        {user ? t('samples.ctaSignedIn') : t('samples.cta')}
-      </button>
+      {/* On the hub the categories come first (as rows, like Profile's), the
+          sign-up button after; on a category page it's the other way round. */}
+      {category && (
+        <button className="btn btn--primary samples-cta" type="button" onClick={() => nav(user ? '/app/home' : '/signup')}>
+          {user ? t('samples.ctaSignedIn') : t('samples.cta')}
+        </button>
+      )}
 
-      <div className="samples-others">
-        {category && <p className="samples-others-title">{t('samples.others')}</p>}
+      {category && <p className="samples-others-title">{t('samples.others')}</p>}
+      <div className="glass samples-cats">
         {(category ? others : CATS).map((c) => (
-          <Link key={c} className="link" to={`/questions/${c}`}>
-            {t(`samples.title.${c}`)}
+          <Link key={c} className="samples-cat-row" to={`/questions/${c}`} style={{ '--cat': `var(--cat-${c})` }}>
+            <span className="samples-cat-dot" />
+            <span className="samples-cat-text">
+              <span className="samples-cat-name">{t(`cat.${c}`)}</span>
+              <span className="samples-cat-sub">{t(`samples.title.${c}`)}</span>
+            </span>
+            <ChevronRight size={18} className="samples-cat-chev" />
           </Link>
         ))}
       </div>
+
+      {!category && (
+        <button className="btn btn--primary samples-cta samples-cta--after" type="button" onClick={() => nav(user ? '/app/home' : '/signup')}>
+          {user ? t('samples.ctaSignedIn') : t('samples.cta')}
+        </button>
+      )}
     </div>
   );
 }
