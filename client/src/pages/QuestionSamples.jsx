@@ -6,6 +6,7 @@ import { useI18n } from '../store/i18n.jsx';
 import { Loading } from '../components/ui.jsx';
 import { IcBack } from '../components/icons.jsx';
 import { CATS, questionText } from '../util.js';
+import { ChevronRight } from 'lucide-react';
 
 const LEVELS = ['open', 'mid', 'deep'];
 

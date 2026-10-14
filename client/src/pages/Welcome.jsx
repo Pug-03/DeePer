@@ -100,7 +100,7 @@ function CountUpNumber({ target, className = 'stat-number' }) {
       ref={ref}
       className={className}
       // Landing pop: swell out, then spring back to size.
-      animate={landed ? { scale: [1, 1.22, 1] } : { scale: 1 }}
+      animate={landed ? { scale: [1, 1.08, 1] } : { scale: 1 }}
       transition={{ duration: 0.66, times: [0, 0.25, 1], ease: ['easeOut', [0.34, 1.56, 0.64, 1]] }}
     >
       {target == null ? '···' : `${value.toLocaleString('en-US')}+`}
@@ -440,6 +440,9 @@ function useMockStatsForPreview() {
 
 // Smaller totals under the user count: every card swiped, answered, saved
 // and shared.
+// Below these the landing page leaves the stats out (see the stats section).
+const STATS_MIN_USERS = 50;
+const STATS_MIN_ACTIVITY = 10;
 const ACTIVITY_STATS = [
   { key: 'swipes', field: 'swipe_count' },
   { key: 'answers', field: 'answer_count' },
@@ -1109,6 +1112,10 @@ export default function Welcome() {
           </div>
         </div>
 
+        {/* Numbers only once they say something: "0+ questions answered"
+            read as broken. Comes back by itself as people use the app. */}
+        {(stats?.user_count ?? 0) >= STATS_MIN_USERS && (
+        <>
         <Reveal className="landing-divider" />
 
         <div className="landing-section">
@@ -1125,7 +1132,7 @@ export default function Welcome() {
             <div className="stat-label">{t('welcome.stats.label')}</div>
           </Reveal>
           <div className="stat-grid">
-            {ACTIVITY_STATS.map(({ key, field }, i) => (
+            {ACTIVITY_STATS.filter(({ field }) => (stats?.[field] ?? 0) >= STATS_MIN_ACTIVITY).map(({ key, field }, i) => (
               <Reveal className="stat-cell" key={key} delay={0.25 + 0.08 * i}>
                 <CountUpNumber target={stats?.[field] ?? null} className="stat-number stat-number--sm" />
                 <div className="stat-label">{t(`welcome.stats.${key}`)}</div>
@@ -1133,6 +1140,8 @@ export default function Welcome() {
             ))}
           </div>
         </div>
+        </>
+        )}
 
         <Reveal className="landing-divider" />
 
@@ -1272,6 +1281,8 @@ export default function Welcome() {
               {t('privacy.link')}
             </button>
           </p>
+          {/* A quiet close to the page instead of just stopping. */}
+          <p className="landing-copyright">© 2569 DeePer</p>
         </Reveal>
       </div>
     </>
