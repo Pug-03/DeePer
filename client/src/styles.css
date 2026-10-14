@@ -1117,6 +1117,8 @@ html[data-tour] .fade-up {
   inset: 0;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 14px;
   border-radius: var(--radius);
   border: 1px solid var(--border-red);
   background:
@@ -1141,8 +1143,6 @@ html[data-tour] .fade-up {
   inset: 0;
   display: grid;
   place-items: center;
-  align-content: center;
-  gap: 14px;
   border-radius: var(--radius);
   border: 2px solid var(--red-bright);
   background: rgba(0, 0, 0, 0.28);

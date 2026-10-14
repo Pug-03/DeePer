@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Navigate } from 'react-router-dom';
 import { adminApi, getAdminToken, setAdminToken, AdminAuthError } from '../admin/adminApi.js';
 import { Loading, ErrorState, useConfirm, useToast } from '../components/ui.jsx';
 import { SPONSORS } from '../sponsors-info.js';
 import { useI18n } from '../store/i18n.jsx';
 import { CATS } from '../util.js';
-import { IcTrash } from '../components/icons.jsx';
+import { IcTrash, IcCheck, IcMail } from '../components/icons.jsx';
 import { keepWord } from '../utils/thai.js';
 
 // Owner-only back office at /admin (not linked from anywhere in the app).
@@ -111,6 +112,12 @@ function AdminDashboard({ onLogout }) {
 
   const current = tabs.find((x) => x.key === tab);
 
+  // On a phone the tabs are a sideways-scrolling strip: keep the chosen one
+  // in view (it used to stay off-screen after picking a tab further along).
+  useEffect(() => {
+    document.querySelector('.admin-tab.active')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [tab]);
+
   // On a computer: a sticky sidebar of sections on the left (with their
   // to-do counts) and a wide work area on the right. On a phone the same
   // nav collapses back into the row of pills above the content.
@@ -165,6 +172,7 @@ function AdminDashboard({ onLogout }) {
           {tab === 'inquiries' && <Inquiries onLogout={onLogout} onChange={reload} />}
           {tab === 'reviews' && <Reviews onLogout={onLogout} onChange={reload} />}
           {tab === 'sponsors' && <Sponsors onLogout={onLogout} />}
+          </motion.div>
         </main>
       </div>
     </div>
@@ -189,18 +197,30 @@ function Overview({ stats, onOpen }) {
     ['เข้าสู่ระบบวันนี้', stats.logins_today],
     ['ตอบคำถามวันนี้', stats.answers_today],
     ['ผู้ใช้ทั้งหมด', stats.users_total],
-    ['แจ้งปัญหาที่ยังไม่แก้', stats.reports_open],
-    [`องค์กรติดต่อเป็น${keepWord('สปอนเซอร์')} (ยังไม่ได้ติดต่อกลับ)`, stats.inquiries_open],
-    ['สลิปรออนุมัติ', stats.proofs_pending],
-    ['รีวิวรออนุมัติ', stats.reviews_pending ?? 0],
   ];
   return (
     <>
+      <p className="admin-group-title">งานที่รอ</p>
       <div className="admin-tiles">
-        {tiles.map(([label, value]) => (
+        {todo.map(([label, value, key]) => (
+          <button
+            key={key}
+            type="button"
+            className={`glass admin-tile admin-tile--todo${value > 0 ? ' has-todo' : ''}`}
+            onClick={() => onOpen(key)}
+          >
+            <span className="admin-tile-value">{value.toLocaleString('th-TH')}</span>
+            <span className="admin-tile-label">{label}</span>
+          </button>
+        ))}
+      </div>
+      <p className="admin-group-title">วันนี้</p>
+      <div className="admin-tiles">
+        {tiles.map(([label, value, sub]) => (
           <div key={label} className="glass admin-tile">
             <span className="admin-tile-value">{value.toLocaleString('th-TH')}</span>
             <span className="admin-tile-label">{label}</span>
+            {sub && <span className="admin-tile-sub">{sub}</span>}
           </div>
         ))}
       </div>
@@ -230,14 +250,22 @@ function DayChart({ days, field, title }) {
     new Date(`${day}T00:00:00Z`).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'UTC' });
   return (
     <div className="glass admin-chart">
-      <p className="admin-chart-title">{title}</p>
+      <p className="admin-chart-title">
+        {title}
+        {/* The scale and today's value at a glance — the bars alone only
+            gave numbers on hover, and there's no hover on a phone. */}
+        <span className="admin-chart-meta">
+          สูงสุด {max.toLocaleString('th-TH')} · วันนี้ {days[days.length - 1][field].toLocaleString('th-TH')}
+        </span>
+      </p>
       <div className="admin-bars" role="img" aria-label={title}>
         {days.map((d) => (
           <div key={d.day} className="admin-bar-slot" tabIndex={0}>
             <span className="admin-bar-tip">
               {label(d.day)}: {d[field]} คน{field === 'active' ? ` · สมัครใหม่ ${d.signups}` : ''}
             </span>
-            <span className="admin-bar" style={{ height: `${(d[field] / max) * 100}%` }} />
+            {/* Nothing drawn for a zero, so it doesn't read as data. */}
+            {d[field] > 0 && <span className="admin-bar" style={{ height: `${(d[field] / max) * 100}%` }} />}
           </div>
         ))}
       </div>
@@ -285,9 +313,11 @@ function Insights({ onLogout }) {
   return (
     <>
       <div className="glass admin-tile admin-tile--wide">
+        {/* Label first, then the number, then the detail. */}
+        <span className="admin-tile-label">กลับมาใช้ซ้ำ</span>
         <span className="admin-tile-value">{pct}%</span>
-        <span className="admin-tile-label">
-          กลับมาใช้ซ้ำ: {data.returning_14d} จาก {data.active_14d} คนที่ใช้งานใน 14 วันล่าสุด ใช้มากกว่า 1 วัน
+        <span className="admin-tile-sub">
+          {data.returning_14d} จาก {data.active_14d} คนที่ใช้งานใน 14 วันล่าสุด ใช้มากกว่า 1 วัน
         </span>
       </div>
       <div className="admin-grid">
@@ -390,7 +420,7 @@ function Reports({ onLogout, onChange }) {
           ['done', 'แก้แล้ว'],
         ]}
       />
-      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.length === 0 && <AdminEmpty />}
       <div className="admin-list">
       {list.map((r) => (
           <div key={r.id} className="glass admin-card">
@@ -516,7 +546,7 @@ function Proofs({ onLogout, onChange }) {
           ['rejected', 'ไม่ขึ้นชื่อ'],
         ]}
       />
-      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.length === 0 && <AdminEmpty />}
       <div className="admin-list">
       {list.map((p) => (
           <div key={p.id} className="glass admin-card">
@@ -536,7 +566,7 @@ function Proofs({ onLogout, onChange }) {
             <dd>{p.amount != null ? `${p.amount.toLocaleString('th-TH')} บาท` : 'ไม่ระบุ'}</dd>
             <dt>โอนเมื่อ</dt>
             <dd>
-              {p.transfer_date} {p.transfer_time}
+              {fmtTransfer(p.transfer_date, p.transfer_time)}
             </dd>
             <dt>ส่งเมื่อ</dt>
             <dd>{fmtTime(p.created_at)}</dd>
@@ -872,6 +902,7 @@ const TESTER_SOURCE = {
 function TesterRequests({ onLogout, onChange }) {
   const { data, error, reload } = useAdminData(adminApi.testerRequests, onLogout);
   const [filter, setFilter] = useState('open');
+  const [sendErr, setSendErr] = useState({});
   const confirm = useConfirm();
   const toast = useToast();
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -897,6 +928,7 @@ function TesterRequests({ onLogout, onChange }) {
   };
   const send = async (r) => {
     const ok = await confirm({
+      icon: <IcMail size={32} />,
       title: 'ส่งรหัสเชิญ',
       message: `ส่งอีเมลพร้อมรหัสเชิญไปที่ ${r.email} ?`,
       confirmText: 'ส่งเลย',
@@ -941,7 +973,7 @@ function TesterRequests({ onLogout, onChange }) {
           </button>
         ))}
       </div>
-      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.length === 0 && <AdminEmpty />}
       <div className="admin-list">
         {list.map((r) => (
           <div key={r.id} className="glass admin-card">
@@ -977,6 +1009,7 @@ function TesterRequests({ onLogout, onChange }) {
               <summary>อีเมลที่จะส่ง · {r.email_preview.subject}</summary>
               <p className="admin-message">{r.email_preview.text}</p>
             </details>
+            {sendErr[r.id] && <p className="admin-note admin-note--warn">ส่งไม่สำเร็จ: {sendErr[r.id]}</p>}
             <div className="admin-actions">
               <button
                 className={`btn ${r.invited_at ? 'btn--ghost' : 'btn--primary'} admin-action`}
@@ -1031,7 +1064,7 @@ function Inquiries({ onLogout, onChange }) {
           ['done', 'ติดต่อแล้ว'],
         ]}
       />
-      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.length === 0 && <AdminEmpty />}
       <div className="admin-list">
       {list.map((q) => (
           <div key={q.id} className="glass admin-card">
@@ -1112,7 +1145,7 @@ function Reviews({ onLogout, onChange }) {
           </button>
         ))}
       </div>
-      {list.length === 0 && <p className="admin-note">ไม่มีรายการ</p>}
+      {list.length === 0 && <AdminEmpty />}
       <div className="admin-list">
       {list.map((r) => (
           <div key={r.id} className="glass admin-card">
@@ -1160,6 +1193,17 @@ function inFilter(items, filter, statusOf) {
   if (filter === 'trash') return items.filter((i) => i.deleted_at);
   const live = items.filter((i) => !i.deleted_at);
   return filter === 'all' ? live : live.filter((i) => statusOf(i) === filter);
+}
+
+// What a list shows with nothing in it: a quiet card, not one grey line
+// lost in empty space.
+function AdminEmpty() {
+  return (
+    <div className="glass admin-empty">
+      <IcCheck size={20} />
+      <span>ไม่มีรายการในส่วนนี้</span>
+    </div>
+  );
 }
 
 function FilterRow({ items, filter, setFilter, statusOf, filters }) {
