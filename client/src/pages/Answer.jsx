@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
-import { displayName, questionText } from '../util.js';
+import { displayName, questionText, partnerLabel } from '../util.js';
 import { useToast } from '../components/ui.jsx';
 import { IcBack, IcCheck } from '../components/icons.jsx';
 
@@ -26,9 +26,11 @@ export default function Answer() {
   // up by this question's own category rather than a single global slot.
   const partner = user?.partners?.[q?.category];
   // Partner's name is edited in Profile, not here — see Profile.jsx.
-  const partnerName = preset?.partner_name || partner?.name || partnerDefault;
+  // Stored as is; shown through partnerLabel so the default reads in the
+  // current language.
+  const partnerName = preset?.partner_name || partner?.name || '';
   // Color is set once in Profile, not per-answer here — see Profile.jsx.
-  const partnerColor = preset?.partner_color || partner?.color || '#f43f5e';
+  const partnerColor = preset?.partner_color || partner?.color || '#a78bfa';
   const [busy, setBusy] = useState(false);
 
   if (!q) {
@@ -43,7 +45,7 @@ export default function Answer() {
   }
 
   const myName = displayName(user, lang) || t('answer.we');
-  const pName = partnerName || partnerDefault;
+  const pName = partnerLabel(partnerName, t);
 
   const save = async () => {
     if (!myAnswer.trim() && !partnerAnswer.trim()) {
@@ -57,7 +59,7 @@ export default function Answer() {
         category: q.category,
         my_answer: myAnswer,
         partner_answer: partnerAnswer,
-        partner_name: partnerName,
+        partner_name: partnerName || partnerDefault,
         partner_color: partnerColor,
         saved_id: savedId,
       });
@@ -95,6 +97,8 @@ export default function Answer() {
         >
           <span className="turn-dot" style={{ background: '#fff' }} />
           {displayName(user, lang) || t('answer.us')}
+          {/* A tick once that person has written something. */}
+          {myAnswer.trim() && <IcCheck size={14} />}
         </button>
         <button
           className={`turn-tab ${turn === 'partner' ? 'active' : ''}`}
@@ -103,6 +107,7 @@ export default function Answer() {
         >
           <span className="turn-dot" style={{ background: partnerColor }} />
           {pName}
+          {partnerAnswer.trim() && <IcCheck size={14} />}
         </button>
       </div>
 
@@ -110,7 +115,7 @@ export default function Answer() {
         <div className="field fade-up">
           <label>{t('answer.myAnswerOf', { name: myName })}</label>
           <textarea
-            className="textarea"
+            className="textarea answer-textarea"
             placeholder={t('answer.myAnswerPh')}
             value={myAnswer}
             onChange={(e) => setMyAnswer(e.target.value)}
@@ -128,31 +133,23 @@ export default function Answer() {
         <div className="field fade-up">
           <label>{t('answer.myAnswerOf', { name: pName })}</label>
           <textarea
-            className="textarea"
+            className="textarea answer-textarea"
             placeholder={t('answer.partnerPh', { name: pName })}
             value={partnerAnswer}
             onChange={(e) => setPartnerAnswer(e.target.value)}
             autoFocus
           />
 
-          <div className="field" style={{ marginTop: 10, marginBottom: 0 }}>
-            <label>{t('answer.partnerName')}</label>
-            <input
-              className="input"
-              value={partnerName}
-              readOnly
-              placeholder={t('answer.partnerNamePh')}
-              style={{ opacity: 0.7, cursor: 'default' }}
-            />
-            <button
-              type="button"
-              className="link"
-              style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 6 }}
-              onClick={() => nav('/app/profile')}
-            >
-              {t('answer.partnerNameHint')}
-            </button>
-          </div>
+          {/* The name is already on the tab; just say where to change it
+              (a read-only name box here looked like a broken field). */}
+          <button
+            type="button"
+            className="link"
+            style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 6, alignSelf: 'flex-start' }}
+            onClick={() => nav('/app/profile/partner')}
+          >
+            {t('answer.partnerNameHint')}
+          </button>
         </div>
       )}
 

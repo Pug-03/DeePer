@@ -117,7 +117,7 @@ router.post('/history', (req, res) => {
     partner_name == null || partner_color == null
       ? db
           .prepare(`SELECT name, color FROM partners WHERE user_id = ? AND category = ?`)
-          .get(req.user.id, category) || { name: 'อีกฝ่าย', color: '#f43f5e' }
+          .get(req.user.id, category) || { name: 'อีกฝ่าย', color: '#a78bfa' }
       : null;
 
   const info = db

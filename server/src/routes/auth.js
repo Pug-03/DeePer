@@ -63,7 +63,7 @@ const getPartnerOrDefault = (userId, category) =>
   db.prepare(`SELECT name, color, icon, avatar_url FROM partners WHERE user_id = ? AND category = ?`).get(
     userId,
     category,
-  ) || { name: 'อีกฝ่าย', color: '#f43f5e', icon: null, avatar_url: null };
+  ) || { name: 'อีกฝ่าย', color: '#a78bfa', icon: null, avatar_url: null };
 
 const upsertPartner = (userId, category, { name, color, icon, avatar_url }) =>
   db

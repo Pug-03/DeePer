@@ -55,7 +55,7 @@ function partnersByCategory(userId) {
     const r = byCategory[category];
     partners[category] = {
       name: r?.name ?? 'อีกฝ่าย',
-      color: r?.color ?? '#f43f5e',
+      color: r?.color ?? '#a78bfa',
       icon: r?.icon ?? null,
       avatar_url: r?.avatar_url ?? null,
     };

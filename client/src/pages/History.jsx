@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
@@ -7,7 +9,7 @@ import { useTutorial } from '../store/tutorial.jsx';
 import { Loading, ErrorState, EmptyState, useToast, useConfirm } from '../components/ui.jsx';
 import CatFilter from '../components/CatFilter.jsx';
 import { fetchList, getCachedList, setCachedList } from '../utils/listCache.js';
-import { catLabel, displayName, formatDate, questionText } from '../util.js';
+import { catLabel, displayName, formatDate, questionText, partnerLabel } from '../util.js';
 import { IcTrash, IcHistory } from '../components/icons.jsx';
 
 export default function History() {
@@ -120,13 +122,29 @@ export default function History() {
                 <p className="ci-q">{questionText(it.question_text, it.question_text_en, lang)}</p>
                 <div className="ci-meta">
                   <span>{formatDate(it.created_at)}</span>
-                  <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="delete">
-                    <IcTrash size={18} />
-                  </button>
+                  <span className="qitem-actions">
+                    {/* Shows the row opens, and which way it's turned. */}
+                    <span className={`qitem-toggle${isOpen ? ' open' : ''}`}>
+                      {isOpen ? t('history.hideAnswers') : t('history.showAnswers')}
+                      <ChevronDown size={15} />
+                    </span>
+                    <button className="icon-del" onClick={(e) => remove(e, it.id)} aria-label="delete">
+                      <IcTrash size={18} />
+                    </button>
+                  </span>
                 </div>
 
+                {/* Opens and closes smoothly instead of the rows below
+                    jumping by the answers' full height in one frame. */}
+                <AnimatePresence initial={false}>
                 {isOpen && (
-                  <div className="fade-up">
+                  <motion.div
+                    className="qitem-answers"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                  >
                     {it.my_answer && (
                       <div className="answer-block" style={{ borderLeftColor: 'var(--red)' }}>
                         <div className="ab-name" style={{ color: 'var(--red-bright)' }}>
@@ -144,7 +162,7 @@ export default function History() {
                           className="ab-name"
                           style={{ color: it.partner_color || 'var(--red-bright)' }}
                         >
-                          {it.partner_name || t('answer.partnerDefault')}
+                          {partnerLabel(it.partner_name, t)}
                         </div>
                         <div className="ab-text">{it.partner_answer}</div>
                       </div>
@@ -154,8 +172,9 @@ export default function History() {
                         {t('history.noAnswers')}
                       </p>
                     )}
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             );
           })}

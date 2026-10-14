@@ -186,7 +186,9 @@ db.exec(`
     user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     category    TEXT NOT NULL,
     name        TEXT NOT NULL DEFAULT 'อีกฝ่าย',
-    color       TEXT NOT NULL DEFAULT '#f43f5e',
+    -- Violet, not the app's own red, so the two people's turns and answers
+    -- tell apart at a glance until a colour is picked.
+    color       TEXT NOT NULL DEFAULT '#a78bfa',
     icon        TEXT,
     avatar_url  TEXT,
     UNIQUE(user_id, category)

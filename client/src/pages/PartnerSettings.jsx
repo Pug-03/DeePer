@@ -40,8 +40,10 @@ export default function PartnerSettings() {
   const partnerFileInputRef = useRef(null);
 
   const saved = (c) => ({
-    name: user?.partners?.[c]?.name || '',
-    color: user?.partners?.[c]?.color || '#f43f5e',
+    // The stored Thai default shows as an empty box with the default as its
+    // placeholder, so it reads right in either language.
+    name: user?.partners?.[c]?.name === 'อีกฝ่าย' ? '' : user?.partners?.[c]?.name || '',
+    color: user?.partners?.[c]?.color || '#a78bfa',
   });
   const current = (c) => ({ ...saved(c), ...drafts[c] });
   const isDirty = (c) => {
@@ -185,6 +187,7 @@ export default function PartnerSettings() {
             id="pt-name"
             className="input"
             value={partnerName}
+            placeholder={t('answer.partnerDefault')}
             onChange={(e) => setPartnerName(e.target.value)}
             maxLength={30}
           />
@@ -192,7 +195,7 @@ export default function PartnerSettings() {
         <label style={{ fontSize: 14, color: 'var(--text-dim)', paddingLeft: 4 }}>
           {t('profile.partnerPicture')}
         </label>
-        <p className="faint" style={{ margin: '4px 0 10px' }}>
+        <p className="faint" style={{ margin: '4px 0 10px', paddingLeft: 4 }}>
           {t('profile.partnerPictureHint')}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>

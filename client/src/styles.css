@@ -253,6 +253,18 @@ html[data-tour] .fade-up {
 .stagger > .list {
   animation: none;
 }
+/* The list's own cards follow on after the page header and the filter row
+   (they used to start at 0.05s, before the filters), quicker and capped,
+   so switching tabs to a long list doesn't take two seconds to settle. */
+.stagger > .list.stagger > * {
+  animation-duration: 0.45s;
+}
+.stagger > .list.stagger > *:nth-child(1) { animation-delay: 0.3s; }
+.stagger > .list.stagger > *:nth-child(2) { animation-delay: 0.36s; }
+.stagger > .list.stagger > *:nth-child(3) { animation-delay: 0.42s; }
+.stagger > .list.stagger > *:nth-child(4) { animation-delay: 0.48s; }
+.stagger > .list.stagger > *:nth-child(5) { animation-delay: 0.54s; }
+.stagger > .list.stagger > *:nth-child(n + 6) { animation-delay: 0.6s; }
 /* Same problem for .deck: it's a page-level stagger item, but it always
    contains a "next" preview card sitting behind at its own fixed resting
    look (scaled down, dimmed) plus the current card, which already animates
@@ -1340,6 +1352,35 @@ html[data-tour] .fade-up {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
+}
+/* History rows: the open/close hint beside the delete button, and the
+   answers panel that animates its height (overflow hidden while it does). */
+.qitem-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.qitem-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+.qitem-toggle svg {
+  transition: transform 0.24s ease;
+}
+.qitem-toggle.open svg {
+  transform: rotate(180deg);
+}
+.qitem-answers {
+  overflow: hidden;
+}
+/* Letter-spacing pulls Thai apart ("ค ร อ บ ค รั ว"); English only. */
+html[lang='th'] .qitem-cat {
+  letter-spacing: 0;
+}
+.qitem-cat {
   color: var(--cat, var(--red-bright));
 }
 .card-item.qitem .ci-q {
@@ -1411,6 +1452,14 @@ html[data-tour] .fade-up {
 .turn-tab.active {
   color: #fff;
   border-color: transparent;
+}
+/* The answer box grows with what's typed (up to 40% of the screen)
+   instead of scrolling inside four lines. */
+.answer-textarea {
+  field-sizing: content;
+  min-height: 120px;
+  max-height: 40vh;
+  resize: none;
 }
 .turn-dot {
   width: 12px;
@@ -4479,10 +4528,24 @@ button.profile-row:active {
 }
 .level-seg {
   width: 100%;
-  /* On a narrow phone in English the four labels don't fit one line;
-     they wrap to a second row instead of overlapping. */
-  flex-wrap: wrap;
+  /* One row always: a wrapped label sat alone on a second row with the
+     capsule jumping between rows. Narrow screens tighten the labels below
+     instead. */
+  flex-wrap: nowrap;
   border-radius: 18px;
+}
+@media (max-width: 400px) {
+  .level-seg button {
+    padding: 0 6px !important;
+    font-size: 13px !important;
+  }
+  .info-age-field {
+    flex-basis: 68px !important;
+  }
+  .info-gender-field .level-seg button {
+    padding: 0 2px !important;
+    font-size: 12.5px !important;
+  }
 }
 .level-seg,
 .lang-seg--elastic {
