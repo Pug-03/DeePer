@@ -227,10 +227,13 @@ html[data-tour] .fade-up {
   }
 }
 .stagger > * {
-  /* `both` fill hides each child (via the `from` keyframe) during its delay,
-     then keeps the final state. No `opacity: 0` base, so if the animation is
-     ever skipped the element still defaults to visible (fail-safe). */
-  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* `backwards` fill hides each child (via the `from` keyframe) during its
+     delay, then lets go once it's done — the end state is the element's own
+     look anyway. (`both` kept opacity pinned at 1 afterwards, which beat
+     `.btn:disabled { opacity: .5 }`, so disabled buttons looked active.) No
+     `opacity: 0` base, so if the animation is ever skipped the element still
+     defaults to visible (fail-safe). */
+  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .stagger > *:nth-child(1) { animation-delay: 0.05s; }
 .stagger > *:nth-child(2) { animation-delay: 0.17s; }
@@ -417,6 +420,7 @@ html[data-tour] .fade-up {
 .h1 {
   font-size: 26px;
   font-weight: 700;
+  line-height: 1.3;
   margin: 0 0 6px;
   letter-spacing: -0.3px;
 }
@@ -536,8 +540,10 @@ html[data-tour] .fade-up {
 .input:focus,
 .textarea:focus,
 .select:focus {
-  border-color: var(--border-red);
-  box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.12);
+  /* Neutral, so a field you're typing in doesn't look like one with an
+     error (those keep the red border). */
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.06);
 }
 .textarea {
@@ -582,7 +588,7 @@ html[data-tour] .fade-up {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin: 0 0 6px;
 }
 /* Letter-spacing pries Thai vowel/tone marks apart from their base
@@ -1023,11 +1029,17 @@ html[data-tour] .fade-up {
   flex: 1;
   display: grid;
   grid-template: 1fr / 1fr;
+  /* Reaches out over the page's side padding to the screen edges, so the
+     clip used while the deck slides away only trims what's off-screen and
+     never cuts the cards' red glow (which used to blink off and back). */
+  margin: 0 -20px;
+  padding: 0 20px;
 }
 .swap-deck {
   display: flex;
   flex-direction: column;
 }
+
 .deck {
   position: relative;
   flex: 1;
@@ -1109,6 +1121,8 @@ html[data-tour] .fade-up {
   inset: 0;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: 14px;
   border-radius: var(--radius);
   border: 2px solid var(--red-bright);
   background: rgba(0, 0, 0, 0.28);
@@ -1285,6 +1299,8 @@ html[data-tour] .fade-up {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.5;
+  /* A <p>: without this the browser's own 1em margins left big gaps. */
+  margin: 2px 0 0;
 }
 .card-item .ci-meta {
   display: flex;
@@ -1631,6 +1647,7 @@ html[data-tour] .fade-up {
 .modal-msg {
   font-size: 15px;
   line-height: 1.6;
+  white-space: pre-line;
   color: var(--text-dim);
   margin: 0 0 22px;
 }
@@ -1881,6 +1898,36 @@ html[data-tour] .fade-up {
   font-size: 13px;
   color: var(--text-dim);
 }
+.admin-tile-sub {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+/* Overview: "waiting on you" tiles open their tab; red while non-zero. */
+.admin-group-title {
+  margin: 4px 0 8px 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.admin-tile--todo {
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.admin-tile--todo.has-todo {
+  border-color: var(--border-red);
+}
+.admin-tile--todo.has-todo .admin-tile-value {
+  color: var(--red-bright);
+}
+.admin-chart-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-faint);
+}
 .admin-chart {
   padding: 16px;
   border-radius: var(--radius-sm);
@@ -1909,7 +1956,6 @@ html[data-tour] .fade-up {
 }
 .admin-bar {
   width: 70%;
-  min-height: 2px;
   border-radius: 4px 4px 0 0;
   background: var(--red);
   transition: background 0.15s;
@@ -2228,6 +2274,9 @@ html[data-tour] .fade-up {
   margin: 0 -20px 16px;
   padding: 0 20px 4px;
   scrollbar-width: none;
+  /* Fades out at the right edge, so it's clear the strip scrolls. */
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
 }
 .admin-tabs::-webkit-scrollbar {
   display: none;
@@ -2334,6 +2383,8 @@ html[data-tour] .fade-up {
     overflow: visible;
     margin: 0;
     padding: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
   }
   .admin-tab {
     justify-content: space-between;
@@ -2777,7 +2828,7 @@ html[data-tour] .fade-up {
 /* ---------- Report a problem / bug ---------- */
 /* Quiet contact footer on Welcome, below the supporters */
 .landing-report {
-  padding: 0 20px 12px;
+  padding: 0 20px 36px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2884,9 +2935,9 @@ a.btn {
 .slip-preview {
   display: block;
   width: 100%;
-  max-height: 300px;
+  max-height: 200px;
   object-fit: contain;
-  background: #fff;
+  border-radius: 12px;
 }
 /* Date + time side by side; each field shrinks evenly instead of overflowing
    the card on narrow screens. */
@@ -3206,7 +3257,7 @@ a.btn {
    column a beat apart, the same rise the rest of the page uses. */
 .launch-notice-text,
 .launch-notice .countdown-cell {
-  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: 1s;
 }
 .launch-notice .countdown-cell:nth-child(1) { animation-delay: 1.12s; }
@@ -3873,7 +3924,7 @@ a.btn {
   animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
 }
 .profile-page > .supporters-placeholder > * {
-  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .profile-page > .supporters-placeholder > :nth-child(1) { animation-delay: 1.55s; }
 .profile-page > .supporters-placeholder > :nth-child(2) { animation-delay: 1.67s; }
@@ -3910,11 +3961,14 @@ html[data-returning] .profile-page > .supporters-placeholder > * {
 /* Plain stacked text, no box/border — matches the "Who's behind DeePer"
    list treatment (see .dev-team-entry) rather than a card component. */
 .award-entry {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
   margin-bottom: 20px;
-  transition: transform 0.15s ease;
+  /* Room for the bullet, so wrapped lines and the result line up under
+     the name instead of under the bullet. */
+  padding-left: 16px;
 }
 .award-entry:last-of-type {
   margin-bottom: 0;
@@ -4161,7 +4215,10 @@ html[data-returning] .profile-page > .supporters-placeholder > * {
 }
 .tut-dots {
   display: flex;
-  flex-wrap: wrap;
+  /* One line always — on the last step the wider "Got it" button pushed
+     the current dot onto a line of its own. */
+  flex-wrap: nowrap;
+  overflow: hidden;
   /* 4px keeps every step's dot on one line beside the Back/Next buttons. */
   gap: 4px;
   min-width: 0;
@@ -4182,7 +4239,9 @@ html[data-returning] .profile-page > .supporters-placeholder > * {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(96px + var(--safe-b));
+  /* Clear of the bottom nav and its glow (it used to overlap the nav's top
+     edge and the deck's action buttons). */
+  bottom: calc(118px + var(--safe-b));
   transform: translateX(-50%);
   z-index: 60;
   display: flex;
@@ -4722,7 +4781,7 @@ button.profile-row:active {
    pops in with one soft pulse, the title and its line rise a beat apart,
    and the form's fields rise one after another, the send button last. */
 .form-page .header > * {
-  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: staggerRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .form-page .header > :nth-child(1) { animation-delay: 0.12s; }
 .form-page .header > :nth-child(2) { animation-delay: 0.22s; }
@@ -4736,10 +4795,10 @@ button.profile-row:active {
   to { opacity: 1; transform: none; }
 }
 .form-page .support-head-title {
-  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both;
+  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.48s backwards;
 }
 .form-page .support-proof-form > * {
-  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: staggerRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 .form-page .support-proof-form > :nth-child(1) { animation-delay: 0.55s; }
 .form-page .support-proof-form > :nth-child(2) { animation-delay: 0.63s; }
