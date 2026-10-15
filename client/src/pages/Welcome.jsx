@@ -1036,13 +1036,13 @@ export default function Welcome() {
       {/* Pinned to a full viewport regardless of content, so everything
           below (about / stats / supporters) always starts past the fold —
           see .landing-more below for the sibling that follows it. */}
-      <div className="page stagger" style={{ minHeight: '100dvh' }}>
+      <div className="page stagger welcome-hero" style={{ minHeight: '100dvh' }}>
         <div className="lang-float">
           <LangToggle />
         </div>
 
         <div className="spacer" />
-        <div className="center fade-up">
+        <div className="center fade-up hero-text">
           <div className="brand-mark" style={{ justifyContent: 'center' }}>
             <span className="dot" />
             <span className="brand">DeePer</span>
@@ -1060,7 +1060,7 @@ export default function Welcome() {
         </div>
 
         <div className="spacer" />
-        <div className="stack mt-a">
+        <div className="stack mt-a hero-actions">
           <button className="btn btn--primary" onClick={() => nav('/signup')}>
             {t('welcome.signup')}
           </button>

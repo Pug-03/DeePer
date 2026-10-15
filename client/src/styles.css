@@ -5084,3 +5084,117 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
   border-color: var(--green, #34d399);
   box-shadow: none;
 }
+
+/* ---------- Landing on a computer ---------- */
+/* Phones keep the single centred column. From 960px the hero
+   (.welcome-hero) becomes one composition centred on the screen: big title,
+   tagline and buttons on the left, the sample deck at real (not scaled-up)
+   size on the right over a soft red glow. Below it the sections stay a
+   centred column, except the two lists that read better side by side. */
+@media (min-width: 960px) {
+  .app-shell:has(> .welcome-hero) {
+    max-width: 1180px;
+  }
+  .welcome-hero {
+    padding-inline: 48px;
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    grid-template-rows: 1fr auto auto 1fr auto;
+    grid-template-areas:
+      '.    .'
+      'text deck'
+      'acts deck'
+      '.    .'
+      'cue  cue';
+    column-gap: 120px;
+    align-items: center;
+  }
+  .welcome-hero > .spacer {
+    display: none;
+  }
+  .welcome-hero .hero-text {
+    grid-area: text;
+    align-self: end;
+    text-align: left;
+    padding-bottom: 40px;
+  }
+  .welcome-hero .hero-text .brand-mark {
+    justify-content: flex-start !important;
+    gap: 16px;
+  }
+  .welcome-hero .hero-text .brand-mark .dot {
+    width: 16px;
+    height: 16px;
+  }
+  .welcome-hero .brand {
+    font-size: 88px;
+    line-height: 1.05;
+  }
+  .welcome-hero .hero-tagline {
+    margin: 22px 0 0;
+    max-width: 20em;
+    font-size: 26px;
+    line-height: 1.45;
+  }
+  .welcome-hero .deck-hero {
+    grid-area: deck;
+    margin: 0 !important;
+    position: relative;
+    isolation: isolate;
+  }
+  /* Soft red glow behind the deck so the right half isn't a black void. */
+  .welcome-hero .deck-hero::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    width: 760px;
+    height: 760px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(244, 63, 94, 0.2), transparent);
+    pointer-events: none;
+  }
+  .welcome-hero .sample-stack {
+    width: 340px;
+    height: 400px;
+  }
+  .welcome-hero .sample-card {
+    padding: 36px;
+  }
+  .welcome-hero .sample-card p {
+    font-size: 28px;
+  }
+  .welcome-hero .hero-actions {
+    grid-area: acts;
+    align-self: start;
+    flex-direction: row;
+    gap: 16px;
+  }
+  .welcome-hero .hero-actions .btn {
+    width: auto;
+    min-width: 220px;
+    min-height: 64px;
+    font-size: 19px;
+  }
+  .welcome-hero .scroll-cue-wrap {
+    grid-area: cue;
+  }
+  .welcome-hero .lang-float {
+    right: 32px;
+  }
+
+  .landing-section .sub {
+    max-width: 48ch;
+  }
+  .feature-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 340px));
+    gap: 28px 72px;
+    margin-top: 28px;
+  }
+  .social-links {
+    flex-direction: row;
+    gap: 72px;
+    max-width: none;
+  }
+}
