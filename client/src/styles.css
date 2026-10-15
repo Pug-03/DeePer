@@ -3166,8 +3166,9 @@ a.btn {
   box-shadow: var(--shadow-lift);
   will-change: transform;
 }
-/* The front card's red border and glow live on their own layer and only
-   fade its opacity (cheap), instead of animating box-shadow every frame. */
+/* Both cards carry the red border and glow, on their own layer so nothing
+   animates box-shadow every frame. It sits above the waiting card's shade
+   so that card's edge stays as bright as the front one's. */
 .sample-card::after {
   content: '';
   position: absolute;
@@ -3175,12 +3176,8 @@ a.btn {
   border-radius: inherit;
   border: 1px solid var(--border-red);
   box-shadow: var(--glow-red);
-  opacity: 0;
-  transition: opacity 0.5s ease;
   pointer-events: none;
-}
-.sample-card.is-front::after {
-  opacity: 1;
+  z-index: 1;
 }
 /* Depth: the waiting card sits in shade and brightens as it comes forward. */
 .sample-card::before {
