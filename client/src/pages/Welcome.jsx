@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useReturning } from '../components/ScrollToTop.jsx';
 import { motion, useInView, useReducedMotion, animate, cubicBezier } from 'framer-motion';
@@ -979,10 +979,225 @@ function ReviewsSection({ t, lang }) {
   );
 }
 
+// The opening: the screen is dark, a red drop falls to the middle, lands
+// like a drop of water (rings ripple out, the screen glows red), then the
+// drop travels to the dot beside the DeePer wordmark and the hero builds in
+// around it (the `intro-in` styles). Plays on every page load, and never
+// with reduced motion, which opens straight onto the page.
+// Set once it has played, so coming back to / inside the app (after
+// logging out, say) doesn't replay it; a reload starts fresh and plays again.
+let introPlayed = false;
+function shouldPlayIntro() {
+  if (introPlayed) return false;
+  try {
+    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+const INTRO_DOT = 16;
+const INTRO_JET = 64;
+const INTRO_RING = 400;
+const INTRO_WORD = 'DeePer';
+// Native Web Animations on transform/opacity only, so the whole opening runs
+// on the compositor: React mounting the page underneath (and its data
+// fetches) can't make it stutter, which framer's per-frame JS updates did.
+const dropPose = (x, y, sx = 1, sy = sx) => `translate(${x}px, ${y}px) scale(${sx}, ${sy})`;
+function IntroDrop({ onLand }) {
+  const root = useRef(null);
+  const bg = useRef(null);
+  const glow = useRef(null);
+  const dot = useRef(null);
+  const jet = useRef(null);
+  const mark = useRef(null);
+  const rings = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+  useEffect(() => {
+    introPlayed = true;
+    const running = [];
+    const play = (el, keyframes, options) => {
+      const anim = el.animate(keyframes, { fill: 'forwards', ...options });
+      running.push(anim);
+      return anim.finished;
+    };
+    // Hold the page still while it plays (the mark flies to a spot on the
+    // page). Swallowing scroll input rather than setting overflow:hidden,
+    // which on a screen with a scrollbar reflowed the page twice.
+    const block = (e) => e.preventDefault();
+    const blockOpts = { passive: false };
+    window.addEventListener('wheel', block, blockOpts);
+    window.addEventListener('touchmove', block, blockOpts);
+    const unblock = () => {
+      window.removeEventListener('wheel', block, blockOpts);
+      window.removeEventListener('touchmove', block, blockOpts);
+    };
+    let dead = false;
+    (async () => {
+      // Start once the page underneath has mounted and the main thread is
+      // free: kicked off during that work, the first second of the fall got
+      // swallowed and the drop jumped.
+      await document.fonts?.ready;
+      await new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(r, { timeout: 700 }) : setTimeout(r, 200)));
+      if (dead) return;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const half = INTRO_DOT / 2;
+      const top = cy - INTRO_JET - half - 8;
+
+      // The overlay's own wordmark is styled to match the hero's exactly
+      // (size, spacing, dot), so when it flies into place and hands over to
+      // the real one nothing changes size or shifts.
+      const heroDot = document.querySelector('.welcome-hero .brand-mark .dot');
+      const heroWord = document.querySelector('.welcome-hero .brand');
+      const m = mark.current;
+      const mDot = m.querySelector('.dot');
+      const mWord = m.querySelector('.brand');
+      if (heroDot && heroWord) {
+        const ws = getComputedStyle(heroWord);
+        Object.assign(mWord.style, { fontSize: ws.fontSize, lineHeight: ws.lineHeight, letterSpacing: ws.letterSpacing });
+        m.style.gap = getComputedStyle(heroDot.parentElement).columnGap;
+        const d = heroDot.getBoundingClientRect();
+        Object.assign(mDot.style, { width: `${d.width}px`, height: `${d.height}px` });
+      }
+      // Each letter carries its slice of the wordmark's gradient, so the
+      // letters can fade in one by one and still read as one gradient.
+      const letters = [...mWord.children];
+      const wordW = mWord.offsetWidth;
+      letters.forEach((l) => {
+        l.style.backgroundSize = `${wordW}px 100%`;
+        l.style.backgroundPosition = `${-(l.offsetLeft - mWord.offsetLeft)}px 0`;
+      });
+      const markW = m.offsetWidth;
+      const dotSize = mDot.offsetWidth;
+      const dotX = mDot.offsetLeft + dotSize / 2;
+      const dotY = mDot.offsetTop + mDot.offsetHeight / 2;
+      // Mark positions: its dot on the centre of the screen, then the whole
+      // word centred, then the dot on the hero's dot.
+      const atDot = dropPose(cx - dotX, cy - dotY);
+      const centred = dropPose(cx - markW / 2, cy - dotY);
+
+      // The whole timeline is laid out up front with delays (rather than
+      // waiting for each step to finish), so there are no hand-offs between
+      // steps for the main thread to be late on.
+      const IMPACT = 850; // the drop reaches the surface
+      const KICK = IMPACT + 100; // the column kicks the drop back up
+      const PEAK = KICK + 450; // top of the kick
+      const SETTLE = PEAK + 450; // back down, resting on the centre
+      const RING_GAP = 120;
+      const RING_MS = 1500;
+      const CALM = IMPACT + 40 + RING_GAP * (rings.length - 1) + RING_MS; // last ripple gone
+      const LETTERS = CALM + 250; // a beat of stillness, then the name
+      const LETTER_GAP = 110;
+      const LETTER_MS = 600;
+      const SPELLED = LETTERS + LETTER_GAP * (INTRO_WORD.length - 1) + LETTER_MS;
+      const MOVE = SPELLED + 450; // hold the full name, then fly it home
+      const LAND = MOVE + 1000;
+
+      // 1. The drop falls, speeding up.
+      play(dot.current, [
+        { transform: dropPose(cx - half, -INTRO_DOT), opacity: 1 },
+        { transform: dropPose(cx - half, cy - half), opacity: 1 },
+      ], { duration: IMPACT, easing: 'cubic-bezier(0.55, 0, 1, 0.55)' });
+      // 2. It hits the surface like a drop of water, seen from a low angle so
+      // the rings are flat ellipses: rings ripple out one after another, the
+      // glow swells, the drop squashes into the surface, a little column of
+      // water kicks it back up, and it drops back to rest on the centre.
+      const r0 = INTRO_RING / 2;
+      const reach = Math.max(window.innerWidth * 1.5, 700) / INTRO_RING;
+      rings.forEach((r, i) => {
+        const timing = { duration: RING_MS, delay: IMPACT + 40 + i * RING_GAP };
+        play(r.current, [{ opacity: 0 }, { opacity: 0.9, offset: 0.08 }, { opacity: 0.35, offset: 0.45 }, { opacity: 0 }], { ...timing, easing: 'linear' });
+        play(r.current, [
+          { transform: dropPose(cx - r0, cy - r0, 0.02, 0.006) },
+          { transform: dropPose(cx - r0, cy - r0, reach, reach * 0.3) },
+        ], { ...timing, easing: 'cubic-bezier(0.15, 0.55, 0.3, 1)' });
+      });
+      play(glow.current, [{ opacity: 0, transform: 'scale(0.25)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 900, delay: IMPACT, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+      // The glow calms with the water, leaving a soft light around the drop.
+      play(glow.current, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0.35, transform: 'scale(0.7)' }], { duration: CALM - PEAK, delay: PEAK, easing: 'ease-in-out' });
+      play(dot.current, [
+        { transform: dropPose(cx - half, cy - half) },
+        { transform: dropPose(cx - half, cy - half + 4, 1.9, 0.3) },
+      ], { duration: KICK - IMPACT, delay: IMPACT, easing: 'ease-out' });
+      play(jet.current, [
+        { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 0), opacity: 1 },
+        { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 1), opacity: 1 },
+      ], { duration: 400, delay: KICK, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' });
+      play(dot.current, [
+        { transform: dropPose(cx - half, cy - half, 0.75) },
+        { transform: dropPose(cx - half, top, 0.75) },
+      ], { duration: PEAK - KICK, delay: KICK, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' });
+      play(jet.current, [{ transform: dropPose(cx - 3, cy - INTRO_JET, 1, 1), opacity: 1 }, { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 0), opacity: 0 }], { duration: 450, delay: PEAK, easing: 'ease-in' });
+      play(dot.current, [
+        { transform: dropPose(cx - half, top, 0.75) },
+        { transform: dropPose(cx - half, cy - half, dotSize / INTRO_DOT) },
+      ], { duration: SETTLE - PEAK, delay: PEAK, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' });
+      // The resting drop becomes the wordmark's dot (same size, same spot).
+      play(dot.current, [{ opacity: 0 }, { opacity: 0 }], { duration: 1, delay: SETTLE });
+      play(m, [{ transform: atDot, opacity: 1 }, { transform: atDot, opacity: 1 }], { duration: 1, delay: SETTLE });
+      // 3. Once the water is still, the name writes itself out beside the
+      // dot, letter by letter, while the mark eases over to stay centred.
+      letters.forEach((l, i) => {
+        play(l, [
+          { opacity: 0, transform: 'translateY(0.3em)', filter: 'blur(8px)' },
+          { opacity: 1, transform: 'none', filter: 'blur(0)' },
+        ], { duration: LETTER_MS, delay: LETTERS + i * LETTER_GAP, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+      });
+      const spelled = play(m, [{ transform: atDot, opacity: 1 }, { transform: centred, opacity: 1 }], { duration: SPELLED - LETTERS, delay: LETTERS, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' });
+      // 4. The name flies to its place in the hero as the dark lifts. Where
+      // that is gets measured only now: early on, the page's own entrance
+      // animation still had the hero shifted down a little.
+      await spelled;
+      if (dead) return;
+      const t = heroDot?.getBoundingClientRect();
+      const home = t ? dropPose(t.left + t.width / 2 - dotX, t.top + t.height / 2 - dotY) : centred;
+      const fade = { duration: LAND - MOVE, delay: MOVE - SPELLED, easing: 'ease-in-out' };
+      play(glow.current, [{ opacity: 0.35, transform: 'scale(0.7)' }, { opacity: 0, transform: 'scale(0.7)' }], fade);
+      play(bg.current, [{ opacity: 1 }, { opacity: 0 }], fade);
+      const landed = play(m, [{ transform: centred, opacity: 1 }, { transform: home, opacity: 1 }], { ...fade, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' });
+      await landed;
+      if (dead) return;
+      unblock();
+      onLand();
+      if (root.current) root.current.hidden = true;
+    })().catch(() => {
+      /* cancelled on unmount */
+    });
+    return () => {
+      dead = true;
+      running.forEach((anim) => anim.cancel());
+      unblock();
+    };
+  }, [onLand]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="intro-drop" ref={root} aria-hidden="true">
+      <div className="intro-drop-bg" ref={bg} />
+      <div className="intro-drop-glow" ref={glow} />
+      {rings.map((r, i) => (
+        <span className="intro-drop-ring" ref={r} key={i} />
+      ))}
+      <span className="intro-drop-jet" ref={jet} />
+      <span className="intro-drop-dot" ref={dot} />
+      <div className="brand-mark intro-mark" ref={mark}>
+        <span className="dot" />
+        <span className="brand">
+          {INTRO_WORD.split('').map((c, i) => (
+            <span className="intro-mark-letter" key={i}>
+              {c}
+            </span>
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function Welcome() {
   const nav = useNavigate();
   const { t, lang } = useI18n();
   const socials = socialLinks();
+  // 'run' while the opening plays, 'in' as the hero builds in, then null.
+  const [intro, setIntro] = useState(() => (shouldPlayIntro() ? 'run' : null));
+  const landIntro = useCallback(() => setIntro('in'), []);
   const [liveStats, setStats] = useState(landingCache.stats ?? null);
   const mockStats = useMockStatsForPreview();
   const stats = mockStats ?? liveStats;
@@ -1033,10 +1248,11 @@ export default function Welcome() {
 
   return (
     <>
+      {intro && <IntroDrop onLand={landIntro} />}
       {/* Pinned to a full viewport regardless of content, so everything
           below (about / stats / supporters) always starts past the fold —
           see .landing-more below for the sibling that follows it. */}
-      <div className="page stagger welcome-hero" style={{ minHeight: '100dvh' }}>
+      <div className={`page stagger welcome-hero${intro === 'run' ? ' is-intro' : intro === 'in' ? ' intro-in' : ''}`} style={{ minHeight: '100dvh' }}>
         <div className="lang-float">
           <LangToggle />
         </div>

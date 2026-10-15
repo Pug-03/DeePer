@@ -5198,3 +5198,119 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
     max-width: none;
   }
 }
+
+/* The opening (IntroDrop in Welcome.jsx). While it runs the hero is
+   hidden; once the drop lands in the wordmark's dot the hero builds in:
+   the name wipes in from the dot, then the tagline, the deck, the buttons. */
+.intro-drop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+.intro-drop-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-bottom);
+  will-change: opacity;
+}
+.intro-drop-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120vmax;
+  height: 120vmax;
+  margin: -60vmax 0 0 -60vmax;
+  will-change: transform, opacity;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(244, 63, 94, 0.5), rgba(244, 63, 94, 0.16) 45%, transparent);
+  opacity: 0;
+}
+.intro-drop-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 16px 2px var(--red);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.intro-drop-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  will-change: transform, opacity;
+  /* A soft band with a bright crest, like light on a ripple. Squashed flat
+     by the animation, so the band thins at the far and near edges the way
+     a ripple seen at an angle does. */
+  background: radial-gradient(
+    closest-side,
+    transparent 86%,
+    rgba(244, 63, 94, 0.25) 91%,
+    rgba(255, 150, 168, 0.95) 95.5%,
+    rgba(244, 63, 94, 0.3) 98%,
+    transparent
+  );
+  opacity: 0;
+}
+/* The little column of water that kicks the drop back up. */
+.intro-drop-jet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 64px;
+  border-radius: 3px 3px 1px 1px;
+  background: linear-gradient(to top, rgba(244, 63, 94, 0.1), rgba(255, 130, 150, 0.95));
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.6);
+  transform-origin: 50% 100%;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* The name written out mid-screen; positioned by IntroDrop. */
+.intro-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.intro-mark .brand {
+  background: none;
+}
+.intro-mark-letter {
+  display: inline-block;
+  opacity: 0;
+  background: linear-gradient(120deg, #fff 20%, var(--red-bright) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.welcome-hero.is-intro > * {
+  visibility: hidden;
+  animation: none;
+}
+.welcome-hero.intro-in > .hero-text {
+  animation: none;
+}
+/* The name arrives already written (the opening flies it in). */
+.welcome-hero.intro-in .hero-tagline {
+  animation: staggerRise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.05s backwards;
+}
+.welcome-hero.intro-in > .deck-hero {
+  animation: staggerRise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s backwards;
+}
+.welcome-hero.intro-in > .hero-actions {
+  animation: staggerRise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s backwards;
+}
+.welcome-hero.intro-in > .lang-float,
+.welcome-hero.intro-in > .scroll-cue-wrap {
+  animation: staggerRise 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s backwards;
+}
