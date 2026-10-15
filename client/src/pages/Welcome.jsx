@@ -1182,11 +1182,11 @@ export default function Welcome() {
               return (
                 <Reveal key={key} delay={0.08 * i}>
                   {url ? (
-                    <a className="social-link glass" href={url} target="_blank" rel="noopener noreferrer">
+                    <a className="social-link" href={url} target="_blank" rel="noopener noreferrer">
                       {body}
                     </a>
                   ) : (
-                    <div className="social-link glass">{body}</div>
+                    <div className="social-link">{body}</div>
                   )}
                 </Reveal>
               );

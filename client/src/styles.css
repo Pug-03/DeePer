@@ -3435,33 +3435,24 @@ a.btn {
   line-height: 1.5;
   margin: 0;
 }
-/* Closing "follow us" links — one tappable glass row per channel, same
-   icon chip + title/desc pairing as .feature-row. */
+/* Closing "follow us" links — one tappable row per channel, no box around
+   it, laid out like the .feature-row list above it. */
 .social-links {
   margin: 18px auto 0;
-  max-width: 340px;
-  /* Equal-height rows, so a channel with a one-line description is still
-     the same size as one whose description wraps. */
-  display: grid;
-  grid-auto-rows: 1fr;
-  gap: 10px;
+  width: fit-content;
+  max-width: min(340px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   text-align: left;
-}
-.social-links > * {
-  height: 100%;
-}
-.social-links .social-link {
-  height: 100%;
-  box-sizing: border-box;
 }
 .social-link {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
-  padding: 12px 16px;
-  border-radius: var(--radius-sm);
+  color: inherit;
   text-decoration: none;
-  transition: transform 0.12s ease, border-color 0.2s ease;
+  transition: transform 0.12s ease;
 }
 .social-link:active {
   transform: scale(0.98);
@@ -3482,8 +3473,20 @@ a.btn {
   margin: 0;
 }
 .social-link-handle {
-  font-size: 12.5px;
-  color: var(--text-faint);
+  font-size: 13px;
+  color: var(--text-dim);
+}
+/* Live links have no box to hint they're tappable: the title warms to red
+   on hover, and dims a touch while pressed. */
+a.social-link .feature-title {
+  transition: color 0.2s ease;
+}
+a.social-link:hover .feature-title {
+  color: var(--red-bright);
+}
+a.social-link:active {
+  transform: none;
+  opacity: 0.7;
 }
 /* ---------- Supporters marquee ---------- */
 /* One column of independently-scrolling rows. */
@@ -3528,8 +3531,7 @@ a.btn {
    page over the fixed backdrop, so a backdrop blur on them is recomputed
    every frame. The backdrop behind them is a soft gradient, so the blur
    added nothing visible: drop it and keep the frames smooth. */
-.supporter-chip.glass,
-.social-link.glass {
+.supporter-chip.glass {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
