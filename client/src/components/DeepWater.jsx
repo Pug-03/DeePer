@@ -32,6 +32,7 @@ uniform float u_surf;
 uniform float u_rise;
 uniform float u_orb;
 uniform vec3 u_light;   // xy: where the visitor's light is (uv), z: how strong
+uniform float u_air;    // 1: draw the air and the surface line; 0: water only
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -91,7 +92,7 @@ void main() {
   // The surface itself: a bright rippling band right under the line.
   float caus = caustic(vec2(q.x * 0.6, uv.y * 0.35 + u_rise * 0.25), t * 0.35);
   float band = exp(-dist * 9.0);
-  col += vec3(1.0, 0.42, 0.5) * band * (0.35 + caus * 0.55);
+  col += vec3(1.0, 0.42, 0.5) * band * (0.35 + caus * 0.55) * u_air;
   col += vec3(0.9, 0.3, 0.4) * caus * 0.07 * exp(-dist * 2.2);
 
   // Soft, uneven beams swaying down from the surface.
@@ -124,7 +125,7 @@ void main() {
   col += (hash(frag + fract(t)) - 0.5) * 0.012;
 
   float above = smoothstep(surf - 0.004, surf + 0.012, uv.y);
-  gl_FragColor = vec4(mix(col, air, above), 1.0);
+  gl_FragColor = vec4(mix(col, air, above * u_air), 1.0);
 }
 `;
 
@@ -153,7 +154,7 @@ function makeWater(canvas) {
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const u = Object.fromEntries(
-    ['res', 'time', 'surf', 'rise', 'orb', 'light'].map((k) => [k, gl.getUniformLocation(prog, `u_${k}`)]),
+    ['res', 'time', 'surf', 'rise', 'orb', 'light', 'air'].map((k) => [k, gl.getUniformLocation(prog, `u_${k}`)]),
   );
   return {
     resize() {
@@ -161,7 +162,7 @@ function makeWater(canvas) {
       // up: it looks the same and leaves the GPU room to keep the scroll
       // smooth (phones, with their dense screens, get a bit less again).
       const coarse = window.matchMedia('(pointer: coarse)').matches;
-      const scale = Math.min(window.devicePixelRatio || 1, 2) * (coarse ? 0.38 : 0.45);
+      const scale = Math.min(window.devicePixelRatio || 1, 2) * (coarse ? 0.3 : 0.45);
       const w = Math.max(1, Math.round(canvas.clientWidth * scale));
       const h = Math.max(1, Math.round(canvas.clientHeight * scale));
       if (canvas.width !== w || canvas.height !== h) {
@@ -170,8 +171,9 @@ function makeWater(canvas) {
         gl.viewport(0, 0, w, h);
       }
     },
-    draw(time, surf, rise, orb, light) {
+    draw(time, surf, rise, orb, light, air) {
       gl.uniform3f(u.light, light.x, light.y, light.z);
+      gl.uniform1f(u.air, air);
       gl.uniform2f(u.res, canvas.width, canvas.height);
       gl.uniform1f(u.time, time);
       gl.uniform1f(u.surf, surf);
@@ -199,10 +201,19 @@ const SURFACE_AT_TOP_PHONE = 0.012;
 export default function DeepWater() {
   const canvas = useRef(null);
   useEffect(() => {
-    const water = makeWater(canvas.current);
+    const el = canvas.current;
+    const water = makeWater(el);
     if (!water) return undefined;
     const root = document.documentElement;
     root.classList.add('deep-water');
+    // On touch screens the page scrolls on the phone's own scroller, which
+    // runs ahead of anything drawn here, so a surface line drawn in the
+    // canvas trailed the hero's buttons and wobbled mid-swipe. There the
+    // canvas draws only the water and the hero itself carries the air and
+    // the surface line (.deep-water--native-surface in styles.css), so the
+    // line moves exactly with the page.
+    const nativeSurface = window.matchMedia('(pointer: coarse)').matches;
+    root.classList.toggle('deep-water--native-surface', nativeSurface);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const start = performance.now();
     let frame = 0;
@@ -212,7 +223,7 @@ export default function DeepWater() {
     let restTimer = 0;
     const aim = (e) => {
       light.tx = e.clientX / window.innerWidth;
-      light.ty = 1 - e.clientY / window.innerHeight;
+      light.ty = 1 - e.clientY / (el.clientHeight || window.innerHeight);
       light.tz = 1;
       if (e.pointerType !== 'mouse') {
         clearTimeout(restTimer);
@@ -236,8 +247,13 @@ export default function DeepWater() {
       light.y += (light.ty - light.y) * ease;
       light.z += (light.tz - light.z) * (reduce ? 1 : 0.05);
       water.resize();
+      // Place the surface by the canvas's own height, not the window's: on
+      // a phone the window grows and shrinks as the browser bar slides away
+      // mid-scroll, which made the surface jump; the canvas is sized to the
+      // largest viewport (100lvh), so its height holds steady.
+      const H = el.clientHeight || vh;
       const rest = window.innerWidth < 760 ? SURFACE_AT_TOP_PHONE : SURFACE_AT_TOP;
-      water.draw(reduce ? 0 : (now - start) / 1000, rest + y / vh, y / vh, orb, light);
+      water.draw(reduce ? 0 : (now - start) / 1000, rest + y / H, y / H, orb, light, nativeSurface ? 0 : 1);
       if (!reduce && !document.hidden) frame = requestAnimationFrame(tick);
     };
     const kick = () => {
@@ -259,7 +275,7 @@ export default function DeepWater() {
       document.documentElement.removeEventListener('pointerleave', dim);
       clearTimeout(restTimer);
       document.removeEventListener('visibilitychange', kick);
-      root.classList.remove('deep-water');
+      root.classList.remove('deep-water', 'deep-water--native-surface');
       water.dispose();
     };
   }, []);
@@ -279,6 +295,7 @@ export function DepthGauge() {
     const meter = el.querySelector('.depth-m');
     let stops = [];
     let frame = 0;
+    const shown = { on: null, here: null, m: '' };
     const build = () => {
       const vh = window.innerHeight;
       const max = Math.max(1, document.documentElement.scrollHeight - vh);
@@ -286,6 +303,7 @@ export function DepthGauge() {
         const top = node.getBoundingClientRect().top + window.scrollY;
         return { label: node.dataset.depth, at: Math.min(Math.max((top - vh / 2) / max, 0), 1) };
       });
+      shown.here = null; // fresh stop elements: re-mark the current one
       list.replaceChildren(
         ...stops.map((s) => {
           const span = document.createElement('span');
@@ -301,14 +319,21 @@ export function DepthGauge() {
       const vh = window.innerHeight;
       const max = Math.max(1, document.documentElement.scrollHeight - vh);
       const p = Math.min(Math.max(window.scrollY / max, 0), 1);
-      el.style.setProperty('--p', p);
-      el.classList.toggle('is-on', window.scrollY > vh * 0.6);
+      el.style.setProperty('--p', p.toFixed(4));
+      // Only touch the page when something actually changed: rewriting the
+      // label and classes every frame cost a layout pass per frame.
+      const on = window.scrollY > vh * 0.6;
+      if (on !== shown.on) el.classList.toggle('is-on', (shown.on = on));
       let here = -1;
       stops.forEach((s, i) => {
         if (p >= s.at - 0.002) here = i;
       });
-      [...list.children].forEach((c, i) => c.classList.toggle('is-here', i === here));
-      meter.textContent = `−${Math.round(p * MAX_DEPTH_M)} m`;
+      if (here !== shown.here) {
+        shown.here = here;
+        [...list.children].forEach((c, i) => c.classList.toggle('is-here', i === here));
+      }
+      const m = `−${Math.round(p * MAX_DEPTH_M)} m`;
+      if (m !== shown.m) meter.textContent = shown.m = m;
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);

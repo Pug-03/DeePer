@@ -37,6 +37,10 @@ const MARKS = [
   { key: 'deep', at: 0.91 },
 ];
 
+// A mouse-and-trackpad computer. Phones skip the costlier touches (blurred
+// far bubbles), which made the swipe stutter there.
+const FINE = typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
 const smooth = (a, b, x) => {
   const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
   return t * t * (3 - 2 * t);
@@ -71,23 +75,31 @@ export default function DiveStory() {
     let at = 0;
     let frame = 0;
     // The section's place on the page, read only when the layout changes.
+    // Heights come from the pinned stage (sized to the small viewport, so
+    // it holds still while a phone's browser bar slides in and out) rather
+    // than the window, whose height changes mid-swipe on a phone and made
+    // the lines jump.
+    const stage = section.querySelector('.dive-stage');
     let top = 0;
     let run = 1;
+    let vh = window.innerHeight;
+    let bubbles = [];
     const place = () => {
+      vh = stage.clientHeight || window.innerHeight;
       top = section.getBoundingClientRect().top + window.scrollY;
-      run = Math.max(1, section.offsetHeight - window.innerHeight);
+      run = Math.max(1, section.offsetHeight - vh);
+      bubbles = [...section.querySelectorAll('.dive-surface span')];
     };
     const measure = () => {
       target = Math.min(Math.max((window.scrollY - top) / run, 0), 1);
     };
     const paint = (p) => {
-      const vh = window.innerHeight;
       beats.current.forEach((el, i) => {
         if (!el) return;
         if (BEATS[i].key === 'surface') {
           el.style.opacity = '1';
           el.style.visibility = p < BEATS[i].at[1] ? 'visible' : 'hidden';
-          el.querySelectorAll('.dive-surface span').forEach((b, j) => {
+          bubbles.forEach((b, j) => {
             const k = (p - BUBBLES[j].start) / BUBBLE_RUN;
             const o = smooth(0, 0.18, k) * (1 - smooth(0.7, 1, k));
             const y = (0.55 - k) * vh * 1.15;
@@ -152,7 +164,7 @@ export default function DiveStory() {
     surface: (
       <div className="dive-surface">
         {BUBBLES.map((b) => (
-          <span key={b.key} style={{ left: b.x, filter: b.blur ? `blur(${b.blur}px)` : undefined }}>
+          <span key={b.key} style={{ left: b.x, filter: b.blur && FINE ? `blur(${b.blur}px)` : undefined }}>
             {t(`welcome.dive.${b.key}`)}
           </span>
         ))}

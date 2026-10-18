@@ -1836,24 +1836,40 @@ export default function Welcome() {
           )}
         </div>
 
-        {/* The bottom of the dive: the orb glows in the deep (DeepWater),
-            the name and one last invitation, then the contact lines and the
-            page's small print. */}
+        {/* The bottom of the dive: the orb glows in the deep (DeepWater).
+            A question to take with you, the name, an invitation in, then
+            the contact lines and the page's small print. */}
         <section className="landing-end" data-depth={t('welcome.dive.bottom')}>
-          <Reveal className="end-brand">
+          <Reveal>
+            <p className="end-ask">{t('welcome.end.ask')}</p>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="end-q">{t('welcome.dive.deepQ')}</p>
+          </Reveal>
+          <Reveal delay={0.2} className="end-brand">
             <span className="dot" />
             <span className="brand">DeePer</span>
           </Reveal>
-          <Reveal delay={0.1}>
+          <Reveal delay={0.3}>
             <p className="end-tagline">{t('welcome.dive.end')}</p>
           </Reveal>
-          <Reveal delay={0.2} className="end-actions">
-            <button className="btn btn--primary" onClick={() => nav('/signup')}>
-              {t('welcome.signup')}
+          <Reveal delay={0.4} className="end-actions">
+            <button className="btn btn--primary end-cta" onClick={() => nav('/signup')}>
+              {t('welcome.end.cta')}
             </button>
             <button className="btn btn--ghost" onClick={() => nav('/login')}>
               {t('welcome.haveAccount')}
             </button>
+          </Reveal>
+          <Reveal delay={0.5}>
+            <p className="how-facts end-facts">
+              {['free', 'web'].map((k) => (
+                <span key={k}>
+                  <i aria-hidden="true" />
+                  {t(`welcome.how.fact.${k}`)}
+                </span>
+              ))}
+            </p>
           </Reveal>
         {/* Contact lines, grouped at the foot of the page: sponsoring first
             (right after the sponsor logos), then problems / suggestions. */}

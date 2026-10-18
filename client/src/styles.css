@@ -5333,6 +5333,38 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
   position: relative;
   isolation: isolate;
 }
+/* Touch screens: the hero is the air above the water, with the lit surface
+   line along its bottom edge, so it scrolls with the page exactly (see
+   DeepWater). Same colours as the page backdrop and the canvas's surface. */
+html.deep-water--native-surface .welcome-hero {
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(244, 63, 94, 0.16), transparent 60%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-bottom));
+}
+html.deep-water--native-surface .welcome-hero::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -46px;
+  height: 52px;
+  z-index: 1;
+  pointer-events: none;
+  /* The bright line right at the edge, glowing down into the water, with a
+     slow shimmer travelling along it. */
+  background:
+    radial-gradient(40% 70% at 30% 0%, rgba(255, 150, 170, 0.55), transparent 70%) 0 0 / 200% 100% repeat-x,
+    linear-gradient(180deg, rgba(255, 120, 145, 0.95) 0, rgba(255, 90, 114, 0.55) 3px, rgba(190, 30, 60, 0.28) 30%, transparent);
+  animation: surfaceShimmer 7s linear infinite;
+}
+@keyframes surfaceShimmer {
+  to { background-position: -200% 0, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.deep-water--native-surface .welcome-hero::after {
+    animation: none;
+  }
+}
 .welcome-hero > .hero-water {
   position: absolute;
   top: 0;
@@ -5414,9 +5446,13 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
    usual body::before backdrop while it's running. */
 .deep-water-canvas {
   position: fixed;
-  inset: 0;
+  left: 0;
+  top: 0;
   width: 100%;
-  height: 100%;
+  /* The largest viewport height, so it doesn't resize (and flash a
+     stretched frame) each time a phone's browser bar slides in or out. */
+  height: 100vh;
+  height: 100lvh;
   z-index: -1;
   pointer-events: none;
 }
@@ -5436,7 +5472,10 @@ html.deep-water body::before {
 .dive-stage {
   position: sticky;
   top: 0;
-  height: 100dvh;
+  /* The small viewport: stays the same height while a phone's browser bar
+     slides in and out, so the centred lines don't shift mid-swipe. */
+  height: 100vh;
+  height: 100svh;
   overflow: hidden;
 }
 /* Depth-gauge stops along the section: each reaches the middle of the
@@ -6093,6 +6132,41 @@ html.deep-water body::before {
     rgba(255, 40, 80, 0.06) 77%,
     rgba(255, 40, 80, 0) 100%
   );
+}
+.end-ask {
+  margin: 0;
+  font-size: clamp(15px, 1.5vw, 18px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--red-bright);
+  text-shadow: 0 0 18px rgba(244, 63, 94, 0.5);
+}
+/* The question to take with you: big, lit, the last thing before the name. */
+.end-q {
+  margin: 0 auto 36px;
+  max-width: 14em;
+  font-size: clamp(30px, 4.6vw, 58px);
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--text);
+  text-shadow: 0 0 40px rgba(244, 63, 94, 0.35);
+  text-wrap: balance;
+}
+/* The sign-up button breathes a soft red glow, the one thing to press. */
+.end-cta {
+  min-width: 240px !important;
+  animation: ctaGlow 2.8s ease-in-out infinite;
+}
+@keyframes ctaGlow {
+  0%, 100% { box-shadow: 0 10px 30px -10px rgba(244, 63, 94, 0.6); }
+  50% { box-shadow: 0 10px 46px -6px rgba(244, 63, 94, 0.95), 0 0 0 6px rgba(244, 63, 94, 0.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .end-cta { animation: none; }
+}
+.end-facts {
+  margin-top: 6px;
+  font-size: 14px;
 }
 .end-tagline {
   margin: 0;
