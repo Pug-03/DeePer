@@ -30,8 +30,7 @@ export const DEV_TEAM = [
     // Portrait on DeePer red (same backdrop as Nathaporn's) — taller than
     // wide, so bias the crop to the top where her face is.
     avatarPosition: '50% 10%',
-    // Own page, honest empty state until she has achievements to list —
-    // see pages/AwardsNatsha.jsx.
+    // Own page listing her competitions — see pages/AwardsNatsha.jsx.
     awardsHref: '/awards/natsha',
   },
 ];

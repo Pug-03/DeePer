@@ -3,21 +3,25 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../store/i18n.jsx';
 import { ContactReveal, ContactLink } from '../components/ContactReveal.jsx';
 import DevProfile from '../components/DevProfile.jsx';
-import { IcBack, IcMail, IcSparkle } from '../components/icons.jsx';
+import { IcBack, IcMail } from '../components/icons.jsx';
 
 const CONTACT_EMAIL = 'natsha.nampan@gmail.com';
 
-// No real achievements to list yet — see Awards.jsx for the same page
-// structure with a filled-in list. Honest empty state instead of
-// placeholder/fake entries; fill this in the same way once she has some.
+// Real, fixed content, same shape and rendering as Awards.jsx's list.
+const AWARDS = [
+  {
+    name: 'U-Hackathon 2026',
+    result: 'Participant',
+  },
+];
+
 export default function AwardsNatsha() {
   const nav = useNavigate();
   // Back returns to the landing page where the visitor left it (scroll
   // kept by ScrollToTop); opened directly, it just goes home.
   const location = useLocation();
   const { t } = useI18n();
-  // Contact comes in last, once the empty-state box has opened and its
-  // contents have risen in (their animations bubble up to the box).
+  // Contact comes in last, once the last entry has risen in.
   const [shown, setShown] = useState(false);
 
   return (
@@ -38,14 +42,19 @@ export default function AwardsNatsha() {
         <h2 className="h1">{t('awards.title')}</h2>
       </div>
 
-      <div
-        className="supporters-placeholder"
-        onAnimationEnd={(e) => e.target !== e.currentTarget && setShown(true)}
-      >
-        <span className="supporters-placeholder-ic">
-          <IcSparkle size={20} />
-        </span>
-        <p className="supporters-placeholder-text">{t('awards.empty')}</p>
+      <div className="award-list stagger">
+        {AWARDS.map((a, i) => (
+          <div
+            className="award-entry"
+            key={a.name}
+            // After the profile header has played in (see .dev-profile).
+            style={{ animationDelay: `${0.95 + i * 0.12}s` }}
+            onAnimationEnd={i === AWARDS.length - 1 ? () => setShown(true) : undefined}
+          >
+            <p className="award-name">{a.name}</p>
+            <p className="award-result">{a.result}</p>
+          </div>
+        ))}
       </div>
 
       <ContactReveal title={t('awards.contactTitle')} ready={shown}>
