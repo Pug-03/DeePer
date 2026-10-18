@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Fragment, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useReturning } from '../components/ScrollToTop.jsx';
 import { motion, useInView, useReducedMotion, animate, cubicBezier } from 'framer-motion';
@@ -13,6 +13,7 @@ import {
   IcMousePointer,
   IcCards,
   IcUser,
+  IcPlus,
   IcShare,
   IcHistory,
   IcFileText,
@@ -23,6 +24,10 @@ import { DEV_TEAM } from '../dev-team-info.js';
 import { unbreakablePhrases } from '../utils/phrases.jsx';
 import { useLaunch } from '../launch.js';
 import Countdown from '../components/Countdown.jsx';
+import DiveStory from '../components/DiveStory.jsx';
+import DeepWater, { DepthGauge } from '../components/DeepWater.jsx';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import { SPONSORS, SPONSOR_TIERS, SUPPORTERS } from '../sponsors-info.js';
 import { socialLinks } from '../social-info.js';
 // `import.meta.env.DEV` below is a compile-time constant, so Vite's
@@ -55,12 +60,215 @@ function Reveal({ children = null, delay = 0, className }) {
     <motion.div
       ref={ref}
       className={className}
-      initial={returning ? false : { opacity: 0, y: 26 }}
-      animate={returning || inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 26 }}
-      transition={{ duration: 0.6, delay, ease: EASE }}
+      initial={returning ? false : { opacity: 0, y: 30, filter: 'blur(10px)' }}
+      animate={returning || inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 30, filter: 'blur(10px)' }}
+      transition={{ duration: 0.9, delay, ease: EASE }}
     >
       {children}
     </motion.div>
+  );
+}
+
+// A paragraph that lights up word by word as it scrolls up the screen:
+// each word sits dim until it passes into the upper half, so the reading
+// follows the scroll. Thai has no spaces, so words come from
+// Intl.Segmenter (falling back to the spaces there are). All lit with
+// reduced motion, or when coming back to the page.
+function ScrollLit({ text, className }) {
+  const ref = useRef(null);
+  const returning = useReturning();
+  const words = useMemo(() => {
+    try {
+      const seg = new Intl.Segmenter(undefined, { granularity: 'word' });
+      return [...seg.segment(text)].map((w) => w.segment);
+    } catch {
+      return text.split(/(\s+)/);
+    }
+  }, [text]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const spans = [...el.children];
+    if (returning || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      spans.forEach((s) => (s.style.opacity = 1));
+      return undefined;
+    }
+    // Word positions on the page, measured only when the layout changes
+    // (not every frame), and each word written only when its light moves.
+    let mids = [];
+    const shown = [];
+    const measure = () => {
+      mids = spans.map((s) => {
+        const r = s.getBoundingClientRect();
+        return r.top + window.scrollY + r.height / 2;
+      });
+    };
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const vh = window.innerHeight;
+      const y = window.scrollY;
+      spans.forEach((s, i) => {
+        const lit = Math.min(Math.max((vh * 0.82 - (mids[i] - y)) / (vh * 0.3), 0), 1);
+        const o = (0.16 + 0.84 * lit).toFixed(2);
+        if (shown[i] !== o) {
+          shown[i] = o;
+          s.style.opacity = o;
+        }
+      });
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    const relayout = () => {
+      measure();
+      update();
+    };
+    relayout();
+    const ro = new ResizeObserver(relayout);
+    ro.observe(document.querySelector('.app-shell') || document.body);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [words, returning]);
+  return (
+    <p className={className} ref={ref} aria-label={text}>
+      {words.map((w, i) => (
+        <span key={i} aria-hidden="true">
+          {w}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+// Children of the returned ref's element float up out of the water one
+// after another as they scroll into view, tied to the scroll (scrolling back
+// sinks them again) rather than played once: each starts lower, faded and
+// blurred, and settles as it climbs the bottom third of the screen. Items
+// on the right of a row trail the left a little, so a grid rises in reading
+// order. Settled straight away with reduced motion or when coming back.
+function useRiseWithScroll() {
+  const ref = useRef(null);
+  const returning = useReturning();
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || returning || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const items = [...el.children];
+    // Where each item sits on the page, measured with no transform on it
+    // and only when the layout changes: reading positions every frame while
+    // also moving the items made the browser lay the page out again and
+    // again during the scroll.
+    let spots = [];
+    const measure = () => {
+      items.forEach((it) => (it.style.transform = 'none'));
+      const left = el.getBoundingClientRect().left;
+      spots = items.map((it) => {
+        const r = it.getBoundingClientRect();
+        return { top: r.top + window.scrollY, lag: r.left - left > 40 };
+      });
+    };
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const vh = window.innerHeight;
+      const y = window.scrollY;
+      items.forEach((it, i) => {
+        const { top, lag } = spots[i];
+        const k = Math.min(Math.max((vh * 0.98 - (lag ? vh * 0.06 : 0) - (top - y)) / (vh * 0.32), 0), 1);
+        const e = 1 - (1 - k) ** 3;
+        it.style.opacity = e.toFixed(3);
+        it.style.transform = `translate3d(0, ${((1 - e) * 70).toFixed(1)}px, 0) scale(${(0.94 + 0.06 * e).toFixed(3)})`;
+      });
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    const relayout = () => {
+      measure();
+      update();
+    };
+    relayout();
+    const ro = new ResizeObserver(relayout);
+    ro.observe(document.querySelector('.app-shell') || document.body);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [returning]);
+  return ref;
+}
+
+// Smooth scrolling on a computer, like the reference sites: wheel and
+// trackpad input glide the page to where it's going instead of stepping
+// notch by notch, so everything tied to the scroll (the water, the rising
+// lines, the gauge) moves in one continuous motion. Phones keep their own
+// native touch scrolling, which already glides. Not with reduced motion,
+// and held off while the opening plays. ScrollCue reaches it through
+// `smoothScroller`.
+let smoothScroller = null;
+function useSmoothScroll(enabled) {
+  useEffect(() => {
+    if (!enabled) return undefined;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const lenis = new Lenis({ duration: 1.15, easing: (t) => 1 - 2 ** (-10 * t), smoothWheel: true });
+    smoothScroller = lenis;
+    let frame = requestAnimationFrame(function raf(time) {
+      lenis.raf(time);
+      frame = requestAnimationFrame(raf);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      lenis.destroy();
+      smoothScroller = null;
+    };
+  }, [enabled]);
+}
+
+// Each section heading catches a sweep of light once, as it comes up into
+// view: a pink-white glint passes across the words (.h2.is-lit). The same
+// moment draws the underline under a heading's marked word (.mark-word).
+function useHeadingSweep() {
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-lit');
+          io.unobserve(e.target);
+        }),
+      { rootMargin: '0px 0px -30% 0px' },
+    );
+    document.querySelectorAll('.landing-more .h2').forEach((h) => io.observe(h));
+    return () => io.disconnect();
+  }, []);
+}
+
+// "DeePer" in a heading set in the wordmark's white-to-red gradient, the
+// same as the hero's.
+// The words around the name are kept whole (they only wrap at their
+// spaces), so a narrow screen breaks "ใครอยู่เบื้องหลัง | DeePer" rather
+// than mid-word.
+function withLogo(text) {
+  const parts = text.split('DeePer');
+  if (parts.length === 1) return text;
+  const keep = (part, i) => <Fragment key={`t${i}`}>{unbreakablePhrases(part)}</Fragment>;
+  return parts.flatMap((part, i) =>
+    i === 0
+      ? [keep(part, i)]
+      : [
+          <span className="brand-inline" key={i}>
+            DeePer
+          </span>,
+          keep(part, i),
+        ],
   );
 }
 
@@ -124,10 +332,12 @@ const SOCIAL_SPARKLES = [
 
 // The app's standout features, shown below the About blurb — icon +
 // i18n key pair per row, kept as data so the section is one small map()
-// rather than six near-identical JSX blocks.
+// rather than six near-identical JSX blocks. Six, so the two columns on a
+// computer come out even.
 const FEATURES = [
   { Icon: IcCards, key: 'deck' },
   { Icon: IcUser, key: 'partner' },
+  { Icon: IcPlus, key: 'own' },
   { Icon: IcShare, key: 'share' },
   { Icon: IcHistory, key: 'memory' },
   { Icon: IcFileText, key: 'history' },
@@ -366,10 +576,13 @@ function LaunchCountdown({ t, launch }) {
   if (launch.launched) return <LaunchOpened t={t} />;
   return (
     <>
-      <div className="landing-section">
+      <div className="landing-section" data-depth={t('welcome.launch.eyebrow')}>
         <Reveal>
-          <p className="eyebrow">{t('welcome.launch.eyebrow')}</p>
-          <h2 className="h2">{t('welcome.launch.title')}</h2>
+          <h2 className="h2 launch-title">
+            <span className="brand-inline">DeePer</span>{' '}
+            <span className="mark-word">{t('welcome.launch.titleMark')}</span>{' '}
+            <span className="nowrap">{t('welcome.launch.titleRest')}</span>
+          </h2>
         </Reveal>
         <Reveal delay={0.1}>
           <Countdown remaining={launch.remaining} t={t} />
@@ -378,8 +591,6 @@ function LaunchCountdown({ t, launch }) {
           <p className="stat-label">{t('welcome.launch.when')}</p>
         </Reveal>
       </div>
-
-      <Reveal className="landing-divider" />
     </>
   );
 }
@@ -396,7 +607,7 @@ function LaunchOpened({ t }) {
   const reduceMotion = useReducedMotion();
   return (
     <>
-      <div className="landing-section launch-opened" ref={ref}>
+      <div className="landing-section launch-opened" ref={ref} data-depth={t('welcome.launch.openEyebrow')}>
         <Fireworks play={onScreen} />
         <motion.div
           style={{ position: 'relative' }}
@@ -404,7 +615,6 @@ function LaunchOpened({ t }) {
           animate={inView ? { opacity: 1, y: 0, scale: 1 } : undefined}
           transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.15 }}
         >
-          <p className="eyebrow">{t('welcome.launch.openEyebrow')}</p>
           <h2 className="h2 launch-opened-title">
             <span className="sparkle-anchor">
               {t('welcome.launch.openTitle')}
@@ -414,8 +624,6 @@ function LaunchOpened({ t }) {
           <p className="stat-label">{t('welcome.launch.openSub')}</p>
         </motion.div>
       </div>
-
-      <Reveal className="landing-divider" />
     </>
   );
 }
@@ -451,94 +659,9 @@ const ACTIVITY_STATS = [
 ];
 
 // Until launch, sponsor logos and individual supporters are `sealed`:
-// blurred out behind a strip of red "caution tape", and not clickable.
-// Flips open on its own when the clock passes LAUNCH_AT.
-// The tape's text: drifts slowly on its own, and can be dragged sideways by
-// hand (mouse or finger); let go and it glides on, easing back to its drift.
-// Holds the text twice and wraps by half its width, so it loops seamlessly.
-function TapeTrack({ text, dir }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    // The whole strip (stripes included) is the drag handle, not just the text.
-    const handle = el.parentElement;
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const drift = still ? 0 : 10 * dir; // px per second
-    let x = 0;
-    let v = drift;
-    let dragging = false;
-    let lastX = 0;
-    let lastT = 0;
-    let frame = 0;
-    let prev = performance.now();
-    const half = () => el.scrollWidth / 2 || 1;
-    const place = () => {
-      const h = half();
-      x = ((x % h) + h) % h - h; // keep within [-half, 0)
-      el.style.transform = `translateX(${x}px)`;
-    };
-    const tick = (now) => {
-      const dt = Math.min(0.05, (now - prev) / 1000);
-      prev = now;
-      if (!dragging) {
-        v += (drift - v) * Math.min(1, dt * 1.5); // ease back to the drift
-        x += v * dt;
-        place();
-      }
-      frame = visible ? requestAnimationFrame(tick) : 0;
-    };
-    // Drift only while the tape is on screen (same reason as the marquee).
-    let visible = true;
-    const io = new IntersectionObserver(([entry]) => {
-      visible = entry.isIntersecting;
-      if (visible && !frame) {
-        prev = performance.now();
-        frame = requestAnimationFrame(tick);
-      }
-    });
-    io.observe(handle);
-    const down = (e) => {
-      dragging = true;
-      lastX = e.clientX;
-      lastT = performance.now();
-      v = 0;
-      handle.setPointerCapture?.(e.pointerId);
-    };
-    const move = (e) => {
-      if (!dragging) return;
-      const now = performance.now();
-      const dx = e.clientX - lastX;
-      x += dx;
-      v = dx / Math.max(0.016, (now - lastT) / 1000);
-      lastX = e.clientX;
-      lastT = now;
-      place();
-    };
-    const up = () => {
-      dragging = false;
-    };
-    handle.addEventListener('pointerdown', down);
-    handle.addEventListener('pointermove', move);
-    handle.addEventListener('pointerup', up);
-    handle.addEventListener('pointercancel', up);
-    frame = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frame);
-      io.disconnect();
-      handle.removeEventListener('pointerdown', down);
-      handle.removeEventListener('pointermove', move);
-      handle.removeEventListener('pointerup', up);
-      handle.removeEventListener('pointercancel', up);
-    };
-  }, [dir]);
-  return (
-    <div className="sponsor-tape-track" ref={ref}>
-      <span>{text}</span>
-      <span aria-hidden="true">{text}</span>
-    </div>
-  );
-}
-
+// sunk out of focus in the water under a quiet veil saying when they'll be
+// shown, and not clickable. Flips open on its own when the clock passes
+// LAUNCH_AT: the veil clears and the logos come up into focus.
 // A small burst of stars shooting out from the middle of a sponsor tier,
 // once, as its logos are revealed. Each `burst` change fires a new one.
 const BURST_COLORS = ['#ff5a72', '#ffd2d9', '#fbbf24', '#ffffff'];
@@ -580,7 +703,7 @@ function StarBurst({ burst }) {
 
 function Sealed({ t, sealed, index = 0, children }) {
   // sealed → (launch passes while the page is open) → opening → open.
-  // While opening, the tape peels off and the logos come into focus; the
+  // While opening, the veil clears and the logos come into focus; the
   // wrapper stays the same element throughout so nothing inside remounts.
   const [phase, setPhase] = useState(sealed ? 'sealed' : 'open');
   // Stars shoot out as the logos come into focus — at the reveal, or (when
@@ -606,13 +729,11 @@ function Sealed({ t, sealed, index = 0, children }) {
   useEffect(() => {
     if (inView && !sealed && phase === 'open' && burst === 0) setBurst(1);
   }, [inView]); // eslint-disable-line react-hooks/exhaustive-deps
-  const half = Array.from({ length: 12 }, () => `${t('welcome.supporters.sealed')}   ✦   `).join('');
   const open = phase === 'open';
   return (
-    // Tapes peel off in alternating directions: left→right, then right→left.
     <div
       ref={ref}
-      className={`sealed${index % 2 ? ' peel-rev' : ''}${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
+      className={`sealed${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
       style={{ '--i': index }}
     >
       {!reduceMotion && <StarBurst burst={burst} />}
@@ -620,8 +741,9 @@ function Sealed({ t, sealed, index = 0, children }) {
         {children}
       </div>
       {!open && (
-        <div className="sponsor-tape">
-          <TapeTrack text={half} dir={index % 2 ? 1 : -1} />
+        <div className="sealed-veil">
+          <span className="sealed-orb" aria-hidden="true" />
+          {t('welcome.supporters.sealed')}
         </div>
       )}
     </div>
@@ -643,8 +765,8 @@ function SponsorTiers({ t, sponsors, sealed }) {
               {t(`welcome.supporters.tier.${tier}`)}
               <span className="tier-gem" aria-hidden="true">✦</span>
             </p>
-            {/* Before launch only the logos are taped over; the tier
-                label above stays readable. */}
+            {/* Before launch only the logos are veiled; the tier label
+                above stays readable. */}
             <Sealed t={t} sealed={sealed} index={i}>
               <div className="sponsor-wall">{items.map(renderSponsorLogo)}</div>
             </Sealed>
@@ -842,7 +964,11 @@ function ScrollCue({ label }) {
         className={`scroll-cue${gone ? ' is-gone' : ''}`}
         aria-label={label}
         tabIndex={gone ? -1 : undefined}
-        onClick={() => document.querySelector('.landing-more')?.scrollIntoView({ behavior: 'smooth' })}
+        onClick={() => {
+          const target = document.querySelector('.dive, .landing-more');
+          if (smoothScroller) smoothScroller.scrollTo(target);
+          else target?.scrollIntoView({ behavior: 'smooth' });
+        }}
       >
         <ChevronDown size={22} strokeWidth={2} />
       </button>
@@ -953,9 +1079,8 @@ function ReviewsSection({ t, lang }) {
   if (reviews.length === 0) return null;
   return (
     <>
-      <div className="landing-section">
+      <div className="landing-section" data-depth={t('welcome.reviews.eyebrow')}>
         <Reveal>
-          <p className="eyebrow">{t('welcome.reviews.eyebrow')}</p>
           <h2 className="h2">{t('welcome.reviews.title')}</h2>
         </Reveal>
         <Reveal delay={0.1}>
@@ -973,8 +1098,6 @@ function ReviewsSection({ t, lang }) {
           </div>
         </Reveal>
       </div>
-
-      <Reveal className="landing-divider" />
     </>
   );
 }
@@ -982,17 +1105,33 @@ function ReviewsSection({ t, lang }) {
 // The opening: the screen is dark, a red drop falls to the middle, lands
 // like a drop of water (rings ripple out, the screen glows red), then the
 // drop travels to the dot beside the DeePer wordmark and the hero builds in
-// around it (the `intro-in` styles). Plays on every page load, and never
-// with reduced motion, which opens straight onto the page.
-// Set once it has played, so coming back to / inside the app (after
-// logging out, say) doesn't replay it; a reload starts fresh and plays again.
+// around it (the `intro-in` styles). Never with reduced motion, which opens
+// straight onto the page.
+// The full opening (about 6s) plays on the first visit of the day; after
+// that each load gets a short one (about 4.5s: the drop lands, the rings
+// fade, the name writes itself out and flies home), so a returning visitor isn't kept
+// waiting but still sees each beat rather than a blur.
+// `introPlayed` stops it replaying when coming back to / inside the app
+// (after logging out, say); a reload starts fresh.
+const INTRO_DAY_KEY = 'deeper-intro-day';
 let introPlayed = false;
-function shouldPlayIntro() {
-  if (introPlayed) return false;
+// Whether this page load already showed the opening (so the signed-in
+// greeting doesn't play it a second time right after logging in).
+export function introPlayedThisLoad() {
+  return introPlayed;
+}
+function introMode() {
+  if (introPlayed) return null;
   try {
-    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
   } catch {
-    return false;
+    return null;
+  }
+  try {
+    return localStorage.getItem(INTRO_DAY_KEY) === new Date().toDateString() ? 'short' : 'full';
+  } catch {
+    // Storage blocked: no way to tell a first visit, so keep it brief.
+    return 'short';
   }
 }
 const INTRO_DOT = 16;
@@ -1003,16 +1142,27 @@ const INTRO_WORD = 'DeePer';
 // on the compositor: React mounting the page underneath (and its data
 // fetches) can't make it stutter, which framer's per-frame JS updates did.
 const dropPose = (x, y, sx = 1, sy = sx) => `translate(${x}px, ${y}px) scale(${sx}, ${sy})`;
-function IntroDrop({ onLand }) {
+// `greeting` (signed-in users' first open of the day, see MorningGreeting):
+// there's no hero to fly home to, so once the name is written a welcome
+// line rises under it, holds, and everything fades out where it is.
+export function IntroDrop({ full, onLand, greeting = null }) {
   const root = useRef(null);
   const bg = useRef(null);
   const glow = useRef(null);
   const dot = useRef(null);
   const jet = useRef(null);
   const mark = useRef(null);
+  const greet = useRef(null);
   const rings = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
   useEffect(() => {
     introPlayed = true;
+    if (full) {
+      try {
+        localStorage.setItem(INTRO_DAY_KEY, new Date().toDateString());
+      } catch {
+        /* storage blocked */
+      }
+    }
     const running = [];
     const play = (el, keyframes, options) => {
       const anim = el.animate(keyframes, { fill: 'forwards', ...options });
@@ -1024,11 +1174,25 @@ function IntroDrop({ onLand }) {
     // which on a screen with a scrollbar reflowed the page twice.
     const block = (e) => e.preventDefault();
     const blockOpts = { passive: false };
+    // A tap, click or key skips ahead: everything up to the written-out name
+    // jumps to its end and the name flies home right away. Once it's already
+    // flying there's nothing left to skip.
+    let skipped = false;
+    let moving = false;
+    const skip = () => {
+      if (moving || skipped) return;
+      skipped = true;
+      running.forEach((anim) => anim.finish());
+    };
     window.addEventListener('wheel', block, blockOpts);
     window.addEventListener('touchmove', block, blockOpts);
+    window.addEventListener('pointerdown', skip);
+    window.addEventListener('keydown', skip);
     const unblock = () => {
       window.removeEventListener('wheel', block, blockOpts);
       window.removeEventListener('touchmove', block, blockOpts);
+      window.removeEventListener('pointerdown', skip);
+      window.removeEventListener('keydown', skip);
     };
     let dead = false;
     (async () => {
@@ -1078,19 +1242,25 @@ function IntroDrop({ onLand }) {
       // The whole timeline is laid out up front with delays (rather than
       // waiting for each step to finish), so there are no hand-offs between
       // steps for the main thread to be late on.
-      const IMPACT = 850; // the drop reaches the surface
-      const KICK = IMPACT + 100; // the column kicks the drop back up
-      const PEAK = KICK + 450; // top of the kick
-      const SETTLE = PEAK + 450; // back down, resting on the centre
-      const RING_GAP = 120;
-      const RING_MS = 1500;
-      const CALM = IMPACT + 40 + RING_GAP * (rings.length - 1) + RING_MS; // last ripple gone
-      const LETTERS = CALM + 250; // a beat of stillness, then the name
-      const LETTER_GAP = 110;
-      const LETTER_MS = 600;
+      // The short version keeps the same beats, a little quicker: no column
+      // kicking the drop back up, three rings, and the name follows on.
+      const IMPACT = full ? 850 : 800; // the drop reaches the surface
+      const KICK = IMPACT + 100; // squashed flat on the surface
+      const PEAK = KICK + 450; // top of the kick (full only)
+      const SETTLE = full ? PEAK + 450 : KICK + 280; // resting on the centre
+      const ripplesUsed = full ? rings : rings.slice(0, 3);
+      const RING_GAP = full ? 120 : 130;
+      const RING_MS = full ? 1500 : 1100;
+      // Water still: the last ring has faded out completely. The name waits
+      // for that in both versions, so it never writes over moving water.
+      const CALM = IMPACT + 40 + RING_GAP * (ripplesUsed.length - 1) + RING_MS;
+      const LETTERS = CALM + (full ? 250 : 150); // then the name
+      const LETTER_GAP = full ? 110 : 80;
+      const LETTER_MS = full ? 600 : 560;
       const SPELLED = LETTERS + LETTER_GAP * (INTRO_WORD.length - 1) + LETTER_MS;
-      const MOVE = SPELLED + 450; // hold the full name, then fly it home
-      const LAND = MOVE + 1000;
+      const MOVE = SPELLED + (full ? 450 : 320); // hold the full name, then fly it home
+      const LAND = MOVE + (full ? 1000 : 900);
+      const GLOW_PEAK = full ? PEAK : SETTLE;
 
       // 1. The drop falls, speeding up.
       play(dot.current, [
@@ -1103,7 +1273,7 @@ function IntroDrop({ onLand }) {
       // water kicks it back up, and it drops back to rest on the centre.
       const r0 = INTRO_RING / 2;
       const reach = Math.max(window.innerWidth * 1.5, 700) / INTRO_RING;
-      rings.forEach((r, i) => {
+      ripplesUsed.forEach((r, i) => {
         const timing = { duration: RING_MS, delay: IMPACT + 40 + i * RING_GAP };
         play(r.current, [{ opacity: 0 }, { opacity: 0.9, offset: 0.08 }, { opacity: 0.35, offset: 0.45 }, { opacity: 0 }], { ...timing, easing: 'linear' });
         play(r.current, [
@@ -1111,29 +1281,41 @@ function IntroDrop({ onLand }) {
           { transform: dropPose(cx - r0, cy - r0, reach, reach * 0.3) },
         ], { ...timing, easing: 'cubic-bezier(0.15, 0.55, 0.3, 1)' });
       });
-      play(glow.current, [{ opacity: 0, transform: 'scale(0.25)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 900, delay: IMPACT, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+      play(glow.current, [{ opacity: 0, transform: 'scale(0.25)' }, { opacity: 1, transform: 'scale(1)' }], { duration: GLOW_PEAK - IMPACT, delay: IMPACT, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
       // The glow calms with the water, leaving a soft light around the drop.
-      play(glow.current, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0.35, transform: 'scale(0.7)' }], { duration: CALM - PEAK, delay: PEAK, easing: 'ease-in-out' });
+      play(glow.current, [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0.35, transform: 'scale(0.7)' }], { duration: CALM - GLOW_PEAK, delay: GLOW_PEAK, easing: 'ease-in-out' });
       play(dot.current, [
         { transform: dropPose(cx - half, cy - half) },
         { transform: dropPose(cx - half, cy - half + 4, 1.9, 0.3) },
       ], { duration: KICK - IMPACT, delay: IMPACT, easing: 'ease-out' });
-      play(jet.current, [
-        { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 0), opacity: 1 },
-        { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 1), opacity: 1 },
-      ], { duration: 400, delay: KICK, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' });
-      play(dot.current, [
-        { transform: dropPose(cx - half, cy - half, 0.75) },
-        { transform: dropPose(cx - half, top, 0.75) },
-      ], { duration: PEAK - KICK, delay: KICK, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' });
-      play(jet.current, [{ transform: dropPose(cx - 3, cy - INTRO_JET, 1, 1), opacity: 1 }, { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 0), opacity: 0 }], { duration: 450, delay: PEAK, easing: 'ease-in' });
-      play(dot.current, [
-        { transform: dropPose(cx - half, top, 0.75) },
-        { transform: dropPose(cx - half, cy - half, dotSize / INTRO_DOT) },
-      ], { duration: SETTLE - PEAK, delay: PEAK, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' });
-      // The resting drop becomes the wordmark's dot (same size, same spot).
-      play(dot.current, [{ opacity: 0 }, { opacity: 0 }], { duration: 1, delay: SETTLE });
+      if (full) {
+        play(jet.current, [
+          { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 0), opacity: 1 },
+          { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 1), opacity: 1 },
+        ], { duration: 400, delay: KICK, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' });
+        play(dot.current, [
+          { transform: dropPose(cx - half, cy - half, 0.75) },
+          { transform: dropPose(cx - half, top, 0.75) },
+        ], { duration: PEAK - KICK, delay: KICK, easing: 'cubic-bezier(0.2, 0.8, 0.3, 1)' });
+        play(jet.current, [{ transform: dropPose(cx - 3, cy - INTRO_JET, 1, 1), opacity: 1 }, { transform: dropPose(cx - 3, cy - INTRO_JET, 1, 0), opacity: 0 }], { duration: 450, delay: PEAK, easing: 'ease-in' });
+        play(dot.current, [
+          { transform: dropPose(cx - half, top, 0.75) },
+          { transform: dropPose(cx - half, cy - half, dotSize / INTRO_DOT) },
+        ], { duration: SETTLE - PEAK, delay: PEAK, easing: 'cubic-bezier(0.45, 0, 0.55, 1)' });
+      } else {
+        // Short: straight from the squash back to a round dot at rest.
+        play(dot.current, [
+          { transform: dropPose(cx - half, cy - half + 4, 1.9, 0.3) },
+          { transform: dropPose(cx - half, cy - half, dotSize / INTRO_DOT) },
+        ], { duration: SETTLE - KICK, delay: KICK, easing: 'cubic-bezier(0.34, 1.4, 0.64, 1)' });
+      }
+      // Once it rests on the water, the solid drop slowly softens into the
+      // glowing orb of the app icon: the wordmark's dot (drawn as that orb,
+      // same spot) fades in as the drop fades out.
+      const ORB_MS = 900;
+      play(dot.current, [{ opacity: 1 }, { opacity: 0 }], { duration: ORB_MS, delay: SETTLE, easing: 'ease-in-out' });
       play(m, [{ transform: atDot, opacity: 1 }, { transform: atDot, opacity: 1 }], { duration: 1, delay: SETTLE });
+      play(mDot, [{ opacity: 0 }, { opacity: 1 }], { duration: ORB_MS, delay: SETTLE, easing: 'ease-in-out', fill: 'both' });
       // 3. Once the water is still, the name writes itself out beside the
       // dot, letter by letter, while the mark eases over to stay centred.
       letters.forEach((l, i) => {
@@ -1143,14 +1325,37 @@ function IntroDrop({ onLand }) {
         ], { duration: LETTER_MS, delay: LETTERS + i * LETTER_GAP, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
       });
       const spelled = play(m, [{ transform: atDot, opacity: 1 }, { transform: centred, opacity: 1 }], { duration: SPELLED - LETTERS, delay: LETTERS, easing: 'cubic-bezier(0.45, 0, 0.25, 1)' });
+      if (skipped) running.forEach((anim) => anim.finish());
       // 4. The name flies to its place in the hero as the dark lifts. Where
       // that is gets measured only now: early on, the page's own entrance
       // animation still had the hero shifted down a little.
       await spelled;
       if (dead) return;
+      moving = true;
+      if (greeting) {
+        const g = greet.current;
+        Object.assign(g.style, { top: `${cy + m.offsetHeight / 2 + 18}px` });
+        await play(g, [
+          { opacity: 0, transform: 'translate(-50%, 10px)', filter: 'blur(6px)' },
+          { opacity: 1, transform: 'translate(-50%, 0)', filter: 'blur(0)' },
+        ], { duration: 700, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+        if (dead) return;
+        const out = { duration: 800, delay: skipped ? 200 : 1400, easing: 'ease-in-out' };
+        play(glow.current, [{ opacity: 0.35 }, { opacity: 0 }], out);
+        play(g, [{ opacity: 1 }, { opacity: 0 }], out);
+        play(m, [{ opacity: 1 }, { opacity: 0 }], out);
+        await play(bg.current, [{ opacity: 1 }, { opacity: 0 }], out);
+        if (dead) return;
+        unblock();
+        onLand?.();
+        if (root.current) root.current.hidden = true;
+        return;
+      }
       const t = heroDot?.getBoundingClientRect();
       const home = t ? dropPose(t.left + t.width / 2 - dotX, t.top + t.height / 2 - dotY) : centred;
-      const fade = { duration: LAND - MOVE, delay: MOVE - SPELLED, easing: 'ease-in-out' };
+      const fade = skipped
+        ? { duration: 700, delay: 0, easing: 'ease-in-out' }
+        : { duration: LAND - MOVE, delay: MOVE - SPELLED, easing: 'ease-in-out' };
       play(glow.current, [{ opacity: 0.35, transform: 'scale(0.7)' }, { opacity: 0, transform: 'scale(0.7)' }], fade);
       play(bg.current, [{ opacity: 1 }, { opacity: 0 }], fade);
       const landed = play(m, [{ transform: centred, opacity: 1 }, { transform: home, opacity: 1 }], { ...fade, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' });
@@ -1158,6 +1363,10 @@ function IntroDrop({ onLand }) {
       if (dead) return;
       unblock();
       onLand();
+      // Hide the overlay only once the hero has re-rendered with its own name
+      // showing (onLand's state update paints a frame or two later); hiding
+      // it straight away left the name missing for a couple of frames.
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       if (root.current) root.current.hidden = true;
     })().catch(() => {
       /* cancelled on unmount */
@@ -1167,7 +1376,7 @@ function IntroDrop({ onLand }) {
       running.forEach((anim) => anim.cancel());
       unblock();
     };
-  }, [onLand]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [full, onLand]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="intro-drop" ref={root} aria-hidden="true">
       <div className="intro-drop-bg" ref={bg} />
@@ -1187,8 +1396,146 @@ function IntroDrop({ onLand }) {
           ))}
         </span>
       </div>
+      {greeting && (
+        <p className="intro-greet" ref={greet}>
+          {greeting}
+        </p>
+      )}
     </div>
   );
+}
+
+// Pressing a button on the landing page sends a ripple out from under the
+// finger, the same water ring the opening plays, so the page keeps one
+// language. Skipped with reduced motion.
+function useTapRipples() {
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const onDown = (e) => {
+      const host = e.target.closest?.('.btn');
+      if (!host || !host.closest('.welcome-hero, .landing-more')) return;
+      const r = host.getBoundingClientRect();
+      const size = Math.hypot(r.width, r.height) * 1.2;
+      const ring = document.createElement('span');
+      ring.className = 'tap-ripple';
+      Object.assign(ring.style, {
+        width: `${size}px`,
+        height: `${size}px`,
+        left: `${e.clientX - r.left - size / 2}px`,
+        top: `${e.clientY - r.top - size / 2}px`,
+      });
+      host.appendChild(ring);
+      ring.animate([{ opacity: 1 }, { opacity: 0.7, offset: 0.4 }, { opacity: 0 }], { duration: 900, easing: 'linear' });
+      ring
+        .animate([{ transform: 'scale(0.05)' }, { transform: 'scale(1)' }], { duration: 900, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' })
+        .finished.then(() => ring.remove(), () => ring.remove());
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, []);
+}
+
+// On a computer the hero deck leans toward the mouse a little, as if you
+// could pick it up, and settles back flat when the mouse leaves. Not on touch
+// screens, and not with reduced motion.
+const TILT_DEG = 8;
+function useDeckTilt() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    const stack = el?.querySelector('.sample-stack');
+    if (!stack) return undefined;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    let frame = 0;
+    let px = 0.5;
+    let py = 0.5;
+    const apply = () => {
+      frame = 0;
+      stack.style.setProperty('--tilt-y', `${(px - 0.5) * 2 * TILT_DEG}deg`);
+      stack.style.setProperty('--tilt-x', `${(0.5 - py) * 1.5 * TILT_DEG}deg`);
+    };
+    const onMove = (e) => {
+      const r = stack.getBoundingClientRect();
+      px = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
+      py = Math.min(Math.max((e.clientY - r.top) / r.height, 0), 1);
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    const onLeave = () => {
+      px = 0.5;
+      py = 0.5;
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerleave', onLeave);
+    return () => {
+      cancelAnimationFrame(frame);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', onLeave);
+    };
+  }, []);
+  return ref;
+}
+
+// The hero sits on still water: moving the mouse leaves faint red rings
+// behind it, and a tap anywhere on the hero drops one, the same ring the
+// opening plays. Buttons keep their own press ripple (useTapRipples). Not
+// while the opening runs, and not with reduced motion.
+const WATER_STEP_PX = 90; // mouse travel between rings
+const WATER_MAX_RINGS = 10;
+function useHeroWater() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const layer = ref.current;
+    const hero = layer?.parentElement;
+    if (!hero) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const drop = (e, size, strength) => {
+      if (hero.classList.contains('is-intro') || layer.childElementCount >= WATER_MAX_RINGS) return;
+      const r = layer.getBoundingClientRect();
+      const ring = document.createElement('span');
+      ring.className = 'hero-ring';
+      Object.assign(ring.style, {
+        width: `${size}px`,
+        height: `${size}px`,
+        left: `${e.clientX - r.left - size / 2}px`,
+        top: `${e.clientY - r.top - size / 2}px`,
+      });
+      layer.appendChild(ring);
+      const ms = 1800;
+      ring.animate([{ opacity: strength }, { opacity: 0 }], { duration: ms, easing: 'cubic-bezier(0.3, 0, 0.6, 1)' });
+      ring
+        .animate([{ transform: 'scale(0.08)' }, { transform: 'scale(1)' }], { duration: ms, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' })
+        .finished.then(() => ring.remove(), () => ring.remove());
+    };
+    let last = null;
+    let travelled = 0;
+    const onMove = (e) => {
+      if (e.pointerType !== 'mouse') return;
+      if (last) travelled += Math.hypot(e.clientX - last.x, e.clientY - last.y);
+      last = { x: e.clientX, y: e.clientY };
+      if (travelled < WATER_STEP_PX) return;
+      travelled = 0;
+      drop(e, 200, 0.55);
+    };
+    const onLeave = () => {
+      last = null;
+      travelled = 0;
+    };
+    const onDown = (e) => {
+      if (e.target.closest('.btn, .lang-float, .scroll-cue')) return;
+      drop(e, 340, 0.9);
+    };
+    hero.addEventListener('pointermove', onMove);
+    hero.addEventListener('pointerleave', onLeave);
+    hero.addEventListener('pointerdown', onDown);
+    return () => {
+      hero.removeEventListener('pointermove', onMove);
+      hero.removeEventListener('pointerleave', onLeave);
+      hero.removeEventListener('pointerdown', onDown);
+    };
+  }, []);
+  return ref;
 }
 
 export default function Welcome() {
@@ -1196,8 +1543,18 @@ export default function Welcome() {
   const { t, lang } = useI18n();
   const socials = socialLinks();
   // 'run' while the opening plays, 'in' as the hero builds in, then null.
-  const [intro, setIntro] = useState(() => (shouldPlayIntro() ? 'run' : null));
+  const [introKind] = useState(introMode);
+  const [intro, setIntro] = useState(introKind ? 'run' : null);
   const landIntro = useCallback(() => setIntro('in'), []);
+  useTapRipples();
+  const deckRef = useDeckTilt();
+  const waterRef = useHeroWater();
+  useSmoothScroll(intro !== 'run');
+  const featuresRef = useRiseWithScroll();
+  const stepsRef = useRiseWithScroll();
+  useHeadingSweep();
+  const socialRef = useRiseWithScroll();
+  const teamRef = useRiseWithScroll();
   const [liveStats, setStats] = useState(landingCache.stats ?? null);
   const mockStats = useMockStatsForPreview();
   const stats = mockStats ?? liveStats;
@@ -1248,7 +1605,9 @@ export default function Welcome() {
 
   return (
     <>
-      {intro && <IntroDrop onLand={landIntro} />}
+      <DeepWater />
+      <DepthGauge />
+      {intro && <IntroDrop full={introKind === 'full'} onLand={landIntro} />}
       {/* Pinned to a full viewport regardless of content, so everything
           below (about / stats / supporters) always starts past the fold —
           see .landing-more below for the sibling that follows it. */}
@@ -1269,6 +1628,7 @@ export default function Welcome() {
         </div>
 
         <div
+          ref={deckRef}
           className="deck-hero fade-up"
           style={{ margin: '36px 0', display: 'grid', placeItems: 'center' }}
         >
@@ -1285,45 +1645,66 @@ export default function Welcome() {
           </button>
         </div>
         <ScrollCue label={t('welcome.scrollMore')} />
+        <div ref={waterRef} className="hero-water" aria-hidden="true" />
       </div>
+
+      <DiveStory />
+
 
       {/* Below the fold, every piece rises in on its own as it scrolls into
           view — dividers, headings, paragraphs, each feature row, each
           developer, each sponsor tier — one after another, not a whole
           section at once (same as the iOS app's WelcomeView). */}
       <div className="landing-more">
-        <Reveal className="landing-divider" />
 
         <LaunchCountdown t={t} launch={launch} />
 
-        <div className="landing-section">
+        <div className="landing-section" data-depth={t('welcome.about.eyebrow')}>
           <Reveal>
-            <p className="eyebrow">{t('welcome.about.eyebrow')}</p>
-            <h2 className="h2">{t('welcome.about.title')}</h2>
+            <h2 className="h2">{withLogo(t('welcome.about.title'))}</h2>
           </Reveal>
-          <Reveal delay={0.1}>
-            <p className="sub">{t('welcome.about.body')}</p>
+          <ScrollLit className="about-lit" text={t('welcome.about.body')} />
+          {/* How a round goes, in the three moves the app actually has:
+              pick, swipe, take turns. */}
+          <div className="how-steps" ref={stepsRef}>
+            {['pick', 'swipe', 'turns'].map((k, i) => (
+              <div className="how-step" key={k}>
+                <span className="how-num" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <p className="how-title">{t(`welcome.how.${k}.title`)}</p>
+                {/* Wrap only at the copy's spaces, not mid-phrase. */}
+                <p className="how-desc">{unbreakablePhrases(t(`welcome.how.${k}.desc`))}</p>
+              </div>
+            ))}
+          </div>
+          <Reveal>
+            <p className="how-facts">
+              {['free', 'web', 'home', 'lang'].map((k) => (
+                <span key={k}>
+                  <i aria-hidden="true" />
+                  {t(`welcome.how.fact.${k}`)}
+                </span>
+              ))}
+            </p>
           </Reveal>
         </div>
 
-        <Reveal className="landing-divider" />
-
-        <div className="landing-section">
+        <div className="landing-section lit-section" data-depth={t('welcome.features.eyebrow')}>
           <Reveal>
-            <p className="eyebrow">{t('welcome.features.eyebrow')}</p>
-            <h2 className="h2">{t('welcome.features.title')}</h2>
+            <h2 className="h2">{withLogo(t('welcome.features.title'))}</h2>
           </Reveal>
-          <div className="feature-list">
-            {FEATURES.map(({ Icon, key }, i) => (
-              <Reveal className="feature-row" key={key} delay={0.08 * i}>
+          <div className="feature-list" ref={featuresRef}>
+            {FEATURES.map(({ Icon, key }) => (
+              <div className="feature-row" key={key}>
                 <span className="feature-ic">
-                  <Icon size={18} />
+                  <Icon size={20} />
                 </span>
                 <div className="feature-text">
                   <p className="feature-title">{t(`welcome.features.${key}.title`)}</p>
                   <p className="feature-desc">{t(`welcome.features.${key}.desc`)}</p>
                 </div>
-              </Reveal>
+              </div>
             ))}
           </div>
         </div>
@@ -1332,11 +1713,10 @@ export default function Welcome() {
             read as broken. Comes back by itself as people use the app. */}
         {(stats?.user_count ?? 0) >= STATS_MIN_USERS && (
         <>
-        <Reveal className="landing-divider" />
 
-        <div className="landing-section">
+        <div className="landing-section" data-depth={t('welcome.stats.eyebrow')}>
           <Reveal>
-            <p className="eyebrow">{t('welcome.stats.eyebrow')}</p>
+            <p className="stat-kicker">{t('welcome.stats.eyebrow')}</p>
           </Reveal>
           <Reveal delay={0.1}>
             <div className="stat-number-wrap">
@@ -1359,15 +1739,12 @@ export default function Welcome() {
         </>
         )}
 
-        <Reveal className="landing-divider" />
-
         <ReviewsSection t={t} lang={lang} />
 
         {/* Where news and events get announced — right after the user count,
             so "this many people use it" leads straight into "follow along". */}
-        <div className="landing-section">
+        <div className="landing-section lit-section" data-depth={t('welcome.social.eyebrow')}>
           <Reveal>
-            <p className="eyebrow">{t('welcome.social.eyebrow')}</p>
             <h2 className="h2">
               <span className="sparkle-anchor">
                 {t('welcome.social.title')}
@@ -1378,13 +1755,13 @@ export default function Welcome() {
           <Reveal delay={0.1}>
             <p className="sub">{t('social.msg')}</p>
           </Reveal>
-          <div className="social-links">
-            {socials.map(({ key, handle, url }, i) => {
+          <div className="social-links" ref={socialRef}>
+            {socials.map(({ key, handle, url }) => {
               const Icon = SOCIAL_ICONS[key];
               const body = (
                 <>
                   <span className="feature-ic">
-                    <Icon size={19} />
+                    <Icon size={28} />
                   </span>
                   <span className="social-link-text">
                     <span className="social-link-head">
@@ -1395,46 +1772,36 @@ export default function Welcome() {
                   </span>
                 </>
               );
-              return (
-                <Reveal key={key} delay={0.08 * i}>
-                  {url ? (
-                    <a className="social-link" href={url} target="_blank" rel="noopener noreferrer">
-                      {body}
-                    </a>
-                  ) : (
-                    <div className="social-link">{body}</div>
-                  )}
-                </Reveal>
+              return url ? (
+                <a key={key} className="social-link" href={url} target="_blank" rel="noopener noreferrer">
+                  {body}
+                </a>
+              ) : (
+                <div key={key} className="social-link">
+                  {body}
+                </div>
               );
             })}
           </div>
         </div>
 
-        <Reveal className="landing-divider" />
-
         {/* Credits the people who built the app — distinct from Supporters
             (people who donated) below, deliberately different heading and a
             plain text list, no card/box and no carousel, so the two never
             read as the same kind of list. */}
-        <div className="landing-section">
+        <div className="landing-section lit-section" data-depth={t('welcome.team.eyebrow')}>
           <Reveal>
-            <p className="eyebrow">{t('welcome.team.eyebrow')}</p>
-            <h2 className="h2">{t('welcome.team.title')}</h2>
+            <h2 className="h2">{withLogo(t('welcome.team.title'))}</h2>
           </Reveal>
-          <div className="dev-team-list">
-            {DEV_TEAM.map((dev, i) => (
-              <Reveal key={dev.nameTh} delay={0.1 * i}>
-                <DevTeamCard dev={dev} lang={lang} nav={nav} />
-              </Reveal>
+          <div className="dev-team-list" ref={teamRef}>
+            {DEV_TEAM.map((dev) => (
+              <DevTeamCard key={dev.nameTh} dev={dev} lang={lang} nav={nav} />
             ))}
           </div>
         </div>
 
-        <Reveal className="landing-divider" />
-
-        <div className="landing-section">
+        <div className="landing-section" data-depth={t('welcome.supporters.eyebrow')}>
           <Reveal>
-            <p className="eyebrow">{t('welcome.supporters.eyebrow')}</p>
             <h2 className="h2">{t('welcome.supporters.title')}</h2>
           </Reveal>
           <Reveal delay={0.1}>
@@ -1469,8 +1836,25 @@ export default function Welcome() {
           )}
         </div>
 
-        <Reveal className="landing-divider" />
-
+        {/* The bottom of the dive: the orb glows in the deep (DeepWater),
+            the name and one last invitation, then the contact lines and the
+            page's small print. */}
+        <section className="landing-end" data-depth={t('welcome.dive.bottom')}>
+          <Reveal className="end-brand">
+            <span className="dot" />
+            <span className="brand">DeePer</span>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="end-tagline">{t('welcome.dive.end')}</p>
+          </Reveal>
+          <Reveal delay={0.2} className="end-actions">
+            <button className="btn btn--primary" onClick={() => nav('/signup')}>
+              {t('welcome.signup')}
+            </button>
+            <button className="btn btn--ghost" onClick={() => nav('/login')}>
+              {t('welcome.haveAccount')}
+            </button>
+          </Reveal>
         {/* Contact lines, grouped at the foot of the page: sponsoring first
             (right after the sponsor logos), then problems / suggestions. */}
         <Reveal className="landing-report">
@@ -1500,6 +1884,7 @@ export default function Welcome() {
           {/* A quiet close to the page instead of just stopping. */}
           <p className="landing-copyright">© 2569 DeePer</p>
         </Reveal>
+        </section>
       </div>
     </>
   );
