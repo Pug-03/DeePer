@@ -12,6 +12,7 @@ import { lazyPage, preloadPages } from './lazyPage.js';
 // every other page is its own chunk, fetched when first opened (and
 // warmed up in the background once the landing page is idle).
 import Welcome from './pages/Welcome.jsx';
+import MorningGreeting from './components/MorningGreeting.jsx';
 // The four tabs stay in the main bundle too: the onboarding tour walks
 // across them, and a tab suspending mid-tour reset the tour's step.
 import Home from './pages/Home.jsx';
@@ -87,6 +88,7 @@ function TabLayout() {
       <Outlet />
       <BottomNav />
       {tutorial.active && <OnboardingTour />}
+      <MorningGreeting />
     </>
   );
 }
