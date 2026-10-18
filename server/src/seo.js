@@ -53,7 +53,8 @@ export const CATEGORY_SEO = {
 const LEVEL_NAMES = { open: 'เบา ๆ', mid: 'กลาง ๆ', deep: 'ลึก' };
 
 const HOME = {
-  title: 'DeePer — การ์ดคำถามชวนคุยลึก ๆ คู่รัก เพื่อน ครอบครัว ใช้ฟรี',
+  // English in the browser tab; the Thai search words live in the description.
+  title: 'DeePer — Deep conversation cards for couples, friends & family',
   description: `คำถามถามแฟน คำถามชวนคุยกับเพื่อน และคำถามคุยกับครอบครัว กว่า ${TOTAL.toLocaleString('en-US')} ข้อ ปัดการ์ดแล้วผลัดกันตอบบนมือถือเครื่องเดียว ใช้ฟรี ไม่ต้องดาวน์โหลด`,
 };
 

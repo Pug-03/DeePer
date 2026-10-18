@@ -7,7 +7,11 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#120a0e" />
-    <title>DeePer — การ์ดคำถามชวนคุยลึก ๆ คู่รัก เพื่อน ครอบครัว ใช้ฟรี</title>
+    <meta name="color-scheme" content="dark" />
+    <!-- Paint the page dark from the very first frame: without this, a reload
+         flashed white before the stylesheet loaded (Safari especially). -->
+    <style>html { background: #120a0e; }</style>
+    <title>DeePer — Deep conversation cards for couples, friends &amp; family</title>
     <meta name="description" content="คำถามถามแฟน คำถามชวนคุยกับเพื่อน และคำถามคุยกับครอบครัว กว่า 1,050 ข้อ ปัดการ์ดแล้วผลัดกันตอบบนมือถือเครื่องเดียว ใช้ฟรี ไม่ต้องดาวน์โหลด" />
 
     <!-- Link previews (LINE, Facebook, Messenger, IG DMs, X). Crawlers need
@@ -31,8 +35,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="DeePer" />
-    <link rel="icon" href="/icon-512.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <!-- Tab icons: a rounded dark tile with the logo's orb filling it, so the
+         frame Safari draws around tab icons follows the tile's own corners.
+         The ?v= busts Safari's very sticky favicon cache when they change. -->
+    <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png?v=2" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/favicon-64.png?v=2" type="image/png" sizes="64x64" />
+    <!-- Safari also takes the touch icon for tabs and favourites, so it's the
+         same tile (full square: iOS rounds it on the home screen). -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

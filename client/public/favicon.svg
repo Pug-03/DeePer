@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- DeePer's tab icon: a rounded dark tile with the app's glowing orb
+       filling it (the same light profile as icon-512.png). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22101a"/>
+      <stop offset="1" stop-color="#0d070a"/>
+    </linearGradient>
+    <radialGradient id="o" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="rgb(255,128,154)"/>
+      <stop offset=".1" stop-color="rgb(255,98,132)"/>
+      <stop offset=".2" stop-color="rgb(255,73,113)"/>
+      <stop offset=".3" stop-color="rgb(255,64,104)" stop-opacity=".88"/>
+      <stop offset=".42" stop-color="rgb(255,58,98)" stop-opacity=".62"/>
+      <stop offset=".55" stop-color="rgb(255,52,92)" stop-opacity=".36"/>
+      <stop offset=".7" stop-color="rgb(255,44,84)" stop-opacity=".15"/>
+      <stop offset=".85" stop-color="rgb(255,40,80)" stop-opacity=".04"/>
+      <stop offset="1" stop-color="rgb(255,40,80)" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <circle cx="32" cy="32" r="30" fill="url(#o)"/>
+</svg>
