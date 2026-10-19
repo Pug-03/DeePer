@@ -5979,6 +5979,41 @@ html.deep-water body::before {
   .landing-more .dev-team-entry:has(.dev-team-row-clickable):hover {
     background: radial-gradient(60% 80% at 20% 50%, rgba(244, 63, 94, 0.1), transparent 70%);
   }
+  /* Features and follow-us: on hover the item lifts a little over a red
+     glow and a streak of light sweeps across it once. `top`, not a
+     transform, so it doesn't fight the bob or the scroll rise. */
+  .landing-more .feature-row,
+  .landing-more a.social-link {
+    top: 0;
+    overflow: hidden;
+    transition: top 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .landing-more .feature-row::after,
+  .landing-more a.social-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 210, 217, 0.14) 46%, rgba(255, 255, 255, 0.2) 50%, transparent 62%);
+    translate: -110% 0;
+    pointer-events: none;
+  }
+  .landing-more .feature-row:hover,
+  .landing-more a.social-link:hover {
+    top: -4px;
+    box-shadow: 0 16px 32px -18px rgba(244, 63, 94, 0.55);
+  }
+  .landing-more .feature-row:hover::after,
+  .landing-more a.social-link:hover::after {
+    translate: 110% 0;
+    transition: translate 0.7s ease;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  .landing-more .feature-row::after,
+  .landing-more a.social-link::after {
+    display: none;
+  }
 }
 /* Just the icon and a soft red light around it: no disc, no edge. The
    light is a blurred glow behind the glyph, which glows itself too. */
