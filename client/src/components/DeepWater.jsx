@@ -153,6 +153,7 @@ function makeWater(canvas) {
   const loc = gl.getAttribLocation(prog, 'p');
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
   const u = Object.fromEntries(
     ['res', 'time', 'surf', 'rise', 'orb', 'light', 'air'].map((k) => [k, gl.getUniformLocation(prog, `u_${k}`)]),
   );
@@ -161,7 +162,6 @@ function makeWater(canvas) {
       // A soft scene, so render well below full resolution and let it scale
       // up: it looks the same and leaves the GPU room to keep the scroll
       // smooth (phones, with their dense screens, get a bit less again).
-      const coarse = window.matchMedia('(pointer: coarse)').matches;
       const scale = Math.min(window.devicePixelRatio || 1, 2) * (coarse ? 0.3 : 0.45);
       const w = Math.max(1, Math.round(canvas.clientWidth * scale));
       const h = Math.max(1, Math.round(canvas.clientHeight * scale));
@@ -235,41 +235,55 @@ export default function DeepWater() {
       light.tz = 0;
       kick();
     };
+    // Sizes are read only when the layout changes, never in the frame loop:
+    // reading them there, right after the scroll-linked pieces had written
+    // their styles, made the browser lay out the whole page again every
+    // frame, which stuttered on phones.
+    let H = 1;
+    let max = 1;
+    let rest = SURFACE_AT_TOP;
+    const measure = () => {
+      water.resize();
+      // Place the surface by the canvas's own height, not the window's: on
+      // a phone the window grows and shrinks as the browser bar slides away
+      // mid-scroll, which made the surface jump; the canvas is sized to the
+      // largest viewport (100lvh), so its height holds steady.
+      H = el.clientHeight || window.innerHeight;
+      max = Math.max(1, root.scrollHeight - window.innerHeight);
+      rest = window.innerWidth < 760 ? SURFACE_AT_TOP_PHONE : SURFACE_AT_TOP;
+      kick();
+    };
     const tick = (now) => {
       frame = 0;
-      const vh = window.innerHeight;
       const y = window.scrollY;
-      const max = Math.max(1, root.scrollHeight - vh);
       const p = Math.min(Math.max(y / max, 0), 1);
       const orb = Math.min(Math.max((p - 0.94) / 0.06, 0), 1);
       const ease = reduce ? 1 : 0.08;
       light.x += (light.tx - light.x) * ease;
       light.y += (light.ty - light.y) * ease;
       light.z += (light.tz - light.z) * (reduce ? 1 : 0.05);
-      water.resize();
-      // Place the surface by the canvas's own height, not the window's: on
-      // a phone the window grows and shrinks as the browser bar slides away
-      // mid-scroll, which made the surface jump; the canvas is sized to the
-      // largest viewport (100lvh), so its height holds steady.
-      const H = el.clientHeight || vh;
-      const rest = window.innerWidth < 760 ? SURFACE_AT_TOP_PHONE : SURFACE_AT_TOP;
       water.draw(reduce ? 0 : (now - start) / 1000, rest + y / H, y / H, orb, light, nativeSurface ? 0 : 1);
       if (!reduce && !document.hidden) frame = requestAnimationFrame(tick);
     };
     const kick = () => {
       if (!frame) frame = requestAnimationFrame(tick);
     };
+    // The shell grows as sections fill in with data (see DepthGauge).
+    const ro = new ResizeObserver(measure);
+    ro.observe(document.querySelector('.app-shell') || document.body);
+    ro.observe(el);
     window.addEventListener('scroll', kick, { passive: true });
-    window.addEventListener('resize', kick);
+    window.addEventListener('resize', measure);
     window.addEventListener('pointermove', aim, { passive: true });
     window.addEventListener('pointerdown', aim, { passive: true });
     document.documentElement.addEventListener('pointerleave', dim);
     document.addEventListener('visibilitychange', kick);
-    kick();
+    measure();
     return () => {
       cancelAnimationFrame(frame);
+      ro.disconnect();
       window.removeEventListener('scroll', kick);
-      window.removeEventListener('resize', kick);
+      window.removeEventListener('resize', measure);
       window.removeEventListener('pointermove', aim);
       window.removeEventListener('pointerdown', aim);
       document.documentElement.removeEventListener('pointerleave', dim);
@@ -296,9 +310,12 @@ export function DepthGauge() {
     let stops = [];
     let frame = 0;
     const shown = { on: null, here: null, m: '' };
+    // Page height, read with the stops rather than every frame (see
+    // DeepWater's measure for why).
+    let max = 1;
     const build = () => {
       const vh = window.innerHeight;
-      const max = Math.max(1, document.documentElement.scrollHeight - vh);
+      max = Math.max(1, document.documentElement.scrollHeight - vh);
       stops = [...document.querySelectorAll('[data-depth]')].map((node) => {
         const top = node.getBoundingClientRect().top + window.scrollY;
         return { label: node.dataset.depth, at: Math.min(Math.max((top - vh / 2) / max, 0), 1) };
@@ -317,7 +334,6 @@ export function DepthGauge() {
     const update = () => {
       frame = 0;
       const vh = window.innerHeight;
-      const max = Math.max(1, document.documentElement.scrollHeight - vh);
       const p = Math.min(Math.max(window.scrollY / max, 0), 1);
       el.style.setProperty('--p', p.toFixed(4));
       // Only touch the page when something actually changed: rewriting the

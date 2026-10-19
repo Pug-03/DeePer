@@ -434,7 +434,12 @@ function SupportersRow({ items, reverse, renderItem = renderSupporterChip }) {
     let drag = null;
     let lastWheel = 0;
 
-    const oneSet = () => el.scrollWidth / 2;
+    // Width of one set, measured when the row's content resizes rather than
+    // read every frame (that forced a page layout per frame mid-scroll).
+    let setWidth = el.scrollWidth / 2;
+    const oneSet = () => setWidth;
+    const ro = new ResizeObserver(() => (setWidth = el.scrollWidth / 2));
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
     const wrap = (x) => {
       const half = oneSet();
       if (half <= 0) return x;
@@ -523,6 +528,7 @@ function SupportersRow({ items, reverse, renderItem = renderSupporterChip }) {
     return () => {
       cancelAnimationFrame(frame);
       io.disconnect();
+      ro.disconnect();
       el.removeEventListener('pointerdown', onPointerDown);
       el.removeEventListener('pointermove', onPointerMove);
       el.removeEventListener('pointerup', onPointerUp);
@@ -818,16 +824,16 @@ function Sealed({ t, sealed, index = 0, children }) {
   useEffect(() => {
     if (inView && !sealed && phase === 'open' && burst === 0) setBurst(1);
   }, [inView]); // eslint-disable-line react-hooks/exhaustive-deps
+  const half = Array.from({ length: 12 }, () => `${t('welcome.supporters.sealed')}   ✦   `).join('');
   const open = phase === 'open';
   return (
+    // Tapes peel off in alternating directions: left→right, then right→left.
     <div
       ref={ref}
       className={`sealed${index % 2 ? ' peel-rev' : ''}${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
       style={{ '--i': index }}
-  const half = Array.from({ length: 12 }, () => `${t('welcome.supporters.sealed')}   ✦   `).join('');
     >
       {!reduceMotion && <StarBurst burst={burst} />}
-    // Tapes peel off in alternating directions: left→right, then right→left.
       <div className="sealed-content" aria-hidden={open ? undefined : 'true'} inert={open ? undefined : ''}>
         {children}
       </div>
