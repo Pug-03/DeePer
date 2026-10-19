@@ -6008,6 +6008,24 @@ html.deep-water body::before {
     translate: 110% 0;
     transition: translate 0.7s ease;
   }
+  /* The channel name and handle slide right a little and a shimmer runs
+     through them. */
+  .landing-more a.social-link .social-link-head {
+    transition: translate 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .landing-more a.social-link:hover .social-link-head {
+    translate: 6px 0;
+  }
+  .landing-more a.social-link .social-link-head > span {
+    background: linear-gradient(100deg, var(--red-bright) 40%, #fff 50%, var(--red-bright) 60%) 100% 0 / 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  .landing-more a.social-link:hover .social-link-head > span {
+    color: transparent;
+    background-position: 0 0;
+    transition: background-position 0.8s ease;
+  }
 }
 @media (hover: hover) and (prefers-reduced-motion: reduce) {
   .landing-more .feature-row::after,
