@@ -3680,8 +3680,11 @@ a.social-link:active {
 .sponsor-tier .supporters-marquee-group {
   margin-top: 0;
 }
-/* Pre-launch: sponsor logos and supporter names sunk out of focus under a
-   quiet veil, one per tier so the tier labels stay readable. */
+/* Pre-launch: sponsor logos and supporter names blurred behind red
+   "caution tape" (police-tape look, in the brand red instead of yellow),
+   one strip per tier so the tier labels stay readable. The strips run edge
+   to edge across the whole screen; html clips the overhang so the page
+   never scrolls sideways. */
 .sealed {
   position: relative;
   padding: 10px 0;
@@ -3693,8 +3696,8 @@ a.social-link:active {
   opacity: 0.7;
   transition: filter 1.1s ease, opacity 1.1s ease;
 }
-/* Launch reveal: each tier's veil clears (one tier after another, via
-   --i), then its logos come up into focus. */
+/* Launch reveal: each tier's tape peels away left to right (one tier after
+   another, via --i), then its logos come into focus. */
 .sealed.is-opening .sealed-content,
 .sealed.is-open .sealed-content {
   filter: none;
@@ -3705,43 +3708,45 @@ a.social-link:active {
 .sealed.is-opening .sealed-content {
   transition-delay: calc(0.5s + var(--i) * 0.28s);
 }
-/* The veil over sealed logos: a soft dark haze in the water with one quiet
-   line saying when they'll be shown, beside a slowly pulsing orb. */
-.sealed-veil {
-  position: absolute;
-  inset: -12px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 0 20px;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: rgba(244, 241, 242, 0.78);
-  text-align: center;
-  text-shadow: 0 0 16px rgba(244, 63, 94, 0.4);
-  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(16, 7, 11, 0.7), transparent 75%);
-}
-.sealed-orb {
-  width: 9px;
-  height: 9px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle closest-side, rgb(255, 128, 154), rgb(255, 73, 113) 60%, rgba(255, 60, 100, 0.6));
-  box-shadow: 0 0 12px 2px rgba(244, 63, 94, 0.7);
-  animation: sealedPulse 2.6s ease-in-out infinite;
-}
-@keyframes sealedPulse {
-  0%, 100% { opacity: 0.55; transform: scale(0.85); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
-.sealed.is-opening .sealed-veil {
-  animation: veilClear 1.2s cubic-bezier(0.55, 0, 0.25, 1) both;
+.sealed.is-opening .sponsor-tape {
+  animation: tape-peel 1.4s cubic-bezier(0.55, 0, 0.25, 1) both;
   animation-delay: calc(var(--i) * 0.28s);
 }
-@keyframes veilClear {
-  to { opacity: 0; filter: blur(8px); transform: scale(1.06); }
+.sealed.peel-rev.is-opening .sponsor-tape {
+  animation-name: tape-peel-rev;
+}
+@keyframes tape-peel-rev {
+  0% { clip-path: inset(-20px 18% -20px -20px); }
+  12% { clip-path: inset(-20px 18% -20px -20px); filter: brightness(1.2); }
+  100% { clip-path: inset(-20px 82% -20px -20px); filter: brightness(1); margin-top: -8px; }
+}
+@keyframes tape-peel {
+  /* The strip is 160vw wide and centred, so only ~18%–82% of it is on
+     screen; peel across that span so the whole duration is visible. */
+  0% { clip-path: inset(-20px -20px -20px 18%); }
+  12% { clip-path: inset(-20px -20px -20px 18%); filter: brightness(1.2); }
+  100% { clip-path: inset(-20px -20px -20px 82%); filter: brightness(1); margin-top: -8px; }
+}
+.sponsor-tape {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160vw;
+  padding: 11px 0;
+  overflow: hidden;
+  white-space: pre;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #fff;
+  /* Plain brand red, no glow, so the tape doesn't shout on the dark page. */
+  background:
+    /* hazard stripes along both edges */
+    repeating-linear-gradient(-45deg, #140a0f 0 8px, transparent 8px 16px) top / 100% 6px no-repeat,
+    repeating-linear-gradient(-45deg, #140a0f 0 8px, transparent 8px 16px) bottom / 100% 6px no-repeat,
+    var(--red-deep);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.7);
+  transform: translate(-50%, -50%) rotate(-2.5deg);
 }
 /* Stars shooting out from a sponsor tier as it's revealed (StarBurst). */
 .star-burst {
@@ -3761,9 +3766,29 @@ a.social-link:active {
   translate: -50% -50%;
   filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.6));
 }
+/* The tape text: moved by TapeTrack (Welcome.jsx) — a slow drift, and it
+   can be dragged sideways. pan-y keeps vertical page scrolling working on
+   touch screens while a sideways swipe moves the tape. */
+.sponsor-tape-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.sealed .sponsor-tape {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sealed .sponsor-tape:active {
+  cursor: grabbing;
+}
+/* Alternate the tilt and the drift direction from tier to tier. */
+.sponsor-tier:nth-child(even) .sponsor-tape {
+  transform: translate(-50%, -50%) rotate(2.5deg);
+}
 @media (prefers-reduced-motion: reduce) {
-  .sealed.is-opening .sealed-veil { animation: none; opacity: 0; }
-  .sealed-orb { animation: none; }
+  .sealed.is-opening .sponsor-tape { animation: none; opacity: 0; }
   .sealed-content { transition: none; }
 }
 /* Individual supporters: the lowest tier, a sibling below .sponsor-tiers

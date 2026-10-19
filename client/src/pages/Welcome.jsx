@@ -659,9 +659,98 @@ const ACTIVITY_STATS = [
 ];
 
 // Until launch, sponsor logos and individual supporters are `sealed`:
-// sunk out of focus in the water under a quiet veil saying when they'll be
-// shown, and not clickable. Flips open on its own when the clock passes
-// LAUNCH_AT: the veil clears and the logos come up into focus.
+// blurred out behind a strip of red "caution tape", and not clickable.
+// Flips open on its own when the clock passes LAUNCH_AT.
+// The tape's text: drifts slowly on its own, and can be dragged sideways by
+// hand (mouse or finger); let go and it glides on, easing back to its drift.
+// Holds the text twice and wraps by half its width, so it loops seamlessly.
+function TapeTrack({ text, dir }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    // The whole strip (stripes included) is the drag handle, not just the text.
+    const handle = el.parentElement;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const drift = still ? 0 : 10 * dir; // px per second
+    let x = 0;
+    let v = drift;
+    let dragging = false;
+    let lastX = 0;
+    let lastT = 0;
+    let frame = 0;
+    let prev = performance.now();
+    // Measured on resize, not per frame: reading it right after moving the
+    // text made the browser lay the page out again every frame.
+    let h = 1;
+    const ro = new ResizeObserver(() => (h = el.scrollWidth / 2 || 1));
+    ro.observe(el);
+    const place = () => {
+      x = ((x % h) + h) % h - h; // keep within [-half, 0)
+      el.style.transform = `translateX(${x}px)`;
+    };
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - prev) / 1000);
+      prev = now;
+      if (!dragging) {
+        v += (drift - v) * Math.min(1, dt * 1.5); // ease back to the drift
+        x += v * dt;
+        place();
+      }
+      frame = visible ? requestAnimationFrame(tick) : 0;
+    };
+    // Drift only while the tape is on screen (same reason as the marquee).
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (visible && !frame) {
+        prev = performance.now();
+        frame = requestAnimationFrame(tick);
+      }
+    });
+    io.observe(handle);
+    const down = (e) => {
+      dragging = true;
+      lastX = e.clientX;
+      lastT = performance.now();
+      v = 0;
+      handle.setPointerCapture?.(e.pointerId);
+    };
+    const move = (e) => {
+      if (!dragging) return;
+      const now = performance.now();
+      const dx = e.clientX - lastX;
+      x += dx;
+      v = dx / Math.max(0.016, (now - lastT) / 1000);
+      lastX = e.clientX;
+      lastT = now;
+      place();
+    };
+    const up = () => {
+      dragging = false;
+    };
+    handle.addEventListener('pointerdown', down);
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      io.disconnect();
+      ro.disconnect();
+      handle.removeEventListener('pointerdown', down);
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+    };
+  }, [dir]);
+  return (
+    <div className="sponsor-tape-track" ref={ref}>
+      <span>{text}</span>
+      <span aria-hidden="true">{text}</span>
+    </div>
+  );
+}
+
 // A small burst of stars shooting out from the middle of a sponsor tier,
 // once, as its logos are revealed. Each `burst` change fires a new one.
 const BURST_COLORS = ['#ff5a72', '#ffd2d9', '#fbbf24', '#ffffff'];
@@ -703,7 +792,7 @@ function StarBurst({ burst }) {
 
 function Sealed({ t, sealed, index = 0, children }) {
   // sealed → (launch passes while the page is open) → opening → open.
-  // While opening, the veil clears and the logos come into focus; the
+  // While opening, the tape peels off and the logos come into focus; the
   // wrapper stays the same element throughout so nothing inside remounts.
   const [phase, setPhase] = useState(sealed ? 'sealed' : 'open');
   // Stars shoot out as the logos come into focus — at the reveal, or (when
@@ -733,17 +822,18 @@ function Sealed({ t, sealed, index = 0, children }) {
   return (
     <div
       ref={ref}
-      className={`sealed${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
+      className={`sealed${index % 2 ? ' peel-rev' : ''}${phase === 'opening' ? ' is-opening' : ''}${open ? ' is-open' : ''}`}
       style={{ '--i': index }}
+  const half = Array.from({ length: 12 }, () => `${t('welcome.supporters.sealed')}   ✦   `).join('');
     >
       {!reduceMotion && <StarBurst burst={burst} />}
+    // Tapes peel off in alternating directions: left→right, then right→left.
       <div className="sealed-content" aria-hidden={open ? undefined : 'true'} inert={open ? undefined : ''}>
         {children}
       </div>
       {!open && (
-        <div className="sealed-veil">
-          <span className="sealed-orb" aria-hidden="true" />
-          {t('welcome.supporters.sealed')}
+        <div className="sponsor-tape">
+          <TapeTrack text={half} dir={index % 2 ? 1 : -1} />
         </div>
       )}
     </div>
