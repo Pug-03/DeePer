@@ -242,6 +242,10 @@ export default function DeepWater() {
     let H = 1;
     let max = 1;
     let rest = SURFACE_AT_TOP;
+    // Where the orb starts to glow: as the landing's closing scene
+    // (.end-run) comes up, so it's lit for that whole long stretch — not
+    // just the last bit of the page. Without that scene, the page's end.
+    let orbFrom = Infinity;
     const measure = () => {
       water.resize();
       // Place the surface by the canvas's own height, not the window's: on
@@ -251,13 +255,14 @@ export default function DeepWater() {
       H = el.clientHeight || window.innerHeight;
       max = Math.max(1, root.scrollHeight - window.innerHeight);
       rest = window.innerWidth < 760 ? SURFACE_AT_TOP_PHONE : SURFACE_AT_TOP;
+      const end = document.querySelector('.end-run');
+      orbFrom = end ? end.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.6 : max * 0.94;
       kick();
     };
     const tick = (now) => {
       frame = 0;
       const y = window.scrollY;
-      const p = Math.min(Math.max(y / max, 0), 1);
-      const orb = Math.min(Math.max((p - 0.94) / 0.06, 0), 1);
+      const orb = Math.min(Math.max((y - orbFrom) / (window.innerHeight * 0.6), 0), 1);
       const ease = reduce ? 1 : 0.08;
       light.x += (light.tx - light.x) * ease;
       light.y += (light.ty - light.y) * ease;
