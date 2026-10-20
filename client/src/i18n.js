@@ -161,6 +161,8 @@ export const STRINGS = {
     'welcome.dive.surface': 'ผิวน้ำ',
     'welcome.dive.bottom': 'ก้นทะเล',
     'welcome.end.ask': 'คืนนี้ ลองถามกันดูไหม',
+    // The closing question: its own line, not the dive's deep question again.
+    'welcome.end.q': '“ครั้งล่าสุดที่เราคุยกันจริง ๆ คือเมื่อไหร่?”',
     'welcome.end.cta': 'เริ่มคุยกันเลย',
     'welcome.how.pick.title': 'เลือกวงที่จะคุย',
     'welcome.how.pick.desc': 'คู่รัก เพื่อน หรือครอบครัว แล้วเลือกระดับคำถาม จะเริ่มจากเบา ๆ หรือไปให้ลึกเลยก็ได้',
@@ -802,6 +804,7 @@ export const STRINGS = {
     'welcome.dive.surface': 'Surface',
     'welcome.dive.bottom': 'The deep',
     'welcome.end.ask': 'Tonight, try asking each other',
+    'welcome.end.q': '“When did we last really talk?”',
     'welcome.end.cta': 'Start talking',
     'welcome.how.pick.title': 'Pick who you’re talking with',
     'welcome.how.pick.desc': 'Couple, friends or family, then a question level: start light, or go straight to the deep end.',

@@ -6192,15 +6192,95 @@ html.deep-water body::before {
 /* The bottom of the dive: the name in the orb's light, a last invitation,
    then the small print. */
 .landing-end {
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 20px calc(32px + var(--safe-b));
+  text-align: center;
+}
+/* Like PeelPlan's closing scene: a long stretch of scroll (.end-run) with
+   the stage pinned to the screen, its lines coming up one after another
+   as --p (useEndRun) runs from 0 to 1, then held before the small print. */
+.end-run {
+  --p: 0;
+  position: relative;
+  height: 360svh;
+}
+@media (max-width: 759px) {
+  .end-run { height: 240svh; }
+}
+.end-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+/* Both scenes fill the pinned stage, one over the other. */
+.end-scene {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 22px;
-  padding: 18vh 20px calc(32px + var(--safe-b));
-  text-align: center;
 }
+/* Scene 1 drifts up and away once its question is fully lit. */
+.end-scene--q {
+  --x: clamp(0, calc((var(--p) - 0.42) / 0.1), 1);
+  opacity: calc(1 - var(--x));
+  translate: 0 calc(var(--x) * -80px);
+  pointer-events: none;
+}
+.end-scene--brand {
+  pointer-events: none;
+}
+.end-run.end-ready .end-scene--brand {
+  pointer-events: auto;
+}
+/* Comes up as --p passes its start --a, over --d. */
+.end-fade {
+  --s: clamp(0, calc((var(--p) - var(--a)) / var(--d)), 1);
+  opacity: var(--s);
+  translate: 0 calc((1 - var(--s)) * 30px);
+}
+/* A soft blur as each piece comes up, on computers only: repainting blur
+   every scroll step costs frames on phones. */
+@media (hover: hover) and (pointer: fine) {
+  .end-fade { filter: blur(calc((1 - var(--s)) * 8px)); }
+}
+/* Each word sits dim until its turn, then lights. */
+.end-word {
+  opacity: calc(0.14 + 0.86 * clamp(0, calc((var(--p) - var(--a)) / 0.05), 1));
+}
+.end-q {
+  margin-bottom: 0;
+}
+/* The orb swells out of nothing before the name, then settles. */
+.end-scene--brand .end-brand .dot {
+  --g: clamp(0, calc((var(--p) - 0.48) / 0.12), 1);
+  scale: var(--g);
+}
+.end-scene--brand .end-brand .dot::before {
+  scale: calc(1 + (1 - clamp(0, calc((var(--p) - 0.56) / 0.12), 1)) * 2.4);
+}
+/* Reduced motion, or coming back to the page (useEndRun adds .end-static):
+   no long pinned scroll, just the question and then the name, stacked. */
+.end-run.end-static {
+  height: auto;
+}
+.end-static .end-stage {
+  position: static;
+  height: auto;
+}
+.end-static .end-scene {
+  position: static;
+  padding-block: 12vh;
+}
+.end-static .end-scene--q { opacity: 1; translate: none; }
+.end-static .end-fade { --s: 1; }
+.end-static .end-word { opacity: 1; }
+.end-static .end-brand .dot,
+.end-static .end-brand .dot::before { scale: 1; }
 .end-brand {
   display: inline-flex;
   align-items: center;
@@ -6292,6 +6372,19 @@ html.deep-water body::before {
   min-width: 200px;
 }
 .landing-end .landing-report {
-  margin-top: 12vh;
+  margin-top: 8vh;
   padding-bottom: 0;
+}
+
+/* Read by screen readers, not shown. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }

@@ -145,6 +145,92 @@ function ScrollLit({ text, className }) {
   );
 }
 
+// The closing question, its words lighting one after another across the
+// first stretch of the closing scene (each word's start as --a, read by
+// .end-word against the scene's --p). Thai has no spaces, so words come
+// from Intl.Segmenter, as in ScrollLit.
+function EndQuestion({ text }) {
+  const words = useMemo(() => {
+    try {
+      const seg = new Intl.Segmenter(undefined, { granularity: 'word' });
+      return [...seg.segment(text)].map((w) => w.segment);
+    } catch {
+      return text.split(/(\s+)/);
+    }
+  }, [text]);
+  return (
+    <p className="end-q">
+      <span className="sr-only">{text}</span>
+      {words.map((w, i) => (
+        <span key={i} className="end-word" aria-hidden="true" style={{ '--a': (0.05 + (0.3 * i) / words.length).toFixed(3) }}>
+          {w}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+// The landing's closing scene: how far the scroll has come through the
+// returned ref's (tall) element, 0 → 1, written to it as --p so its pinned
+// scenes can play one after another (.end-scene in styles.css). Positions
+// are measured only when the layout changes, never per frame. Fully shown
+// at once with reduced motion or when coming back.
+function useEndRun() {
+  const ref = useRef(null);
+  const returning = useReturning();
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    if (returning || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // No long pinned scroll: both scenes simply stacked in the page.
+      el.style.setProperty('--p', '1');
+      el.classList.add('end-ready', 'end-static');
+      return undefined;
+    }
+    // Until the buttons have come up they're out of the tab order too, not
+    // just unclickable (inert), so keyboard focus can't land on them unseen.
+    const brand = el.querySelector('.end-scene--brand');
+    let top = 0;
+    let run = 1;
+    const measure = () => {
+      top = el.getBoundingClientRect().top + window.scrollY;
+      run = Math.max(1, el.offsetHeight - window.innerHeight);
+    };
+    let frame = 0;
+    let shown = '';
+    const update = () => {
+      frame = 0;
+      const p = Math.min(Math.max((window.scrollY - top) / run, 0), 1).toFixed(3);
+      if (p !== shown) {
+        el.style.setProperty('--p', (shown = p));
+        // The buttons only take taps once they've come up.
+        const ready = p > 0.74;
+        el.classList.toggle('end-ready', ready);
+        if (brand) brand.inert = !ready;
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    const relayout = () => {
+      measure();
+      update();
+    };
+    relayout();
+    const ro = new ResizeObserver(relayout);
+    ro.observe(document.querySelector('.app-shell') || document.body);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', relayout);
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', relayout);
+    };
+  }, [returning]);
+  return ref;
+}
+
 // Children of the returned ref's element float up out of the water one
 // after another as they scroll into view, tied to the scroll (scrolling back
 // sinks them again) rather than played once: each starts lower, faded and
@@ -1082,7 +1168,9 @@ function DevTeamCard({ dev, lang, nav }) {
   const role = (lang === 'en' ? dev.roleEn : dev.roleTh) || dev.roleTh;
   const showPhoto = dev.avatar && !imgFailed;
 
+  // Wrapped so a streak of light can sweep across the round photo on hover.
   const avatar = showPhoto ? (
+    <span className="dev-team-avatar">
     <img
       className="dev-team-avatar-img"
       src={dev.avatar}
@@ -1091,6 +1179,7 @@ function DevTeamCard({ dev, lang, nav }) {
       onError={() => setImgFailed(true)}
       draggable={false}
     />
+    </span>
   ) : (
     <span className="supporter-avatar dev-team-avatar-fallback">{initials(name)}</span>
   );
@@ -1168,9 +1257,7 @@ function useMockReviewCountForPreview() {
 }
 
 function ReviewsSection({ t, lang }) {
-  // Wrapped so a streak of light can sweep across the round photo on hover.
   const fetched = useLandingData('reviews', '/reviews', (d) => d.reviews, []);
-    <span className="dev-team-avatar">
   const mockCount = useMockReviewCountForPreview();
   // The literal import.meta.env.DEV lets production builds drop the mock entirely.
   const reviews = import.meta.env.DEV && mockCount > 0 ? makeMockReviewsDevOnly(mockCount, lang) : fetched;
@@ -1179,7 +1266,6 @@ function ReviewsSection({ t, lang }) {
     <>
       <div className="landing-section" data-depth={t('welcome.reviews.eyebrow')}>
         <Reveal>
-    </span>
           <h2 className="h2">{t('welcome.reviews.title')}</h2>
         </Reveal>
         <Reveal delay={0.1}>
@@ -1650,6 +1736,7 @@ export default function Welcome() {
   const waterRef = useHeroWater();
   useSmoothScroll(intro !== 'run');
   const featuresRef = useRiseWithScroll();
+  const endRunRef = useEndRun();
   const stepsRef = useRiseWithScroll();
   useHeadingSweep();
   const socialRef = useRiseWithScroll();
@@ -1939,37 +2026,44 @@ export default function Welcome() {
             A question to take with you, the name, an invitation in, then
             the contact lines and the page's small print. */}
         <section className="landing-end" data-depth={t('welcome.dive.bottom')}>
-          <Reveal>
-            <p className="end-ask">{t('welcome.end.ask')}</p>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="end-q">{t('welcome.dive.deepQ')}</p>
-          </Reveal>
-          <Reveal delay={0.2} className="end-brand">
-            <span className="dot" />
-            <span className="brand">DeePer</span>
-          </Reveal>
-          <Reveal delay={0.3}>
-            <p className="end-tagline">{t('welcome.dive.end')}</p>
-          </Reveal>
-          <Reveal delay={0.4} className="end-actions">
-            <button className="btn btn--primary end-cta" onClick={() => nav('/signup')}>
-              {t('welcome.end.cta')}
-            </button>
-            <button className="btn btn--ghost" onClick={() => nav('/login')}>
-              {t('welcome.haveAccount')}
-            </button>
-          </Reveal>
-          <Reveal delay={0.5}>
-            <p className="how-facts end-facts">
-              {['free', 'web'].map((k) => (
-                <span key={k}>
-                  <i aria-hidden="true" />
-                  {t(`welcome.how.fact.${k}`)}
-                </span>
-              ))}
-            </p>
-          </Reveal>
+          {/* Like PeelPlan's closing scene: the screen holds still for a long
+              stretch of scroll while the lines come up one by one (driven by
+              the scroll, see useEndRun), and only then the small print. */}
+          <div className="end-run" ref={endRunRef}>
+            {/* Two scenes in turn. First the question to take with you,
+                lighting up word by word, then drifting up and away; then
+                the orb swells and the name comes up out of its light, with
+                the invitation in. All timed off the scroll (--p). */}
+            <div className="end-stage">
+              <div className="end-scene end-scene--q">
+                <p className="end-ask end-fade" style={{ '--a': 0, '--d': 0.06 }}>{t('welcome.end.ask')}</p>
+                <EndQuestion text={t('welcome.end.q')} />
+              </div>
+              <div className="end-scene end-scene--brand">
+                <div className="end-brand">
+                  <span className="dot" />
+                  <span className="brand end-fade" style={{ '--a': 0.56, '--d': 0.1 }}>DeePer</span>
+                </div>
+                <p className="end-tagline end-fade" style={{ '--a': 0.66, '--d': 0.07 }}>{t('welcome.dive.end')}</p>
+                <div className="end-actions end-fade" style={{ '--a': 0.72, '--d': 0.07 }}>
+                  <button className="btn btn--primary end-cta" onClick={() => nav('/signup')}>
+                    {t('welcome.end.cta')}
+                  </button>
+                  <button className="btn btn--ghost" onClick={() => nav('/login')}>
+                    {t('welcome.haveAccount')}
+                  </button>
+                </div>
+                <p className="how-facts end-facts end-fade" style={{ '--a': 0.78, '--d': 0.07 }}>
+                  {['free', 'web'].map((k) => (
+                    <span key={k}>
+                      <i aria-hidden="true" />
+                      {t(`welcome.how.fact.${k}`)}
+                    </span>
+                  ))}
+                </p>
+              </div>
+            </div>
+          </div>
         {/* Contact lines, grouped at the foot of the page: sponsoring first
             (right after the sponsor logos), then problems / suggestions. */}
         <Reveal className="landing-report">
