@@ -6338,14 +6338,14 @@ html.deep-water body::before {
   text-shadow: 0 0 40px rgba(244, 63, 94, 0.35);
   text-wrap: balance;
 }
-/* The sign-up button breathes a soft red glow, the one thing to press. */
+/* The sign-up button breathes a soft red glow, the one thing to press —
+   a glow only, no ring around it (the ring read as a second outline). */
 .end-cta {
-  min-width: 240px !important;
   animation: ctaGlow 2.8s ease-in-out infinite;
 }
 @keyframes ctaGlow {
-  0%, 100% { box-shadow: 0 10px 30px -10px rgba(244, 63, 94, 0.6); }
-  50% { box-shadow: 0 10px 46px -6px rgba(244, 63, 94, 0.95), 0 0 0 6px rgba(244, 63, 94, 0.12); }
+  0%, 100% { box-shadow: 0 10px 30px -12px rgba(244, 63, 94, 0.55); }
+  50% { box-shadow: 0 12px 40px -10px rgba(244, 63, 94, 0.9); }
 }
 @media (prefers-reduced-motion: reduce) {
   .end-cta { animation: none; }
@@ -6365,11 +6365,16 @@ html.deep-water body::before {
   flex-wrap: wrap;
   justify-content: center;
   gap: 14px;
+  width: min(100%, 540px);
   margin-top: 18px;
 }
+/* The two buttons the same size side by side (they were 240 and 200
+   wide, which looked off); on a phone they wrap, one under the other. */
 .end-actions .btn {
+  flex: 1 1 0;
   width: auto;
   min-width: 200px;
+  max-width: 260px;
 }
 .landing-end .landing-report {
   margin-top: 8vh;
