@@ -5975,8 +5975,7 @@ html.deep-water body::before {
 }
 @media (hover: hover) {
   .landing-more .feature-row:hover,
-  .landing-more a.social-link:hover,
-  .landing-more .dev-team-entry:has(.dev-team-row-clickable):hover {
+  .landing-more a.social-link:hover {
     background: radial-gradient(60% 80% at 20% 50%, rgba(244, 63, 94, 0.1), transparent 70%);
   }
   /* Features and follow-us: on hover the item lifts a little over a red
@@ -6132,6 +6131,35 @@ html.deep-water body::before {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+}
+.landing-more .dev-team-row-clickable:hover {
+  background-color: transparent;
+}
+/* On hover a streak of light sweeps once across the round photo. */
+.dev-team-avatar {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.dev-team-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 220, 226, 0.22) 45%, rgba(255, 255, 255, 0.45) 50%, transparent 62%) no-repeat;
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  pointer-events: none;
+}
+@media (hover: hover) {
+  .dev-team-row-clickable:hover .dev-team-avatar::after {
+    background-position: -30% 0;
+    transition: background-position 0.8s ease;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dev-team-avatar::after { display: none; }
 }
 .landing-more .dev-team-avatar-img,
 .landing-more .dev-team-avatar-fallback {

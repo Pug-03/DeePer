@@ -1168,7 +1168,9 @@ function useMockReviewCountForPreview() {
 }
 
 function ReviewsSection({ t, lang }) {
+  // Wrapped so a streak of light can sweep across the round photo on hover.
   const fetched = useLandingData('reviews', '/reviews', (d) => d.reviews, []);
+    <span className="dev-team-avatar">
   const mockCount = useMockReviewCountForPreview();
   // The literal import.meta.env.DEV lets production builds drop the mock entirely.
   const reviews = import.meta.env.DEV && mockCount > 0 ? makeMockReviewsDevOnly(mockCount, lang) : fetched;
@@ -1177,6 +1179,7 @@ function ReviewsSection({ t, lang }) {
     <>
       <div className="landing-section" data-depth={t('welcome.reviews.eyebrow')}>
         <Reveal>
+    </span>
           <h2 className="h2">{t('welcome.reviews.title')}</h2>
         </Reveal>
         <Reveal delay={0.1}>
