@@ -49,7 +49,7 @@ router.post('/mine', requireAuth, reviewLimiter, (req, res) => {
       .status(400)
       .json({ error: `รีวิวต้องยาว ${MIN_LEN}–${MAX_LEN} ตัวอักษร`, error_code: 'REVIEW_LENGTH' });
   if (!REVIEW_RELATIONS.includes(relation))
-    return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
+    return res.status(400).json({ error: 'กรุณาเลือกว่าใช้กับใคร', error_code: 'REVIEW_RELATION_INVALID' });
 
   db.prepare(
     `INSERT INTO reviews (user_id, text, relation) VALUES (?, ?, ?)

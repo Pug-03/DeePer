@@ -733,7 +733,7 @@ function Sponsors({ onLogout }) {
       <form className="glass admin-card admin-sponsor-form" onSubmit={add}>
         <p className="admin-chart-title">เพิ่ม{keepWord('สปอนเซอร์')}</p>
         <label className="admin-logo-drop">
-          <input type="file" accept="image/png,image/svg+xml,image/webp,image/jpeg" hidden onChange={pickLogo} />
+          <input type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={pickLogo} />
           {preview ? <img src={preview} alt="ตัวอย่างโลโก้" /> : <span>แนบโลโก้ (ไม่เกิน 2MB)</span>}
         </label>
         <div className="field">

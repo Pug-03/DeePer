@@ -19,7 +19,12 @@ const SOURCE_HOSTS = [
 // referrer's host; otherwise a direct visit.
 function sourceOf(ref, referrer) {
   const tag = String(ref || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 30);
-  if (tag) return { ig: 'instagram', tt: 'tiktok', fb: 'facebook' }[tag] || tag;
+  // Only tags we hand out (or a known source's own name); anything else a
+  // visitor types into ?ref= counts as "other" instead of a new chart row.
+  if (tag) {
+    const named = { ig: 'instagram', tt: 'tiktok', fb: 'facebook' }[tag] || tag;
+    return SOURCE_HOSTS.some(([, name]) => name === named) ? named : 'other';
+  }
   let host = '';
   try {
     host = new URL(String(referrer || '')).hostname.toLowerCase();

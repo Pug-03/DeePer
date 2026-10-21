@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { OAuth2Client } from 'google-auth-library';
 import multer from 'multer';
 import fs from 'node:fs';
-import { randomInt, timingSafeEqual } from 'node:crypto';
+import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { join, basename } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
@@ -39,7 +39,8 @@ const AVATAR_MIME_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp
 const avatarUpload = multer({
   storage: multer.diskStorage({
     destination: AVATAR_DIR,
-    filename: (req, file, cb) => cb(null, `${req.user.id}-${Date.now()}${AVATAR_MIME_EXT[file.mimetype]}`),
+    // Random names: "<userId>-<time>" let anyone walk through everyone's photos.
+    filename: (req, file, cb) => cb(null, `${randomBytes(16).toString('hex')}${AVATAR_MIME_EXT[file.mimetype]}`),
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, !!AVATAR_MIME_EXT[file.mimetype]),
@@ -47,8 +48,7 @@ const avatarUpload = multer({
 const partnerAvatarUpload = multer({
   storage: multer.diskStorage({
     destination: PARTNER_AVATAR_DIR,
-    filename: (req, file, cb) =>
-      cb(null, `${req.user.id}-${req.params.category}-${Date.now()}${AVATAR_MIME_EXT[file.mimetype]}`),
+    filename: (req, file, cb) => cb(null, `${randomBytes(16).toString('hex')}${AVATAR_MIME_EXT[file.mimetype]}`),
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, !!AVATAR_MIME_EXT[file.mimetype]),

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { join, basename } from 'node:path';
 import { db } from '../db.js';
+import { isRealImage } from '../images.js';
 import { requireAdmin } from '../auth.js';
 import { approveProofs, revokeProofs } from '../supporters.js';
 import { sendMail } from '../mailer.js';
@@ -384,7 +385,8 @@ const SPONSOR_TIERS = ['high', 'medium', 'general'];
 const SPONSOR_DIR = join(UPLOADS_DIR, 'sponsors');
 fs.mkdirSync(SPONSOR_DIR, { recursive: true });
 
-const LOGO_MIME_EXT = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg', 'image/svg+xml': '.svg' };
+// No SVG: an SVG served from our own domain can carry script.
+const LOGO_MIME_EXT = { 'image/png': '.png', 'image/webp': '.webp', 'image/jpeg': '.jpg' };
 const logoUpload = multer({
   storage: multer.diskStorage({
     destination: SPONSOR_DIR,
@@ -418,7 +420,8 @@ router.get('/sponsors', (req, res) => {
 
 router.post('/sponsors', (req, res) =>
   logoUpload.single('logo')(req, res, (err) => {
-    if (err) return sponsorError(req, res, 'อัปโหลดโลโก้ไม่สำเร็จ (ไฟล์ใหญ่เกิน 2MB หรือชนิดไม่รองรับ)', 'LOGO_UPLOAD_FAILED');
+    if (err || (req.file && !isRealImage(req.file.path)))
+      return sponsorError(req, res, 'อัปโหลดโลโก้ไม่สำเร็จ (ไฟล์ใหญ่เกิน 2MB หรือชนิดไม่รองรับ)', 'LOGO_UPLOAD_FAILED');
     const name = String(req.body.name || '').trim().slice(0, 60);
     const tier = String(req.body.tier || '');
     const { link, error } = cleanLink(req.body.link);
