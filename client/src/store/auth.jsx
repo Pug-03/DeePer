@@ -18,11 +18,30 @@ export function AuthProvider({ children }) {
       setLoading(false);
       return;
     }
-    api
-      .get('/auth/me')
-      .then((d) => setUser(d.user))
-      .catch(() => setToken(null))
-      .finally(() => setLoading(false));
+    // Only a server saying the session is over (401) signs the person out.
+    // A network error or a 5xx/502 (no signal, or the host mid-deploy) used
+    // to delete the token too, logging everyone out at each deploy: now it's
+    // tried again a couple of times and, if it still fails, the token is
+    // kept for the next visit.
+    let cancelled = false;
+    const load = async (tries) => {
+      try {
+        const d = await api.get('/auth/me');
+        if (!cancelled) setUser(d.user);
+      } catch (e) {
+        if (cancelled) return;
+        if (e.status === 401) setToken(null);
+        else if (tries > 0) {
+          await new Promise((r) => setTimeout(r, 2500));
+          return load(tries - 1);
+        }
+      }
+      if (!cancelled) setLoading(false);
+    };
+    load(2);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const applyAuth = useCallback((token, u) => {
