@@ -19,7 +19,7 @@ export default function Answer() {
   const preset = loc.state?.answers;
 
   const partnerDefault = t('answer.partnerDefault');
-  const [turn, setTurn] = useState('me'); // me | partner
+  const [turn, setTurn] = useState(loc.state?.turn || 'me'); // me | partner
   const [myAnswer, setMyAnswer] = useState(preset?.my_answer || '');
   const [partnerAnswer, setPartnerAnswer] = useState(preset?.partner_answer || '');
   // Each category has its own partner (set in Profile, not here) — look it
@@ -146,7 +146,15 @@ export default function Answer() {
             type="button"
             className="link"
             style={{ fontSize: 13, color: 'var(--text-faint)', marginTop: 6, alignSelf: 'flex-start' }}
-            onClick={() => nav('/app/profile/partner')}
+            onClick={() => {
+              // Keep what's been typed: written into this page's own history
+              // entry, so Back from the partner page brings both answers back.
+              nav(loc.pathname, {
+                replace: true,
+                state: { ...loc.state, turn: 'partner', answers: { ...preset, my_answer: myAnswer, partner_answer: partnerAnswer } },
+              });
+              nav('/app/profile/partner');
+            }}
           >
             {t('answer.partnerNameHint')}
           </button>
