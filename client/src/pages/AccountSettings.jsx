@@ -17,7 +17,7 @@ export default function AccountSettings() {
   // Opened straight from a link or after a reload there's no app page to
   // go back to, so fall back to the page this one is opened from.
   const goBack = () => (location.key !== 'default' ? nav(-1) : nav('/app/profile', { replace: true }));
-  const { user, setUser, logout } = useAuth();
+  const { user, setUser, logout, signOut } = useAuth();
   const { t } = useI18n();
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -57,8 +57,8 @@ export default function AccountSettings() {
     }
   };
 
-  const doLogout = () => {
-    logout();
+  const doLogout = async () => {
+    await signOut();
     nav('/', { replace: true });
   };
 

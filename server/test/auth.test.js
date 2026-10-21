@@ -307,3 +307,10 @@ test('a reset code dies after a few wrong guesses, and asking again voids the ol
   const after = await anon.post('/auth/password-reset/confirm', { email, code: second, password: 'Dd4$dddd' });
   assert.equal(after.body.error_code, 'OTP_NOT_VERIFIED_RESET');
 });
+
+test('logging out ends that session on the server, not just on the device', async () => {
+  const { token } = await registerUser(base);
+  const me = api(base, token);
+  assert.equal((await me.post('/auth/logout')).status, 200);
+  assert.equal((await me.get('/auth/me')).status, 401);
+});

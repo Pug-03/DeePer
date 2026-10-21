@@ -611,6 +611,15 @@ router.delete('/me/login-history/:id', requireAuth, (req, res) => {
 // --- Log out of every OTHER device/session at once — revokes every
 // not-yet-revoked login_history row for this user except the one the
 // current request came in on.
+// --- Sign out: ends this device's session on the server too, so a copy
+// of the token stops working instead of lasting out its 30 days ---
+router.post('/logout', requireAuth, (req, res) => {
+  db.prepare(`UPDATE login_history SET revoked_at = datetime('now') WHERE id = ? AND revoked_at IS NULL`).run(
+    req.sessionId,
+  );
+  res.json({ ok: true });
+});
+
 router.post('/me/logout-other-devices', requireAuth, (req, res) => {
   const { changes } = db
     .prepare(

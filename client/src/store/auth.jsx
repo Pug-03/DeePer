@@ -54,6 +54,17 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  // The "log out" button: ends the session on the server as well, then
+  // forgets it here. Signed out locally even if the server can't be reached.
+  const signOut = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      /* offline: the token is still dropped below */
+    }
+    logout();
+  }, [logout]);
+
   // Any request anywhere that comes back with an invalid/expired token
   // routes through this so the user lands back on Login instead of being
   // stuck on a page that can no longer load anything — see api.js.
@@ -69,7 +80,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, config, applyAuth, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, config, applyAuth, logout, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
