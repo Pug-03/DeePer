@@ -76,6 +76,9 @@ export async function sendOtpEmail(to, code, purpose = 'register') {
   const { text, html } = otpBodies(code, purpose);
 
   if (!transporter) {
+    // In production a missing SMTP setup is an error, not a reason to print
+    // people's codes into the host's logs.
+    if (process.env.NODE_ENV === 'production') throw new Error('SMTP is not configured');
     // Dev fallback — visible in the terminal running the server.
     console.log(`\n========== [DeePer OTP] ==========`);
     console.log(`  ส่งถึง: ${to}`);
@@ -101,6 +104,12 @@ export async function sendMail({ to, subject, text, html, attachments }) {
   // donor name) — keep them to one line.
   subject = String(subject).replace(/[\r\n]+/g, ' ');
   if (!transporter) {
+    // Production without SMTP: note that a mail was dropped, but never print
+    // its contents (reports and digests carry people's details).
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`[mailer] SMTP is not configured; dropped a mail (${subject})`);
+      return { delivered: false };
+    }
     console.log(`\n========== [DeePer mail — dev fallback] ==========`);
     console.log(`  ส่งถึง: ${to}`);
     console.log(`  หัวข้อ: ${subject}`);
