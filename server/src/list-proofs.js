@@ -1,10 +1,9 @@
 // Quick back-office view: print everyone who submitted transfer proof.
 // Run from the server folder:  npm run proofs
+import 'dotenv/config';
 import { join, basename } from 'node:path';
 import { db } from './db.js';
-import { UPLOADS_DIR } from './paths.js';
-
-const SLIP_DIR = join(UPLOADS_DIR, 'slips');
+import { SLIP_DIR } from './paths.js';
 
 // SELECT * (not an explicit column list) because fresh installs no longer
 // have the legacy transfer_at column at all — only pre-split-field databases

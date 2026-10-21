@@ -3,6 +3,7 @@
 // list everything with `npm run proofs`. Run from the server folder:
 //   npm run approve -- 12 15          approve proofs #12 and #15
 //   npm run approve -- --revoke 12    hide #12 again
+import 'dotenv/config';
 import { approveProofs, revokeProofs } from './supporters.js';
 
 const args = process.argv.slice(2);

@@ -1,5 +1,6 @@
 // Quick back-office view: print every bug / problem / idea report.
 // Run from the server folder:  npm run reports
+import 'dotenv/config';
 import { join } from 'node:path';
 import { db } from './db.js';
 import { REPORT_DIR } from './routes/reports.js';
