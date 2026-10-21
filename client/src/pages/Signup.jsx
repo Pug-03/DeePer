@@ -660,6 +660,11 @@ export default function Signup() {
                 // Checked as soon as the sixth digit goes in.
                 if (next.every(Boolean)) checkInvite(next);
               }}
+              onFill={(next) => {
+                setInviteDigits(next);
+                setInviteMsg('');
+                if (next.every(Boolean)) checkInvite(next);
+              }}
               status={inviteLockedUntil ? 'locked' : inviteStatus}
               statusText={
                 inviteLockedUntil
