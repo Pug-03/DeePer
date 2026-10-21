@@ -40,6 +40,8 @@ export function installErrorReporter() {
   });
   window.addEventListener('unhandledrejection', (e) => {
     const r = e.reason;
-    send(r?.message || String(r), r?.stack);
+    // A bare `reject()` has no reason at all; say so instead of "undefined".
+    const message = r?.message || (r === undefined ? 'Promise rejected with no reason' : String(r));
+    send(message, r?.stack);
   });
 }

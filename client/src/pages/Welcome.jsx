@@ -1762,8 +1762,9 @@ export default function Welcome() {
   // Sponsor logos added from the admin dashboard, after the hard-coded ones.
   const adminSponsors = useLandingData('sponsors', '/support/sponsors', (d) => d.sponsors, []);
   const sponsors = [...SPONSORS, ...adminSponsors];
+  // The literal import.meta.env.DEV lets production builds drop the mock entirely.
   const activeSupporters =
-    mockSupporterCount > 0
+    import.meta.env.DEV && mockSupporterCount > 0
       ? makeMockSupportersDevOnly(mockSupporterCount)
       : [
           ...SUPPORTERS,
