@@ -285,3 +285,14 @@ test('trash hides items from counts and the public list, restores, and only dele
 
   assert.equal((await admin.post('/admin/inquiries/999999/trash')).status, 404);
 });
+
+test('five wrong admin passwords lock admin sign-in for a while, from any IP', async () => {
+  const { resetAdminLock } = await import('../src/auth.js');
+  resetAdminLock();
+  for (let i = 0; i < 5; i++) assert.equal((await login(ADMIN_EMAIL, 'wrong-pass')).status, 401);
+  // Even the right password is refused while locked.
+  const locked = await login(ADMIN_EMAIL, ADMIN_PASSWORD);
+  assert.equal(locked.body.admin_token, undefined);
+  resetAdminLock();
+  assert.ok((await login(ADMIN_EMAIL, ADMIN_PASSWORD)).body.admin_token);
+});

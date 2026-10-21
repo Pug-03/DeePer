@@ -129,9 +129,15 @@ test('a slip that is not really an image is turned away and not kept', async () 
   });
   assert.equal(res.status, 400);
   assert.equal((await res.json()).error_code, 'SLIP_UPLOAD_FAILED');
-  // The file is removed asynchronously; give it a moment.
-  await new Promise((r) => setTimeout(r, 50));
-  assert.deepEqual(fs.readdirSync(slipsDir).filter((f) => !before.has(f)), []);
+  // The file is removed asynchronously: wait for it (up to a second, as a
+  // busy test run can take longer than a fixed short pause).
+  let left = [];
+  for (let i = 0; i < 20; i++) {
+    await new Promise((r) => setTimeout(r, 50));
+    left = fs.readdirSync(slipsDir).filter((f) => !before.has(f));
+    if (!left.length) break;
+  }
+  assert.deepEqual(left, []);
 });
 
 test('a slip is never a public file: only the review link (and the admin) can open it', async () => {

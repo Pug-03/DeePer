@@ -12,6 +12,7 @@ import { sendOtpEmail, mailerReady } from '../mailer.js';
 import {
   hashPassword,
   verifyPassword,
+  verifyPasswordOrWaste,
   signToken,
   validatePassword,
   publicUser,
@@ -377,7 +378,7 @@ router.post('/login', checkSecretLimiter, (req, res) => {
   if (checkAdminLogin(email, password)) return res.json({ admin_token: signAdminToken() });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user || !verifyPassword(password, user.password_hash))
+  if (!verifyPasswordOrWaste(password, user?.password_hash))
     return res
       .status(401)
       .json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', error_code: 'LOGIN_INVALID' });

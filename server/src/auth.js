@@ -138,16 +138,51 @@ export function optionalAuth(req, res, next) {
 // hash of the password come from ADMIN_EMAIL / ADMIN_PASSWORD_HASH (never
 // from the repo, which is public), so it also survives DB wipes. Generate
 // the hash with:  node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 10))" '<password>'
-const ADMIN_TTL = '12h';
+// Short-lived: an admin token can't be revoked early, so it shouldn't last.
+const ADMIN_TTL = '4h';
 
 const adminConfigured = () => !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD_HASH);
+
+// Wrong passwords for the admin email, counted across every IP: five in a
+// row lock admin sign-in for 15 minutes. In memory; a restart clears it.
+const ADMIN_MAX_FAILS = 5;
+const ADMIN_LOCK_MS = 15 * 60 * 1000;
+const adminFails = { count: 0, lockedUntil: 0 };
 
 export function checkAdminLogin(email, password) {
   if (!adminConfigured()) return false;
   const emailOk = String(email || '').trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase();
   // Always run the bcrypt compare so a wrong email takes as long as a wrong password.
   const passOk = bcrypt.compareSync(String(password || ''), process.env.ADMIN_PASSWORD_HASH);
-  return emailOk && passOk;
+  if (!emailOk) return false;
+  if (Date.now() < adminFails.lockedUntil) return false;
+  if (!passOk) {
+    adminFails.count += 1;
+    if (adminFails.count >= ADMIN_MAX_FAILS) {
+      adminFails.lockedUntil = Date.now() + ADMIN_LOCK_MS;
+      adminFails.count = 0;
+    }
+    return false;
+  }
+  adminFails.count = 0;
+  return true;
+}
+
+// Tests only.
+export function resetAdminLock() {
+  adminFails.count = 0;
+  adminFails.lockedUntil = 0;
+}
+
+// Compared against when no account has the typed email, so a login for an
+// unknown address takes as long as one with a wrong password.
+const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
+export function verifyPasswordOrWaste(plain, hash) {
+  if (!hash) {
+    bcrypt.compareSync(String(plain || ''), DUMMY_HASH);
+    return false;
+  }
+  return verifyPassword(plain, hash);
 }
 
 // For Google sign-in: Google has already proven the person owns this inbox,
