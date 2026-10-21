@@ -13,13 +13,15 @@ if (process.env.NODE_ENV === 'production' && JWT_SECRET === 'dev-secret-change-m
   throw new Error('JWT_SECRET must be set in production — refusing to start with the default dev secret');
 }
 
+// Async on purpose: a sync bcrypt call blocks Node's single thread for
+// ~50-100 ms, so a burst of wrong logins used to stall every other request.
 export function hashPassword(plain) {
-  return bcrypt.hashSync(plain, 10);
+  return bcrypt.hash(plain, 10);
 }
 
-export function verifyPassword(plain, hash) {
+export async function verifyPassword(plain, hash) {
   if (!hash) return false;
-  return bcrypt.compareSync(plain, hash);
+  return bcrypt.compare(plain, hash);
 }
 
 // sessionId is the login_history row id created for this login (see
@@ -149,12 +151,12 @@ const ADMIN_MAX_FAILS = 5;
 const ADMIN_LOCK_MS = 15 * 60 * 1000;
 const adminFails = { count: 0, lockedUntil: 0 };
 
-export function checkAdminLogin(email, password) {
+export async function checkAdminLogin(email, password) {
   if (!adminConfigured()) return false;
-  const emailOk = String(email || '').trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase();
-  // Always run the bcrypt compare so a wrong email takes as long as a wrong password.
-  const passOk = bcrypt.compareSync(String(password || ''), process.env.ADMIN_PASSWORD_HASH);
-  if (!emailOk) return false;
+  // Any other email skips the admin compare: the login route still runs one
+  // compare for it (the user's hash or a dummy), so its timing is unchanged.
+  if (!isAdminEmail(email)) return false;
+  const passOk = await bcrypt.compare(String(password || ''), process.env.ADMIN_PASSWORD_HASH);
   if (Date.now() < adminFails.lockedUntil) return false;
   if (!passOk) {
     adminFails.count += 1;
@@ -177,9 +179,9 @@ export function resetAdminLock() {
 // Compared against when no account has the typed email, so a login for an
 // unknown address takes as long as one with a wrong password.
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
-export function verifyPasswordOrWaste(plain, hash) {
+export async function verifyPasswordOrWaste(plain, hash) {
   if (!hash) {
-    bcrypt.compareSync(String(plain || ''), DUMMY_HASH);
+    await bcrypt.compare(String(plain || ''), DUMMY_HASH);
     return false;
   }
   return verifyPassword(plain, hash);

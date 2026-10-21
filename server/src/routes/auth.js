@@ -318,7 +318,7 @@ function ageError(age) {
 }
 
 // --- Step 3: complete email signup ---
-router.post('/register', submitLimiter, (req, res) => {
+router.post('/register', submitLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { nickname, age, gender, password, accept_privacy: acceptPrivacy } = req.body;
@@ -341,6 +341,9 @@ router.post('/register', submitLimiter, (req, res) => {
       error_code: 'PASSWORD_WEAK',
     });
 
+  // Hashed before the code check so nothing awaits between checking the
+  // code and using it up (two quick submits can't both get through).
+  const passwordHash = await hashPassword(password);
   const { otp } = checkOtp(email, 'register', code);
   if (!otp)
     return res
@@ -363,7 +366,7 @@ router.post('/register', submitLimiter, (req, res) => {
       String(nickname).trim(),
       age ? Number(age) : null,
       gender || null,
-      hashPassword(password),
+      passwordHash,
       PRIVACY_VERSION,
     );
 
@@ -375,7 +378,7 @@ router.post('/register', submitLimiter, (req, res) => {
 });
 
 // --- Email + password login ---
-router.post('/login', checkSecretLimiter, (req, res) => {
+router.post('/login', checkSecretLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   if (!isEmail(email) || !password)
@@ -385,10 +388,10 @@ router.post('/login', checkSecretLimiter, (req, res) => {
 
   // The admin signs in on this same form: their credentials (from env, not
   // the users table) get an admin token instead of a user session.
-  if (checkAdminLogin(email, password)) return res.json({ admin_token: signAdminToken() });
+  if (await checkAdminLogin(email, password)) return res.json({ admin_token: signAdminToken() });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!verifyPasswordOrWaste(password, user?.password_hash))
+  if (!(await verifyPasswordOrWaste(password, user?.password_hash)))
     return res
       .status(401)
       .json({ error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง', error_code: 'LOGIN_INVALID' });
@@ -442,7 +445,7 @@ router.post('/password-reset/verify', checkSecretLimiter, (req, res) => {
 });
 
 // --- Forgot password — Step 3: set new password (auto-login on success) ---
-router.post('/password-reset/confirm', submitLimiter, (req, res) => {
+router.post('/password-reset/confirm', submitLimiter, async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { password } = req.body;
@@ -455,6 +458,8 @@ router.post('/password-reset/confirm', submitLimiter, (req, res) => {
       error_code: 'PASSWORD_WEAK',
     });
 
+  // Hashed before the code check, as in /register.
+  const passwordHash = await hashPassword(password);
   const { otp } = checkOtp(email, 'reset', code);
   if (!otp)
     return res
@@ -467,10 +472,7 @@ router.post('/password-reset/confirm', submitLimiter, (req, res) => {
       .status(404)
       .json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้', error_code: 'EMAIL_NOT_FOUND' });
 
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(
-    hashPassword(password),
-    user.id,
-  );
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, user.id);
   db.prepare('UPDATE otp_codes SET consumed = 1 WHERE id = ?').run(otp.id);
   // A reset usually means the old password can't be trusted: sign every
   // existing session out, so whoever might have it is logged out too.
@@ -576,7 +578,7 @@ router.post('/google', async (req, res) => {
         String(nickname).trim(),
         age ? Number(age) : null,
         gender || null,
-        hashPassword(password),
+        await hashPassword(password),
         PRIVACY_VERSION,
       );
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
@@ -775,7 +777,7 @@ router.delete('/me/partner/:category/avatar', requireAuth, (req, res) => {
 // --- Change / set password. Accounts created via Google have no
 // password_hash yet, so current_password isn't required for them — this
 // doubles as the "add a password" flow that also unlocks email login.
-router.post('/me/password', requireAuth, (req, res) => {
+router.post('/me/password', requireAuth, async (req, res) => {
   const u = req.user;
   const currentPassword = String(req.body.current_password || '');
   const newPassword = req.body.new_password;
@@ -785,7 +787,7 @@ router.post('/me/password', requireAuth, (req, res) => {
       return res
         .status(400)
         .json({ error: 'กรุณากรอกรหัสผ่าน', error_code: 'PASSWORD_REQUIRED' });
-    if (!verifyPassword(currentPassword, u.password_hash))
+    if (!(await verifyPassword(currentPassword, u.password_hash)))
       return res
         .status(401)
         .json({ error: 'รหัสผ่านไม่ถูกต้อง', error_code: 'PASSWORD_INCORRECT' });
@@ -796,7 +798,7 @@ router.post('/me/password', requireAuth, (req, res) => {
       error_code: 'PASSWORD_WEAK',
     });
 
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(newPassword), u.id);
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(await hashPassword(newPassword), u.id);
   // Changing the password signs out every other device; this one stays in.
   db.prepare(
     `UPDATE login_history SET revoked_at = datetime('now')
@@ -849,7 +851,7 @@ router.delete('/me/avatar', requireAuth, (req, res) => {
 });
 
 // --- Delete account ---
-router.delete('/me', requireAuth, (req, res) => {
+router.delete('/me', requireAuth, async (req, res) => {
   const u = req.user;
   const password = String(req.body.password || '');
 
@@ -858,7 +860,7 @@ router.delete('/me', requireAuth, (req, res) => {
       return res
         .status(400)
         .json({ error: 'กรุณากรอกรหัสผ่าน', error_code: 'PASSWORD_REQUIRED' });
-    if (!verifyPassword(password, u.password_hash))
+    if (!(await verifyPassword(password, u.password_hash)))
       return res
         .status(401)
         .json({ error: 'รหัสผ่านไม่ถูกต้อง', error_code: 'PASSWORD_INCORRECT' });
