@@ -151,7 +151,7 @@ export default function Report() {
           <div className="field" style={{ marginBottom: 0 }}>
             <label>{t('report.screenshot')}</label>
             <label className="slip-drop">
-              <input type="file" accept="image/*" hidden onChange={onShot} />
+              <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" onChange={onShot} />
               {shotPreview ? (
                 <img className="slip-preview" src={shotPreview} alt={t('report.screenshot')} />
               ) : (

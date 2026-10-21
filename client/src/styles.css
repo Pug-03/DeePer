@@ -2974,6 +2974,7 @@ a.btn {
 }
 /* Slip upload — dashed dropzone that swaps to the chosen image preview */
 .slip-drop {
+  position: relative;
   display: block;
   cursor: pointer;
   border: 1.5px dashed var(--border-red);
@@ -2984,6 +2985,11 @@ a.btn {
 }
 .slip-drop:hover {
   background: rgba(244, 63, 94, 0.08);
+}
+/* The file input inside is visually hidden but still reachable by Tab. */
+.slip-drop:focus-within {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
 }
 .slip-drop-cta {
   display: flex;

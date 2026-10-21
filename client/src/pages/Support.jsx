@@ -170,7 +170,7 @@ export default function Support() {
 
         <form className="support-proof-form" onSubmit={submitProof}>
           <label className="slip-drop">
-            <input type="file" accept="image/*" hidden onChange={onSlip} />
+            <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" onChange={onSlip} />
             {slipPreview ? (
               <img className="slip-preview" src={slipPreview} alt={t('support.proofSlip')} />
             ) : (
