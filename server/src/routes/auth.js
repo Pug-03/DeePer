@@ -77,7 +77,10 @@ const upsertPartner = (userId, category, { name, color, icon, avatar_url }) =>
     )
     .run(userId, category, name, color, icon, avatar_url);
 
-const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+// At most 254 characters (the longest real address), plain local@domain
+// only: no comments, quotes or angle brackets for the mail parser to chew on.
+const isEmail = (s) =>
+  typeof s === 'string' && s.length <= 254 && /^[^\s@()<>,;:"\[\]\\]+@[^\s@()<>,;:"\[\]\\]+\.[^\s@()<>,;:"\[\]\\]+$/.test(s);
 
 // One-time codes (4 digits, mailed for signup and password reset). Guarding
 // them is what keeps a reset code from being guessed into someone's account:
