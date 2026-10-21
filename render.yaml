@@ -37,6 +37,28 @@ services:
         sync: false
       - key: INVITE_CODE
         sync: false
+      # Set in the dashboard (values stay there; sync: false only lists them
+      # so a Blueprint sync shows they're expected).
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: REPORTS_TO
+        sync: false
+      - key: SIGNUP_OPENS_AT
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_REPLY_TO
+        sync: false
+      - key: SUPPORT_DIGEST_TO
+        sync: false
+      - key: SUPPORT_DIGEST_DAYS
+        sync: false
       # Only the site itself may call the API from a browser (the iOS app
       # isn't a browser, so CORS doesn't apply to it).
       - key: CORS_ORIGIN
