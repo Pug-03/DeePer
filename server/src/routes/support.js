@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import fs from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { join, basename } from 'node:path';
@@ -78,7 +79,20 @@ const handleSlip = (req, res, next) =>
 // Supporter submits proof of transfer: slip image + date + time + amount +
 // display name. Stored immediately, and the maintainer is emailed the slip
 // with a review link to approve it (plus the batched digest every 15 days).
-router.post('/proof', requireAuth, handleSlip, (req, res) => {
+// A few proofs a day per account: each stores a 5 MB image and mails it.
+const proofLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 5,
+  keyGenerator: (req) => String(req.user.id),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'ส่งหลักฐานได้ไม่เกิน 5 ครั้งต่อวัน', error_code: 'PROOF_TOO_MANY' },
+});
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}$/;
+const AMOUNT_MAX = 1_000_000;
+
+router.post('/proof', requireAuth, proofLimiter, handleSlip, (req, res) => {
   const displayName = String(req.body.display_name || '').trim();
   const transferDate = String(req.body.transfer_date || '').trim();
   const transferTime = String(req.body.transfer_time || '').trim();
@@ -88,9 +102,9 @@ router.post('/proof', requireAuth, handleSlip, (req, res) => {
     return res.status(400).json({ error: 'กรุณาแนบสลิป', error_code: 'SLIP_REQUIRED' });
   if (!displayName)
     return res.status(400).json({ error: 'กรุณากรอกชื่อที่อยากให้แสดง', error_code: 'NAME_REQUIRED' });
-  if (!transferDate || !transferTime)
+  if (!DATE_RE.test(transferDate) || !TIME_RE.test(transferTime))
     return res.status(400).json({ error: 'กรุณาระบุวันและเวลาที่โอน', error_code: 'DATETIME_REQUIRED' });
-  if (!Number.isFinite(amount) || amount <= 0)
+  if (!Number.isFinite(amount) || amount <= 0 || amount > AMOUNT_MAX)
     return res.status(400).json({ error: 'กรุณาระบุจำนวนเงินให้ถูกต้อง', error_code: 'AMOUNT_INVALID' });
 
   const slipUrl = req.file.filename;

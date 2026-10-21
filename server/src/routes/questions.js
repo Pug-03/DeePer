@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CATEGORIES, LEVELS } from '../questions-bank.js';
@@ -30,7 +31,8 @@ router.get('/', requireAuth, (req, res) => {
   if (level && !LEVELS.includes(level))
     return res.status(400).json({ error: 'ระดับคำถามไม่ถูกต้อง', error_code: 'INVALID_LEVEL' });
 
-  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  // 1 to 50: a negative limit would read as "no limit" to SQLite.
+  const limit = Math.min(Math.max(Math.trunc(Number(req.query.limit)) || 20, 1), 50);
   const exclude = String(req.query.exclude || '')
     .split(',')
     .map((n) => Number(n))
@@ -51,8 +53,19 @@ router.get('/', requireAuth, (req, res) => {
   res.json({ questions: rows });
 });
 
+// A person's own questions: the add form allows 200 characters; the cap
+// here is the backstop, with a per-account pace a person never reaches.
+const QUESTION_MAX = 300;
+const addLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 30,
+  keyGenerator: (req) => String(req.user.id),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // A user adds their own question to a category.
-router.post('/', requireAuth, (req, res) => {
+router.post('/', requireAuth, addLimiter, (req, res) => {
   const category = req.body.category;
   const text = String(req.body.text || '').trim();
   if (!validCategory(category))
@@ -63,6 +76,8 @@ router.post('/', requireAuth, (req, res) => {
     return res
       .status(400)
       .json({ error: 'คำถามสั้นเกินไป', error_code: 'QUESTION_TOO_SHORT' });
+  if (text.length > QUESTION_MAX)
+    return res.status(400).json({ error: 'คำถามยาวเกินไป', error_code: 'QUESTION_TOO_LONG' });
 
   const info = db
     .prepare(`INSERT INTO questions (category, text, source, user_id) VALUES (?, ?, 'user', ?)`)
