@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
+import { getCachedList, setCachedList, fetchList } from '../utils/listCache.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { displayName, questionText, partnerLabel } from '../util.js';
@@ -63,6 +64,12 @@ export default function Answer() {
         partner_color: partnerColor,
         saved_id: savedId,
       });
+      // Saved and History show the change on the next tap, not after a refresh.
+      if (savedId) {
+        const saved = getCachedList(user?.id, 'saved');
+        if (saved) setCachedList(user?.id, 'saved', saved.filter((x) => x.id !== savedId));
+      }
+      fetchList(user?.id, 'history', { fresh: true }).catch(() => {});
       toast(
         <>
           <IcCheck size={16} /> {t('answer.saved')}

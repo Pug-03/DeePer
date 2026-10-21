@@ -426,6 +426,9 @@ export default function OnboardingTour() {
       {!closing && (
         <motion.div
           className="tut-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('profile.appTutorial')}
           // Appears at full strength: the dim layer inside already starts
           // dark to take over from the confirm dialog's backdrop, and fading
           // the whole overlay in on top of that let the page flash through.

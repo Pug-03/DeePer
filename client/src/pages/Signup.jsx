@@ -406,7 +406,11 @@ export default function Signup() {
     const file = await shrinkImage(picked, AVATAR_SIDE);
     if (file.size > AVATAR_MAX_BYTES) return toast(t('err.AVATAR_TOO_LARGE'));
     setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    // Free the previous preview's memory before making the next one.
+    setAvatarPreview((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return URL.createObjectURL(file);
+    });
   };
 
   // Best-effort: the account already exists by this point, so a failed

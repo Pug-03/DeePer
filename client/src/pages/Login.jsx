@@ -124,8 +124,9 @@ export default function Login() {
         )}
 
         <div className="field">
-          <label>{t('login.email')}</label>
+          <label htmlFor="login-email">{t('login.email')}</label>
           <input
+            id="login-email"
             className="input"
             type="email"
             inputMode="email"

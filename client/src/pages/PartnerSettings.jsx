@@ -81,6 +81,9 @@ export default function PartnerSettings() {
   const pickPartnerAvatar = () => partnerFileInputRef.current?.click();
 
   const onPartnerAvatarChange = async (e) => {
+    // The tab the photo was picked on, before the shrink below gives time to
+    // switch tabs (it used to upload to whichever tab was open by then).
+    const cat = activeCat;
     const picked = e.target.files?.[0];
     e.target.value = '';
     if (!picked) return;
@@ -97,7 +100,7 @@ export default function PartnerSettings() {
     try {
       const form = new FormData();
       form.append('avatar', file);
-      const d = await api.upload(`/auth/me/partner/${activeCat}/avatar`, form);
+      const d = await api.upload(`/auth/me/partner/${cat}/avatar`, form);
       setUser(d.user);
     } catch (err) {
       toast(err.message);

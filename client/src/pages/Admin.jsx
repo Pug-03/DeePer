@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Navigate } from 'react-router-dom';
 import { adminApi, getAdminToken, setAdminToken, AdminAuthError } from '../admin/adminApi.js';
@@ -360,6 +360,10 @@ function Reports({ onLogout, onChange }) {
   const { data, error, reload } = useAdminData(adminApi.reports, onLogout);
   const [filter, setFilter] = useState('open');
   const [shots, setShots] = useState({}); // id -> loaded image URL (kept once fetched)
+  // Free the loaded screenshots when leaving the tab.
+  const shotsRef = useRef(shots);
+  shotsRef.current = shots;
+  useEffect(() => () => Object.values(shotsRef.current).forEach((u) => URL.revokeObjectURL(u)), []);
   const [openShots, setOpenShots] = useState({}); // id -> currently shown
   const trash = useTrash('reports', 'รายงาน', { reload, onChange, onLogout });
 

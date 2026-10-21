@@ -31,6 +31,7 @@ export default function BottomNav() {
             onClick={() => nav(to)}
             // Icon-only tabs: the label lives here (and as a tooltip) only.
             aria-label={t(key)}
+            aria-current={active ? 'page' : undefined}
             title={t(key)}
           >
             <span className="nav-ic">

@@ -16,7 +16,7 @@ import { IcTrash, IcBookmark } from '../components/icons.jsx';
 // animation that replayed every time a card scrolled into view, which
 // looked different from History and cost more on phones.
 function SavedItem({ it, index, onAnswer, onRemove }) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
 
   return (
     <div
@@ -31,7 +31,7 @@ function SavedItem({ it, index, onAnswer, onRemove }) {
       <p className="ci-q">{questionText(it.question_text, it.question_text_en, lang)}</p>
       <div className="ci-meta">
         <span>{formatDate(it.created_at)}</span>
-        <button className="icon-del" onClick={(e) => onRemove(e, it.id)} aria-label="delete">
+        <button className="icon-del" onClick={(e) => onRemove(e, it.id)} aria-label={t('confirm.delete')}>
           <IcTrash size={18} />
         </button>
       </div>
@@ -98,7 +98,12 @@ export default function Saved() {
     if (!ok) return;
     try {
       await api.del(`/saved/${id}`);
-      setItems((prev) => prev.filter((x) => x.id !== id));
+      setItems((prev) => {
+        const next = prev.filter((x) => x.id !== id);
+        // The last one gone: the page's own empty state, not "none in this filter".
+        if (!next.length) setStatus('empty');
+        return next;
+      });
       toast(t('saved.removed'));
     } catch (e2) {
       toast(e2.message);

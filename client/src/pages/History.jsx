@@ -61,7 +61,11 @@ export default function History() {
     if (!ok) return;
     try {
       await api.del(`/history/${id}`);
-      setItems((prev) => prev.filter((x) => x.id !== id));
+      setItems((prev) => {
+        const next = prev.filter((x) => x.id !== id);
+        if (!next.length) setStatus('empty');
+        return next;
+      });
       toast(t('history.removed'));
     } catch (e2) {
       toast(e2.message);
