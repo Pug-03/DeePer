@@ -365,6 +365,7 @@ function Reports({ onLogout, onChange }) {
   shotsRef.current = shots;
   useEffect(() => () => Object.values(shotsRef.current).forEach((u) => URL.revokeObjectURL(u)), []);
   const [openShots, setOpenShots] = useState({}); // id -> currently shown
+  const loadingShots = useRef(new Set()); // a quick double-click fetches once
   const trash = useTrash('reports', 'รายงาน', { reload, onChange, onLogout });
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -399,13 +400,16 @@ function Reports({ onLogout, onChange }) {
   };
   const showShot = async (id) => {
     setOpenShots((o) => ({ ...o, [id]: true }));
-    if (shots[id]) return;
+    if (shots[id] || loadingShots.current.has(id)) return;
+    loadingShots.current.add(id);
     try {
       const blob = await adminApi.screenshot(id);
       setShots((s) => ({ ...s, [id]: URL.createObjectURL(blob) }));
     } catch (e) {
       setOpenShots((o) => ({ ...o, [id]: false }));
       if (e instanceof AdminAuthError) onLogout();
+    } finally {
+      loadingShots.current.delete(id);
     }
   };
 
@@ -659,6 +663,8 @@ function Sponsors({ onLogout }) {
   const [link, setLink] = useState('');
   const [logo, setLogo] = useState(null);
   const [preview, setPreview] = useState('');
+  // Frees the preview's memory when it's replaced or the page closes.
+  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
   const [busy, setBusy] = useState(false);
 
   if (error) return <ErrorState message={error} onRetry={reload} />;

@@ -394,6 +394,8 @@ export default function Signup() {
 
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  // Frees the preview's memory when it's replaced or the page closes.
+  useEffect(() => () => avatarPreview && URL.revokeObjectURL(avatarPreview), [avatarPreview]);
   const avatarInputRef = useRef(null);
 
   const onPickAvatar = () => avatarInputRef.current?.click();

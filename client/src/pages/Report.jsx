@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CheckBadge, { rise } from '../components/CheckBadge.jsx';
@@ -26,6 +26,8 @@ export default function Report() {
   const [contact, setContact] = useState('');
   const [shotFile, setShotFile] = useState(null);
   const [shotPreview, setShotPreview] = useState('');
+  // Frees the preview's memory when it's replaced or the page closes.
+  useEffect(() => () => shotPreview && URL.revokeObjectURL(shotPreview), [shotPreview]);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 

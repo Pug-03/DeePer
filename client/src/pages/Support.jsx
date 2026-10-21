@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
@@ -20,6 +20,8 @@ export default function Support() {
 
   const [slipFile, setSlipFile] = useState(null);
   const [slipPreview, setSlipPreview] = useState('');
+  // Frees the preview's memory when it's replaced or the page closes.
+  useEffect(() => () => slipPreview && URL.revokeObjectURL(slipPreview), [slipPreview]);
   const [transferDate, setTransferDate] = useState('');
   const [transferTime, setTransferTime] = useState('');
   const [amount, setAmount] = useState('');
