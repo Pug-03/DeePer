@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { api, getToken, setToken, setSessionExpiredHandler } from '../api.js';
+import { setAdminToken } from '../admin/adminApi.js';
 
 const AuthContext = createContext(null);
 
@@ -62,6 +63,9 @@ export function AuthProvider({ children }) {
     } catch {
       /* offline: the token is still dropped below */
     }
+    // An admin sign-in on this device ends with it too, so the next person
+    // can't open /admin on a shared phone or computer.
+    setAdminToken(null);
     logout();
   }, [logout]);
 
