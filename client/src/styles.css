@@ -6204,10 +6204,12 @@ html.deep-water body::before {
 .end-run {
   --p: 0;
   position: relative;
-  height: 360svh;
+  /* Scenes play over the first ~2.6 screens (1.4 on a phone, useEndRun);
+     the rest holds the finished scene, so the footer takes a long scroll. */
+  height: 640svh;
 }
 @media (max-width: 759px) {
-  .end-run { height: 240svh; }
+  .end-run { height: 420svh; }
 }
 .end-stage {
   position: sticky;

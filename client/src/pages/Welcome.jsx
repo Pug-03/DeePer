@@ -194,7 +194,11 @@ function useEndRun() {
     let run = 1;
     const measure = () => {
       top = el.getBoundingClientRect().top + window.scrollY;
-      run = Math.max(1, el.offsetHeight - window.innerHeight);
+      // The scenes play over the first stretch of scroll (the same pace as
+      // before); the rest of .end-run is a long hold on the finished scene
+      // before the footer comes.
+      const play = window.innerHeight * (window.innerWidth < 760 ? 1.4 : 2.6);
+      run = Math.max(1, Math.min(el.offsetHeight - window.innerHeight, play));
     };
     let frame = 0;
     let shown = '';
