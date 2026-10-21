@@ -100,12 +100,16 @@ router.post('/proof', requireAuth, proofLimiter, handleSlip, (req, res) => {
 
   if (!req.file)
     return res.status(400).json({ error: 'กรุณาแนบสลิป', error_code: 'SLIP_REQUIRED' });
-  if (!displayName)
-    return res.status(400).json({ error: 'กรุณากรอกชื่อที่อยากให้แสดง', error_code: 'NAME_REQUIRED' });
+  // A rejected proof has no row pointing at its slip, so drop the file too.
+  const reject = (body) => {
+    fs.rm(req.file.path, { force: true }, () => {});
+    res.status(400).json(body);
+  };
+  if (!displayName) return reject({ error: 'กรุณากรอกชื่อที่อยากให้แสดง', error_code: 'NAME_REQUIRED' });
   if (!DATE_RE.test(transferDate) || !TIME_RE.test(transferTime))
-    return res.status(400).json({ error: 'กรุณาระบุวันและเวลาที่โอน', error_code: 'DATETIME_REQUIRED' });
+    return reject({ error: 'กรุณาระบุวันและเวลาที่โอน', error_code: 'DATETIME_REQUIRED' });
   if (!Number.isFinite(amount) || amount <= 0 || amount > AMOUNT_MAX)
-    return res.status(400).json({ error: 'กรุณาระบุจำนวนเงินให้ถูกต้อง', error_code: 'AMOUNT_INVALID' });
+    return reject({ error: 'กรุณาระบุจำนวนเงินให้ถูกต้อง', error_code: 'AMOUNT_INVALID' });
 
   const slipUrl = req.file.filename;
   const token = randomBytes(24).toString('hex');
