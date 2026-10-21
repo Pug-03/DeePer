@@ -8,7 +8,7 @@ import { db } from '../db.js';
 import { isRealImage } from '../images.js';
 import { optionalAuth } from '../auth.js';
 import { sendMail } from '../mailer.js';
-import { PRIVATE_UPLOADS_DIR } from '../paths.js';
+import { PRIVATE_UPLOADS_DIR, requireDiskSpace } from '../paths.js';
 
 const router = Router();
 
@@ -70,7 +70,7 @@ const reject = (req, res, status, error, code) => {
 // Bug / problem / idea report from anyone, signed in or not. Stored first,
 // then emailed to the maintainer right away (Render's free plan wipes the DB
 // on redeploy, so the email is what actually reaches a person).
-router.post('/', reportLimiter, optionalAuth, handleShot, (req, res) => {
+router.post('/', reportLimiter, optionalAuth, requireDiskSpace, handleShot, (req, res) => {
   const category = String(req.body.category || '');
   const message = String(req.body.message || '').trim();
   const contact = String(req.body.contact || '').trim().slice(0, 120);

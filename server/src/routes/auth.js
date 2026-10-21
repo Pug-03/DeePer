@@ -21,7 +21,7 @@ import {
   isAdminEmail,
   signAdminToken,
 } from '../auth.js';
-import { UPLOADS_DIR } from '../paths.js';
+import { UPLOADS_DIR, requireDiskSpace } from '../paths.js';
 import { inviteRequired, signupGateError } from '../signupGate.js';
 import { slipFile } from './support.js';
 
@@ -729,7 +729,7 @@ router.patch('/me/partner/:category', requireAuth, (req, res) => {
 });
 
 // --- Upload a category's partner photo (clears any picked icon) ---
-router.post('/me/partner/:category/avatar', requireAuth, (req, res) => {
+router.post('/me/partner/:category/avatar', requireAuth, requireDiskSpace, (req, res) => {
   const { category } = req.params;
   if (!CATEGORIES.includes(category))
     return res.status(400).json({ error: 'หมวดไม่ถูกต้อง', error_code: 'INVALID_CATEGORY' });
@@ -812,7 +812,7 @@ router.post('/me/password', requireAuth, checkSecretLimiter, async (req, res) =>
 });
 
 // --- Upload profile picture ---
-router.post('/me/avatar', requireAuth, (req, res) => {
+router.post('/me/avatar', requireAuth, requireDiskSpace, (req, res) => {
   avatarUpload.single('avatar')(req, res, (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE')

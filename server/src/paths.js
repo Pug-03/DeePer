@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -17,3 +18,31 @@ export const PRIVATE_UPLOADS_DIR = join(DATA_DIR, 'private-uploads');
 // (see moveOldSlips in routes/support.js).
 export const SLIP_DIR = join(PRIVATE_UPLOADS_DIR, 'slips');
 export const OLD_PUBLIC_SLIP_DIR = join(UPLOADS_DIR, 'slips');
+
+// The data disk holds the DB and every upload, so a full disk stops the
+// whole app (SQLite can't write). Uploads are refused while free space is
+// under this floor, which leaves room for the database to keep working.
+const MIN_FREE_BYTES = 200 * 1024 * 1024;
+
+export function diskFreeBytes() {
+  try {
+    const s = fs.statfsSync(DATA_DIR);
+    return s.bavail * s.bsize;
+  } catch {
+    return null;
+  }
+}
+
+export const diskLow = () => {
+  const free = diskFreeBytes();
+  return free != null && free < MIN_FREE_BYTES;
+};
+
+// Route guard, placed before multer so nothing is written.
+export function requireDiskSpace(req, res, next) {
+  if (diskLow()) {
+    console.error('[disk] free space under 200 MB, refusing upload');
+    return res.status(507).json({ error: 'พื้นที่เก็บไฟล์ใกล้เต็ม ส่งรูปไม่ได้ชั่วคราว', error_code: 'STORAGE_FULL' });
+  }
+  next();
+}

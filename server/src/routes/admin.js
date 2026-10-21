@@ -9,7 +9,7 @@ import { requireAdmin } from '../auth.js';
 import { approveProofs, revokeProofs } from '../supporters.js';
 import { sendMail } from '../mailer.js';
 import { REPORT_DIR } from './reports.js';
-import { UPLOADS_DIR } from '../paths.js';
+import { UPLOADS_DIR, requireDiskSpace } from '../paths.js';
 import { slipFile } from './support.js';
 import { testerInviteEmail } from '../testerInvite.js';
 
@@ -418,7 +418,7 @@ router.get('/sponsors', (req, res) => {
   res.json({ sponsors: db.prepare('SELECT * FROM sponsors ORDER BY created_at, id').all() });
 });
 
-router.post('/sponsors', (req, res) =>
+router.post('/sponsors', requireDiskSpace, (req, res) =>
   logoUpload.single('logo')(req, res, (err) => {
     if (err || (req.file && !isRealImage(req.file.path)))
       return sponsorError(req, res, 'อัปโหลดโลโก้ไม่สำเร็จ (ไฟล์ใหญ่เกิน 2MB หรือชนิดไม่รองรับ)', 'LOGO_UPLOAD_FAILED');

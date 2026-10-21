@@ -9,7 +9,7 @@ import { isRealImage } from '../images.js';
 import { requireAuth } from '../auth.js';
 import { approvedSupporterNames, approveProofs, revokeProofs, proofByToken } from '../supporters.js';
 import { sendMail } from '../mailer.js';
-import { SLIP_DIR, OLD_PUBLIC_SLIP_DIR } from '../paths.js';
+import { SLIP_DIR, OLD_PUBLIC_SLIP_DIR, requireDiskSpace } from '../paths.js';
 
 const router = Router();
 
@@ -92,7 +92,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
 const AMOUNT_MAX = 1_000_000;
 
-router.post('/proof', requireAuth, proofLimiter, handleSlip, (req, res) => {
+router.post('/proof', requireAuth, proofLimiter, requireDiskSpace, handleSlip, (req, res) => {
   const displayName = String(req.body.display_name || '').trim();
   const transferDate = String(req.body.transfer_date || '').trim();
   const transferTime = String(req.body.transfer_time || '').trim();
