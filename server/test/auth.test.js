@@ -287,3 +287,23 @@ test('signing up needs the privacy policy accepted, and records when', async () 
   assert.ok(row.privacy_accepted_at);
   assert.ok(row.privacy_version);
 });
+
+test('a reset code dies after a few wrong guesses, and asking again voids the old code', async () => {
+  const email = uniqueEmail('otp-guard');
+  await registerUser(base, { email });
+  const anon = api(base);
+  const first = (await anon.post('/auth/password-reset/request', { email })).body.dev_code;
+  const second = (await anon.post('/auth/password-reset/request', { email })).body.dev_code;
+  // Only the newest code works.
+  if (first !== second) {
+    assert.equal((await anon.post('/auth/password-reset/verify', { email, code: first })).body.error_code, 'OTP_INVALID');
+  }
+  // Wrong guesses use the code up, even if the right one comes next.
+  const wrong = second === '1111' ? '2222' : '1111';
+  // (The old code above already counted as one wrong guess.)
+  const codes = [];
+  for (let i = 0; i < 5; i++) codes.push((await anon.post('/auth/password-reset/verify', { email, code: wrong })).body.error_code);
+  assert.ok(codes.includes('OTP_LOCKED'));
+  const after = await anon.post('/auth/password-reset/confirm', { email, code: second, password: 'Dd4$dddd' });
+  assert.equal(after.body.error_code, 'OTP_NOT_VERIFIED_RESET');
+});

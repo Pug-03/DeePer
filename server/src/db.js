@@ -202,6 +202,10 @@ const otpCols = db.prepare(`PRAGMA table_info(otp_codes)`).all();
 if (!otpCols.some((c) => c.name === 'purpose')) {
   db.exec(`ALTER TABLE otp_codes ADD COLUMN purpose TEXT NOT NULL DEFAULT 'register'`);
 }
+// Wrong guesses against a code (it stops working after a few: see checkOtp).
+if (!otpCols.some((c) => c.name === 'attempts')) {
+  db.exec(`ALTER TABLE otp_codes ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0`);
+}
 
 // Migration: older databases don't have users.avatar_url yet (added for
 // the profile picture feature) — add it so existing installs keep working.

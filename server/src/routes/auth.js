@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { OAuth2Client } from 'google-auth-library';
 import multer from 'multer';
 import fs from 'node:fs';
+import { randomInt, timingSafeEqual } from 'node:crypto';
 import { join, basename } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
@@ -77,7 +78,78 @@ const upsertPartner = (userId, category, { name, color, icon, avatar_url }) =>
     .run(userId, category, name, color, icon, avatar_url);
 
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-const genOtp = () => String(Math.floor(1000 + Math.random() * 9000)); // 4 digits
+
+// One-time codes (4 digits, mailed for signup and password reset). Guarding
+// them is what keeps a reset code from being guessed into someone's account:
+// - only the newest code for an email works (asking again voids the old ones),
+// - a code dies after OTP_MAX_TRIES wrong guesses,
+// - an email gets at most OTP_SENDS_PER_HOUR codes an hour,
+// all counted per email, so spreading guesses over many IPs doesn't help.
+const OTP_TTL_MS = 10 * 60 * 1000;
+const OTP_MAX_TRIES = 5;
+const OTP_SENDS_PER_HOUR = 5;
+const genOtp = () => String(randomInt(1000, 10000));
+
+// null when a new code may be sent, else { status, body }.
+function otpSendLimit(email, purpose) {
+  const { n } = db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM otp_codes WHERE email = ? AND purpose = ? AND created_at > datetime('now', '-1 hour')`,
+    )
+    .get(email, purpose);
+  if (n < OTP_SENDS_PER_HOUR) return null;
+  return {
+    status: 429,
+    body: { error: 'ขอรหัสบ่อยเกินไป ลองใหม่อีกครั้งในอีก 1 ชั่วโมง', error_code: 'OTP_TOO_MANY' },
+  };
+}
+
+// Voids this email's earlier codes for the purpose and stores a fresh one.
+function issueOtp(email, purpose) {
+  const code = genOtp();
+  db.prepare(`UPDATE otp_codes SET consumed = 1 WHERE email = ? AND purpose = ? AND consumed = 0`).run(email, purpose);
+  db.prepare(`INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?, ?, ?, ?)`).run(
+    email,
+    code,
+    purpose,
+    Date.now() + OTP_TTL_MS,
+  );
+  return code;
+}
+
+const sameCode = (a, b) => {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && timingSafeEqual(x, y);
+};
+
+// Checks a typed code against the email's live code. Returns { otp } when it
+// matches, or { error: { status, body } }. A wrong guess counts against the
+// code; the last allowed one kills it.
+function checkOtp(email, purpose, code) {
+  const otp = db
+    .prepare(`SELECT * FROM otp_codes WHERE email = ? AND purpose = ? AND consumed = 0 ORDER BY id DESC LIMIT 1`)
+    .get(email, purpose);
+  const invalid = { status: 400, body: { error: 'รหัส OTP ไม่ถูกต้อง', error_code: 'OTP_INVALID' } };
+  if (!otp) return { error: invalid };
+  if (otp.expires_at < Date.now())
+    return { error: { status: 400, body: { error: 'รหัส OTP หมดอายุแล้ว', error_code: 'OTP_EXPIRED' } } };
+  if (sameCode(otp.code, code)) return { otp };
+  const tries = otp.attempts + 1;
+  db.prepare('UPDATE otp_codes SET attempts = ?, consumed = ? WHERE id = ?').run(
+    tries,
+    tries >= OTP_MAX_TRIES ? 1 : 0,
+    otp.id,
+  );
+  if (tries >= OTP_MAX_TRIES)
+    return {
+      error: {
+        status: 400,
+        body: { error: 'ใส่รหัสผิดหลายครั้ง กรุณาขอรหัสใหม่', error_code: 'OTP_LOCKED' },
+      },
+    };
+  return { error: invalid };
+}
 
 // Logged at every token-issuing endpoint below (password login, Google,
 // register, password-reset) so the account settings "login history" view
@@ -154,11 +226,9 @@ router.post('/otp/request', sendCodeLimiter, async (req, res) => {
       .status(409)
       .json({ error: 'อีเมลนี้มีบัญชีอยู่แล้ว', error_code: 'EMAIL_TAKEN' });
 
-  const code = genOtp();
-  const expires = Date.now() + 10 * 60 * 1000;
-  db.prepare(
-    `INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?, ?, 'register', ?)`,
-  ).run(email, code, expires);
+  const tooMany = otpSendLimit(email, 'register');
+  if (tooMany) return res.status(tooMany.status).json(tooMany.body);
+  const code = issueOtp(email, 'register');
 
   try {
     const result = await sendOtpEmail(email, code, 'register');
@@ -179,18 +249,8 @@ router.post('/otp/verify', checkSecretLimiter, (req, res) => {
   if (!isEmail(email) || !/^\d{4}$/.test(code))
     return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', error_code: 'INVALID_INPUT' });
 
-  const row = db
-    .prepare(
-      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'register' AND consumed = 0
-       ORDER BY id DESC LIMIT 1`,
-    )
-    .get(email, code);
-
-  if (!row)
-    return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง', error_code: 'OTP_INVALID' });
-  if (row.expires_at < Date.now())
-    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว', error_code: 'OTP_EXPIRED' });
-
+  const { error } = checkOtp(email, 'register', code);
+  if (error) return res.status(error.status).json(error.body);
   res.json({ ok: true });
 });
 
@@ -267,13 +327,8 @@ router.post('/register', submitLimiter, (req, res) => {
       error_code: 'PASSWORD_WEAK',
     });
 
-  const otp = db
-    .prepare(
-      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'register' AND consumed = 0
-       ORDER BY id DESC LIMIT 1`,
-    )
-    .get(email, code);
-  if (!otp || otp.expires_at < Date.now())
+  const { otp } = checkOtp(email, 'register', code);
+  if (!otp)
     return res
       .status(400)
       .json({ error: 'ต้องยืนยัน OTP ก่อนสมัคร', error_code: 'OTP_NOT_VERIFIED' });
@@ -345,11 +400,9 @@ router.post('/password-reset/request', sendCodeLimiter, async (req, res) => {
       error_code: 'ACCOUNT_IS_GOOGLE',
     });
 
-  const code = genOtp();
-  const expires = Date.now() + 10 * 60 * 1000;
-  db.prepare(
-    `INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?, ?, 'reset', ?)`,
-  ).run(email, code, expires);
+  const tooMany = otpSendLimit(email, 'reset');
+  if (tooMany) return res.status(tooMany.status).json(tooMany.body);
+  const code = issueOtp(email, 'reset');
 
   try {
     const result = await sendOtpEmail(email, code, 'reset');
@@ -369,18 +422,8 @@ router.post('/password-reset/verify', checkSecretLimiter, (req, res) => {
   if (!isEmail(email) || !/^\d{4}$/.test(code))
     return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', error_code: 'INVALID_INPUT' });
 
-  const row = db
-    .prepare(
-      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'reset' AND consumed = 0
-       ORDER BY id DESC LIMIT 1`,
-    )
-    .get(email, code);
-
-  if (!row)
-    return res.status(400).json({ error: 'รหัส OTP ไม่ถูกต้อง', error_code: 'OTP_INVALID' });
-  if (row.expires_at < Date.now())
-    return res.status(400).json({ error: 'รหัส OTP หมดอายุแล้ว', error_code: 'OTP_EXPIRED' });
-
+  const { error } = checkOtp(email, 'reset', code);
+  if (error) return res.status(error.status).json(error.body);
   res.json({ ok: true });
 });
 
@@ -398,13 +441,8 @@ router.post('/password-reset/confirm', submitLimiter, (req, res) => {
       error_code: 'PASSWORD_WEAK',
     });
 
-  const otp = db
-    .prepare(
-      `SELECT * FROM otp_codes WHERE email = ? AND code = ? AND purpose = 'reset' AND consumed = 0
-       ORDER BY id DESC LIMIT 1`,
-    )
-    .get(email, code);
-  if (!otp || otp.expires_at < Date.now())
+  const { otp } = checkOtp(email, 'reset', code);
+  if (!otp)
     return res
       .status(400)
       .json({ error: 'ต้องยืนยัน OTP ก่อนตั้งรหัสผ่านใหม่', error_code: 'OTP_NOT_VERIFIED_RESET' });
