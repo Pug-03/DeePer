@@ -315,16 +315,21 @@ export function DepthGauge() {
     let stops = [];
     let frame = 0;
     const shown = { on: null, here: null, m: '' };
-    // Page height, read with the stops rather than every frame (see
-    // DeepWater's measure for why).
+    // How far down the gauge runs, read with the stops rather than every
+    // frame (see DeepWater's measure for why). The bottom is the deepest
+    // stop (the sea floor, where the landing's closing scene begins), not
+    // the page's end: that scene now holds for a long scroll, and the orb
+    // and the "-200 m" should reach the bottom as it arrives.
     let max = 1;
     const build = () => {
       const vh = window.innerHeight;
-      max = Math.max(1, document.documentElement.scrollHeight - vh);
-      stops = [...document.querySelectorAll('[data-depth]')].map((node) => {
-        const top = node.getBoundingClientRect().top + window.scrollY;
-        return { label: node.dataset.depth, at: Math.min(Math.max((top - vh / 2) / max, 0), 1) };
-      });
+      const marks = [...document.querySelectorAll('[data-depth]')].map((node) => ({
+        label: node.dataset.depth,
+        px: Math.max(node.getBoundingClientRect().top + window.scrollY - vh / 2, 0),
+      }));
+      const pageMax = Math.max(1, document.documentElement.scrollHeight - vh);
+      max = Math.min(pageMax, Math.max(1, ...marks.map((m) => m.px)));
+      stops = marks.map((m) => ({ label: m.label, at: Math.min(m.px / max, 1) }));
       shown.here = null; // fresh stop elements: re-mark the current one
       list.replaceChildren(
         ...stops.map((s) => {
