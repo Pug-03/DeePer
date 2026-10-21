@@ -18,7 +18,7 @@ import inquiryRoutes from './routes/inquiries.js';
 import reviewRoutes from './routes/reviews.js';
 import testerRoutes from './routes/testers.js';
 import clientErrorRoutes from './routes/clientErrors.js';
-import { UPLOADS_DIR } from './paths.js';
+import { UPLOADS_DIR, diskLow } from './paths.js';
 import { renderPage, PUBLIC_PATHS, SITE } from './seo.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -80,7 +80,17 @@ fs.mkdirSync(join(UPLOADS_DIR, 'avatars'), { recursive: true });
 app.use('/uploads/slips', (_req, res) => res.status(404).end());
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-app.get('/api/health', (_req, res) => res.json({ ok: true }));
+// Render restarts the service when this fails, so it touches the database
+// for real; disk_low is for a person reading it (see requireDiskSpace).
+app.get('/api/health', (_req, res) => {
+  try {
+    db.prepare('SELECT 1').get();
+  } catch (err) {
+    console.error('[health] database check failed', err);
+    return res.status(503).json({ ok: false });
+  }
+  res.json({ ok: true, disk_low: diskLow() });
+});
 // Public landing-page stats — site-wide totals only, no per-user data.
 app.get('/api/stats', (_req, res) => {
   const { c } = db.prepare('SELECT COUNT(*) AS c FROM users').get();

@@ -24,6 +24,7 @@ import {
 import { UPLOADS_DIR, requireDiskSpace } from '../paths.js';
 import { inviteRequired, signupGateError } from '../signupGate.js';
 import { slipFile } from './support.js';
+import { asyncRoute } from '../asyncRoute.js';
 
 const router = Router();
 
@@ -228,7 +229,7 @@ router.post('/invite/check', checkSecretLimiter, (req, res) => {
 });
 
 // --- Step 1: request OTP for email signup ---
-router.post('/otp/request', sendCodeLimiter, async (req, res) => {
+router.post('/otp/request', sendCodeLimiter, asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -257,7 +258,7 @@ router.post('/otp/request', sendCodeLimiter, async (req, res) => {
       .status(500)
       .json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่', error_code: 'OTP_SEND_FAILED' });
   }
-});
+}));
 
 // --- Step 2: verify OTP ---
 router.post('/otp/verify', checkSecretLimiter, (req, res) => {
@@ -321,7 +322,7 @@ function ageError(age) {
 }
 
 // --- Step 3: complete email signup ---
-router.post('/register', submitLimiter, async (req, res) => {
+router.post('/register', submitLimiter, asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { nickname, age, gender, password, accept_privacy: acceptPrivacy } = req.body;
@@ -378,10 +379,10 @@ router.post('/register', submitLimiter, async (req, res) => {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   const sessionId = recordLogin(user.id, 'register', req);
   res.json({ token: signToken(user, sessionId), user: publicUser(user) });
-});
+}));
 
 // --- Email + password login ---
-router.post('/login', checkSecretLimiter, async (req, res) => {
+router.post('/login', checkSecretLimiter, asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   if (!isEmail(email) || !password)
@@ -401,10 +402,10 @@ router.post('/login', checkSecretLimiter, async (req, res) => {
 
   const sessionId = recordLogin(user.id, 'password', req);
   res.json({ token: signToken(user, sessionId), user: publicUser(user) });
-});
+}));
 
 // --- Forgot password — Step 1: request OTP ---
-router.post('/password-reset/request', sendCodeLimiter, async (req, res) => {
+router.post('/password-reset/request', sendCodeLimiter, asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!isEmail(email))
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
@@ -433,7 +434,7 @@ router.post('/password-reset/request', sendCodeLimiter, async (req, res) => {
       .status(500)
       .json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่', error_code: 'OTP_SEND_FAILED' });
   }
-});
+}));
 
 // --- Forgot password — Step 2: verify OTP ---
 router.post('/password-reset/verify', checkSecretLimiter, (req, res) => {
@@ -448,7 +449,7 @@ router.post('/password-reset/verify', checkSecretLimiter, (req, res) => {
 });
 
 // --- Forgot password — Step 3: set new password (auto-login on success) ---
-router.post('/password-reset/confirm', submitLimiter, async (req, res) => {
+router.post('/password-reset/confirm', submitLimiter, asyncRoute(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
   const { password } = req.body;
@@ -486,10 +487,10 @@ router.post('/password-reset/confirm', submitLimiter, async (req, res) => {
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(user.id);
   const sessionId = recordLogin(updated.id, 'password_reset', req);
   res.json({ token: signToken(updated, sessionId), user: publicUser(updated) });
-});
+}));
 
 // --- Google OAuth (verify ID token from Google Identity Services) ---
-router.post('/google', googleLimiter, async (req, res) => {
+router.post('/google', googleLimiter, asyncRoute(async (req, res) => {
   if (!googleClient)
     return res.status(503).json({
       error: 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google',
@@ -589,7 +590,7 @@ router.post('/google', googleLimiter, async (req, res) => {
 
   const sessionId = recordLogin(user.id, 'google', req);
   res.json({ token: signToken(user, sessionId), user: publicUser(user) });
-});
+}));
 
 // --- Current user ---
 router.get('/me', requireAuth, (req, res) => {
@@ -780,7 +781,7 @@ router.delete('/me/partner/:category/avatar', requireAuth, (req, res) => {
 // --- Change / set password. Accounts created via Google have no
 // password_hash yet, so current_password isn't required for them — this
 // doubles as the "add a password" flow that also unlocks email login.
-router.post('/me/password', requireAuth, checkSecretLimiter, async (req, res) => {
+router.post('/me/password', requireAuth, checkSecretLimiter, asyncRoute(async (req, res) => {
   const u = req.user;
   const currentPassword = String(req.body.current_password || '');
   const newPassword = req.body.new_password;
@@ -809,7 +810,7 @@ router.post('/me/password', requireAuth, checkSecretLimiter, async (req, res) =>
   ).run(u.id, req.sessionId);
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
   res.json({ user: publicUser(updated) });
-});
+}));
 
 // --- Upload profile picture ---
 router.post('/me/avatar', requireAuth, requireDiskSpace, (req, res) => {
@@ -854,7 +855,7 @@ router.delete('/me/avatar', requireAuth, (req, res) => {
 });
 
 // --- Delete account ---
-router.delete('/me', requireAuth, checkSecretLimiter, async (req, res) => {
+router.delete('/me', requireAuth, checkSecretLimiter, asyncRoute(async (req, res) => {
   const u = req.user;
   const password = String(req.body.password || '');
 
@@ -885,6 +886,6 @@ router.delete('/me', requireAuth, checkSecretLimiter, async (req, res) => {
 
   db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
   res.json({ ok: true });
-});
+}));
 
 export default router;

@@ -12,6 +12,7 @@ import { REPORT_DIR } from './reports.js';
 import { UPLOADS_DIR, requireDiskSpace } from '../paths.js';
 import { slipFile } from './support.js';
 import { testerInviteEmail } from '../testerInvite.js';
+import { asyncRoute } from '../asyncRoute.js';
 
 const router = Router();
 
@@ -151,7 +152,7 @@ function replyAddress(r) {
   return r.contact && EMAIL_RE.test(r.contact) ? r.contact : null;
 }
 
-router.post('/reports/:id/reply', async (req, res) => {
+router.post('/reports/:id/reply', asyncRoute(async (req, res) => {
   const r = db
     .prepare('SELECT r.*, u.email FROM bug_reports r LEFT JOIN users u ON u.id = r.user_id WHERE r.id = ?')
     .get(Number(req.params.id));
@@ -169,7 +170,7 @@ router.post('/reports/:id/reply', async (req, res) => {
     return res.status(503).json({ error: 'ยังไม่ได้ตั้งค่า SMTP จึงส่งอีเมลไม่ได้', error_code: 'MAIL_NOT_CONFIGURED' });
   db.prepare(`UPDATE bug_reports SET replied_at = datetime('now') WHERE id = ?`).run(r.id);
   res.json({ ok: true });
-});
+}));
 
 // A proof's slip (private: see SLIP_DIR), fetched by the dashboard as a blob.
 router.get('/proofs/:id/slip', (req, res) => {
@@ -200,7 +201,7 @@ const REJECT_TEXT = (name) =>
   `เพราะชื่อหรือความหมายอาจไม่เหมาะสมกับพื้นที่สาธารณะ\n\n` +
   `ถ้าอยากให้แสดงชื่ออื่น ส่งหลักฐานใหม่ในแอปพร้อมชื่อที่ต้องการได้เลย\n\n— ทีม DeePer`;
 
-router.post('/proofs/:id/reject', async (req, res) => {
+router.post('/proofs/:id/reject', asyncRoute(async (req, res) => {
   const p = db
     .prepare('SELECT p.*, u.email FROM support_proofs p LEFT JOIN users u ON u.id = p.user_id WHERE p.id = ?')
     .get(Number(req.params.id));
@@ -220,7 +221,7 @@ router.post('/proofs/:id/reject', async (req, res) => {
         }));
   }
   res.json({ ok: true, emailed, email: p.email || null });
-});
+}));
 
 router.post('/proofs/:id/:action(approve|revoke)', (req, res) => {
   const id = Number(req.params.id);
@@ -264,7 +265,7 @@ router.get('/tester-requests', (req, res) => {
   });
 });
 
-router.post('/tester-requests/:id/invite', async (req, res) => {
+router.post('/tester-requests/:id/invite', asyncRoute(async (req, res) => {
   const r = db.prepare('SELECT * FROM tester_requests WHERE id = ?').get(Number(req.params.id));
   if (!r) return res.status(404).json({ error: 'ไม่พบคำขอ', error_code: 'NOT_FOUND' });
   const code = process.env.INVITE_CODE;
@@ -278,7 +279,7 @@ router.post('/tester-requests/:id/invite', async (req, res) => {
     return res.status(503).json({ error: 'ยังไม่ได้ตั้งค่า SMTP จึงส่งอีเมลไม่ได้', error_code: 'MAIL_NOT_CONFIGURED' });
   db.prepare(`UPDATE tester_requests SET invited_at = datetime('now') WHERE id = ?`).run(r.id);
   res.json({ ok: true });
-});
+}));
 
 router.delete('/tester-requests/:id', (req, res) => {
   const { changes } = db.prepare('DELETE FROM tester_requests WHERE id = ?').run(Number(req.params.id));
