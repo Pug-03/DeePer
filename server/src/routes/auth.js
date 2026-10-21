@@ -503,6 +503,16 @@ router.post('/google', async (req, res) => {
   if (payload.email_verified && isAdminEmail(email)) return res.json({ admin_token: signAdminToken() });
   let user = db.prepare('SELECT * FROM users WHERE google_sub = ?').get(sub);
 
+  // A Google account we haven't seen only gets tied to an email (an existing
+  // account with it, or a new one) once Google has verified that address —
+  // otherwise someone could add a victim's address to a Google account and
+  // sign straight into the victim's DeePer account.
+  if (!user && payload.email_verified !== true)
+    return res.status(403).json({
+      error: 'อีเมลของบัญชี Google นี้ยังไม่ได้ยืนยัน กรุณายืนยันกับ Google ก่อน หรือสมัครด้วยอีเมล',
+      error_code: 'GOOGLE_EMAIL_UNVERIFIED',
+    });
+
   if (!user && email) {
     // Link to an existing email account if one exists.
     const byEmail = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
