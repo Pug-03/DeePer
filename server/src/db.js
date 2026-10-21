@@ -269,13 +269,8 @@ if (!loginHistoryCols.some((c) => c.name === 'revoked_at')) {
   db.exec(`ALTER TABLE login_history ADD COLUMN revoked_at TEXT`);
 }
 
-// Housekeeping: prune login_history rows older than 90 days — well past
-// the 30-day token TTL (see TOKEN_TTL in auth.js), so a row this old can
-// no longer represent a live, revocable session; it's pure audit history
-// at that point, and keeping it forever would grow the table with no
-// remaining benefit. Runs on every boot rather than as a one-time
-// migration — it's ongoing data hygiene, not a schema change.
-db.exec(`DELETE FROM login_history WHERE created_at < datetime('now', '-90 days')`);
+// login_history rows older than 90 days (well past the 30-day token TTL in
+// auth.js, so no longer a live session) are pruned by pruneOldRows below.
 
 // Migration: seed one `partners` row per category per existing user from
 // the old single, global partner_* columns above — so every user's
@@ -367,6 +362,31 @@ const reportCols = db.prepare(`PRAGMA table_info(bug_reports)`).all();
 if (!reportCols.some((c) => c.name === 'replied_at')) {
   db.exec(`ALTER TABLE bug_reports ADD COLUMN replied_at TEXT`);
 }
+
+// Indexes for lookups that used to scan whole tables: every OTP send/check
+// (by email), a review link (by token), and deleting an account (each table
+// that points at the user).
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_otp_email ON otp_codes(email, purpose, id);
+  CREATE INDEX IF NOT EXISTS idx_support_review_token ON support_proofs(review_token);
+  CREATE INDEX IF NOT EXISTS idx_support_user ON support_proofs(user_id);
+  CREATE INDEX IF NOT EXISTS idx_questions_user ON questions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_bug_reports_user ON bug_reports(user_id);
+  CREATE INDEX IF NOT EXISTS idx_user_activity_user ON user_activity(user_id);
+`);
+
+// Housekeeping for tables that otherwise only grow. OTP rows are dead after
+// 10 minutes and only the last day counts toward the send caps; resolved
+// browser errors are kept 90 days for reference. Runs at boot and daily
+// (see index.js).
+export function pruneOldRows() {
+  db.exec(`
+    DELETE FROM otp_codes WHERE created_at < datetime('now', '-2 days');
+    DELETE FROM client_errors WHERE resolved_at IS NOT NULL AND resolved_at < datetime('now', '-90 days');
+    DELETE FROM login_history WHERE created_at < datetime('now', '-90 days');
+  `);
+}
+pruneOldRows();
 
 // User reviews of DeePer, one per user (editing resubmits it). Only rows the
 // admin has approved show on the landing page; editing an approved review
