@@ -42,7 +42,15 @@ function lockedFor(ip, now) {
   return Math.max(0, a.lockedUntil - now);
 }
 
+// Entries are otherwise only dropped when the same IP comes back, so
+// sweep stale ones once the map gets big.
+function sweep(now) {
+  if (attempts.size < 1000) return;
+  for (const [ip, a] of attempts) if (now - a.lastFail > LONG_LOCK_MS && now >= a.lockedUntil) attempts.delete(ip);
+}
+
 function recordFail(ip, now) {
+  sweep(now);
   const a = attempts.get(ip) || { fails: 0, lockedUntil: 0, lastFail: 0 };
   a.fails += 1;
   a.lastFail = now;

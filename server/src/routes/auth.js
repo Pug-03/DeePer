@@ -206,6 +206,9 @@ const checkSecretLimiter = limiter(10, { failedOnly: true });
 // Creating the account / setting the new password: needs a valid code
 // already, so this only catches a broken client retrying in a loop.
 const submitLimiter = limiter(20, { failedOnly: true });
+// Google sign-in: every call checks a token with Google (and a signup
+// hashes a password), so it gets a plain cap like the email sends.
+const googleLimiter = limiter(30);
 
 // --- Config for the client (which auth methods are live) ---
 router.get('/config', (_req, res) => {
@@ -486,7 +489,7 @@ router.post('/password-reset/confirm', submitLimiter, async (req, res) => {
 });
 
 // --- Google OAuth (verify ID token from Google Identity Services) ---
-router.post('/google', async (req, res) => {
+router.post('/google', googleLimiter, async (req, res) => {
   if (!googleClient)
     return res.status(503).json({
       error: 'ยังไม่ได้เปิดใช้งานการเข้าสู่ระบบด้วย Google',
@@ -777,7 +780,7 @@ router.delete('/me/partner/:category/avatar', requireAuth, (req, res) => {
 // --- Change / set password. Accounts created via Google have no
 // password_hash yet, so current_password isn't required for them — this
 // doubles as the "add a password" flow that also unlocks email login.
-router.post('/me/password', requireAuth, async (req, res) => {
+router.post('/me/password', requireAuth, checkSecretLimiter, async (req, res) => {
   const u = req.user;
   const currentPassword = String(req.body.current_password || '');
   const newPassword = req.body.new_password;
@@ -851,7 +854,7 @@ router.delete('/me/avatar', requireAuth, (req, res) => {
 });
 
 // --- Delete account ---
-router.delete('/me', requireAuth, async (req, res) => {
+router.delete('/me', requireAuth, checkSecretLimiter, async (req, res) => {
   const u = req.user;
   const password = String(req.body.password || '');
 
