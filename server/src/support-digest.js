@@ -9,6 +9,9 @@ const DIGEST_DAYS = Number(process.env.SUPPORT_DIGEST_DAYS || 15);
 const DIGEST_TO = process.env.SUPPORT_DIGEST_TO || process.env.SMTP_USER || '';
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // re-check every 6h
 const META_KEY = 'support_digest_at';
+// Most mail servers refuse messages over ~25 MB; base64 adds a third, so
+// cap the raw slips well under that. Rows past the cap go in the next email.
+const MAX_ATTACH_BYTES = 15 * 1024 * 1024;
 
 const getMeta = (key) => db.prepare('SELECT value FROM app_meta WHERE key = ?').get(key)?.value ?? null;
 const setMeta = (key, value) =>
@@ -27,15 +30,28 @@ export async function runSupportDigest({ force = false } = {}) {
   const dueByTime = !last || Date.now() - Date.parse(last) >= DIGEST_DAYS * 86400000;
   if (!force && !dueByTime) return { sent: false, reason: 'not_due' };
 
-  const rows = db
-    .prepare('SELECT * FROM support_proofs WHERE notified = 0 ORDER BY created_at ASC')
+  const pending = db
+    .prepare('SELECT * FROM support_proofs WHERE notified = 0 AND deleted_at IS NULL ORDER BY created_at ASC')
     .all();
-  if (rows.length === 0) return { sent: false, reason: 'empty' };
+  if (pending.length === 0) return { sent: false, reason: 'empty' };
 
   if (!DIGEST_TO) {
     console.warn('[support-digest] no recipient — set SUPPORT_DIGEST_TO (or SMTP_USER) to receive the summary');
     return { sent: false, reason: 'no_recipient' };
   }
+
+  const rows = [];
+  const attachments = [];
+  let bytes = 0;
+  for (const r of pending) {
+    const p = join(SLIP_DIR, basename(r.slip_path));
+    const size = r.slip_path && fs.existsSync(p) ? fs.statSync(p).size : 0;
+    if (rows.length > 0 && bytes + size > MAX_ATTACH_BYTES) break;
+    rows.push(r);
+    bytes += size;
+    if (size) attachments.push({ filename: `slip-${r.id}${basename(r.slip_path).replace(/^[^.]*/, '')}`, path: p });
+  }
+  const more = pending.length - rows.length;
 
   const lines = rows.map((r, i) => {
     const amount = r.amount != null ? `${r.amount} บาท` : 'ไม่ระบุ';
@@ -43,14 +59,9 @@ export async function runSupportDigest({ force = false } = {}) {
   });
   const text =
     `มีผู้สนับสนุน ${rows.length} รายในรอบนี้ (สลิปแนบมาในอีเมล):\n\n` +
-    `${lines.join('\n\n')}\n\n— DeePer`;
-
-  const attachments = rows
-    .map((r) => {
-      const p = join(SLIP_DIR, basename(r.slip_path));
-      return fs.existsSync(p) ? { filename: `slip-${r.id}${basename(r.slip_path).replace(/^[^.]*/, '')}`, path: p } : null;
-    })
-    .filter(Boolean);
+    `${lines.join('\n\n')}\n\n` +
+    (more ? `(ยังเหลืออีก ${more} ราย จะส่งในอีเมลถัดไป)\n\n` : '') +
+    '— DeePer';
 
   await sendMail({
     to: DIGEST_TO,
@@ -61,7 +72,8 @@ export async function runSupportDigest({ force = false } = {}) {
 
   const mark = db.prepare('UPDATE support_proofs SET notified = 1 WHERE id = ?');
   for (const r of rows) mark.run(r.id);
-  setMeta(META_KEY, new Date().toISOString());
+  // Leftovers go out on the next 6-hourly check instead of waiting a window.
+  if (!more) setMeta(META_KEY, new Date().toISOString());
 
   console.log(`[support-digest] sent summary of ${rows.length} submission(s) to ${DIGEST_TO}`);
   return { sent: true, count: rows.length };
