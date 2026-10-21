@@ -2,9 +2,8 @@ import { join, basename } from 'node:path';
 import fs from 'node:fs';
 import { db } from './db.js';
 import { sendMail } from './mailer.js';
-import { UPLOADS_DIR } from './paths.js';
+import { SLIP_DIR } from './paths.js';
 
-const SLIP_DIR = join(UPLOADS_DIR, 'slips');
 
 const DIGEST_DAYS = Number(process.env.SUPPORT_DIGEST_DAYS || 15);
 const DIGEST_TO = process.env.SUPPORT_DIGEST_TO || process.env.SMTP_USER || '';

@@ -573,9 +573,7 @@ function Proofs({ onLogout, onChange }) {
             <dt>บัญชี</dt>
             <dd>{p.nickname ? `${p.nickname} (${p.email || 'ไม่มีอีเมล'})` : 'ไม่ทราบ'}</dd>
           </dl>
-          <a href={p.slip_path} target="_blank" rel="noreferrer">
-            <img className="admin-img" src={p.slip_path} alt={`สลิปของ ${p.display_name}`} />
-          </a>
+          {p.slip_path && <SlipImage id={p.id} name={p.display_name} onLogout={onLogout} />}
           {p.deleted_at ? (
             <TrashedActions item={p} trash={trash} />
           ) : (
@@ -607,6 +605,36 @@ function Proofs({ onLogout, onChange }) {
 
 // Where the thank-you goes: the account email, else an email typed in the
 // contact field. Without either there's no one to reply to.
+// A proof's slip. Slips are private on the server, so it's fetched with the
+// admin token as a blob rather than linked by URL.
+function SlipImage({ id, name, onLogout }) {
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    let live = true;
+    let objectUrl = null;
+    adminApi
+      .slip(id)
+      .then((blob) => {
+        if (!live) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+      })
+      .catch((e) => {
+        if (e instanceof AdminAuthError) onLogout();
+      });
+    return () => {
+      live = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [id, onLogout]);
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noreferrer">
+      <img className="admin-img" src={url} alt={`สลิปของ ${name}`} />
+    </a>
+  );
+}
+
 function ReplyButton({ r, onReply }) {
   const to = r.email || (r.contact && EMAIL_RE.test(r.contact) ? r.contact : null);
   if (r.replied_at) return <p className="admin-note admin-replied">✓ ส่งอีเมลขอบคุณแล้ว {fmtTime(r.replied_at)}</p>;

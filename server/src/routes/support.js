@@ -2,13 +2,13 @@ import { Router } from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
 import { randomBytes } from 'node:crypto';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
 import { requireAuth } from '../auth.js';
 import { approvedSupporterNames, approveProofs, revokeProofs, proofByToken } from '../supporters.js';
 import { sendMail } from '../mailer.js';
-import { UPLOADS_DIR } from '../paths.js';
+import { SLIP_DIR, OLD_PUBLIC_SLIP_DIR } from '../paths.js';
 
 const router = Router();
 
@@ -25,14 +25,36 @@ const publicOrigin = (req) =>
 const escapeHtml = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-const SLIP_DIR = join(UPLOADS_DIR, 'slips');
 fs.mkdirSync(SLIP_DIR, { recursive: true });
+
+// Slips used to be saved in the public uploads folder: move any left there
+// into the private one (their rows keep working, as files are found by name).
+function moveOldSlips() {
+  if (!fs.existsSync(OLD_PUBLIC_SLIP_DIR)) return;
+  for (const name of fs.readdirSync(OLD_PUBLIC_SLIP_DIR)) {
+    try {
+      fs.renameSync(join(OLD_PUBLIC_SLIP_DIR, name), join(SLIP_DIR, name));
+    } catch (err) {
+      console.error('[support] could not move slip', name, err);
+    }
+  }
+  fs.rmSync(OLD_PUBLIC_SLIP_DIR, { recursive: true, force: true });
+}
+moveOldSlips();
+
+// A stored slip's file on disk, or null. Only the file name is used, so a
+// stored path can never point outside the slip folder.
+export const slipFile = (slipPath) => {
+  const file = slipPath && join(SLIP_DIR, basename(slipPath));
+  return file && fs.existsSync(file) ? file : null;
+};
 
 const SLIP_MIME_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 const slipUpload = multer({
   storage: multer.diskStorage({
     destination: SLIP_DIR,
-    filename: (req, file, cb) => cb(null, `${req.user.id}-${Date.now()}${SLIP_MIME_EXT[file.mimetype]}`),
+    // A random name: the old "<userId>-<time>" could be guessed.
+    filename: (req, file, cb) => cb(null, `${randomBytes(16).toString('hex')}${SLIP_MIME_EXT[file.mimetype]}`),
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, !!SLIP_MIME_EXT[file.mimetype]),
@@ -71,7 +93,7 @@ router.post('/proof', requireAuth, handleSlip, (req, res) => {
   if (!Number.isFinite(amount) || amount <= 0)
     return res.status(400).json({ error: 'กรุณาระบุจำนวนเงินให้ถูกต้อง', error_code: 'AMOUNT_INVALID' });
 
-  const slipUrl = `/uploads/slips/${req.file.filename}`;
+  const slipUrl = req.file.filename;
   const token = randomBytes(24).toString('hex');
   const name = displayName.slice(0, 80);
   const { lastInsertRowid: id } = db
@@ -140,7 +162,7 @@ function reviewPage(proof, token) {
     <dt>โอนเมื่อ</dt><dd>${escapeHtml(proof.transfer_date)} ${escapeHtml(proof.transfer_time)}</dd>
     <dt>ส่งเมื่อ</dt><dd>${escapeHtml(proof.created_at)}</dd>
   </dl>
-  <img src="${escapeHtml(proof.slip_path)}" alt="สลิป">
+  <img src="/api/support/review/${token}/slip" alt="สลิป">
   <form method="post" action="/api/support/review/${token}/${action}">
     <button type="submit">${approved ? 'ซ่อนชื่อออกจากหน้าเว็บ' : 'อนุมัติ ให้ชื่อขึ้นหน้าเว็บ'}</button>
   </form>
@@ -154,6 +176,14 @@ router.get('/review/:token', (req, res) => {
   const proof = proofByToken(req.params.token);
   if (!proof) return notFound(res);
   res.type('html').send(reviewPage(proof, req.params.token));
+});
+
+// The slip itself, for the review page: only with that proof's secret link.
+router.get('/review/:token/slip', (req, res) => {
+  const proof = proofByToken(req.params.token);
+  const file = proof && slipFile(proof.slip_path);
+  if (!file) return res.status(404).end();
+  res.set('Cache-Control', 'private, no-store').sendFile(file);
 });
 
 router.post('/review/:token/:action(approve|revoke)', (req, res) => {

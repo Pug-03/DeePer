@@ -2,10 +2,11 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, basename } from 'node:path';
 import { startServer, cleanupDb, api, registerUser } from '../test-support/helpers.js';
 
-const UPLOADS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'uploads');
+// Slips are private: they land in private-uploads/slips, not the public uploads.
+const SLIP_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'private-uploads', 'slips');
 
 // Same module instance as the running app (helpers.js already loaded it),
 // so this talks to the test file's own database.
@@ -18,11 +19,11 @@ before(() => {
 });
 
 after(async () => {
-  // Proof uploads land in the real uploads/slips folder — delete the ones
-  // this file created before its database (which lists them) goes away.
+  // Proof uploads land in the real private-uploads/slips folder — delete the
+  // ones this file created before its database (which lists them) goes away.
   const { db } = await import('../src/db.js');
   for (const { slip_path: p } of db.prepare('SELECT slip_path FROM support_proofs').all()) {
-    fs.rmSync(join(UPLOADS_DIR, p.replace(/^\/uploads\//, '')), { force: true });
+    if (p) fs.rmSync(join(SLIP_DIR, basename(p)), { force: true });
   }
   server.close();
   cleanupDb();
@@ -111,7 +112,7 @@ test('an unknown review token is a 404 and approves nothing', async () => {
 
 test('a slip that is not really an image is turned away and not kept', async () => {
   const { token } = await registerUser(base);
-  const slipsDir = join(UPLOADS_DIR, 'slips');
+  const slipsDir = SLIP_DIR;
   // Compare names, not counts: an earlier test's rejected upload may still
   // be being removed in the background.
   const before = new Set(fs.readdirSync(slipsDir));
@@ -131,4 +132,20 @@ test('a slip that is not really an image is turned away and not kept', async () 
   // The file is removed asynchronously; give it a moment.
   await new Promise((r) => setTimeout(r, 50));
   assert.deepEqual(fs.readdirSync(slipsDir).filter((f) => !before.has(f)), []);
+});
+
+test('a slip is never a public file: only the review link (and the admin) can open it', async () => {
+  const { token } = await registerUser(base);
+  await submitProof(token, 'สลิปลับ');
+  const { db } = await import('../src/db.js');
+  const { slip_path: name, review_token: rt } = db
+    .prepare(`SELECT slip_path, review_token FROM support_proofs WHERE display_name = 'สลิปลับ'`)
+    .get();
+  // A random name, not "<userId>-<time>", and nothing under /uploads.
+  assert.match(name, /^[0-9a-f]{32}\.png$/);
+  const origin = base.replace(/\/api$/, '');
+  assert.equal((await fetch(`${origin}/uploads/slips/${name}`)).status, 404);
+  const viaLink = await fetch(`${base}/support/review/${rt}/slip`);
+  assert.equal(viaLink.status, 200);
+  assert.equal((await fetch(`${base}/support/review/deadbeef/slip`)).status, 404);
 });

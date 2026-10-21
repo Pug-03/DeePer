@@ -45,6 +45,7 @@ export const adminApi = {
   insights: () => request('/insights'),
   reports: () => request('/reports'),
   screenshot: (id) => request(`/reports/${id}/screenshot`, { raw: true }),
+  slip: (id) => request(`/proofs/${id}/slip`, { raw: true }),
   setReport: (id, action) => request(`/reports/${id}/${action}`, { method: 'POST' }),
   replyReport: (id) => request(`/reports/${id}/reply`, { method: 'POST' }),
   inquiries: () => request('/inquiries'),

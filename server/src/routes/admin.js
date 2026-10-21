@@ -9,6 +9,7 @@ import { approveProofs, revokeProofs } from '../supporters.js';
 import { sendMail } from '../mailer.js';
 import { REPORT_DIR } from './reports.js';
 import { UPLOADS_DIR } from '../paths.js';
+import { slipFile } from './support.js';
 import { testerInviteEmail } from '../testerInvite.js';
 
 const router = Router();
@@ -167,6 +168,14 @@ router.post('/reports/:id/reply', async (req, res) => {
     return res.status(503).json({ error: 'ยังไม่ได้ตั้งค่า SMTP จึงส่งอีเมลไม่ได้', error_code: 'MAIL_NOT_CONFIGURED' });
   db.prepare(`UPDATE bug_reports SET replied_at = datetime('now') WHERE id = ?`).run(r.id);
   res.json({ ok: true });
+});
+
+// A proof's slip (private: see SLIP_DIR), fetched by the dashboard as a blob.
+router.get('/proofs/:id/slip', (req, res) => {
+  const row = db.prepare('SELECT slip_path FROM support_proofs WHERE id = ?').get(Number(req.params.id));
+  const file = slipFile(row?.slip_path);
+  if (!file) return res.status(404).json({ error: 'ไม่พบรูป', error_code: 'NOT_FOUND' });
+  res.set('Cache-Control', 'private, no-store').sendFile(file);
 });
 
 router.get('/proofs', (req, res) => {
@@ -342,7 +351,7 @@ router.delete('/reviews/:id', (req, res) => {
 const TRASHABLE = {
   reports: { table: 'bug_reports', file: (r) => r.screenshot_path && join(REPORT_DIR, basename(r.screenshot_path)) },
   inquiries: { table: 'sponsor_inquiries', file: () => null },
-  proofs: { table: 'support_proofs', file: (r) => join(UPLOADS_DIR, 'slips', basename(r.slip_path)) },
+  proofs: { table: 'support_proofs', file: (r) => slipFile(r.slip_path) },
 };
 
 router.post('/:kind(reports|inquiries|proofs)/:id/:action(trash|restore)', (req, res) => {

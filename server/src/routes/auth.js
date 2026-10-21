@@ -21,6 +21,7 @@ import {
 } from '../auth.js';
 import { UPLOADS_DIR } from '../paths.js';
 import { inviteRequired, signupGateError } from '../signupGate.js';
+import { slipFile } from './support.js';
 
 const router = Router();
 
@@ -797,6 +798,14 @@ router.delete('/me', requireAuth, (req, res) => {
     .prepare(`SELECT avatar_url FROM partners WHERE user_id = ? AND avatar_url IS NOT NULL`)
     .all(u.id);
   for (const { avatar_url } of partnerAvatars) fs.unlink(partnerAvatarPath(avatar_url), () => {});
+  // Their transfer slips go too (the proof rows stay, unlinked from the
+  // account, so an approved name can still be shown or hidden).
+  const slips = db.prepare('SELECT slip_path FROM support_proofs WHERE user_id = ?').all(u.id);
+  for (const { slip_path } of slips) {
+    const file = slipFile(slip_path);
+    if (file) fs.unlink(file, () => {});
+  }
+  db.prepare(`UPDATE support_proofs SET slip_path = '' WHERE user_id = ?`).run(u.id);
 
   db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
   res.json({ ok: true });

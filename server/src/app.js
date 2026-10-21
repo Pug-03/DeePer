@@ -75,7 +75,9 @@ app.use(cors(corsOrigins.length ? { origin: corsOrigins } : {}));
 app.use(express.json({ limit: '256kb' }));
 
 fs.mkdirSync(join(UPLOADS_DIR, 'avatars'), { recursive: true });
-fs.mkdirSync(join(UPLOADS_DIR, 'slips'), { recursive: true });
+// Transfer slips are never public (they live in private-uploads, see
+// SLIP_DIR); refuse the old public path outright in case any file lingers.
+app.use('/uploads/slips', (_req, res) => res.status(404).end());
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
