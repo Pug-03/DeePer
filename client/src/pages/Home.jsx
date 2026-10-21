@@ -900,9 +900,11 @@ export default function Home() {
         if (!silent) setStatus('loading');
       }
       const exclude = [...seen.current].join(',');
-      const lv = levelRef.current === 'all' ? '' : `&level=${levelRef.current}`;
+      const lvl = levelRef.current;
+      const lv = lvl === 'all' ? '' : `&level=${lvl}`;
       const d = await api.get(`/questions/?category=${cat}${lv}&limit=20&exclude=${exclude}`);
-      if (stale?.() || catRef.current !== cat) return 0;
+      // Dropped if the category or level changed while it was loading.
+      if (stale?.() || catRef.current !== cat || levelRef.current !== lvl) return 0;
       const fresh = d.questions.filter((q) => !seen.current.has(q.id));
       fresh.forEach((q) => seen.current.add(q.id));
       setDeck((prev) => (reset ? fresh : [...prev, ...fresh]));
@@ -912,6 +914,9 @@ export default function Home() {
       }
       return fresh.length;
     } catch (e) {
+      // A failed top-up leaves the cards in hand alone (the next swipe tries
+      // again); only a failed fresh load replaces the deck with the error.
+      if (!reset || stale?.() || catRef.current !== cat) return 0;
       setError(e.message);
       setStatus('error');
       return 0;
