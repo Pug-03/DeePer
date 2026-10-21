@@ -87,21 +87,31 @@ const isEmail = (s) =>
 // them is what keeps a reset code from being guessed into someone's account:
 // - only the newest code for an email works (asking again voids the old ones),
 // - a code dies after OTP_MAX_TRIES wrong guesses,
-// - an email gets at most OTP_SENDS_PER_HOUR codes an hour,
+// - an email gets at most OTP_SENDS_PER_HOUR codes an hour and
+//   OTP_SENDS_PER_DAY a day,
 // all counted per email, so spreading guesses over many IPs doesn't help.
+// The daily cap is what bounds a patient attacker: 6 codes x 5 tries is 30
+// guesses a day out of 10,000, where the hourly cap alone allowed ~600.
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_MAX_TRIES = 5;
 const OTP_SENDS_PER_HOUR = 5;
+const OTP_SENDS_PER_DAY = 6;
 const genOtp = () => String(randomInt(1000, 10000));
 
 // null when a new code may be sent, else { status, body }.
 function otpSendLimit(email, purpose) {
-  const { n } = db
+  const { hour, day } = db
     .prepare(
-      `SELECT COUNT(*) AS n FROM otp_codes WHERE email = ? AND purpose = ? AND created_at > datetime('now', '-1 hour')`,
+      `SELECT COUNT(CASE WHEN created_at > datetime('now', '-1 hour') THEN 1 END) AS hour, COUNT(*) AS day
+       FROM otp_codes WHERE email = ? AND purpose = ? AND created_at > datetime('now', '-1 day')`,
     )
     .get(email, purpose);
-  if (n < OTP_SENDS_PER_HOUR) return null;
+  if (day >= OTP_SENDS_PER_DAY)
+    return {
+      status: 429,
+      body: { error: 'ขอรหัสครบจำนวนของวันนี้แล้ว ลองใหม่อีกครั้งพรุ่งนี้', error_code: 'OTP_DAILY_LIMIT' },
+    };
+  if (hour < OTP_SENDS_PER_HOUR) return null;
   return {
     status: 429,
     body: { error: 'ขอรหัสบ่อยเกินไป ลองใหม่อีกครั้งในอีก 1 ชั่วโมง', error_code: 'OTP_TOO_MANY' },
