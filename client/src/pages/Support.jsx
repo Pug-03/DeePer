@@ -183,8 +183,9 @@ export default function Support() {
 
           <div className="field-row">
             <div className="field">
-              <label>{t('support.proofDate')}</label>
+              <label htmlFor="proof-date">{t('support.proofDate')}</label>
               <input
+                id="proof-date"
                 className="input"
                 type="date"
                 value={transferDate}
@@ -193,8 +194,9 @@ export default function Support() {
               />
             </div>
             <div className="field">
-              <label>{t('support.proofTime')}</label>
+              <label htmlFor="proof-time">{t('support.proofTime')}</label>
               <input
+                id="proof-time"
                 className="input"
                 type="time"
                 value={transferTime}
@@ -205,8 +207,9 @@ export default function Support() {
           </div>
 
           <div className="field">
-            <label>{t('support.proofAmount')}</label>
+            <label htmlFor="proof-amount">{t('support.proofAmount')}</label>
             <input
+              id="proof-amount"
               className="input"
               type="number"
               inputMode="decimal"
@@ -220,8 +223,9 @@ export default function Support() {
           </div>
 
           <div className="field">
-            <label>{t('support.proofName')}</label>
+            <label htmlFor="proof-name">{t('support.proofName')}</label>
             <input
+              id="proof-name"
               className="input"
               type="text"
               maxLength={80}

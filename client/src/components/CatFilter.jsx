@@ -22,6 +22,7 @@ export default function CatFilter({ value, onChange }) {
             data-pick={c}
             type="button"
             className={`pill ${isActive ? 'active' : ''}`}
+            aria-pressed={isActive}
             onClick={() => pick(c)}
           >
             <motion.span

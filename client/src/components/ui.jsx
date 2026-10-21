@@ -59,7 +59,10 @@ export function ToastProvider({ children }) {
   return (
     <ToastCtx.Provider value={show}>
       {children}
-      {msg && <div className="toast fade-up">{msg}</div>}
+      {/* Always mounted so screen readers announce each new message. */}
+      <div role="status" aria-live="polite">
+        {msg && <div className="toast fade-up">{msg}</div>}
+      </div>
     </ToastCtx.Provider>
   );
 }

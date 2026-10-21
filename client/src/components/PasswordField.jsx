@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { useI18n } from '../store/i18n.jsx';
 import { IcEye, IcEyeOff } from './icons.jsx';
 
@@ -17,6 +17,7 @@ export default function PasswordField({
 }) {
   const { t } = useI18n();
   const [show, setShow] = useState(false);
+  const inputId = useId();
   // A password being chosen (signup, change, reset) has to be typed by hand:
   // no copying it out, cutting, pasting or dropping text in — so the person
   // actually types it, twice where there's a confirm box. Logging in with an
@@ -27,9 +28,10 @@ export default function PasswordField({
 
   return (
     <div className="field">
-      {label && <label>{label}</label>}
+      {label && <label htmlFor={inputId}>{label}</label>}
       <div className="input-wrap">
         <input
+          id={inputId}
           className="input"
           type={show ? 'text' : 'password'}
           autoComplete={autoComplete}

@@ -120,8 +120,9 @@ export default function Answer() {
 
       {turn === 'me' ? (
         <div className="field fade-up">
-          <label>{t('answer.myAnswerOf', { name: myName })}</label>
+          <label htmlFor="answer-me">{t('answer.myAnswerOf', { name: myName })}</label>
           <textarea
+            id="answer-me"
             className="textarea answer-textarea"
             placeholder={t('answer.myAnswerPh')}
             value={myAnswer}
@@ -138,8 +139,9 @@ export default function Answer() {
         </div>
       ) : (
         <div className="field fade-up">
-          <label>{t('answer.myAnswerOf', { name: pName })}</label>
+          <label htmlFor="answer-partner">{t('answer.myAnswerOf', { name: pName })}</label>
           <textarea
+            id="answer-partner"
             className="textarea answer-textarea"
             placeholder={t('answer.partnerPh', { name: pName })}
             value={partnerAnswer}

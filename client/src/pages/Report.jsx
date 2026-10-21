@@ -120,13 +120,14 @@ export default function Report() {
 
         <form className="support-proof-form" onSubmit={submit}>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>{t('report.category')}</label>
-            <div className="filter-row" style={{ marginBottom: 0 }}>
+            <label id="report-category-label">{t('report.category')}</label>
+            <div className="filter-row" style={{ marginBottom: 0 }} role="group" aria-labelledby="report-category-label">
               {CATEGORIES.map((c) => (
                 <button
                   key={c}
                   type="button"
                   className={`pill ${category === c ? 'active' : ''}`}
+                  aria-pressed={category === c}
                   onClick={() => setCategory(c)}
                 >
                   {t(`report.cat.${c}`)}

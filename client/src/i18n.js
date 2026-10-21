@@ -221,6 +221,7 @@ export const STRINGS = {
 
     // นำทางล่าง
     'nav.home': 'หน้าหลัก',
+    'lang.switch': 'เปลี่ยนภาษา',
     'nav.saved': 'บันทึกไว้',
     'nav.history': 'ประวัติ',
     'nav.profile': 'โปรไฟล์',
@@ -871,6 +872,7 @@ export const STRINGS = {
     'welcome.supporters.tier.individual': 'Individual supporters',
 
     'nav.home': 'Home',
+    'lang.switch': 'Switch language',
     'nav.saved': 'Saved',
     'nav.history': 'History',
     'nav.profile': 'Profile',

@@ -66,7 +66,13 @@ export default function ReviewForm() {
           <label className="review-with-label">{t('review.withLabel')}</label>
           <div className="filter-row review-with" style={{ marginBottom: 12 }}>
             {CATS.map((c) => (
-              <button key={c} type="button" className={`pill ${relation === c ? 'active' : ''}`} onClick={() => setRelation(c)}>
+              <button
+                key={c}
+                type="button"
+                className={`pill ${relation === c ? 'active' : ''}`}
+                aria-pressed={relation === c}
+                onClick={() => setRelation(c)}
+              >
                 {t(`cat.${c}`)}
               </button>
             ))}
