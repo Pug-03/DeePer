@@ -433,28 +433,36 @@ export const bumpStat = (key) => bumpStmt.run(key);
 // out any a database still has.
 db.prepare(`DELETE FROM questions WHERE source = 'ai'`).run();
 
-// Keep the bank rows in step with questions-bank.js: (re)written whenever the
-// bank in code differs from what's stored, e.g. after questions are added or
-// reworded. Saved questions and history keep their own copy of the text, so
-// they're unaffected by the bank rows being replaced.
+// Keep the bank rows in step with questions-bank.js whenever the bank in code
+// differs from what's stored, e.g. after questions are added or reworded.
+// Only changed rows are replaced: unchanged ones keep their id, so the ids a
+// client is excluding (cards already seen) still match after a deploy.
+// Saved questions and history keep their own copy of the text, so they're
+// unaffected by bank rows being replaced.
 const bank = bankRows();
 const key = (r) => `${r.category}|${r.level}|${r.text}|${r.text_en}`;
-const stored = db
-  .prepare(`SELECT category, level, text, text_en FROM questions WHERE source = 'bank'`)
-  .all()
-  .map(key)
-  .sort();
-const wanted = bank.map(key).sort();
-if (stored.length !== wanted.length || stored.some((k, i) => k !== wanted[i])) {
+const storedIds = new Map(); // key -> ids
+for (const r of db.prepare(`SELECT id, category, level, text, text_en FROM questions WHERE source = 'bank'`).all()) {
+  const k = key(r);
+  if (!storedIds.has(k)) storedIds.set(k, []);
+  storedIds.get(k).push(r.id);
+}
+const toInsert = bank.filter((r) => {
+  const ids = storedIds.get(key(r));
+  return !(ids && ids.length && ids.pop());
+});
+const toDelete = [...storedIds.values()].flat();
+if (toInsert.length || toDelete.length) {
   const insert = db.prepare(
     `INSERT INTO questions (category, level, text, text_en, source) VALUES (?, ?, ?, ?, 'bank')`,
   );
+  const remove = db.prepare(`DELETE FROM questions WHERE id = ?`);
   db.prepare('BEGIN').run();
   try {
-    db.prepare(`DELETE FROM questions WHERE source = 'bank'`).run();
-    for (const r of bank) insert.run(r.category, r.level, r.text, r.text_en);
+    for (const id of toDelete) remove.run(id);
+    for (const r of toInsert) insert.run(r.category, r.level, r.text, r.text_en);
     db.prepare('COMMIT').run();
-    console.log(`[db] wrote ${bank.length} bank questions`);
+    console.log(`[db] bank questions: ${toInsert.length} added, ${toDelete.length} removed`);
   } catch (e) {
     db.prepare('ROLLBACK').run();
     throw e;
