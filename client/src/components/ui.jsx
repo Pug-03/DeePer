@@ -96,8 +96,10 @@ export function ConfirmProvider({ children }) {
     if (!state) return;
     cancelBtnRef.current?.focus();
     const onKeyDown = (e) => {
+      // Dismissing (Escape, or a tap outside) answers null, not "no", so a
+      // caller can tell "chose the second option" from "closed it".
       if (e.key === 'Escape') {
-        close(false);
+        close(null);
         return;
       }
       if (e.key !== 'Tab') return;
@@ -121,7 +123,7 @@ export function ConfirmProvider({ children }) {
     <ConfirmCtx.Provider value={confirm}>
       {children}
       {state && (
-        <div className="modal-overlay fade-in" onClick={() => close(false)}>
+        <div className="modal-overlay fade-in" onClick={() => close(null)}>
           <div
             ref={modalRef}
             className={`modal glass glass--red pop-in${state.pulse === false ? ' modal--calm' : ''}`}

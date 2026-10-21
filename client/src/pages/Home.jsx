@@ -884,6 +884,10 @@ export default function Home() {
   // "no more questions" before any of them came back.
   const toppingUp = useRef(false);
   const [refilling, setRefilling] = useState(false);
+  // The category on screen right now, for dropping a top-up that comes back
+  // after the person has switched category (it would mix the two decks).
+  const catRef = useRef(category);
+  catRef.current = category;
   const fetchBatch = useCallback(async (cat, { reset = false, silent = false, stale } = {}) => {
     if (!reset) {
       if (toppingUp.current) return 0;
@@ -898,7 +902,7 @@ export default function Home() {
       const exclude = [...seen.current].join(',');
       const lv = levelRef.current === 'all' ? '' : `&level=${levelRef.current}`;
       const d = await api.get(`/questions/?category=${cat}${lv}&limit=20&exclude=${exclude}`);
-      if (stale?.()) return 0;
+      if (stale?.() || catRef.current !== cat) return 0;
       const fresh = d.questions.filter((q) => !seen.current.has(q.id));
       fresh.forEach((q) => seen.current.add(q.id));
       setDeck((prev) => (reset ? fresh : [...prev, ...fresh]));
@@ -1052,17 +1056,23 @@ export default function Home() {
 
   // Confirmation is the card itself turning over and fading out (see
   // SAVE_FLIP / SAVE_FADE) instead of a toast; then advance.
+  // Set before the request goes out, so a double tap (or ↑ held) can't save
+  // twice and skip an unseen card.
+  const saving = useRef(false);
   const save = async () => {
-    if (!current || saveFlash) return;
+    if (!current || saveFlash || saving.current) return;
+    saving.current = true;
     try {
       const res = await api.post('/saved', { question_text: current.text, category });
       noteSaved(user?.id, res, { text: current.text, text_en: current.text_en, category });
       setSaveFlash(true);
       setTimeout(() => {
         setSaveFlash(false);
+        saving.current = false;
         advance();
       }, SAVE_MS);
     } catch (e) {
+      saving.current = false;
       toast(e.message);
     }
   };
@@ -1094,10 +1104,13 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  // One question per submit, however fast the button is pressed.
+  const addingBusy = useRef(false);
   const addOwn = async (e) => {
     e.preventDefault();
     const text = newQ.trim();
-    if (!questionLooksReal(text)) return;
+    if (!questionLooksReal(text) || addingBusy.current) return;
+    addingBusy.current = true;
     try {
       // Goes into the category picked in the tabs above the form.
       const d = await api.post('/questions', { category, text });
@@ -1140,11 +1153,13 @@ export default function Home() {
         pulse: false,
         stacked: true,
       }).finally(() => setDialogOpen(false));
+      // Escape or a tap outside the dialog (null) does neither: the question
+      // stays in the deck's category without being saved.
       if (answerNow) {
         nav('/app/answer', {
           state: { question: { text: d.question.text, category: d.question.category } },
         });
-      } else {
+      } else if (answerNow === false) {
         const res = await api.post('/saved', {
           question_text: d.question.text,
           category: d.question.category,
@@ -1158,6 +1173,8 @@ export default function Home() {
       }
     } catch (e2) {
       toast(e2.message);
+    } finally {
+      addingBusy.current = false;
     }
   };
 
