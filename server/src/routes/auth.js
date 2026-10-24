@@ -8,7 +8,7 @@ import { join, basename } from 'node:path';
 import { db } from '../db.js';
 import { isRealImage } from '../images.js';
 import { CATEGORIES } from '../questions-bank.js';
-import { sendOtpEmail, mailerReady } from '../mailer.js';
+import { sendOtpEmail, sendMail, mailerReady } from '../mailer.js';
 import {
   hashPassword,
   verifyPassword,
@@ -132,6 +132,38 @@ function issueOtp(email, purpose) {
   return code;
 }
 
+// Signup and reset answer the same whether or not the email has an account,
+// so neither can be used to check who uses DeePer. When the code can't help
+// (signing up with a taken email, resetting one with no password), the
+// inbox's owner gets a mail saying what to do instead.
+const ACCOUNT_NOTICES = {
+  taken: {
+    subject: 'อีเมลนี้มีบัญชี DeePer อยู่แล้ว',
+    text:
+      'มีคนขอสมัคร DeePer ด้วยอีเมลนี้ แต่อีเมลนี้มีบัญชีอยู่แล้ว\n\n' +
+      'ถ้าเป็นคุณ เข้าสู่ระบบได้เลย ถ้าลืมรหัสผ่าน กด "ลืมรหัสผ่าน" ที่หน้าเข้าสู่ระบบ ' +
+      'ถ้าเคยสมัครด้วย Google ให้กด "เข้าสู่ระบบด้วย Google"',
+  },
+  none: {
+    subject: 'ไม่พบบัญชี DeePer ที่ใช้อีเมลนี้',
+    text:
+      'มีคนขอตั้งรหัสผ่านใหม่ของ DeePer ด้วยอีเมลนี้ แต่ไม่มีบัญชีที่ใช้อีเมลนี้\n\n' +
+      'ถ้าเป็นคุณ อาจสมัครไว้ด้วยอีเมลอื่น หรือสมัครใหม่ได้ที่ https://deeper.in.th',
+  },
+  google: {
+    subject: 'บัญชี DeePer นี้เข้าสู่ระบบด้วย Google',
+    text:
+      'มีคนขอตั้งรหัสผ่านใหม่ของ DeePer ด้วยอีเมลนี้ แต่บัญชีนี้สมัครด้วย Google และยังไม่มีรหัสผ่าน\n\n' +
+      'ถ้าเป็นคุณ กด "เข้าสู่ระบบด้วย Google" ที่หน้าเข้าสู่ระบบ แล้วตั้งรหัสผ่านได้ในหน้าตั้งค่าบัญชี',
+  },
+};
+const sendAccountNotice = (to, kind) =>
+  sendMail({
+    to,
+    subject: ACCOUNT_NOTICES[kind].subject,
+    text: `${ACCOUNT_NOTICES[kind].text}\n\nถ้าคุณไม่ได้ขอ ไม่ต้องทำอะไร\n\nDeePer`,
+  });
+
 const sameCode = (a, b) => {
   const x = Buffer.from(String(a));
   const y = Buffer.from(String(b));
@@ -239,10 +271,17 @@ router.post('/otp/request', sendCodeLimiter, asyncRoute(async (req, res) => {
   if (gate) return res.status(gate.status).json(gate.body);
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing)
-    return res
-      .status(409)
-      .json({ error: 'อีเมลนี้มีบัญชีอยู่แล้ว', error_code: 'EMAIL_TAKEN' });
+  if (existing) {
+    try {
+      await sendAccountNotice(email, 'taken');
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('[otp] notice failed', e);
+      return res
+        .status(500)
+        .json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่', error_code: 'OTP_SEND_FAILED' });
+    }
+  }
 
   const tooMany = otpSendLimit(email, 'register');
   if (tooMany) return res.status(tooMany.status).json(tooMany.body);
@@ -411,15 +450,17 @@ router.post('/password-reset/request', sendCodeLimiter, asyncRoute(async (req, r
     return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
 
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user)
-    return res
-      .status(404)
-      .json({ error: 'ไม่พบบัญชีที่ใช้อีเมลนี้', error_code: 'EMAIL_NOT_FOUND' });
-  if (!user.password_hash)
-    return res.status(400).json({
-      error: 'บัญชีนี้สมัครด้วย Google กรุณาเข้าสู่ระบบด้วย Google แทน',
-      error_code: 'ACCOUNT_IS_GOOGLE',
-    });
+  if (!user || !user.password_hash) {
+    try {
+      await sendAccountNotice(email, user ? 'google' : 'none');
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('[password-reset] notice failed', e);
+      return res
+        .status(500)
+        .json({ error: 'ส่งรหัส OTP ไม่สำเร็จ กรุณาลองใหม่', error_code: 'OTP_SEND_FAILED' });
+    }
+  }
 
   const tooMany = otpSendLimit(email, 'reset');
   if (tooMany) return res.status(tooMany.status).json(tooMany.body);

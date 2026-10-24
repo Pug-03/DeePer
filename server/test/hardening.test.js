@@ -47,3 +47,16 @@ test('the health check reads the database and reports disk space', async () => {
   assert.equal(res.body.ok, true);
   assert.equal(typeof res.body.disk_low, 'boolean');
 });
+
+test('signup and reset answer the same whether or not the email has an account', async () => {
+  const { email } = await registerUser(base);
+  const anon = api(base);
+
+  const taken = await anon.post('/auth/otp/request', { email });
+  assert.equal(taken.status, 200);
+  assert.equal(taken.body.dev_code, undefined); // a notice goes out, not a code
+
+  const unknown = await anon.post('/auth/password-reset/request', { email: `nobody_${Date.now()}@example.com` });
+  assert.equal(unknown.status, 200);
+  assert.equal(unknown.body.dev_code, undefined);
+});
