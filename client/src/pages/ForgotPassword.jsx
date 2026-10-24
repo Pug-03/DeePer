@@ -24,7 +24,7 @@ export default function ForgotPassword() {
   const [err, setErr] = useState('');
 
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpKey, setOtpKey] = useState(0);
   const [otpStatus, setOtpStatus] = useState('idle'); // idle | error | success
   // The last OTP error, kept under the boxes after the shake until they type
@@ -45,7 +45,7 @@ export default function ForgotPassword() {
     try {
       const d = await api.post('/auth/password-reset/request', { email }, { auth: false });
       setStep('otp');
-      setOtp(['', '', '', '']);
+      setOtp(['', '', '', '', '', '']);
       setOtpKey((k) => k + 1);
       setOtpStatus('idle');
       if (d.dev_code) toast(t('signup.devOtp', { code: d.dev_code }));
@@ -59,7 +59,7 @@ export default function ForgotPassword() {
   const verifyOtp = async (e) => {
     e.preventDefault();
     const code = otp.join('');
-    if (code.length !== 4) {
+    if (code.length !== 6) {
       // Incomplete: flag it (shake + red blink + message) but keep the digits
       // they've typed so far — no clear/remount, just prompt them to finish.
       setErr(t('signup.otpIncomplete'));
@@ -85,7 +85,7 @@ export default function ForgotPassword() {
       setOtpMsg(e2.message);
       setOtpStatus('error');
       setTimeout(() => {
-        setOtp(['', '', '', '']);
+        setOtp(['', '', '', '', '', '']);
         setOtpKey((k) => k + 1);
         setOtpStatus('idle');
         setErr('');
@@ -183,7 +183,7 @@ export default function ForgotPassword() {
               <b style={{ color: 'var(--text)' }}>{email}</b>
             </p>
           </div>
-          <div style={{ marginBottom: 24 }}>
+          <div className="otp-six" style={{ marginBottom: 24 }}>
             <OtpInput
               key={otpKey}
               value={otp}

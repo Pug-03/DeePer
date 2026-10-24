@@ -299,7 +299,7 @@ test('a reset code dies after a few wrong guesses, and asking again voids the ol
     assert.equal((await anon.post('/auth/password-reset/verify', { email, code: first })).body.error_code, 'OTP_INVALID');
   }
   // Wrong guesses use the code up, even if the right one comes next.
-  const wrong = second === '1111' ? '2222' : '1111';
+  const wrong = second === '111111' ? '222222' : '111111';
   // (The old code above already counted as one wrong guess.)
   const codes = [];
   for (let i = 0; i < 5; i++) codes.push((await anon.post('/auth/password-reset/verify', { email, code: wrong })).body.error_code);

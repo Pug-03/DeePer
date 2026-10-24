@@ -620,8 +620,8 @@ html[data-tour] .fade-up {
   position: relative;
   display: inline-flex;
 }
-/* Six boxes (the signup invite code): narrower boxes sharing the width so
-   the row fits a phone instead of the four-digit OTP's 60px each. */
+/* Six boxes (the invite code and the emailed OTP): narrower boxes sharing
+   the width so the row fits a phone instead of 60px each. */
 .otp-six .otp-row {
   gap: 8px;
 }

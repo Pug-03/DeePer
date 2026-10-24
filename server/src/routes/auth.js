@@ -84,7 +84,7 @@ const upsertPartner = (userId, category, { name, color, icon, avatar_url }) =>
 const isEmail = (s) =>
   typeof s === 'string' && s.length <= 254 && /^[^\s@()<>,;:"\[\]\\]+@[^\s@()<>,;:"\[\]\\]+\.[^\s@()<>,;:"\[\]\\]+$/.test(s);
 
-// One-time codes (4 digits, mailed for signup and password reset). Guarding
+// One-time codes (6 digits, mailed for signup and password reset). Guarding
 // them is what keeps a reset code from being guessed into someone's account:
 // - only the newest code for an email works (asking again voids the old ones),
 // - a code dies after OTP_MAX_TRIES wrong guesses,
@@ -92,12 +92,12 @@ const isEmail = (s) =>
 //   OTP_SENDS_PER_DAY a day,
 // all counted per email, so spreading guesses over many IPs doesn't help.
 // The daily cap is what bounds a patient attacker: 6 codes x 5 tries is 30
-// guesses a day out of 10,000, where the hourly cap alone allowed ~600.
+// guesses a day out of 1,000,000.
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_MAX_TRIES = 5;
 const OTP_SENDS_PER_HOUR = 5;
 const OTP_SENDS_PER_DAY = 6;
-const genOtp = () => String(randomInt(1000, 10000));
+const genOtp = () => String(randomInt(100000, 1000000));
 
 // null when a new code may be sent, else { status, body }.
 function otpSendLimit(email, purpose) {
@@ -186,7 +186,7 @@ const recordLogin = (userId, method, req) => {
 // Now each kind of request has its own counter, and the ones that guard a
 // secret (OTP checks, passwords) only count failed attempts: a correct code
 // or password never uses up the allowance. The caps still stop someone
-// working through the 10,000 possible 4-digit OTPs before they expire.
+// working through the 1,000,000 possible 6-digit OTPs before they expire.
 //
 // Outside production (local dev) the caps are far higher, so testing the
 // signup flow over and over doesn't lock you out; the test suite likewise.
@@ -264,7 +264,7 @@ router.post('/otp/request', sendCodeLimiter, asyncRoute(async (req, res) => {
 router.post('/otp/verify', checkSecretLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
-  if (!isEmail(email) || !/^\d{4}$/.test(code))
+  if (!isEmail(email) || !/^\d{6}$/.test(code))
     return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', error_code: 'INVALID_INPUT' });
 
   const { error } = checkOtp(email, 'register', code);
@@ -440,7 +440,7 @@ router.post('/password-reset/request', sendCodeLimiter, asyncRoute(async (req, r
 router.post('/password-reset/verify', checkSecretLimiter, (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const code = String(req.body.code || '').trim();
-  if (!isEmail(email) || !/^\d{4}$/.test(code))
+  if (!isEmail(email) || !/^\d{6}$/.test(code))
     return res.status(400).json({ error: 'ข้อมูลไม่ถูกต้อง', error_code: 'INVALID_INPUT' });
 
   const { error } = checkOtp(email, 'reset', code);
