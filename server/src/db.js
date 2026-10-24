@@ -377,13 +377,15 @@ db.exec(`
 
 // Housekeeping for tables that otherwise only grow. OTP rows are dead after
 // 10 minutes and only the last day counts toward the send caps; resolved
-// browser errors are kept 90 days for reference. Runs at boot and daily
+// browser errors are kept 90 days for reference, visit counts a year (the
+// admin dashboard only charts the last 14 days). Runs at boot and daily
 // (see index.js).
 export function pruneOldRows() {
   db.exec(`
     DELETE FROM otp_codes WHERE created_at < datetime('now', '-2 days');
     DELETE FROM client_errors WHERE resolved_at IS NOT NULL AND resolved_at < datetime('now', '-90 days');
     DELETE FROM login_history WHERE created_at < datetime('now', '-90 days');
+    DELETE FROM site_visits WHERE day < date('now', '+7 hours', '-365 days');
   `);
 }
 pruneOldRows();
