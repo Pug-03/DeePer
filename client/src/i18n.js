@@ -890,7 +890,6 @@ export const STRINGS = {
     'login.email': 'Email',
     'login.password': 'Password',
     'login.forgot': 'Forgot password?',
-    'login.forgotToast': 'Please contact the admin to reset your password',
     'login.submit': 'Log in',
     'login.submitBusy': 'Logging in...',
     'login.noAccount': 'No account yet?',
