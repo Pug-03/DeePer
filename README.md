@@ -1,289 +1,266 @@
-# DeePer 💬
+<div align="center">
 
-**ภาษาไทย** · [English](./README.en.md)
+<img src="client/public/favicon.svg" width="64" height="64" alt="DeePer logo" />
 
-> แอปการ์ดคำถามชวนคุยลึก ๆ สำหรับใช้ร่วมกัน **บนเครื่องเดียว** — คู่รัก / เพื่อน ๆ / ครอบครัว
-> ดีไซน์ Glassmorphism โทนดำ–แดง เน้นประสบการณ์บน iPad / iPhone (mobile-first, รองรับ gesture ปัด)
+# DeePer
 
----
+### Talk deeper, one question at a time.
 
-## ✨ ไฮไลต์
+Question cards for couples, friends and family who share one phone.<br />
+Swipe to a question, answer it in turns, and keep every answer to read again later.
 
-- 🃏 **การ์ดคำถามปัดได้** — ปัดซ้าย = ข้าม, ปัดขวา = ตอบ พร้อมปุ่มลัด ข้าม / บันทึก / ตอบ
-- 🗂️ **3 หมวด × 36 คำถาม** คัดสรร (คู่รัก / เพื่อน / ครอบครัว)
-- ✍️ **หน้าตอบผลัดกันพิมพ์** ("ถึงตาอีกฝ่าย") ตั้งชื่อ + เลือกสีอีกฝ่ายได้
-- 🔖 **บันทึกไว้ / ประวัติ** เรียงใหม่สุดบนสุด พร้อมวันที่
-- 🔐 **สมัคร/เข้าสู่ระบบ** ด้วยอีเมล + OTP 4 หลัก หรือ Google OAuth
-- 🌐 **สองภาษา** ไทย / อังกฤษ สลับได้ในแอป
-- 📱 **PWA** เพิ่มลงหน้าจอโฮมแล้วเปิดแบบเต็มจอได้
+<p>
+  <img alt="React 18" src="https://img.shields.io/badge/React-18-149ECA?style=flat-square&logo=react&logoColor=white" />
+  <img alt="Vite 5" src="https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white" />
+  <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" />
+  <img alt="Express 4" src="https://img.shields.io/badge/Express-4-111111?style=flat-square&logo=express&logoColor=white" />
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-node%3Asqlite-0F80CC?style=flat-square&logo=sqlite&logoColor=white" />
+  <img alt="Tests" src="https://img.shields.io/badge/tests-node%3Atest-D10039?style=flat-square&logo=nodedotjs&logoColor=white" />
+</p>
 
----
+<img src="docs/readme/banner.jpg" alt="The DeePer landing page in a browser window: the glowing DeePer wordmark, the line Deep-conversation cards for couples, friends and family, sign-up buttons, and a tilted question card asking When did we feel closest to each other?" width="100%" />
 
-## 🧱 เทคโนโลยี
+</div>
 
-| ส่วน | ใช้ |
-|---|---|
-| Frontend | React 18 + Vite 5 + Framer Motion 11 + React Router 6 |
-| Backend | Node.js + Express 4 |
-| ฐานข้อมูล | SQLite ผ่าน `node:sqlite` (ในตัว Node — ไม่ต้อง build อะไรเพิ่ม) |
-| Auth | JWT + bcryptjs, OTP 4 หลัก, Google OAuth (`google-auth-library`) |
-| อีเมล | Nodemailer (fallback = พิมพ์ OTP ลง console) |
-| อัปโหลดรูป | Multer |
+<br />
 
-> แอปทำงานได้ทันทีโดยไม่ต้องตั้งค่าอะไรเลย — Google และการส่งอีเมล OTP จริง เป็น **ออปชัน**
-> (ถ้าไม่ตั้งค่า: OTP จะแสดงใน console ของเซิร์ฟเวอร์, ปุ่ม Google ถูกปิด, ใช้เฉพาะคลังคำถามที่คัดสรร)
+## Why DeePer
 
----
+"Have you eaten?" "How was your day?" "Home yet?" Most of what people we love hear from us is the same few questions. DeePer gives two people something better to ask. Open it on one phone, pick who you're talking with and how deep to go, and pass the phone back and forth. Nobody else needs to download anything.
 
-## 🏗️ สถาปัตยกรรมระบบ
+<table>
+  <tr>
+    <td width="33%" valign="top"><h4>1,050 questions</h4>Couple, friends and family, each in three levels from easy openers to deep ones, all in Thai and English. The deck can start light and get deeper as you play.</td>
+    <td width="33%" valign="top"><h4>Swipe, then take turns</h4>Swipe right to answer, left to skip, or save a card for later. You type your answer, then hand the phone over for theirs.</td>
+    <td width="33%" valign="top"><h4>A partner per circle</h4>Give your partner, your friend and your family their own name, photo or icon, and colour. Each category remembers who you're talking with.</td>
+  </tr>
+  <tr>
+    <td valign="top"><h4>Your own questions</h4>Add a question to any category and it joins the deck with an "ours" label.</td>
+    <td valign="top"><h4>History and memories</h4>Every answer is kept, newest first. Now and then the app brings back a question you talked about before.</td>
+    <td valign="top"><h4>Share a card</h4>Turn any question into an image sized for an IG Story or LINE in a few seconds.</td>
+  </tr>
+</table>
 
-Client เป็น React SPA (PWA) เรียก REST API ของ Express ตัวเดียว ซึ่งต่อออกไปอีก 2 ทาง: ฐานข้อมูล SQLite (เก็บข้อมูลผู้ใช้/คำถาม) และ Google OAuth (สมัคร/เข้าสู่ระบบด้วย Google แบบออปชัน)
+<br />
+
+## A look around
+
+<img src="docs/readme/app.jpg" alt="Four iPhones showing DeePer: the question deck with skip, save and answer buttons; History with both people's answers opened under a question; Saved questions across categories; and the partner settings with a name, icon picker and colour swatches." width="100%" />
+<p align="center"><sub><b>Deck, History, Saved and My partner.</b> Built for one phone held between two people.</sub></p>
+
+<br />
+
+## Architecture
+
+DeePer is one Node process. Express serves the JSON API under `/api` and the built React app from `client/dist`, so a deploy is a single web service with a disk. SQLite runs through Node's built-in `node:sqlite`, so there is nothing native to compile.
 
 ```mermaid
 flowchart LR
-    Client["Client\n(React PWA)"] -->|"REST /api/*"| Server["Express API Server"]
-    Server --> DB[("SQLite\n(node:sqlite)")]
-    Server --> Google["Google OAuth\n(สมัคร/ล็อกอิน)"]
+    subgraph Browser
+        UI["React pages<br/>landing · deck · answer · saved<br/>history · profile · admin"]
+        LS[("localStorage<br/>token · language · category")]
+    end
+
+    subgraph Server["Node + Express (one process)"]
+        API["/api routes<br/>auth · questions · data · support<br/>reports · reviews · admin"]
+        STATIC["Static client/dist<br/>+ SEO tags per route"]
+        JOBS["Daily jobs<br/>prune old rows · support digest"]
+    end
+
+    subgraph Disk["Persistent disk (DATA_DIR)"]
+        DB[("SQLite<br/>deeptalk.db")]
+        UP[("uploads/<br/>avatars · sponsor logos")]
+        PRIV[("private-uploads/<br/>slips · report screenshots")]
+    end
+
+    GOOGLE["Google Identity"]
+    SMTP["SMTP<br/>OTP and notices"]
+
+    UI --> API
+    UI --> LS
+    STATIC --> UI
+    API --> DB
+    API --> UP
+    API --> PRIV
+    JOBS --> DB
+    API --> SMTP
+    UI -. sign in .-> GOOGLE
+    API -. verify ID token .-> GOOGLE
 ```
 
----
+### Signing up before and after launch
 
-## 🧭 เส้นทางการใช้งาน (User Flow)
-
-จากหน้าแรกไปจนถึงการใช้งานจริง: สมัคร/ล็อกอินแล้วมาเจอหน้าถามว่าอยากดูตัวอย่างการใช้งาน (onboarding tour) ไหม — ถ้าใช่ ทัวร์จะพาไล่ดูตั้งแต่หน้าหลักไปจนถึงบันทึกไว้และประวัติ ถ้าข้าม ก็เข้าหน้าหลักได้ทันทีเหมือนกัน
+Until `SIGNUP_OPENS_AT` (11/11/2569 11:11 Bangkok time by default), signing up needs a six-digit invite code. After that anyone can sign up, with no deploy needed. Logging in to an existing account is never gated.
 
 ```mermaid
-flowchart TD
-    A["Landing Page"] --> B["สมัคร / เข้าสู่ระบบ"]
-    B --> C["ถามว่าอยากดูตัวอย่างการใช้งานไหม"]
-    C -->|"อยากดู"| D["Onboarding Tour\nหน้าหลัก → บันทึกไว้ → ประวัติ"]
-    C -->|"ข้าม"| E["หน้าหลัก (การ์ดคำถาม)"]
-    D --> E
-    E --> F["บันทึกไว้"]
-    E --> G["ประวัติ"]
+flowchart LR
+    START(["Sign up"]) --> OPEN{"Past<br/>SIGNUP_OPENS_AT?"}
+    OPEN -- no --> INVITE["Invite code<br/>4 wrong: 30 s lock · 6 wrong: 15 min"]
+    INVITE --> HOW
+    OPEN -- yes --> HOW{"How?"}
+    HOW -- email --> OTP["6-digit code by email<br/>10 min · 6 codes per day"]
+    HOW -- Google --> GOOGLE["Google ID token<br/>verified on the server"]
+    OTP --> PROFILE["Nickname, age, gender<br/>password + privacy consent"]
+    GOOGLE --> PROFILE
+    PROFILE --> APP(["Deck"])
 ```
 
----
+The same message comes back whether or not an email already has an account; people who do get a notice by email instead of a code.
 
-## 🗄️ โครงสร้างฐานข้อมูล
+<br />
 
-ตารางหลักที่เชื่อมกับผู้ใช้ด้วย foreign key: `questions` (คำถามที่ผู้ใช้เพิ่มเอง), `saved_questions`, `history`, และ `support_proofs` (ยอมให้ `user_id` เป็น NULL ได้) — ส่วน `otp_codes` อ้างอิงด้วยอีเมลตรง ๆ ไม่มี foreign key และ `app_meta` เป็น key-value ทั่วไป จึงไม่แสดงในแผนภาพนี้
+## Getting started
 
-```mermaid
-erDiagram
-    users ||--o{ questions : "เพิ่มคำถามเอง (source='user')"
-    users ||--o{ saved_questions : บันทึกไว้
-    users ||--o{ history : ตอบแล้ว
-    users |o--o{ support_proofs : "ส่งหลักฐานสนับสนุน (ออปชัน)"
-
-    users {
-        int id PK
-        string email
-        string google_sub
-        string nickname
-        int age
-        string gender
-        string password_hash
-        string avatar_url
-        string partner_name
-        string partner_color
-        string created_at
-    }
-    questions {
-        int id PK
-        string category
-        string text
-        string source
-        int user_id FK
-        string created_at
-    }
-    saved_questions {
-        int id PK
-        int user_id FK
-        string question_text
-        string category
-        string created_at
-    }
-    history {
-        int id PK
-        int user_id FK
-        string question_text
-        string category
-        string my_answer
-        string partner_answer
-        string partner_name
-        string partner_color
-        string created_at
-    }
-    support_proofs {
-        int id PK
-        int user_id FK
-        string display_name
-        string transfer_date
-        string transfer_time
-        real amount
-        string slip_path
-        int notified
-        string created_at
-    }
-```
-
----
-
-## ✅ ความต้องการของระบบ
-
-- **Node.js 22+** (แนะนำ 24) — จำเป็นเพราะใช้ `node:sqlite`
-- npm
-
----
-
-## 🚀 เริ่มใช้งาน (Development)
+Needs **Node.js 22 or newer** (24 is what production runs) for `node:sqlite`.
 
 ```bash
-# 1) ติดตั้ง dependencies ทั้งหมด (server + client)
-npm run install:all
-
-# 2) รันเซิร์ฟเวอร์ (เทอร์มินัลที่ 1)
-npm run dev:server      # http://localhost:4000
-
-# 3) รัน client (เทอร์มินัลที่ 2)
-npm run dev:client      # http://localhost:5173  ← เปิดอันนี้ในเบราว์เซอร์
+npm run install:all     # server + client dependencies
+npm run dev:server      # API on http://localhost:4000
+npm run dev:client      # app on http://localhost:5173  ← open this
 ```
 
-Vite dev server จะ proxy `/api` และ `/uploads` ไปที่เซิร์ฟเวอร์พอร์ต 4000 ให้อัตโนมัติ
-
-### 🍎 รันบน Mac (Terminal)
-
-เช็คก่อนว่ามี Node 22+ ไหม (ถ้าไม่มีให้ `brew install node`):
+Vite proxies `/api` and `/uploads` to port 4000. Nothing else is needed: without SMTP the OTP is printed in the server console and shown on screen in development, and without `GOOGLE_CLIENT_ID` the Google button is turned off. Before launch you also need `INVITE_CODE` in `server/.env` to sign up, or set `SIGNUP_OPENS_AT` to a past date.
 
 ```bash
-node -v
+npm --prefix server test    # server tests (node:test)
+npm run build               # client → client/dist
+npm start                   # production: API + app on one port
 ```
 
-จากนั้นเปิด Terminal 2 หน้าต่าง (หรือ 2 แท็บ) ที่โฟลเดอร์โปรเจกต์:
+<br />
 
-```bash
-# ครั้งแรกครั้งเดียว
-cd ~/Desktop/Code/Dee_Per
-npm run install:all
+## Project structure
+
+```
+server/
+├─ src/
+│  ├─ index.js            entry: listen, daily pruning, graceful shutdown
+│  ├─ app.js              Express app, helmet, CORS, static client + SEO
+│  ├─ db.js               schema, migrations, question bank sync, pruning
+│  ├─ questions/          couple.js · friends.js · family.js   ([Thai, English] pairs per level)
+│  ├─ routes/             auth · questions · data · support · reports · reviews
+│  │                      inquiries · testers · visits · clientErrors · admin
+│  ├─ auth.js             JWT sessions, bcrypt, admin sign-in
+│  ├─ signupGate.js       invite code until launch
+│  ├─ mailer.js           OTP and notice emails (console fallback)
+│  └─ *-proof(s).js, list-reports.js, send-digest.js    admin CLI scripts
+└─ test/                  node:test suites
+
+client/
+├─ public/                icons, manifest (PWA), robots.txt, llms.txt
+└─ src/
+   ├─ pages/              Welcome, Signup, Login, Home (deck), Answer, Saved, History,
+   │                      Profile and its settings pages, Support, Awards, Admin…
+   ├─ components/         BottomNav, OtpInput, OnboardingTour, DeepWater, Countdown…
+   ├─ store/              auth, i18n, tutorial contexts
+   ├─ utils/              share card, image shrink, memories, password rules…
+   ├─ i18n.js             every Thai and English string
+   └─ styles.css          the design system (dark, red glow)
+
+render.yaml              Render Blueprint: one web service + persistent disk
 ```
 
-**หน้าต่างที่ 1 — เซิร์ฟเวอร์**
-```bash
-cd ~/Desktop/Code/Dee_Per
-npm run dev:server
-```
+<br />
 
-**หน้าต่างที่ 2 — client**
-```bash
-cd ~/Desktop/Code/Dee_Per
-npm run dev:client
-```
+## Tech stack
 
-เปิดเบราว์เซอร์ที่ **http://localhost:5173**
-
-### 🔑 ทดสอบ OTP โดยไม่ตั้งค่า SMTP
-
-ตอนสมัครด้วยอีเมล ระบบจะพิมพ์รหัส OTP ลงใน console ของเซิร์ฟเวอร์ และ (ในโหมดพัฒนา) เด้ง toast บอกรหัสบนหน้าจอด้วย
-
----
-
-## 📦 Build & Deploy (Production)
-
-```bash
-npm run build           # สร้าง client/dist
-npm start               # เซิร์ฟเวอร์เสิร์ฟทั้ง API และหน้าเว็บที่พอร์ตเดียว (4000)
-```
-
-เมื่อมีโฟลเดอร์ `client/dist` อยู่ เซิร์ฟเวอร์ Express จะเสิร์ฟไฟล์ static + fallback ไปที่ `index.html`
-พร้อม deploy ขึ้นบริการที่รัน Node ได้ (Render / Railway / Fly.io / VPS ฯลฯ) — ตั้ง env `PORT` ตามที่ผู้ให้บริการกำหนด
-
----
-
-## ⚙️ ตั้งค่าเพิ่มเติม (ทั้งหมดเป็น optional)
-
-คัดลอก `server/.env.example` เป็น `server/.env` แล้วเติมค่า:
-
-| ตัวแปร | ผล |
+| Area | Choice |
 |---|---|
-| `JWT_SECRET` | ความลับสำหรับเซ็น token (**ต้อง**ตั้งค่าจริงตอน deploy — ถ้า `NODE_ENV=production` แล้วไม่ตั้ง เซิร์ฟเวอร์จะไม่ยอมสตาร์ท) |
-| `NODE_ENV` | ตั้งเป็น `production` ตอน deploy จริง — บังคับตั้ง `JWT_SECRET` เอง และซ่อนรหัส OTP ออกจาก response แม้ยังไม่ได้ตั้งค่า SMTP |
-| `CORS_ORIGIN` | โดเมนของ client ที่อนุญาตให้เรียก API (คั่นด้วย `,`) — ไม่ตั้งค่า = อนุญาตทุกโดเมน |
-| `TRUST_PROXY` | ตั้งเป็น `true` ถ้า deploy หลัง reverse proxy (Render/Railway/Fly.io/nginx ฯลฯ) ไม่งั้นระบบกันสแปม login/OTP จะเห็น IP ผู้ใช้ทุกคนเป็นค่าเดียว |
-| `GOOGLE_CLIENT_ID` | เปิดปุ่มเข้าสู่ระบบ/สมัครด้วย Google (สร้างที่ Google Cloud Console, ประเภท Web) |
-| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` / … | ส่งอีเมล OTP จริง |
-| `PORT` | พอร์ตของเซิร์ฟเวอร์ (ดีฟอลต์ 4000) |
+| Client | React 18, Vite 5, React Router 6 |
+| Motion | Framer Motion, Lenis smooth scroll |
+| Icons | lucide-react |
+| Server | Node.js 24, Express 4, helmet, express-rate-limit |
+| Database | SQLite through `node:sqlite` |
+| Auth | JWT + bcryptjs, email OTP, Google Identity (`google-auth-library`) |
+| Email | Nodemailer |
+| Uploads | Multer, with image type checks and a low-disk guard |
+| Tests | `node:test` |
+| Hosting | Render (Singapore), starter plan with a 1 GB disk |
 
-> **Google OAuth:** เพิ่ม origin ของเว็บ (เช่น `http://localhost:5173` และโดเมน production) ใน
-> "Authorized JavaScript origins" ของ OAuth Client แล้วนำ Client ID มาใส่ใน `GOOGLE_CLIENT_ID`
+<br />
 
----
+## Configuration
 
-## 📁 โครงสร้างโปรเจกต์
+<details>
+<summary><b>Environment variables</b></summary>
 
-ภาพรวมระดับบนสุด (ลึก 2 ชั้น) — รายละเอียดไฟล์จริงทั้งหมดอยู่ในโครงสร้างแบบ tree ด้านล่าง
+<br />
 
-```mermaid
-flowchart TD
-    Root["Dee_Per/"] --> Server["server/"]
-    Root --> Client["client/"]
-    Server --> ServerSrc["src/\n(routes, db, auth, mailer)"]
-    Server --> ServerEnv[".env.example"]
-    Client --> ClientSrc["src/\n(pages, components, store, utils)"]
-    Client --> ClientPublic["public/"]
-```
+Put these in `server/.env` locally, or in the host's environment. Only `JWT_SECRET` is required in production; the server refuses to start with the default when `NODE_ENV=production`.
 
-```
-Dee_Per/
-├── server/                    # Express + SQLite
-│   ├── src/
-│   │   ├── index.js           # entry — เสิร์ฟ API + static
-│   │   ├── db.js              # schema + seed คลังคำถาม (node:sqlite)
-│   │   ├── auth.js            # JWT, bcrypt, กฎรหัสผ่าน
-│   │   ├── mailer.js          # ส่ง OTP (fallback = console)
-│   │   ├── questions-bank.js  # คลังคำถาม 3 หมวด × 36
-│   │   └── routes/            # auth · questions · data (saved/history)
-│   └── .env.example
-└── client/                    # React + Vite
-    └── src/
-        ├── pages/             # Welcome, Signup, Login, ForgotPassword, Home,
-        │                      # Answer, Saved, History, Profile, AccountSettings, Support…
-        ├── components/        # BottomNav, OtpInput, PasswordStrength, GoogleButton, icons, ui…
-        ├── store/             # auth + i18n context
-        ├── utils/             # password, avatar helpers
-        ├── api.js             # ตัวเรียก API
-        └── styles.css         # ดีไซน์ซิสเต็ม (glassmorphism ดำ–แดง)
-```
-
----
-
-## 🧩 ฟีเจอร์ตามสเปค
-
-- หน้าเปิดแอป → เลือกสมัคร / ล็อกอิน
-- สมัครด้วย **Google** (ไม่ต้องตั้งรหัส) หรือ **อีเมล + OTP 4 หลัก** แล้วตั้งรหัสผ่าน
-  - รหัสผ่านต้องมี: พิมพ์ใหญ่ + พิมพ์เล็ก + ตัวเลข + อักขระพิเศษ (มี strength meter ไล่สีแบบเรียลไทม์)
-- **แถบเมนูล่าง 4 อัน:** หน้าหลัก / บันทึกไว้ / ประวัติ / โปรไฟล์
-- **การ์ดคำถาม** glassmorphism ปัดได้ (ซ้าย = ข้าม, ขวา = ตอบ) + ปุ่ม ข้าม / บันทึก / ตอบ
-- **หน้าตอบ 2 ช่อง** ผลัดกันพิมพ์ ("ถึงตาอีกฝ่าย") ตั้งชื่อ + เลือกสีอีกฝ่ายได้
-- **บันทึกไว้ / ประวัติ** เรียงใหม่สุดบนสุด พร้อมวันที่
-- ผู้ใช้เพิ่มคำถามของตัวเองได้ + ผู้พัฒนาแก้คลังได้ที่ `server/src/questions-bank.js`
-
----
-
-## 📜 คำสั่ง npm
-
-| คำสั่ง | ทำอะไร |
+| Variable | What it does |
 |---|---|
-| `npm run install:all` | ติดตั้ง dependencies ของ server และ client |
-| `npm run dev:server` | รันเซิร์ฟเวอร์แบบ dev (auto-reload) ที่พอร์ต 4000 |
-| `npm run dev:client` | รัน Vite dev server ที่พอร์ต 5173 |
-| `npm run build` | build client ไปที่ `client/dist` |
-| `npm start` | รัน production (เสิร์ฟ API + static ที่พอร์ตเดียว) |
-| `npm run proofs` | ดูหลักฐานการโอนของผู้สนับสนุนทั้งหมด พร้อมเลข id และสถานะว่าขึ้นชื่อบนเว็บแล้วหรือยัง |
-| `npm run approve -- <id>` | อนุมัติหลักฐาน (ตรวจสลิปก่อน) ชื่อผู้บริจาคจะขึ้นในระดับ "ผู้สนับสนุนรายบุคคล" หน้าแรก — ใส่ `--revoke` เพื่อซ่อนชื่อกลับ |
+| `NODE_ENV` | `production` on deploy. Enforces a real `JWT_SECRET` and never returns OTP codes in responses. |
+| `JWT_SECRET` | Signs session tokens. |
+| `PORT` | Server port, default 4000. |
+| `DATA_DIR` | Where the database and uploads live. On Render this is the disk at `/var/data`. |
+| `TRUST_PROXY` | `true` behind a reverse proxy, so rate limits see each visitor's IP instead of the proxy's. |
+| `CORS_ORIGIN` | Comma-separated origins allowed to call the API. |
+| `APP_URL` | Public origin used in links inside emails. Falls back to `RENDER_EXTERNAL_URL`. |
+| `GOOGLE_CLIENT_ID` | Turns on Google sign-in. Add your origins under "Authorized JavaScript origins". |
+| `SMTP_HOST` `SMTP_PORT` `SMTP_SECURE` `SMTP_USER` `SMTP_PASS` `SMTP_FROM` `SMTP_REPLY_TO` | Real email for codes and notices. |
+| `INVITE_CODE` | The six-digit code testers type before launch. Unset means nobody can sign up before launch. |
+| `SIGNUP_OPENS_AT` | When signups open to everyone (ISO date). Defaults to the launch. |
+| `ADMIN_EMAIL` `ADMIN_PASSWORD_HASH` | Admin sign-in for `/admin`. Kept out of the database and the repo. |
+| `REPORTS_TO` `SUPPORT_DIGEST_TO` `SUPPORT_DIGEST_DAYS` | Where bug reports and the support-slip digest are emailed, and how often. |
+
+Make the admin password hash with:
+
+```bash
+node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 10))" '<password>'
+```
+
+</details>
+
+<details>
+<summary><b>Deploying on Render</b></summary>
+
+<br />
+
+`render.yaml` describes the service: a Node web service in Singapore with a 1 GB disk mounted at `/var/data`, health check at `/api/health`, and the build installing both halves and building the client. Values marked `sync: false` are set in the dashboard. Render backs up the disk daily.
+
+`/api/health` touches the database and reports `disk_low` when the disk is nearly full; uploads are refused before it fills. On a deploy the server stops taking new connections and closes the database cleanly.
+
+</details>
+
+<details>
+<summary><b>Admin and support</b></summary>
+
+<br />
+
+`/admin` covers visitor and usage stats, bug reports (with screenshots and email replies), support slips (approve, reject or revoke), sponsor inquiries and the sponsor list, tester requests (sending the invite code by email), review moderation and client error logs. Admin tokens last four hours, and five wrong admin passwords lock admin sign-in for 15 minutes.
+
+Slips and report screenshots are private files: only the admin can open them. The same jobs are available from the terminal:
+
+```bash
+npm run proofs      # list support slips
+npm run approve -- <id>    # show a supporter's name on the landing page
+npm run digest      # email the slip digest now
+```
+
+</details>
+
+<details>
+<summary><b>Privacy and data kept</b></summary>
+
+<br />
+
+Visitor counts use a random browser ID and the referring site, never an IP. A daily job deletes OTP codes after 2 days, login history after 90 days, resolved client errors after 90 days and daily visit counts after a year. Deleting an account removes the profile, pictures, saved questions, answers, reviews and login history. The policy shown in the app is in `client/src/utils/privacyPolicy.js`.
+
+</details>
+
+<br />
+
+## Before launch
+
+- [ ] Update the server dependencies flagged by `npm audit` (multer, body-parser, nodemailer, qs).
+- [ ] Move the client to React Router 7.
+- [ ] Split the landing page into its own chunk (the main bundle is about 500 kB).
+- [ ] Add client tests, and server tests for Google sign-in, OTP verify and account deletion.
+- [ ] Name the data controller and a contact email in the privacy policy.
+
+<br />
 
 ---
 
-## 📝 License
-
-โปรเจกต์ส่วนตัว (private) — ยังไม่ได้กำหนดสัญญาอนุญาตแบบเปิด
+<p align="center"><sub>© 2569 DeePer · Private project, no open-source license.</sub></p>
