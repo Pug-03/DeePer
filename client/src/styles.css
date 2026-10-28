@@ -3224,7 +3224,7 @@ a.btn {
   padding: 6px 14px;
   background: none;
   border: none;
-  color: var(--text-faint);
+  color: var(--text-dim);
   /* --cue-p: 0 at the top of the page, 1 once scrolled FADE_PX (ScrollCue). */
   opacity: calc(1 - var(--cue-p, 0));
   transform: scale(calc(1 - 0.5 * var(--cue-p, 0)));
@@ -3239,8 +3239,8 @@ a.btn {
   pointer-events: none;
 }
 @keyframes scrollCueBob {
-  0%, 100% { transform: translateY(0); opacity: 0.55; }
-  50% { transform: translateY(5px); opacity: 1; }
+  0%, 100% { transform: translateY(0); opacity: 0.75; }
+  50% { transform: translateY(6px); opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .scroll-cue svg { animation: none; }
@@ -5185,6 +5185,10 @@ h1, h2, h3, .h1, .h2, .btn, .m-sub, .launch-notice-text, .award-name, .award-res
   }
   .welcome-hero .scroll-cue-wrap {
     grid-area: cue;
+  }
+  .welcome-hero .scroll-cue svg {
+    width: 34px;
+    height: 34px;
   }
   .welcome-hero .lang-float {
     right: 32px;

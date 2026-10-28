@@ -1156,7 +1156,7 @@ function ScrollCue({ label }) {
           else target?.scrollIntoView({ behavior: 'smooth' });
         }}
       >
-        <ChevronDown size={22} strokeWidth={2} />
+        <ChevronDown size={28} strokeWidth={2.5} />
       </button>
     </div>
   );
