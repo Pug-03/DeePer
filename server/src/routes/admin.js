@@ -271,10 +271,10 @@ router.post('/tester-requests/:id/invite', asyncRoute(async (req, res) => {
   const code = process.env.INVITE_CODE;
   if (!code)
     return res.status(400).json({ error: 'ยังไม่ได้ตั้งค่า INVITE_CODE จึงยังส่งรหัสไม่ได้', error_code: 'INVITE_CODE_MISSING' });
-  const { subject, text } = testerInviteEmail({ nickname: r.nickname, code });
+  const { subject, text, html } = testerInviteEmail({ nickname: r.nickname, code });
   // Never mail from the test suite (a real .env may hold SMTP credentials).
   const { delivered } =
-    process.env.NODE_ENV === 'test' ? { delivered: true } : await sendMail({ to: r.email, subject, text });
+    process.env.NODE_ENV === 'test' ? { delivered: true } : await sendMail({ to: r.email, subject, text, html });
   if (!delivered)
     return res.status(503).json({ error: 'ยังไม่ได้ตั้งค่า SMTP จึงส่งอีเมลไม่ได้', error_code: 'MAIL_NOT_CONFIGURED' });
   db.prepare(`UPDATE tester_requests SET invited_at = datetime('now') WHERE id = ?`).run(r.id);
