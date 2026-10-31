@@ -704,6 +704,8 @@ function LaunchOpened({ t }) {
   return (
     <>
       <div className="landing-section launch-opened" ref={ref} data-depth={t('welcome.launch.openEyebrow')}>
+        {/* Desktop only (styles.css): slow beams and a breathing glow behind the title. */}
+        <div className={`launch-aura${inView ? ' is-lit' : ''}`} aria-hidden="true" />
         <Fireworks play={onScreen} />
         <motion.div
           style={{ position: 'relative' }}
