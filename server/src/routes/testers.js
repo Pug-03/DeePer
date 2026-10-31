@@ -42,10 +42,13 @@ router.post('/', requestLimiter, (req, res) => {
   if (!sources.length || sources.length !== new Set(picked).size)
     return res.status(400).json({ error: 'กรุณาเลือกว่ารู้จักเราจากช่องทางไหน', error_code: 'TESTER_SOURCE_REQUIRED' });
 
+  // Asking again counts as a fresh request: it jumps back to the top of the
+  // admin list as not yet invited, even if a code already went out (the
+  // first mail may have been lost or landed in spam).
   db.prepare(
     `INSERT INTO tester_requests (email, nickname, source, source_other) VALUES (?, ?, ?, ?)
      ON CONFLICT(email) DO UPDATE SET nickname = excluded.nickname, source = excluded.source,
-       source_other = excluded.source_other`,
+       source_other = excluded.source_other, invited_at = NULL, created_at = datetime('now')`,
   ).run(email, nickname, source, sourceOther || null);
 
   if (NOTIFY_TO) {

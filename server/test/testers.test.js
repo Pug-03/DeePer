@@ -77,6 +77,13 @@ test('admin sees the request with the email ready to send, then sends it', async
   assert.equal((await admin.post(`/admin/tester-requests/${r.id}/invite`)).status, 200);
   r = (await admin.get('/admin/tester-requests')).body.requests.find((x) => x.email === email);
   assert.ok(r.invited_at);
+
+  // Asking again after the code went out brings it back as a new request.
+  await ask({ nickname: 'Ploy', email, source: 'tiktok' });
+  const again = (await admin.get('/admin/tester-requests')).body.requests;
+  r = again.find((x) => x.email === email);
+  assert.equal(r.invited_at, null);
+  assert.equal(again.filter((x) => x.email === email).length, 1);
 });
 
 test('tester requests are admin-only', async () => {
