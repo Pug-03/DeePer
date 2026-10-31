@@ -221,8 +221,10 @@ html[data-tour] .fade-up {
     opacity: 0;
     transform: translateY(20px);
   }
+  /* No `opacity` here: the fade ends at the element's own opacity, so a
+     disabled button fades in to its dimmed look instead of flashing full
+     strength and then dropping to `.btn:disabled { opacity: .5 }`. */
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -6404,4 +6406,243 @@ html.deep-water body::before {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ---------- Landing, desktop scale-up ----------
+   Phones keep the sizes above; on a computer screen the launch moment,
+   the numbers, the reviews and the sponsor wall get room to be big. */
+.launch-aura {
+  display: none;
+}
+@media (min-width: 960px) {
+  /* Launch moment: the title at full display size, lit from behind by slow
+     rotating beams and a glow that breathes, with a light sweep across
+     the words. */
+  .launch-opened {
+    isolation: isolate;
+  }
+  .launch-aura {
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(1100px, 92vw);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    scale: 0.6;
+    transition: opacity 1.6s cubic-bezier(0.16, 1, 0.3, 1), scale 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .launch-aura.is-lit {
+    opacity: 1;
+    scale: 1;
+  }
+  .launch-aura::before,
+  .launch-aura::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+  }
+  /* Beams: a ring of soft rays in the brand reds and a touch of gold,
+     faded out toward the edge so they never end in a hard line. */
+  .launch-aura::before {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg 14deg,
+      rgba(255, 29, 90, 0.34) 22deg,
+      transparent 32deg 64deg,
+      rgba(255, 210, 217, 0.2) 72deg,
+      transparent 82deg 118deg,
+      rgba(251, 191, 36, 0.18) 126deg,
+      transparent 136deg 178deg,
+      rgba(255, 90, 114, 0.32) 188deg,
+      transparent 198deg 242deg,
+      rgba(255, 29, 90, 0.26) 250deg,
+      transparent 262deg 300deg,
+      rgba(255, 210, 217, 0.18) 308deg,
+      transparent 318deg 360deg
+    );
+    -webkit-mask: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.55) 46%, transparent 100%);
+    mask: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.55) 46%, transparent 100%);
+    filter: blur(6px);
+    animation: launch-beams 38s linear infinite;
+  }
+  .launch-aura::after {
+    inset: 22%;
+    background: radial-gradient(closest-side, rgba(255, 29, 90, 0.42), rgba(190, 18, 60, 0.18) 55%, transparent 100%);
+    filter: blur(20px);
+    animation: launch-breathe 5.5s ease-in-out infinite;
+  }
+  .launch-opened .fireworks {
+    left: -12vw;
+    right: -12vw;
+    top: -200px;
+    width: calc(100% + 24vw);
+    height: calc(100% + 260px);
+  }
+  .landing-more .launch-opened-title {
+    max-width: none;
+    font-size: clamp(64px, 7.4vw, 112px);
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+  .launch-opened-title .sparkle-anchor {
+    background: linear-gradient(
+      100deg,
+      #fff 0%,
+      #fff 38%,
+      #ffd2d9 46%,
+      #fbbf24 50%,
+      #ff5a72 54%,
+      #fff 62%,
+      #fff 100%
+    );
+    background-size: 260% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 6px 40px rgba(255, 29, 90, 0.45));
+    animation: launch-sweep 4.8s cubic-bezier(0.45, 0, 0.2, 1) 1s infinite;
+  }
+  .landing-more .launch-opened .stat-label {
+    margin-top: 22px;
+    font-size: clamp(20px, 1.7vw, 26px);
+    color: rgba(244, 241, 242, 0.78);
+  }
+
+  /* Numbers: the user count as the page's biggest figure, the four totals
+     in one row under it. */
+  .landing-more .stat-kicker {
+    font-size: 19px;
+  }
+  .landing-more .stat-number-wrap > .stat-number {
+    margin-top: 18px;
+    font-size: clamp(120px, 12vw, 190px);
+    letter-spacing: -0.03em;
+    filter: drop-shadow(0 10px 50px rgba(255, 29, 90, 0.35));
+  }
+  .landing-more .stat-label:not(.stat-cell .stat-label) {
+    font-size: 22px;
+  }
+  .landing-more .stat-grid {
+    margin-top: 64px;
+    max-width: 1080px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 32px;
+  }
+  .landing-more .stat-cell {
+    padding-top: 24px;
+    border-top: 1px solid var(--border-red);
+  }
+  .landing-more .stat-cell .stat-number--sm {
+    font-size: clamp(44px, 4.2vw, 64px);
+    letter-spacing: -0.02em;
+  }
+  .landing-more .stat-cell .stat-label {
+    margin-top: 10px;
+    font-size: 17px;
+  }
+
+  /* Reviews: wide cards in a centered grid, the quote at reading size with
+     a big quote mark hung in the corner. */
+  .landing-more .review-row {
+    /* Wider than the text column, so five reviews sit three over two. */
+    width: min(1180px, 92vw);
+    margin: 48px 0 0 50%;
+    translate: -50% 0;
+    padding: 4px 0 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    overflow: visible;
+  }
+  .landing-more .review-card {
+    position: relative;
+    flex: 0 1 340px;
+    padding: 30px 30px 26px;
+    border-top: 2px solid var(--border-red);
+    gap: 24px;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.5s;
+  }
+  .landing-more .review-card blockquote {
+    font-size: 20px;
+    line-height: 1.6;
+  }
+  .landing-more .review-card figcaption {
+    font-size: 15px;
+  }
+  .landing-more .review-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-red);
+    box-shadow: 0 24px 50px -24px rgba(255, 29, 90, 0.45);
+  }
+
+  /* Sponsors: logos about 1.6x, and the sealing tape scaled to match so it
+     still covers each row before launch. */
+  .landing-more .sponsor-tiers {
+    margin-top: 40px;
+    gap: 56px;
+  }
+  .landing-more .sponsor-tier-label {
+    font-size: 17px;
+  }
+  .landing-more .sponsor-wall {
+    gap: 28px 56px;
+  }
+  .landing-more .sponsor-tier-high .sponsor-logo {
+    height: 120px;
+  }
+  .landing-more .sponsor-tier-high .sponsor-logo img {
+    max-width: 360px;
+  }
+  .landing-more .sponsor-tier-medium .sponsor-logo {
+    height: 84px;
+  }
+  .landing-more .sponsor-tier-medium .sponsor-logo img {
+    max-width: 270px;
+  }
+  .landing-more .sponsor-tier-general .sponsor-logo {
+    height: 58px;
+  }
+  .landing-more .sponsor-tier-general .sponsor-logo img {
+    max-width: min(210px, 100%);
+  }
+  .landing-more .sealed {
+    padding: 20px 0;
+  }
+  .landing-more .sponsor-tape {
+    padding: 18px 0;
+    font-size: 19px;
+    background:
+      repeating-linear-gradient(-45deg, #140a0f 0 12px, transparent 12px 24px) top / 100% 9px no-repeat,
+      repeating-linear-gradient(-45deg, #140a0f 0 12px, transparent 12px 24px) bottom / 100% 9px no-repeat,
+      var(--red-deep);
+  }
+}
+@keyframes launch-beams {
+  to { rotate: 360deg; }
+}
+@keyframes launch-breathe {
+  0%, 100% { opacity: 0.75; scale: 0.92; }
+  50% { opacity: 1; scale: 1.08; }
+}
+@keyframes launch-sweep {
+  0% { background-position: 100% 0; }
+  45%, 100% { background-position: 0% 0; }
+}
+@media (min-width: 960px) and (prefers-reduced-motion: reduce) {
+  .launch-aura::before,
+  .launch-aura::after,
+  .launch-opened-title .sparkle-anchor {
+    animation: none;
+  }
+  .landing-more .review-card {
+    transition: none;
+  }
 }
