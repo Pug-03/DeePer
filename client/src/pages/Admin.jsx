@@ -941,6 +941,9 @@ function TesterRequests({ onLogout, onChange }) {
   const { data, error, reload } = useAdminData(adminApi.testerRequests, onLogout);
   const [filter, setFilter] = useState('open');
   const [sendErr, setSendErr] = useState({});
+  // Emails being edited before sending, by request id: { subject, text }.
+  // Kept only in this tab; reloading the page goes back to the default mail.
+  const [drafts, setDrafts] = useState({});
   const confirm = useConfirm();
   const toast = useToast();
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -976,7 +979,8 @@ function TesterRequests({ onLogout, onChange }) {
     if (!ok) return;
     setSendErr((cur) => ({ ...cur, [r.id]: '' }));
     try {
-      await adminApi.inviteTester(r.id);
+      await adminApi.inviteTester(r.id, drafts[r.id]);
+      setDrafts(({ [r.id]: _, ...rest }) => rest);
       toast('ส่งอีเมลแล้ว');
       reload();
       onChange();
@@ -1046,10 +1050,51 @@ function TesterRequests({ onLogout, onChange }) {
                 </>
               )}
             </dl>
-            <details className="admin-email-preview" open={!r.invited_at}>
-              <summary>อีเมลที่จะส่ง · {r.email_preview.subject}</summary>
-              <p className="admin-message">{r.email_preview.text}</p>
-            </details>
+            {drafts[r.id] ? (
+              <div className="admin-email-preview admin-email-edit">
+                <label htmlFor={`ti-subject-${r.id}`}>หัวข้ออีเมล</label>
+                <input
+                  id={`ti-subject-${r.id}`}
+                  className="input"
+                  maxLength={200}
+                  value={drafts[r.id].subject}
+                  onChange={(e) => setDrafts((cur) => ({ ...cur, [r.id]: { ...cur[r.id], subject: e.target.value } }))}
+                />
+                <label htmlFor={`ti-text-${r.id}`}>ข้อความ (ต้องมีรหัสเชิญอยู่ด้วย)</label>
+                <textarea
+                  id={`ti-text-${r.id}`}
+                  className="input"
+                  rows={16}
+                  maxLength={5000}
+                  value={drafts[r.id].text}
+                  onChange={(e) => setDrafts((cur) => ({ ...cur, [r.id]: { ...cur[r.id], text: e.target.value } }))}
+                />
+                <button
+                  className="link"
+                  type="button"
+                  onClick={() => setDrafts(({ [r.id]: _, ...rest }) => rest)}
+                >
+                  ยกเลิกการแก้ไข ใช้ข้อความเดิม
+                </button>
+              </div>
+            ) : (
+              <details className="admin-email-preview" open={!r.invited_at}>
+                <summary>อีเมลที่จะส่ง · {r.email_preview.subject}</summary>
+                <p className="admin-message">{r.email_preview.text}</p>
+                <button
+                  className="link"
+                  type="button"
+                  onClick={() =>
+                    setDrafts((cur) => ({
+                      ...cur,
+                      [r.id]: { subject: r.email_preview.subject, text: r.email_preview.text },
+                    }))
+                  }
+                >
+                  แก้ไขอีเมลก่อนส่ง
+                </button>
+              </details>
+            )}
             {sendErr[r.id] && <p className="admin-note admin-note--warn">ส่งไม่สำเร็จ: {sendErr[r.id]}</p>}
             <div className="admin-actions">
               <button

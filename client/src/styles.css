@@ -6748,3 +6748,28 @@ html.deep-water body::before {
     transition: none;
   }
 }
+
+/* Admin: editing a tester's invite mail before it goes out. */
+.admin-email-preview .link {
+  margin-top: 10px;
+  font-size: 14px;
+}
+.admin-email-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin-email-edit label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.admin-email-edit textarea {
+  min-height: 320px;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.admin-email-edit .link {
+  align-self: flex-start;
+}

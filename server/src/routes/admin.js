@@ -11,7 +11,7 @@ import { sendMail } from '../mailer.js';
 import { REPORT_DIR } from './reports.js';
 import { UPLOADS_DIR, requireDiskSpace } from '../paths.js';
 import { slipFile } from './support.js';
-import { testerInviteEmail } from '../testerInvite.js';
+import { testerInviteEmail, editedInviteEmail } from '../testerInvite.js';
 import { asyncRoute } from '../asyncRoute.js';
 
 const router = Router();
@@ -271,7 +271,16 @@ router.post('/tester-requests/:id/invite', asyncRoute(async (req, res) => {
   const code = process.env.INVITE_CODE;
   if (!code)
     return res.status(400).json({ error: 'ยังไม่ได้ตั้งค่า INVITE_CODE จึงยังส่งรหัสไม่ได้', error_code: 'INVITE_CODE_MISSING' });
-  const { subject, text, html } = testerInviteEmail({ nickname: r.nickname, code });
+  // The admin may have edited the words before sending; the code itself has
+  // to stay in, or the mail is useless.
+  const editedSubject = String(req.body?.subject ?? '').trim().slice(0, 200);
+  const editedText = String(req.body?.text ?? '').trim().slice(0, 5000);
+  if (editedText && !editedText.includes(code))
+    return res.status(400).json({ error: 'ในอีเมลต้องมีรหัสเชิญอยู่ด้วย', error_code: 'INVITE_CODE_NOT_IN_TEXT' });
+  const base = testerInviteEmail({ nickname: r.nickname, code });
+  const { subject, text, html } = editedText
+    ? editedInviteEmail({ subject: editedSubject || base.subject, text: editedText })
+    : { ...base, subject: editedSubject || base.subject };
   // Never mail from the test suite (a real .env may hold SMTP credentials).
   const { delivered } =
     process.env.NODE_ENV === 'test' ? { delivered: true } : await sendMail({ to: r.email, subject, text, html });

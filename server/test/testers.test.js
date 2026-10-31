@@ -86,6 +86,17 @@ test('admin sees the request with the email ready to send, then sends it', async
   assert.equal(again.filter((x) => x.email === email).length, 1);
 });
 
+test('admin can edit the invite mail, as long as the code stays in', async () => {
+  const email = uniqueEmail('edit');
+  await ask({ nickname: 'Fon', email, source: 'friend' });
+  process.env.INVITE_CODE = '271828';
+  const r = (await admin.get('/admin/tester-requests')).body.requests.find((x) => x.email === email);
+  const without = await admin.post(`/admin/tester-requests/${r.id}/invite`, { subject: 'สวัสดี', text: 'ไม่มีรหัส' });
+  assert.equal(without.body.error_code, 'INVITE_CODE_NOT_IN_TEXT');
+  const ok = await admin.post(`/admin/tester-requests/${r.id}/invite`, { subject: 'สวัสดี Fon', text: 'รหัสของคุณ 271828' });
+  assert.equal(ok.status, 200);
+});
+
 test('tester requests are admin-only', async () => {
   assert.equal((await api(base).get('/admin/tester-requests')).status, 401);
 });
