@@ -28,9 +28,8 @@ ${rows}
 
 // Plain text plus a simple HTML part, like the OTP mail: a text-only mail
 // with a code and a link scores as spammier, and so do emoji.
-// Thai and English together (we don't know which the person reads): the
-// whole mail in Thai, then a rule, then the whole mail again in English,
-// the way Thai banks write theirs.
+// English and Thai together (we don't know which the person reads): the
+// whole mail in English, then a rule, then the whole mail again in Thai.
 export function testerInviteEmail({ nickname, code }) {
   const shownCode = code || '(ยังไม่ได้ตั้งรหัสเชิญ)';
   const LANGS = [
@@ -61,12 +60,12 @@ export function testerInviteEmail({ nickname, code }) {
       team: 'The DeePer team',
     },
   ];
-  const text = LANGS.map(
+  const text = [LANGS[1], LANGS[0]].map(
     (l) =>
       `${l.hi}\n\n${l.thanks}\n\n${l.codeLabel}: ${shownCode}\n\n${l.howTo}\n` +
       l.steps.map((st, i) => `${i + 1}. ${st}`).join('\n') +
       `\n\n${l.feedback}\n\n${l.thankYou}\n${l.team}`,
-  ).join('\n\n— English —\n\n');
+  ).join('\n\n— ภาษาไทย —\n\n');
   const section = (l) => `<tr><td style="padding:0 0 6px;font-size:26px;line-height:1.4;font-weight:bold;color:#ffffff">${escapeHtml(l.hi)}</td></tr>
 <tr><td style="padding:0 0 26px;font-size:15px;line-height:1.7;color:#cbbec3">${escapeHtml(l.thanks)}</td></tr>
 <tr><td style="padding:0 0 26px">
@@ -96,15 +95,15 @@ ${l.steps
 <tr><td style="padding:16px 0 0;border-top:1px solid #2c1820;font-size:13px;line-height:1.7;color:#9a8b91">${escapeHtml(l.feedback)}</td></tr>
 <tr><td style="padding:22px 0 0;font-size:15px;line-height:1.6;color:#e9e1e4">${escapeHtml(l.thankYou)}<br><span style="color:#ff5a72;font-weight:bold">${escapeHtml(l.team)}</span></td></tr>`;
   const html = frame(
-    section(LANGS[0]) +
+    section(LANGS[1]) +
       `<tr><td style="padding:36px 0 32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
   <td style="border-top:1px solid #3a1a24;font-size:0;line-height:0">&nbsp;</td>
-  <td width="1" style="padding:0 14px;font-size:12px;color:#6f676d;white-space:nowrap">English</td>
+  <td width="1" style="padding:0 14px;font-size:12px;color:#6f676d;white-space:nowrap">ภาษาไทย</td>
   <td style="border-top:1px solid #3a1a24;font-size:0;line-height:0">&nbsp;</td>
 </tr></table></td></tr>` +
-      section(LANGS[1]),
+      section(LANGS[0]),
   );
-  return { subject: 'รหัสเชิญทดลองใช้ DeePer ของคุณ · Your DeePer invite code', text, html };
+  return { subject: 'Your DeePer invite code · รหัสเชิญทดลองใช้ DeePer ของคุณ', text, html };
 }
 
 // The same mail after the admin has edited its words in the dashboard: their
