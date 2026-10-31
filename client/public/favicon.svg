@@ -1,11 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- DeePer's tab icon: a rounded dark tile with the app's glowing orb
+  <!-- DeePer's tab icon: a rounded black tile with the app's glowing orb
        filling it (the same light profile as icon-512.png). -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#22101a"/>
-      <stop offset="1" stop-color="#0d070a"/>
-    </linearGradient>
     <radialGradient id="o" cx="50%" cy="50%" r="50%">
       <stop offset="0" stop-color="rgb(255,128,154)"/>
       <stop offset=".1" stop-color="rgb(255,98,132)"/>
@@ -18,6 +14,6 @@
       <stop offset="1" stop-color="rgb(255,40,80)" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
-  <circle cx="32" cy="32" r="30" fill="url(#o)"/>
+  <rect width="64" height="64" rx="14" fill="#000"/>
+  <circle cx="32" cy="32" r="26" fill="url(#o)"/>
 </svg>
