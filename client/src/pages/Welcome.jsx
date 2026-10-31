@@ -2,7 +2,7 @@ import { Fragment, useState, useEffect, useRef, useMemo, useCallback } from 'rea
 import { Link, useNavigate } from 'react-router-dom';
 import { useReturning } from '../components/ScrollToTop.jsx';
 import { motion, useInView, useReducedMotion, animate, cubicBezier } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { useI18n } from '../store/i18n.jsx';
 import { api } from '../api.js';
 import LangToggle from '../components/LangToggle.jsx';
@@ -1830,11 +1830,15 @@ export default function Welcome() {
 
         <div className="spacer" />
         <div className="stack mt-a hero-actions">
-          <button className="btn btn--primary" onClick={() => nav('/signup')}>
+          <button className="btn btn--primary cta-lead" onClick={() => nav('/signup')}>
             {t('welcome.signup')}
+            <ArrowRight className="cta-arrow" aria-hidden="true" />
           </button>
-          <button className="btn btn--ghost" onClick={() => nav('/login')}>
+          <button className="btn btn--ghost cta-side" onClick={() => nav('/login')}>
             {t('welcome.haveAccount')}
+            <span className="cta-side-more">
+              ? <u>{t('login.submit')}</u>
+            </span>
           </button>
         </div>
         <ScrollCue label={t('welcome.scrollMore')} />
@@ -2053,11 +2057,15 @@ export default function Welcome() {
                 </div>
                 <p className="end-tagline end-fade" style={{ '--a': 0.66, '--d': 0.07 }}>{t('welcome.dive.end')}</p>
                 <div className="end-actions end-fade" style={{ '--a': 0.72, '--d': 0.07 }}>
-                  <button className="btn btn--primary end-cta" onClick={() => nav('/signup')}>
+                  <button className="btn btn--primary end-cta cta-lead" onClick={() => nav('/signup')}>
                     {t('welcome.end.cta')}
+                    <ArrowRight className="cta-arrow" aria-hidden="true" />
                   </button>
-                  <button className="btn btn--ghost" onClick={() => nav('/login')}>
+                  <button className="btn btn--ghost cta-side" onClick={() => nav('/login')}>
                     {t('welcome.haveAccount')}
+                    <span className="cta-side-more">
+                      ? <u>{t('login.submit')}</u>
+                    </span>
                   </button>
                 </div>
                 <p className="how-facts end-facts end-fade" style={{ '--a': 0.78, '--d': 0.07 }}>

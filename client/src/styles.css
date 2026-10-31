@@ -6652,3 +6652,99 @@ html.deep-water body::before {
     transition: none;
   }
 }
+
+/* ---------- Landing calls to action, desktop ----------
+   Phones keep the two stacked buttons. On a computer the sign-up button
+   leads (bigger, an arrow, lifts and catches a sweep of light on hover)
+   and "have an account" drops to a small link under it. */
+.cta-arrow,
+.cta-side-more {
+  display: none;
+}
+@media (min-width: 960px) {
+  .welcome-hero .hero-actions,
+  .end-actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 18px;
+  }
+  .welcome-hero .hero-actions {
+    align-items: flex-start;
+  }
+  .end-actions {
+    align-items: center;
+  }
+  .welcome-hero .hero-actions .cta-lead,
+  .end-actions .cta-lead {
+    gap: 14px;
+    width: auto;
+    min-width: 300px;
+    max-width: none;
+    min-height: 72px;
+    padding-inline: 40px;
+    font-size: 21px;
+    transition: translate 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cta-lead .cta-arrow {
+    display: block;
+    width: 22px;
+    height: 22px;
+    transition: translate 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .cta-lead::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    translate: -110% 0;
+    transition: translate 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .cta-lead:hover {
+    translate: 0 -3px;
+    box-shadow: 0 18px 44px -12px rgba(255, 29, 90, 0.85);
+  }
+  .cta-lead:hover::after {
+    translate: 110% 0;
+  }
+  .cta-lead:hover .cta-arrow {
+    translate: 4px 0;
+  }
+  .welcome-hero .hero-actions .cta-side,
+  .end-actions .cta-side {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    gap: 0;
+    padding: 6px 4px;
+    overflow: visible;
+    line-height: 1.7;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .cta-side .cta-side-more {
+    display: inline;
+  }
+  .cta-side u {
+    margin-left: 4px;
+    color: var(--text);
+    text-decoration-color: var(--red-bright);
+    text-underline-offset: 4px;
+  }
+  .cta-side:hover u {
+    color: var(--red-bright);
+  }
+}
+@media (min-width: 960px) and (prefers-reduced-motion: reduce) {
+  .cta-lead,
+  .cta-lead .cta-arrow,
+  .cta-lead::after {
+    transition: none;
+  }
+}
