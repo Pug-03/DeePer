@@ -44,9 +44,11 @@ const FROM = resolveFrom();
 // Optional: where replies go (e.g. the team inbox) when From is a no-reply.
 const REPLY_TO = process.env.SMTP_REPLY_TO || undefined;
 
+// The code leads the subject, so it shows in the inbox list and the phone's
+// notification without opening the mail — the way big senders do it.
 const SUBJECTS = {
-  register: 'รหัสยืนยันการสมัคร DeePer',
-  reset: 'รหัสยืนยันการรีเซ็ตรหัสผ่าน DeePer',
+  register: (code) => `${code} คือรหัสยืนยันการสมัคร DeePer`,
+  reset: (code) => `${code} คือรหัสรีเซ็ตรหัสผ่าน DeePer`,
 };
 const INTROS = {
   register: 'ใช้รหัสนี้เพื่อยืนยันอีเมลและสมัครใช้งาน DeePer',
@@ -72,7 +74,7 @@ function otpBodies(code, purpose) {
 }
 
 export async function sendOtpEmail(to, code, purpose = 'register') {
-  const subject = SUBJECTS[purpose] || SUBJECTS.register;
+  const subject = (SUBJECTS[purpose] || SUBJECTS.register)(code);
   const { text, html } = otpBodies(code, purpose);
 
   if (!transporter) {
