@@ -209,10 +209,11 @@ export default function ForgotPassword() {
           >
             {busy ? t('signup.verifying') : t('signup.verify')}
           </button>
+          <p className="otp-spam-tip">{t('signup.spamTip')}</p>
           <button
             type="button"
             className="link center"
-            style={{ marginTop: 16, width: '100%' }}
+            style={{ marginTop: 4, width: '100%' }}
             onClick={requestOtp}
           >
             {t('signup.resend')}

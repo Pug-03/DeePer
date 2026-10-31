@@ -507,6 +507,12 @@ html[data-tour] .fade-up {
   display: flex;
   gap: 12px;
 }
+.otp-spam-tip {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-faint);
+}
 .link {
   color: var(--red-bright);
   text-decoration: none;
