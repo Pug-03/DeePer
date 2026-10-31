@@ -1024,7 +1024,7 @@ export default function Signup() {
           notice remounts with it and rises in last, below the new form.
           Only on the steps before the email is verified — once someone is
           filling in their profile, the launch countdown is just noise. */}
-      {['method', 'email', 'otp'].includes(step) && <LaunchNotice key={step} t={t} />}
+      {['method', 'email', 'otp'].includes(step) && <LaunchNotice key={step} t={t} tester={config.invite_required && inviteOk} />}
 
     </div>
   );
