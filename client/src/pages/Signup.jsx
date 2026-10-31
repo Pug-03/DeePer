@@ -247,7 +247,7 @@ export default function Signup() {
   const inviteCode = inviteDigits.join('');
 
   // No code yet: ask to join the test instead. The admin emails the code.
-  const [req, setReq] = useState({ nickname: '', email: '', source: '', source_other: '' });
+  const [req, setReq] = useState({ nickname: '', email: '', source: [], source_other: '' });
   const [reqErr, setReqErr] = useState({});
   const setReqField = (k, v) => {
     setReq((cur) => ({ ...cur, [k]: v }));
@@ -260,7 +260,7 @@ export default function Signup() {
     if (!req.nickname.trim()) errs.nickname = 'err.NICKNAME_REQUIRED';
     if (!req.email.trim()) errs.email = 'err.EMAIL_REQUIRED';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(req.email.trim())) errs.email = 'err.INVALID_EMAIL';
-    if (!req.source) errs.source = 'err.TESTER_SOURCE_REQUIRED';
+    if (!req.source.length) errs.source = 'err.TESTER_SOURCE_REQUIRED';
     if (Object.keys(errs).length) return setReqErr(errs);
     setBusy(true);
     try {
@@ -736,21 +736,25 @@ export default function Signup() {
           </div>
           <div className="field">
             <label id="tr-source-label">{t('tester.source')}</label>
-            <div className="filter-row tester-sources" role="radiogroup" aria-labelledby="tr-source-label">
-              {TESTER_SOURCES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  role="radio"
-                  aria-checked={req.source === s}
-                  className={`pill ${req.source === s ? 'active' : ''}`}
-                  onClick={() => setReqField('source', s)}
-                >
-                  {t(`tester.source.${s}`)}
-                </button>
-              ))}
+            <div className="filter-row tester-sources" role="group" aria-labelledby="tr-source-label">
+              {TESTER_SOURCES.map((s) => {
+                const on = req.source.includes(s);
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    aria-pressed={on}
+                    className={`pill ${on ? 'active' : ''}`}
+                    onClick={() =>
+                      setReqField('source', on ? req.source.filter((x) => x !== s) : [...req.source, s])
+                    }
+                  >
+                    {t(`tester.source.${s}`)}
+                  </button>
+                );
+              })}
             </div>
-            {req.source === 'other' && (
+            {req.source.includes('other') && (
               <input
                 className="input"
                 value={req.source_other}

@@ -36,6 +36,20 @@ test('asking to test needs a nickname, a valid email and where they heard of us'
   assert.equal((await ask({ nickname: 'Mint', email: uniqueEmail('t'), source: 'tiktok' })).status, 200);
 });
 
+test('several sources can be picked and are stored together', async () => {
+  const email = uniqueEmail('multi');
+  assert.equal((await ask({ nickname: 'Fah', email, source: ['friend', 'instagram', 'other'], source_other: 'งานแต่ง' })).status, 200);
+  assert.equal(
+    (await ask({ nickname: 'Fah', email: uniqueEmail('t'), source: ['friend', 'radio'] })).body.error_code,
+    'TESTER_SOURCE_REQUIRED',
+  );
+  assert.equal((await ask({ nickname: 'Fah', email: uniqueEmail('t'), source: [] })).body.error_code, 'TESTER_SOURCE_REQUIRED');
+
+  const r = (await admin.get('/admin/tester-requests')).body.requests.find((x) => x.email === email);
+  assert.equal(r.source, 'instagram,friend,other');
+  assert.equal(r.source_other, 'งานแต่ง');
+});
+
 test('admin sees the request with the email ready to send, then sends it', async () => {
   const email = uniqueEmail('invite');
   await ask({ nickname: 'Ploy', email, source: 'other', source_other: 'งานสัมมนา' });

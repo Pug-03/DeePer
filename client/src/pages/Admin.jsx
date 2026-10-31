@@ -1031,7 +1031,10 @@ function TesterRequests({ onLogout, onChange }) {
               </dd>
               <dt>รู้จักจาก</dt>
               <dd>
-                {TESTER_SOURCE[r.source] || r.source}
+                {r.source
+                  .split(',')
+                  .map((s) => TESTER_SOURCE[s] || s)
+                  .join(', ')}
                 {r.source_other ? ` · ${r.source_other}` : ''}
               </dd>
               <dt>ขอเมื่อ</dt>

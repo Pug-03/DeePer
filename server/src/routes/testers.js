@@ -30,12 +30,16 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 router.post('/', requestLimiter, (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase().slice(0, 120);
   const nickname = String(req.body?.nickname || '').trim().slice(0, 40);
-  const source = String(req.body?.source || '');
-  const sourceOther = source === 'other' ? String(req.body?.source_other || '').trim().slice(0, 100) : '';
+  // Several can be picked: an array, or a single string from older clients.
+  // Stored comma-joined in the one `source` column, in the list's own order.
+  const picked = [].concat(req.body?.source ?? []).map(String);
+  const sources = TESTER_SOURCES.filter((s) => picked.includes(s));
+  const source = sources.join(',');
+  const sourceOther = sources.includes('other') ? String(req.body?.source_other || '').trim().slice(0, 100) : '';
 
   if (!nickname) return res.status(400).json({ error: 'กรุณากรอกชื่อเล่น', error_code: 'NICKNAME_REQUIRED' });
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'อีเมลไม่ถูกต้อง', error_code: 'INVALID_EMAIL' });
-  if (!TESTER_SOURCES.includes(source))
+  if (!sources.length || sources.length !== new Set(picked).size)
     return res.status(400).json({ error: 'กรุณาเลือกว่ารู้จักเราจากช่องทางไหน', error_code: 'TESTER_SOURCE_REQUIRED' });
 
   db.prepare(
