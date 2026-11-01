@@ -121,8 +121,10 @@ export default function DiveStory() {
     const tick = () => {
       frame = 0;
       // Ease toward the scroll position so the words glide instead of
-      // jumping with each wheel notch.
-      at += (target - at) * (reduce ? 1 : 0.3);
+      // jumping with each wheel notch. Not on a phone: there the finger
+      // already moves the page smoothly, and easing made the words trail
+      // the swipe and catch up in jerks.
+      at += (target - at) * (reduce || !soft ? 1 : 0.3);
       if (Math.abs(target - at) < 0.0005) at = target;
       paint(at);
       if (at !== target) frame = requestAnimationFrame(tick);
