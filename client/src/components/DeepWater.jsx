@@ -90,7 +90,9 @@ void main() {
   vec3 col = mix(deep, shallow, lit);
 
   // The surface itself: a bright rippling band right under the line.
-  float caus = caustic(vec2(q.x * 0.6, uv.y * 0.35 + u_rise * 0.25), t * 0.35);
+  // Phones (u_air 0: the hero draws the surface there) skip the caustic,
+  // the costliest part of the scene, which they'd barely show anyway.
+  float caus = u_air > 0.5 ? caustic(vec2(q.x * 0.6, uv.y * 0.35 + u_rise * 0.25), t * 0.35) : 0.0;
   float band = exp(-dist * 9.0);
   col += vec3(1.0, 0.42, 0.5) * band * (0.35 + caus * 0.55) * u_air;
   col += vec3(0.9, 0.3, 0.4) * caus * 0.07 * exp(-dist * 2.2);
@@ -161,8 +163,10 @@ function makeWater(canvas) {
     resize() {
       // A soft scene, so render well below full resolution and let it scale
       // up: it looks the same and leaves the GPU room to keep the scroll
-      // smooth (phones, with their dense screens, get a bit less again).
-      const scale = Math.min(window.devicePixelRatio || 1, 2) * (coarse ? 0.3 : 0.45);
+      // smooth (phones, with their dense screens and smaller GPUs, get
+      // less again: at more, the water's redraw starved the page's own
+      // scrolling and the swipe juddered once the water filled the screen).
+      const scale = Math.min(window.devicePixelRatio || 1, 2) * (coarse ? 0.2 : 0.45);
       const w = Math.max(1, Math.round(canvas.clientWidth * scale));
       const h = Math.max(1, Math.round(canvas.clientHeight * scale));
       if (canvas.width !== w || canvas.height !== h) {
