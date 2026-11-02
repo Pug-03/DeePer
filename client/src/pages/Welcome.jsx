@@ -170,6 +170,57 @@ function EndQuestion({ text }) {
   );
 }
 
+// Desktop, last screen: question cards from the deck drifting slowly up
+// either side of the name, like bubbles rising past, leaning a touch toward
+// the mouse. Hidden on phones and touch screens (styles.css).
+const END_CARDS = [
+  { x: '4%', key: 0, dur: 30, delay: 0, r: -6 },
+  { x: '15%', key: 2, dur: 36, delay: -12, r: 4 },
+  { x: '6%', key: 4, dur: 33, delay: -22, r: 3 },
+  { x: '76%', key: 1, dur: 32, delay: -6, r: 5 },
+  { x: '86%', key: 3, dur: 38, delay: -18, r: -4 },
+  { x: '79%', key: 5, dur: 34, delay: -28, r: -7 },
+];
+function EndCards({ t }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !window.matchMedia('(min-width: 960px) and (hover: hover)').matches) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    let frame = 0;
+    let x = 0;
+    let y = 0;
+    const apply = () => {
+      frame = 0;
+      el.style.setProperty('--mx', x.toFixed(3));
+      el.style.setProperty('--my', y.toFixed(3));
+    };
+    const move = (e) => {
+      x = e.clientX / window.innerWidth - 0.5;
+      y = e.clientY / window.innerHeight - 0.5;
+      if (!frame) frame = requestAnimationFrame(apply);
+    };
+    window.addEventListener('pointermove', move, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('pointermove', move);
+    };
+  }, []);
+  return (
+    <div className="end-cards end-fade" style={{ '--a': 0.6, '--d': 0.12 }} ref={ref} aria-hidden="true">
+      {END_CARDS.map((c, i) => (
+        <span
+          key={i}
+          className="end-card"
+          style={{ left: c.x, '--r': `${c.r}deg`, animationDuration: `${c.dur}s`, animationDelay: `${c.delay}s` }}
+        >
+          {t(SAMPLE_KEYS[c.key])}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // The landing's closing scene: how far the scroll has come through the
 // returned ref's (tall) element, 0 → 1, written to it as --p so its pinned
 // scenes can play one after another (.end-scene in styles.css). Positions
@@ -2051,6 +2102,7 @@ export default function Welcome() {
                 <EndQuestion text={t('welcome.end.q')} />
               </div>
               <div className="end-scene end-scene--brand">
+                <EndCards t={t} />
                 <div className="end-brand">
                   <span className="dot" />
                   <span className="brand end-fade" style={{ '--a': 0.56, '--d': 0.1 }}>DeePer</span>
