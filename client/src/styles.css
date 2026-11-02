@@ -5425,20 +5425,20 @@ html.deep-water--native-surface .welcome-hero::before {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -20px;
-  height: 40px;
+  bottom: -16px;
+  height: 32px;
   z-index: 1;
   pointer-events: none;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0.7' stop-color='rgb(112,24,44)'/%3E%3Cstop offset='1' stop-color='rgb(112,24,44)' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 20.0 C25.0 10.0 75.0 10.0 100.0 20.0 S175.0 30.0 200 20.0 V40 H0 Z' fill='url(%23g)'/%3E%3Cpath d='M0 20.0 C25.0 10.0 75.0 10.0 100.0 20.0 S175.0 30.0 200 20.0' fill='none' stroke='rgb(255,150,170)' stroke-opacity='0.95' stroke-width='2'/%3E%3C/svg%3E") 0 0 / 200px 40px repeat-x,
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='40' viewBox='0 0 300 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0.7' stop-color='rgb(84,16,32)'/%3E%3Cstop offset='1' stop-color='rgb(84,16,32)' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 20.0 C37.5 6.0 112.5 6.0 150.0 20.0 S262.5 34.0 300 20.0 V40 H0 Z' fill='url(%23g)'/%3E%3Cpath d='M0 20.0 C37.5 6.0 112.5 6.0 150.0 20.0 S262.5 34.0 300 20.0' fill='none' stroke='rgb(255,110,135)' stroke-opacity='0.5' stroke-width='1.4'/%3E%3C/svg%3E") 0 0 / 300px 40px repeat-x;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='32' viewBox='0 0 200 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0.7' stop-color='rgb(112,24,44)'/%3E%3Cstop offset='1' stop-color='rgb(112,24,44)' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 16.0 C25.0 9.0 75.0 9.0 100.0 16.0 S175.0 23.0 200 16.0 V32 H0 Z' fill='url(%23g)'/%3E%3Cpath d='M0 16.0 C25.0 9.0 75.0 9.0 100.0 16.0 S175.0 23.0 200 16.0' fill='none' stroke='rgb(255,150,170)' stroke-opacity='0.95' stroke-width='1.8'/%3E%3C/svg%3E") 0 0 / 200px 32px repeat-x,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='32' viewBox='0 0 300 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0.7' stop-color='rgb(84,16,32)'/%3E%3Cstop offset='1' stop-color='rgb(84,16,32)' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0 16.0 C37.5 6.0 112.5 6.0 150.0 16.0 S262.5 26.0 300 16.0 V32 H0 Z' fill='url(%23g)'/%3E%3Cpath d='M0 16.0 C37.5 6.0 112.5 6.0 150.0 16.0 S262.5 26.0 300 16.0' fill='none' stroke='rgb(255,110,135)' stroke-opacity='0.5' stroke-width='1.3'/%3E%3C/svg%3E") 0 0 / 300px 32px repeat-x;
   animation: surfaceWaves 9s linear infinite;
 }
 /* On a phone the hero stops a little short of the screen's bottom, so a
    strip of water with its waves is on show from the start: without it the
    surface sat right at the edge and the waves were barely seen. */
 html.deep-water--native-surface .welcome-hero {
-  min-height: calc(100dvh - 96px) !important;
+  min-height: calc(100dvh - 64px) !important;
   padding-bottom: 4px;
 }
 /* The hero's own content nearly filled a phone screen by itself, which
@@ -5446,11 +5446,11 @@ html.deep-water--native-surface .welcome-hero {
    with less room around it makes space for that strip of water. */
 @media (max-width: 959px) {
   html.deep-water--native-surface .welcome-hero .deck-hero {
-    margin: 14px 0 !important;
+    margin: 18px 0 !important;
   }
   html.deep-water--native-surface .welcome-hero .sample-stack {
-    width: 228px;
-    height: 260px;
+    width: 236px;
+    height: 272px;
   }
 }
 @keyframes surfaceWaves {
