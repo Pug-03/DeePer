@@ -107,9 +107,11 @@ void main() {
   shafts = pow(shafts, 2.2) * (0.8 + 0.2 * sin(uv.y * 7.0 - t * 0.4));
   col += vec3(1.0, 0.36, 0.45) * shafts * 0.24 * exp(-dist * 0.75);
 
-  // Specks drifting past at three distances.
+  // Specks drifting past at two distances. A third, farthest layer was so
+  // fine its specks were a pixel or two and glittered like sand. No film
+  // grain either, for the same reason; the canvas is scaled up, which
+  // smooths the colour anyway.
   float s = 0.0;
-  s += specks(q, 7.0, u_rise * 1.3 + t * 0.03, t, 0.07) * 0.5;
   s += specks(q + 3.7, 4.0, u_rise * 2.0 + t * 0.045, t, 0.06) * 0.75;
   s += specks(q + 9.1, 2.2, u_rise * 3.1 + t * 0.06, t, 0.05);
   // The visitor's own light: a soft glow in the water around the mouse (or
@@ -124,7 +126,6 @@ void main() {
 
   float v = smoothstep(1.25, 0.25, length((uv - 0.5) * vec2(aspect * 0.7, 1.0)));
   col *= mix(0.6, 1.0, v);
-  col += (hash(frag + fract(t)) - 0.5) * 0.012;
 
   float above = smoothstep(surf - 0.004, surf + 0.012, uv.y);
   gl_FragColor = vec4(mix(col, air, above * u_air), 1.0);
@@ -271,7 +272,10 @@ export default function DeepWater() {
       light.x += (light.tx - light.x) * ease;
       light.y += (light.ty - light.y) * ease;
       light.z += (light.tz - light.z) * (reduce ? 1 : 0.05);
-      water.draw(reduce ? 0 : (now - start) / 1000, rest + y / H, y / H, orb, light, nativeSurface ? 0 : 1);
+      // On a phone the specks drift on their own and don't rise with the
+      // scroll: the canvas learns the scroll late and unevenly there, so
+      // specks tied to it hopped while the page itself slid smoothly.
+      water.draw(reduce ? 0 : (now - start) / 1000, rest + y / H, nativeSurface ? 0 : y / H, orb, light, nativeSurface ? 0 : 1);
       if (!reduce && !document.hidden) frame = requestAnimationFrame(tick);
     };
     const kick = () => {
