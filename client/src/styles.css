@@ -7189,3 +7189,33 @@ html.deep-water body::before {
   }
 }
 
+/* ---------- Last screen: ripples from the sign-up button ----------
+   Two rings of light, half a beat apart, spreading out from the button and
+   fading, like the drop landing in the opening. */
+.cta-lead-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.cta-ring {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 90, 114, 0.55);
+  pointer-events: none;
+  opacity: 0;
+  animation: ctaRipple 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+.cta-ring + .cta-ring {
+  animation-delay: 1.6s;
+}
+@keyframes ctaRipple {
+  0% { inset: 0; opacity: 0.8; }
+  100% { inset: -16px -22px; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-ring {
+    display: none;
+  }
+}

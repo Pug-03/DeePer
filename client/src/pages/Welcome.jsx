@@ -2126,10 +2126,17 @@ export default function Welcome() {
                 </div>
                 <p className="end-tagline end-fade" style={{ '--a': 0.66, '--d': 0.07 }}>{t('welcome.dive.end')}</p>
                 <div className="end-actions end-fade" style={{ '--a': 0.72, '--d': 0.07 }}>
-                  <button className="btn btn--primary end-cta cta-lead" onClick={() => nav('/signup')}>
-                    {t('welcome.end.cta')}
-                    <ArrowRight className="cta-arrow" aria-hidden="true" />
-                  </button>
+                  {/* Rings of light spread out from the button like ripples
+                      on water; they sit in this wrapper because the button
+                      itself clips whatever overflows it. */}
+                  <div className="cta-lead-wrap">
+                    <span className="cta-ring" aria-hidden="true" />
+                    <span className="cta-ring" aria-hidden="true" />
+                    <button className="btn btn--primary end-cta cta-lead" onClick={() => nav('/signup')}>
+                      {t('welcome.end.cta')}
+                      <ArrowRight className="cta-arrow" aria-hidden="true" />
+                    </button>
+                  </div>
                   <button className="btn btn--ghost cta-side" onClick={() => nav('/login')}>
                     {t('welcome.haveAccount')}
                     <span className="cta-side-more">
