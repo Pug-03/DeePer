@@ -686,7 +686,7 @@ export default function Signup() {
           <p className="faint center" style={{ marginTop: 18, fontSize: 14 }}>
             {t('tester.noCode')}{' '}
             <button
-              className="link"
+              className="link link--underline"
               type="button"
               onClick={() => {
                 setErr('');

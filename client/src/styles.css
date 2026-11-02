@@ -522,6 +522,19 @@ html[data-tour] .fade-up {
   padding: 0;
   font-size: 15px;
 }
+/* A link that has to read as tappable on its own (no button around it),
+   e.g. "ask to join the test" on sign-up: underlined, the line a little
+   below the Thai vowels. */
+.link--underline {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 5px;
+  text-decoration-color: rgba(255, 90, 114, 0.6);
+}
+.link--underline:hover,
+.link--underline:focus-visible {
+  text-decoration-color: currentColor;
+}
 .back-btn {
   font-size: 16px;
 }
@@ -6226,19 +6239,6 @@ html.deep-water body::before {
   line-height: 1.6;
   color: rgba(244, 241, 242, 0.66);
 }
-@media (min-width: 960px) {
-  .landing-more .dev-team-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: 820px;
-    gap: 22px;
-  }
-}
-/* The bottom of the dive: the name in the orb's light, a last invitation,
-   then the small print. */
-.landing-end {
-  display: flex;
-  flex-direction: column;
 /* Phones: a compact row each (photo left, name and role beside it), so
    the two of them don't take up the whole screen each. */
 @media (max-width: 959px) {
@@ -6273,6 +6273,19 @@ html.deep-water body::before {
     font-size: 13.5px;
   }
 }
+@media (min-width: 960px) {
+  .landing-more .dev-team-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 820px;
+    gap: 22px;
+  }
+}
+/* The bottom of the dive: the name in the orb's light, a last invitation,
+   then the small print. */
+.landing-end {
+  display: flex;
+  flex-direction: column;
   align-items: stretch;
   padding: 0 20px calc(32px + var(--safe-b));
   text-align: center;
