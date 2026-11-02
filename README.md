@@ -50,6 +50,35 @@ Swipe to a question, answer it in turns, and keep every answer to read again lat
 
 <br />
 
+## Add it to your Home Screen
+
+DeePer is a web app, so there is nothing to download from a store. Added to the Home Screen it opens in one tap, full screen, like any other app.
+
+<table>
+  <tr>
+    <th width="50%" align="left">iPhone and iPad (Safari)</th>
+    <th width="50%" align="left">Android (Chrome)</th>
+  </tr>
+  <tr>
+    <td valign="top">
+      1. Open <a href="https://deeper.in.th">deeper.in.th</a> in Safari.<br />
+      2. Tap the <b>Share</b> button in the bottom bar.<br />
+      3. Scroll down and choose <b>Add to Home Screen</b>.<br />
+      4. Tap <b>Add</b> in the top right.
+    </td>
+    <td valign="top">
+      1. Open <a href="https://deeper.in.th">deeper.in.th</a> in Chrome.<br />
+      2. Tap the <b>⋮</b> menu in the top right.<br />
+      3. Choose <b>Add to Home screen</b> or <b>Install app</b>.<br />
+      4. Tap <b>Add</b> or <b>Install</b>.
+    </td>
+  </tr>
+</table>
+
+The app shows the same steps itself: a small card above the bottom bar on a phone that hasn't added it yet (it stays off the deck, and once closed it stays away for three weeks), and **Add to Home Screen** on the profile page any time. Where the browser offers its own install button, as Chrome on Android does, the app shows that button instead of the steps.
+
+<br />
+
 ## Architecture
 
 DeePer is one Node process. Express serves the JSON API under `/api` and the built React app from `client/dist`, so a deploy is a single web service with a disk. SQLite runs through Node's built-in `node:sqlite`, so there is nothing native to compile.
