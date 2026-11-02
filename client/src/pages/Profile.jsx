@@ -14,7 +14,8 @@ import {
   IcTranslate,
   IcUser,
 } from '../components/icons.jsx';
-import { Building2, Heart, HeartHandshake, Layers, ShieldCheck } from 'lucide-react';
+import { Building2, Heart, HeartHandshake, Layers, ShieldCheck, SquarePlus } from 'lucide-react';
+import { InstallGuide, isStandalone } from '../components/InstallHint.jsx';
 import { LEVEL_OPTIONS, getQuestionLevel, setQuestionLevel } from '../utils/questionLevel.js';
 import { useElasticIndicator } from '../utils/elasticIndicator.js';
 import { useTutorial } from '../store/tutorial.jsx';
@@ -27,6 +28,8 @@ export default function Profile() {
   const tutorial = useTutorial();
   const { user } = useAuth();
   const { t, lang, setLang } = useI18n();
+  const [installOpen, setInstallOpen] = useState(false);
+  const [standalone] = useState(isStandalone);
   // Before launch the report row doubles as the testers' feedback line.
   const { launched } = useLaunch();
 
@@ -92,6 +95,8 @@ export default function Profile() {
         <LanguageRow t={t} lang={lang} setLang={setLang} />
         <QuestionLevelRow t={t} />
         <ProfileRow Icon={IcPlayCircle} label={t('profile.appTutorial')} onClick={replayTutorial} />
+        {/* Not shown once DeePer is already opened from the home screen. */}
+        {!standalone && <ProfileRow Icon={SquarePlus} label={t('install.row')} onClick={() => setInstallOpen(true)} />}
         <ProfileRow
           Icon={IcSettings}
           label={t('profile.accountSettings')}
@@ -114,6 +119,7 @@ export default function Profile() {
         />
         <ProfileRow Icon={ShieldCheck} label={t('privacy.link')} onClick={() => nav('/privacy')} />
       </div>
+      {installOpen && <InstallGuide onClose={() => setInstallOpen(false)} />}
     </div>
   );
 }

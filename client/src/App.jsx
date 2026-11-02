@@ -6,6 +6,7 @@ import { ToastProvider, ConfirmProvider, Loading } from './components/ui.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import OnboardingTour from './components/OnboardingTour.jsx';
+import InstallHint from './components/InstallHint.jsx';
 
 import { lazyPage, preloadPages } from './lazyPage.js';
 // The landing page ships in the main bundle so first visits paint fast;
@@ -89,6 +90,7 @@ function TabLayout() {
       <BottomNav />
       {tutorial.active && <OnboardingTour />}
       <MorningGreeting />
+      <InstallHint />
     </>
   );
 }
