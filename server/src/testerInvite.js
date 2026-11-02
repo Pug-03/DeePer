@@ -34,6 +34,8 @@ export function testerInviteEmail({ nickname, code }) {
   const shownCode = code || '(ยังไม่ได้ตั้งรหัสเชิญ)';
   const LANGS = [
     {
+      eyebrow: 'สิทธิ์ทดลองก่อนใคร',
+      launch: 'เปิดตัวจริง 11.11.2569 · 11:11 น.',
       hi: `สวัสดี ${nickname}`,
       thanks: 'ขอบคุณที่สนใจร่วมทดลองใช้ DeePer ก่อนใครนะ',
       codeLabel: 'รหัสเชิญของคุณ',
@@ -42,11 +44,13 @@ export function testerInviteEmail({ nickname, code }) {
       steps: ['เปิด deeper.in.th/signup', 'กรอกรหัสเชิญ 6 หลักด้านบน', 'สมัครด้วย Google หรืออีเมล แล้วเริ่มคุยกันได้เลย'],
       feedback:
         'ระหว่างทดลอง ถ้าเจอปัญหาหรือมีไอเดีย บอกเราได้ที่เมนู "แจ้งปัญหาหรือเสนอแนะ" ในหน้าโปรไฟล์ ' +
-        'ทุกความเห็นช่วยให้ DeePer ดีขึ้นก่อนเปิดตัวจริงวันที่ 11/11/2569 เวลา 11:11 น.',
+        'ทุกความเห็นช่วยให้ DeePer ดีขึ้นก่อนเปิดตัวจริง',
       thankYou: 'ขอบคุณมาก',
       team: 'ทีม DeePer',
     },
     {
+      eyebrow: 'Early tester invite',
+      launch: 'Opens to everyone 11.11.2026 · 11:11 (GMT+7)',
       hi: `Hi ${nickname},`,
       thanks: 'Thanks for joining the DeePer test before anyone else.',
       codeLabel: 'Your invite code',
@@ -55,7 +59,7 @@ export function testerInviteEmail({ nickname, code }) {
       steps: ['Open deeper.in.th/signup', 'Enter the 6-digit invite code above', 'Sign up with Google or email, and start talking'],
       feedback:
         'During the test, if something breaks or you have an idea, tell us through "Report or suggest" on your profile. ' +
-        'Every note helps make DeePer better before it opens to everyone on 11 Nov 2026 at 11:11 (GMT+7).',
+        'Every note helps make DeePer better before launch.',
       thankYou: 'Thank you',
       team: 'The DeePer team',
     },
@@ -64,20 +68,33 @@ export function testerInviteEmail({ nickname, code }) {
     (l) =>
       `${l.hi}\n\n${l.thanks}\n\n${l.codeLabel}: ${shownCode}\n\n${l.howTo}\n` +
       l.steps.map((st, i) => `${i + 1}. ${st}`).join('\n') +
-      `\n\n${l.feedback}\n\n${l.thankYou}\n${l.team}`,
+      `\n\n${l.launch}\n${l.feedback}\n\n${l.thankYou}\n${l.team}`,
   ).join('\n\n— ภาษาไทย —\n\n');
-  const section = (l) => `<tr><td style="padding:0 0 6px;font-size:26px;line-height:1.4;font-weight:bold;color:#ffffff">${escapeHtml(l.hi)}</td></tr>
+  // The code as six separate tiles, like a one-time-code field. Table cells,
+  // because mail apps ignore flex and grid.
+  const tiles = (c) =>
+    /^\d{6}$/.test(c)
+      ? `<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>${[...c]
+          .map(
+            (d, i) => `${i === 3 ? '<td width="10" style="font-size:0">&nbsp;</td>' : ''}<td style="padding:0 3px">
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" valign="middle" width="44" height="58" bgcolor="#1e0d14" style="width:44px;height:58px;background:#1e0d14;border:1px solid #5a1f33;border-bottom:2px solid #ff1d5a;border-radius:12px;font-size:30px;font-weight:bold;color:#ffffff;font-family:'Courier New',Courier,monospace">${d}</td></tr></table>
+    </td>`,
+          )
+          .join('')}</tr></table>`
+      : `<div style="font-size:30px;font-weight:bold;letter-spacing:8px;color:#ffffff;font-family:'Courier New',Courier,monospace">${escapeHtml(c)}</div>`;
+  const section = (l) => `<tr><td style="padding:0 0 10px;font-size:11px;font-weight:bold;letter-spacing:2.5px;color:#ff5a72;text-transform:uppercase">${escapeHtml(l.eyebrow)}</td></tr>
+<tr><td style="padding:0 0 6px;font-size:28px;line-height:1.3;font-weight:bold;color:#ffffff">${escapeHtml(l.hi)}</td></tr>
 <tr><td style="padding:0 0 26px;font-size:15px;line-height:1.7;color:#cbbec3">${escapeHtml(l.thanks)}</td></tr>
 <tr><td style="padding:0 0 26px">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#1e0d14" style="background:#1e0d14;border:1px solid #5a1f33;border-radius:16px">
-    <tr><td align="center" style="padding:22px 16px 6px;font-size:13px;color:#ff8aa0">${escapeHtml(l.codeLabel)}</td></tr>
-    <tr><td align="center" style="padding:0 16px 22px 28px;font-size:40px;line-height:1.2;font-weight:bold;letter-spacing:12px;color:#ffffff;font-family:'Courier New',Courier,monospace">${escapeHtml(shownCode)}</td></tr>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#170a10" style="background:#170a10;background-image:radial-gradient(120% 90% at 50% 0%,#3b1020 0%,#170a10 70%);border:1px solid #3a1a24;border-radius:18px">
+    <tr><td align="center" style="padding:22px 12px 14px;font-size:12px;letter-spacing:1px;color:#ff8aa0">${escapeHtml(l.codeLabel)}</td></tr>
+    <tr><td align="center" style="padding:0 8px 24px">${tiles(shownCode)}</td></tr>
   </table>
 </td></tr>
 <tr><td align="center" style="padding:0 0 30px">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    <td bgcolor="#ff1d5a" style="background:#ff1d5a;border-radius:999px">
-      <a href="https://deeper.in.th/signup" style="display:inline-block;padding:15px 36px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">${escapeHtml(l.cta)} &rarr;</a>
+    <td bgcolor="#ff1d5a" style="background:#ff1d5a;background-image:linear-gradient(135deg,#ff5a72,#ff1d5a);border-radius:999px;box-shadow:0 8px 28px rgba(255,29,90,0.45)">
+      <a href="https://deeper.in.th/signup" style="display:inline-block;padding:15px 38px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">${escapeHtml(l.cta)} &rarr;</a>
     </td>
   </tr></table>
 </td></tr>
@@ -86,14 +103,18 @@ ${l.steps
   .map(
     (st, i) => `<tr><td style="padding:0 0 10px">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-    <td valign="top" width="30" style="padding-top:1px"><span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:50%;background:#3a1522;color:#ff8aa0;font-size:12px;font-weight:bold;text-align:center">${i + 1}</span></td>
+    <td valign="top" width="32" style="padding-top:1px"><span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:50%;background:#3a1522;color:#ff8aa0;font-size:12px;font-weight:bold;text-align:center">${i + 1}</span></td>
     <td style="font-size:15px;line-height:1.6;color:#e9e1e4">${escapeHtml(st)}</td>
   </tr></table>
 </td></tr>`,
   )
   .join('')}
-<tr><td style="padding:16px 0 0;border-top:1px solid #2c1820;font-size:13px;line-height:1.7;color:#9a8b91">${escapeHtml(l.feedback)}</td></tr>
-<tr><td style="padding:22px 0 0;font-size:15px;line-height:1.6;color:#e9e1e4">${escapeHtml(l.thankYou)}<br><span style="color:#ff5a72;font-weight:bold">${escapeHtml(l.team)}</span></td></tr>`;
+<tr><td style="padding:14px 0 0">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#1a0d12" style="background:#1a0d12;border-left:3px solid #ff1d5a;border-radius:10px"><tr>
+    <td style="padding:14px 16px;font-size:13px;line-height:1.7;color:#b3a5ab"><span style="color:#ffffff;font-weight:bold">${escapeHtml(l.launch)}</span><br>${escapeHtml(l.feedback)}</td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:24px 0 0;font-size:15px;line-height:1.6;color:#e9e1e4">${escapeHtml(l.thankYou)}<br><span style="color:#ff5a72;font-weight:bold">${escapeHtml(l.team)}</span></td></tr>`;
   const html = frame(
     section(LANGS[1]) +
       `<tr><td style="padding:36px 0 32px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
