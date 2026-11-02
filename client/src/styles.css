@@ -7107,3 +7107,85 @@ html.deep-water body::before {
   .end-card:nth-child(3n + 2) { top: 46%; }
   .end-card:nth-child(3n) { top: 72%; }
 }
+
+/* ---------- Last screen buttons on phones ----------
+   Same lead as on a computer: "start talking" big with an arrow and a band
+   of light sweeping across it now and then (no hover on a phone), and
+   "have an account" as a small link under it. */
+@media (max-width: 959px) {
+  .end-actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 14px;
+  }
+  .end-actions .cta-lead-wrap {
+    width: 100%;
+    max-width: 320px;
+  }
+  .end-actions .cta-lead {
+    flex: none;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 60px;
+    font-size: 18px;
+  }
+  .end-actions .cta-lead .cta-arrow {
+    display: block;
+    width: 20px;
+    height: 20px;
+    animation: ctaArrowNudge 2.4s ease-in-out infinite;
+  }
+  .end-actions .cta-lead::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+    translate: -110% 0;
+    pointer-events: none;
+    animation: ctaSheen 4.8s cubic-bezier(0.45, 0, 0.2, 1) 1.5s infinite;
+  }
+  .end-actions .cta-side {
+    flex: none;
+    gap: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    padding: 6px 4px;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .end-actions .cta-side .cta-side-more {
+    display: inline;
+  }
+  .end-actions .cta-side u {
+    margin-left: 4px;
+    color: var(--text);
+    text-decoration-color: var(--red-bright);
+    text-underline-offset: 4px;
+  }
+}
+@keyframes ctaSheen {
+  0% { translate: -110% 0; }
+  35%, 100% { translate: 110% 0; }
+}
+@keyframes ctaArrowNudge {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 3px 0; }
+}
+@media (max-width: 959px) and (prefers-reduced-motion: reduce) {
+  .end-actions .cta-lead .cta-arrow,
+  .end-actions .cta-lead::after {
+    animation: none;
+  }
+}
+
