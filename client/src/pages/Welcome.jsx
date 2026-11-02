@@ -765,8 +765,25 @@ function LaunchOpened({ t }) {
           transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.15 }}
         >
           <h2 className="h2 launch-opened-title">
+            {/* The name in the wordmark's own gradient, the words around it
+                carrying the light sweep. Kept side by side, never one inside
+                the other: Safari drops a text-clipped gradient nested in
+                another. */}
             <span className="sparkle-anchor">
-              {t('welcome.launch.openTitle')}
+              {t('welcome.launch.openTitle')
+                .split('DeePer')
+                .flatMap((part, i) => [
+                  i > 0 && (
+                    <span className="brand-inline" key={`b${i}`}>
+                      DeePer
+                    </span>
+                  ),
+                  part && (
+                    <span className="launch-sweep" key={`t${i}`}>
+                      {part}
+                    </span>
+                  ),
+                ])}
               <Sparkles points={STAT_SPARKLES} />
             </span>
           </h2>

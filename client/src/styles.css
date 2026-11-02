@@ -6590,7 +6590,7 @@ html.deep-water body::before {
     line-height: 1.3;
     letter-spacing: -0.02em;
   }
-  .launch-opened-title .sparkle-anchor {
+  .launch-opened-title .launch-sweep {
     background: linear-gradient(
       100deg,
       #fff 0%,
@@ -6759,7 +6759,7 @@ html.deep-water body::before {
 @media (prefers-reduced-motion: reduce) {
   .launch-aura::before,
   .launch-aura::after,
-  .launch-opened-title .sparkle-anchor {
+  .launch-opened-title .launch-sweep {
     animation: none;
   }
 }
