@@ -5769,8 +5769,13 @@ html.deep-water body::before {
    (useHeadingSweep): a glint slides over the words once. Two layers: a
    narrow glint that travels, over a solid layer in the text colour that
    always covers the whole heading, so no part of it is ever left without
-   a fill (one wide moving gradient left the start of the line blank). */
-.landing-more .h2.is-lit {
+   a fill (one wide moving gradient left the start of the line blank).
+   A heading with sparkles keeps its words in .sparkle-anchor, an inline
+   block of its own: Safari leaves such a box out of its parent's text
+   clip, so the words went fully transparent there. The sweep goes on that
+   box instead. */
+.landing-more .h2.is-lit:not(.launch-opened-title):not(:has(> .sparkle-anchor)),
+.landing-more .h2.is-lit:not(.launch-opened-title) > .sparkle-anchor {
   background-image:
     linear-gradient(100deg, transparent 0%, #ffc2ce 50%, transparent 100%),
     linear-gradient(var(--text), var(--text));
