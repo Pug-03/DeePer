@@ -5441,6 +5441,18 @@ html.deep-water--native-surface .welcome-hero {
   min-height: calc(100dvh - 64px) !important;
   padding-bottom: 4px;
 }
+/* The scroll arrow is drawn down into that strip of water, white on the
+   red, as if pointing into it. It keeps its place in the hero's layout
+   (only shifted), so nothing above it moves. */
+html.deep-water--native-surface .welcome-hero > .scroll-cue-wrap {
+  position: relative;
+  z-index: 2;
+  translate: 0 50px;
+}
+html.deep-water--native-surface .welcome-hero .scroll-cue {
+  color: #fff;
+  filter: drop-shadow(0 2px 6px rgba(80, 0, 20, 0.6));
+}
 /* The hero's own content nearly filled a phone screen by itself, which
    pushed the water off the bottom anyway; a slightly smaller sample card
    with less room around it makes space for that strip of water. */
