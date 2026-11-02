@@ -6239,6 +6239,40 @@ html.deep-water body::before {
 .landing-end {
   display: flex;
   flex-direction: column;
+/* Phones: a compact row each (photo left, name and role beside it), so
+   the two of them don't take up the whole screen each. */
+@media (max-width: 959px) {
+  .landing-more .dev-team-list {
+    margin-top: 28px;
+    gap: 8px;
+  }
+  .landing-more .dev-team-row,
+  .landing-more .dev-team-row-clickable {
+    flex-direction: row;
+    gap: 16px;
+    padding: 14px 8px;
+    text-align: left;
+  }
+  .landing-more .dev-team-text {
+    align-items: flex-start;
+    text-align: left;
+    gap: 2px;
+  }
+  .landing-more .dev-team-avatar-img,
+  .landing-more .dev-team-avatar-fallback {
+    width: 64px;
+    height: 64px;
+    box-shadow:
+      0 0 0 4px rgba(244, 63, 94, 0.08),
+      0 0 30px -6px rgba(244, 63, 94, 0.6);
+  }
+  .landing-more .dev-team-name {
+    font-size: 17px;
+  }
+  .landing-more .dev-team-role {
+    font-size: 13.5px;
+  }
+}
   align-items: stretch;
   padding: 0 20px calc(32px + var(--safe-b));
   text-align: center;
