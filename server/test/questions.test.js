@@ -43,7 +43,7 @@ test('a level filter returns only that level, with English', async () => {
   assert.equal((await me.get('/questions?category=friends&level=nope')).status, 400);
 });
 
-test('without a level, the deck runs from light to deep', async () => {
+test('without a level, the deck warms up light, then medium, then goes deep with a medium breather', async () => {
   const { token } = await registerUser(base);
   const me = api(base, token);
   const seen = [];
@@ -51,11 +51,23 @@ test('without a level, the deck runs from light to deep', async () => {
     const res = await me.get(`/questions?category=family&limit=50&exclude=${seen.map((q) => q.id).join(',')}`);
     seen.push(...res.body.questions);
   }
-  const order = { open: 0, mid: 1, deep: 2 };
-  for (let i = 1; i < seen.length; i++) {
-    assert.ok(order[seen[i].level] >= order[seen[i - 1].level], `out of order at ${i}`);
-  }
+  const levels = seen.map((q) => q.level);
+  assert.deepEqual(levels.slice(0, 17), [
+    'open', 'open', 'open', 'open',
+    'mid', 'mid', 'mid', 'mid', 'mid',
+    'deep', 'deep', 'deep', 'mid',
+    'deep', 'deep', 'deep', 'mid',
+  ]);
+  // Every question still comes round once, none twice.
   assert.equal(seen.length, 350);
+  assert.equal(new Set(seen.map((q) => q.id)).size, 350);
+});
+
+test('a fresh session starts light again', async () => {
+  const { token } = await registerUser(base);
+  const me = api(base, token);
+  const res = await me.get('/questions?category=couple&limit=4');
+  assert.ok(res.body.questions.every((q) => q.level === 'open'));
 });
 
 test('saved questions and history come back with their English', async () => {

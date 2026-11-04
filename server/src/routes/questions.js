@@ -17,11 +17,27 @@ router.get('/samples/:category', (req, res) => {
   res.json({ questions: sampleQuestions(req.params.category) });
 });
 
+// The "light to deep" deck, card by card: a few light ones to warm up, a
+// few medium ones to get going, then deep, with a medium one every fourth
+// card so the deep ones don't come one after another without a breather.
+const RAMP_OPEN = 4;
+const RAMP_MID = 5;
+const DEEP_RUN = 3; // deep cards before each medium one
+function rampLevel(pos) {
+  if (pos < RAMP_OPEN) return 'open';
+  if (pos < RAMP_OPEN + RAMP_MID) return 'mid';
+  return (pos - RAMP_OPEN - RAMP_MID) % (DEEP_RUN + 1) === DEEP_RUN ? 'mid' : 'deep';
+}
+// When a level runs out, the nearest one stands in.
+const FALLBACK = { open: ['mid', 'deep'], mid: ['deep', 'open'], deep: ['mid', 'open'] };
+
 // Fetch a batch of questions for a category (bank + this user's own).
-// `level` is one of LEVELS for just that level, or left out for all of them
-// in order from light to deep (shuffled within each level). A user's own
-// questions count as "mid". `exclude` (comma-separated ids) lets the client
-// avoid repeats within a session.
+// `level` is one of LEVELS for just that level; left out, the batch follows
+// the light-to-deep ramp above. `exclude` (comma-separated ids) is every card
+// dealt so far this session, so the client doesn't see repeats, and its
+// length is where in the ramp this batch starts: a fresh session (opening
+// the app, switching category) starts light again. A user's own questions
+// count as "mid".
 router.get('/', requireAuth, (req, res) => {
   const category = req.query.category;
   if (!validCategory(category))
@@ -39,17 +55,28 @@ router.get('/', requireAuth, (req, res) => {
     .filter((n) => Number.isInteger(n) && n > 0);
 
   const placeholders = exclude.length ? `AND id NOT IN (${exclude.map(() => '?').join(',')})` : '';
-  const rows = db
-    .prepare(
-      `SELECT id, category, COALESCE(level, 'mid') AS level, text, text_en, source FROM questions
-       WHERE category = ? AND (source = 'bank' OR (source = 'user' AND user_id = ?))
-       ${level ? `AND COALESCE(level, 'mid') = ?` : ''}
-       ${placeholders}
-       ORDER BY CASE COALESCE(level, 'mid') WHEN 'open' THEN 0 WHEN 'mid' THEN 1 ELSE 2 END, RANDOM()
-       LIMIT ?`,
-    )
-    .all(category, req.user.id, ...(level ? [level] : []), ...exclude, limit);
+  const pick = (lv, n) =>
+    db
+      .prepare(
+        `SELECT id, category, COALESCE(level, 'mid') AS level, text, text_en, source FROM questions
+         WHERE category = ? AND (source = 'bank' OR (source = 'user' AND user_id = ?))
+         AND COALESCE(level, 'mid') = ?
+         ${placeholders}
+         ORDER BY RANDOM()
+         LIMIT ?`,
+      )
+      .all(category, req.user.id, lv, ...exclude, n);
 
+  if (level) return res.json({ questions: pick(level, limit) });
+
+  const pools = Object.fromEntries(LEVELS.map((lv) => [lv, pick(lv, limit)]));
+  const rows = [];
+  for (let i = 0; i < limit; i++) {
+    const want = rampLevel(exclude.length + i);
+    const from = [want, ...FALLBACK[want]].find((lv) => pools[lv].length);
+    if (!from) break;
+    rows.push(pools[from].shift());
+  }
   res.json({ questions: rows });
 });
 
