@@ -5447,7 +5447,9 @@ html.deep-water--native-surface .welcome-hero {
 html.deep-water--native-surface .welcome-hero > .scroll-cue-wrap {
   position: relative;
   z-index: 2;
-  translate: 0 50px;
+  /* Just under the crest, clear of the iPhone's home bar at the very
+     bottom of the screen. */
+  translate: 0 32px;
 }
 html.deep-water--native-surface .welcome-hero .scroll-cue {
   color: #fff;
