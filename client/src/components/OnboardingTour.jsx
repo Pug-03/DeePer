@@ -72,6 +72,9 @@ const STEP_GROUP = {
   navProfile: 'nav',
 };
 
+// .tut-tip's max-width.
+const TIP_W = 340;
+
 function clamp(v, lo, hi) {
   return Math.min(Math.max(v, lo), hi);
 }
@@ -411,12 +414,18 @@ export default function OnboardingTour() {
   const spot = targetSpot || lastSpot.current;
   const spotRadius = spot?.borderRadius ?? 20;
 
+  // On a computer the page is a narrow column beside a sidebar: tips follow
+  // their target instead of the screen's centre, and go beside it when the
+  // target is the nav or too tall to leave room above or below.
+  const onDesk = spot && window.innerWidth >= 960;
+  const tooTall = onDesk && spot.top - GAP - tipH < EDGE && spot.top + spot.height + GAP + tipH + EDGE > window.innerHeight;
+  const sideTip = onDesk && (id.startsWith('nav') || tooTall);
   let tipTop = null;
   if (spot) {
     const below = spot.top + spot.height + GAP;
     const above = spot.top - GAP - tipH;
     const fitsBelow = below + tipH + EDGE <= window.innerHeight;
-    tipTop = clamp(fitsBelow ? below : above, EDGE, window.innerHeight - tipH - EDGE);
+    tipTop = clamp(sideTip ? spot.top : fitsBelow ? below : above, EDGE, window.innerHeight - tipH - EDGE);
   }
 
   return (
@@ -503,7 +512,15 @@ export default function OnboardingTour() {
               initial={{ opacity: 0, y: 16, top: tipTop }}
               animate={{ opacity: 1, y: 0, top: tipTop }}
               transition={TIP_TRANSITION}
-              style={{ left: '50%', x: '-50%', height: tipH }}
+              style={{
+                left: sideTip
+                  ? Math.min(spot.left + spot.width + GAP, window.innerWidth - TIP_W - EDGE)
+                  : onDesk
+                    ? clamp(spot.left + spot.width / 2, TIP_W / 2 + EDGE, window.innerWidth - TIP_W / 2 - EDGE)
+                    : '50%',
+                x: sideTip ? 0 : '-50%',
+                height: tipH,
+              }}
             >
               <AnimatePresence mode="wait">
                 <motion.div

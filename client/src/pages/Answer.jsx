@@ -102,15 +102,15 @@ export default function Answer() {
   };
 
   return (
-    <div className="page stagger">
+    <div className="page page--answer stagger">
       <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 14 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>
       </button>
 
-      <div className="glass glass--red" style={{ padding: 22, marginBottom: 18 }}>
-        <p style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>{questionText(q.text, q.text_en, lang)}</p>
+      <div className="glass glass--red answer-question" style={{ padding: 22, marginBottom: 18 }}>
+        <p style={{ fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>{questionText(q.text, q.text_en, lang)}</p>
       </div>
 
       {/* A first-timer can't tell from the tabs alone that this is one shared

@@ -1454,6 +1454,9 @@ html[lang='th'] .qitem-cat {
 }
 
 /* ---------- Answer page ---------- */
+.answer-question p {
+  font-size: 20px;
+}
 .answer-note {
   margin: 0 0 12px;
   font-size: 13px;
@@ -7339,5 +7342,277 @@ html.deep-water body::before {
 @media (prefers-reduced-motion: reduce) {
   .cta-ring {
     display: none;
+  }
+}
+
+/* ---------- Inside the app, on a computer ---------- */
+/* Phones keep the single column. Here the nav becomes a sidebar, and each page
+   takes a shape suited to a wide screen. */
+.nav-brand,
+.nav-label,
+.bottom-nav--desk-only {
+  display: none;
+}
+@media (min-width: 960px) {
+  .app-shell:has(> .bottom-nav) {
+    --side: 236px;
+    max-width: none;
+    margin: 0;
+    padding-left: var(--side);
+  }
+  .bottom-nav,
+  .bottom-nav--desk-only {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--side);
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+    padding: 28px 14px;
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    background: rgba(10, 8, 11, 0.55);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .nav-brand {
+    display: flex;
+    padding: 0 12px;
+    margin-bottom: 24px;
+  }
+  .nav-brand-name {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .nav-item {
+    flex: none;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 46px;
+    padding: 0 12px;
+    border-radius: 12px;
+    color: var(--text-dim);
+    font-size: 15px;
+    transition: color 0.15s, background-color 0.15s;
+  }
+  .nav-item .nav-ic svg {
+    width: 21px;
+    height: 21px;
+  }
+  .nav-label {
+    display: inline;
+  }
+  .nav-item:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .nav-item:focus-visible {
+    outline: 2px solid var(--red-bright);
+    outline-offset: -2px;
+  }
+  .nav-item.active {
+    color: var(--text);
+    font-weight: 600;
+    background: rgba(244, 63, 94, 0.14);
+  }
+  .nav-item.active .nav-ic {
+    color: var(--red-bright);
+    filter: none;
+  }
+
+  /* Every page in the main area: centred, with room to breathe. */
+  .app-shell:has(> .bottom-nav) > .page {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 44px 32px 56px;
+  }
+
+  /* Home: a tall playing card, not a slide. Tabs, card and buttons share one
+     narrow column, sized from the screen's height (kept narrow enough to leave
+     the add button its place beside the tabs). */
+  .app-shell:has(> .bottom-nav) > .page--home {
+    --card-h: min(620px, calc(100dvh - 196px), calc((100vw - 236px - 64px - 320px) * 1.4));
+    --card-w: max(340px, calc(var(--card-h) * 5 / 7));
+    max-width: calc(var(--card-w) + 384px);
+    height: 100dvh;
+    min-height: 560px;
+    padding-block: 28px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--card-w) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    row-gap: 16px;
+    align-content: center;
+  }
+  .page--home > .row-between {
+    display: contents;
+  }
+  .page--home > .row-between .brand-mark {
+    display: none;
+  }
+  .page--home > .row-between .btn {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: start;
+    align-self: center;
+    margin: 0 0 0 16px;
+  }
+  .page--home > .cat-row {
+    grid-column: 2;
+    grid-row: 1;
+    margin-bottom: 0 !important;
+  }
+  .page--home > .swap-stage {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .page--home .swap-deck {
+    justify-content: center;
+  }
+  .page--home .deck {
+    flex: 0 0 auto;
+    height: var(--card-h);
+    min-height: 0;
+    margin: 0 0 16px;
+  }
+  .page--home .qcard {
+    padding: 44px 32px;
+  }
+  .page--home .qcard .q-text {
+    font-size: clamp(23px, calc(var(--card-w) * 0.06), 28px);
+    line-height: 1.5;
+    text-wrap: balance;
+  }
+  .page--home .actions {
+    gap: 10px;
+    padding: 0;
+  }
+  .page--home .fab-md {
+    height: 52px;
+  }
+  .page--home .fab--save {
+    width: 52px;
+  }
+
+  /* Saved and History: two columns, so more shows without scrolling. */
+  .app-shell:has(> .bottom-nav) > .page--list {
+    max-width: 1040px;
+  }
+  .page--list .list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 14px;
+  }
+  .page--list .qitem,
+  .page--list .qitem:last-child {
+    margin: 0;
+  }
+
+  /* Profile: who you are across the top, the lists side by side below. */
+  .app-shell:has(> .bottom-nav) > .page--profile {
+    max-width: 1040px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    gap: 16px;
+  }
+  .page--profile > .profile-header {
+    grid-column: 1 / -1;
+    margin-bottom: 12px;
+  }
+  .page--profile > .profile-list {
+    margin: 0;
+  }
+  .page--profile > .profile-list:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .page--profile > .profile-list:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+  }
+  .page--profile > .profile-list:nth-child(4) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  /* Partner: them on the left, what to change on the right. */
+  .app-shell:has(> .bottom-nav) > .page--partner {
+    max-width: 920px;
+  }
+  .partner-card {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto auto auto 1fr;
+    column-gap: 32px;
+    padding: 24px !important;
+  }
+  .partner-card > * {
+    grid-column: 2;
+  }
+  .partner-card > .filter-row {
+    grid-column: 1 / -1;
+    max-width: 440px;
+    margin-bottom: 24px !important;
+  }
+  .partner-card > .partner-stage {
+    grid-column: 1;
+    grid-row: 2 / -1;
+    align-self: center;
+    padding-bottom: 40px;
+  }
+
+  /* Answer: no sidebar, so nothing leads away from a half-written answer. The
+     question stays in view on the left while writing on the right. */
+  .app-shell:has(> .page--answer) {
+    max-width: none;
+  }
+  .app-shell > .page--answer {
+    width: 100%;
+    max-width: 1180px;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: 40px 40px 56px;
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    column-gap: 40px;
+    align-content: start;
+  }
+  .page--answer > * {
+    grid-column: 2;
+  }
+  .page--answer > .back-btn {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .page--answer > .answer-question {
+    grid-column: 1;
+    grid-row: 2 / -1;
+    position: sticky;
+    top: 40px;
+    align-self: start;
+    display: grid;
+    place-items: center;
+    min-height: min(560px, calc(100dvh - 160px));
+    margin: 0 !important;
+    padding: 40px !important;
+  }
+  .answer-question p {
+    font-size: clamp(24px, 2.2vw, 32px);
+    text-wrap: balance;
+  }
+  .page--answer .answer-textarea {
+    min-height: 240px;
+    max-height: 50vh;
   }
 }

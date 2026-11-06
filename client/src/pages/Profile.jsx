@@ -55,7 +55,7 @@ export default function Profile() {
   const initial = (displayName(user, lang) || '?').trim().charAt(0).toUpperCase();
 
   return (
-    <div className="page page--tab stagger">
+    <div className="page page--tab stagger page--profile">
       <div className="profile-header" style={{ marginBottom: 22 }}>
         <div
           className="avatar avatar--lg"

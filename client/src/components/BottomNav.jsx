@@ -4,6 +4,7 @@ import { IcHome, IcBookmark, IcHistory, IcUser } from './icons.jsx';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { prefetchLists } from '../utils/listCache.js';
+import TestBadge from './TestBadge.jsx';
 
 const TABS = [
   { to: '/app/home', key: 'nav.home', Icon: IcHome, tut: 'navHome' },
@@ -12,7 +13,9 @@ const TABS = [
   { to: '/app/profile', key: 'nav.profile', Icon: IcUser, tut: 'navProfile' },
 ];
 
-export default function BottomNav() {
+// A bar along the bottom on phones, a labelled sidebar on computers. `deskOnly`
+// is for the pages under Profile, which show no nav on phones.
+export default function BottomNav({ deskOnly = false }) {
   const { pathname } = useLocation();
   const nav = useNavigate();
   const { t } = useI18n();
@@ -20,9 +23,14 @@ export default function BottomNav() {
   // Load Saved/History ahead of the first tap so those tabs open instantly.
   useEffect(() => prefetchLists(user?.id), [user?.id]);
   return (
-    <nav className="bottom-nav glass glass--red">
+    <nav className={`bottom-nav glass glass--red${deskOnly ? ' bottom-nav--desk-only' : ''}`}>
+      <div className="brand-mark nav-brand">
+        <span className="dot" />
+        <span className="nav-brand-name">DeePer</span>
+        <TestBadge />
+      </div>
       {TABS.map(({ to, key, Icon, tut }) => {
-        const active = pathname === to;
+        const active = pathname === to || pathname.startsWith(`${to}/`);
         return (
           <button
             key={to}
@@ -37,6 +45,7 @@ export default function BottomNav() {
             <span className="nav-ic">
               <Icon size={28} fill={to === '/app/saved' && active ? 'currentColor' : 'none'} />
             </span>
+            <span className="nav-label">{t(key)}</span>
           </button>
         );
       })}

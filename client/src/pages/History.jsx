@@ -75,7 +75,7 @@ export default function History() {
   const filtered = catFilter === 'all' ? items : items.filter((it) => it.category === catFilter);
 
   return (
-    <div className="page page--tab stagger">
+    <div className="page page--tab page--list stagger">
       <div className="header">
         <h1 className="h1">{t('history.title')}</h1>
         <p className="sub">{t('history.sub')}</p>

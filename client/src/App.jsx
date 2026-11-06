@@ -95,6 +95,14 @@ function TabLayout() {
   );
 }
 
+// Pages under Profile keep the sidebar on computers; phones show no nav there.
+const withNav = (page) => (
+  <Protected>
+    {page}
+    <BottomNav deskOnly />
+  </Protected>
+);
+
 export default function App() {
   useEffect(preloadPages, []);
   return (
@@ -133,13 +141,13 @@ export default function App() {
                 </Route>
 
                 <Route path="/app/answer" element={<Protected><Answer /></Protected>} />
-                <Route path="/app/profile/settings" element={<Protected><AccountSettings /></Protected>} />
-                <Route path="/app/profile/info" element={<Protected><ProfileInfo /></Protected>} />
-                <Route path="/app/profile/partner" element={<Protected><PartnerSettings /></Protected>} />
-                <Route path="/app/profile/login-history" element={<Protected><LoginHistory /></Protected>} />
-                <Route path="/app/profile/support" element={<Protected><Support /></Protected>} />
-                <Route path="/app/profile/social" element={<Protected><Social /></Protected>} />
-                <Route path="/app/profile/review" element={<Protected><Review /></Protected>} />
+                <Route path="/app/profile/settings" element={withNav(<AccountSettings />)} />
+                <Route path="/app/profile/info" element={withNav(<ProfileInfo />)} />
+                <Route path="/app/profile/partner" element={withNav(<PartnerSettings />)} />
+                <Route path="/app/profile/login-history" element={withNav(<LoginHistory />)} />
+                <Route path="/app/profile/support" element={withNav(<Support />)} />
+                <Route path="/app/profile/social" element={withNav(<Social />)} />
+                <Route path="/app/profile/review" element={withNav(<Review />)} />
                 <Route path="/app/welcome" element={<Protected><PostAuthWelcome /></Protected>} />
 
                 <Route path="*" element={<UnknownRoute />} />

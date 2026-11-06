@@ -139,7 +139,7 @@ export default function PartnerSettings() {
   };
 
   return (
-    <div className="page stagger">
+    <div className="page page--partner stagger">
       <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
