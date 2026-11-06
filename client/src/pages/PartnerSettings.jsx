@@ -14,6 +14,8 @@ import PartnerAvatar from '../components/PartnerAvatar.jsx';
 import { CATS } from '../util.js';
 import { useElasticIndicator } from '../utils/elasticIndicator.js';
 
+// Shown until a picture or icon is chosen, so the circle isn't left blank.
+const CAT_ICON = { couple: 'heart', friends: 'smile', family: 'flower' };
 const COLORS = ['#f43f5e', '#fb923c', '#eab308', '#34d399', '#38bdf8', '#a78bfa', '#f472b6'];
 
 // The other person in each category (name, picture or icon, colour), edited
@@ -52,6 +54,7 @@ export default function PartnerSettings() {
     return cur.name.trim() !== s0.name || cur.color !== s0.color;
   };
   const { name: partnerName, color: partnerColor } = current(activeCat);
+  const partner = user?.partners?.[activeCat];
   const setDraft = (patch) => setDrafts((d) => ({ ...d, [activeCat]: { ...d[activeCat], ...patch } }));
   const setPartnerName = (name) => setDraft({ name });
   const setPartnerColor = (color) => setDraft({ color });
@@ -148,7 +151,7 @@ export default function PartnerSettings() {
         <p className="sub" style={{ whiteSpace: 'pre-line' }}>{t('profile.partnerHint')}</p>
       </div>
 
-      <div className="glass" style={{ padding: 18 }}>
+      <div className="glass partner-card" style={{ padding: 18, '--pc': partnerColor }}>
         <div
           className="filter-row filter-row--elastic filter-row--fill"
           style={{ marginBottom: 16 }}
@@ -184,6 +187,44 @@ export default function PartnerSettings() {
             );
           })}
         </div>
+        {/* Them as they'll look: follows the name and colour while typing,
+            before anything is saved. */}
+        <div className="partner-stage">
+          <div className="avatar-edit partner-stage__avatar">
+            <PartnerAvatar
+              key={`${partner?.avatar_url || ''}|${partner?.icon || ''}`}
+              avatarUrl={partner?.avatar_url}
+              icon={partner?.icon}
+              fallbackIcon={CAT_ICON[activeCat]}
+              color={partnerColor}
+              size={104}
+            />
+            <button
+              type="button"
+              className="avatar-edit__btn"
+              onClick={pickPartnerAvatar}
+              disabled={partnerAvatarBusy}
+              aria-label={t('profile.changePhoto')}
+            >
+              <IcCamera size={15} />
+            </button>
+            <input
+              ref={partnerFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={onPartnerAvatarChange}
+            />
+          </div>
+          <p className="partner-stage__name">{partnerName.trim() || t('answer.partnerDefault')}</p>
+          {partner?.avatar_url && (
+            <button className="link-btn" onClick={removePartnerAvatar} disabled={partnerAvatarBusy}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <IcTrash size={13} /> {t('profile.partnerPictureRemove')}
+              </span>
+            </button>
+          )}
+        </div>
         <div className="field">
           <label htmlFor="pt-name">{t('profile.partnerNameLabel')}</label>
           <input
@@ -201,44 +242,12 @@ export default function PartnerSettings() {
         <p className="faint" style={{ margin: '4px 0 10px', paddingLeft: 4 }}>
           {t('profile.partnerPictureHint')}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-          <div className="avatar-edit">
-            <PartnerAvatar
-              avatarUrl={user?.partners?.[activeCat]?.avatar_url}
-              icon={user?.partners?.[activeCat]?.icon}
-              color={partnerColor}
-            />
-            <button
-              type="button"
-              className="avatar-edit__btn"
-              onClick={pickPartnerAvatar}
-              disabled={partnerAvatarBusy}
-              aria-label={t('profile.changePhoto')}
-            >
-              <IcCamera size={14} />
-            </button>
-            <input
-              ref={partnerFileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              hidden
-              onChange={onPartnerAvatarChange}
-            />
-          </div>
-          {user?.partners?.[activeCat]?.avatar_url && (
-            <button className="link-btn" onClick={removePartnerAvatar} disabled={partnerAvatarBusy}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <IcTrash size={13} /> {t('profile.partnerPictureRemove')}
-              </span>
-            </button>
-          )}
-        </div>
         <div className="icon-swatches" style={{ marginBottom: 18 }}>
           {PARTNER_ICONS.map(({ id, Icon }) => (
             <button
               key={id}
               type="button"
-              className={`swatch ${user?.partners?.[activeCat]?.icon === id ? 'sel' : ''}`}
+              className={`swatch ${partner?.icon === id ? 'sel' : ''}`}
               onClick={() => pickPartnerIcon(id)}
               disabled={partnerAvatarBusy}
               aria-label={id}

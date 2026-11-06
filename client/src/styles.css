@@ -4520,6 +4520,67 @@ html[data-returning] .profile-page > .supporters-placeholder > * {
   opacity: 0.6;
   cursor: default;
 }
+/* Partner page: the other person up top, lit by their own colour. */
+.partner-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 20px;
+  text-align: center;
+}
+.partner-stage::before {
+  content: '';
+  position: absolute;
+  inset: -16px -18px 0;
+  background: var(--pc);
+  opacity: 0.2;
+  -webkit-mask-image: radial-gradient(closest-side, #000, transparent);
+  mask-image: radial-gradient(closest-side, #000, transparent);
+  transition: background-color 0.35s ease;
+  pointer-events: none;
+}
+.partner-stage > * {
+  position: relative;
+}
+.partner-stage__avatar {
+  width: 104px;
+}
+.partner-stage__avatar .avatar {
+  transition: background-color 0.35s ease;
+  animation: partnerPick 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  box-shadow: 0 10px 34px -10px var(--pc);
+}
+.partner-stage__avatar .avatar-edit__btn {
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
+}
+.partner-stage__name {
+  margin: 2px 0 0;
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+@keyframes partnerPick {
+  from {
+    transform: scale(0.92);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .partner-stage__avatar .avatar {
+    animation: none;
+  }
+}
+/* The picked icon wears their colour, matching the circle above. */
+.partner-card .icon-swatches .swatch.sel {
+  background: var(--pc);
+  box-shadow: 0 0 16px -4px var(--pc);
+}
 .profile-header {
   display: flex;
   align-items: center;
