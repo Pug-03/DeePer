@@ -84,7 +84,7 @@ export function InstallGuide({ onClose }) {
   return (
     <div className="modal-overlay fade-in" onClick={onClose}>
       <div
-        className="modal glass glass--red pop-in install-guide"
+        className="modal glass glass--red pop-in modal--calm install-guide"
         role="dialog"
         aria-modal="true"
         aria-labelledby="install-title"
@@ -167,7 +167,7 @@ export default function InstallHint() {
   }
   if (!show || tutorial.active || pathname === '/app/home') return null;
   return (
-    <div className="install-hint glass pop-in" role="region" aria-label={t('install.title')}>
+    <div className="install-hint glass pop-in modal--calm" role="region" aria-label={t('install.title')}>
       <img src="/icon-180.png" alt="" width="40" height="40" />
       <button type="button" className="install-hint-main" onClick={() => setGuide(true)}>
         <b>{t('install.hint')}</b>

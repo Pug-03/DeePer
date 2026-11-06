@@ -3996,7 +3996,8 @@ a.social-link:active {
   80% { transform: translate(0, 0) scale(0.85); }
   90% { transform: translate(0, 0) scale(1); }
 }
-@media (prefers-reduced-motion: reduce) {
+/* Still on touch screens: at phone size the tiny bounce read as a shake. */
+@media (prefers-reduced-motion: reduce), (hover: none) {
   .dev-team-name-icon { animation: none; }
 }
 .dev-team-role {
@@ -6927,7 +6928,8 @@ html.deep-water body::before {
 .install-hint {
   position: fixed;
   left: 50%;
-  bottom: calc(96px + var(--safe-b));
+  /* Clear of the bottom nav: 16px off the edge + its 92px height + a gap. */
+  bottom: calc(116px + var(--safe-b));
   translate: -50% 0;
   z-index: 39;
   width: min(496px, calc(100% - 24px));
