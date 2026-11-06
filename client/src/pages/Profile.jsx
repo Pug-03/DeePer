@@ -232,7 +232,7 @@ function QuestionLevelRow({ t }) {
           );
         })}
       </div>
-      <p className="profile-row-hint">{t('home.levelHint')}</p>
+      <p className="profile-row-hint">{t(`home.levelHint.${level}`)}</p>
     </div>
   );
 }

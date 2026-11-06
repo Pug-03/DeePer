@@ -232,7 +232,7 @@ export const STRINGS = {
 
     // Google / ปุ่มวิธีสมัคร
     'google.disabledTitle': 'เข้าสู่ระบบด้วย Google',
-    'google.disabledSub': 'ยังไม่ได้เปิดใช้งาน (ตั้งค่า GOOGLE_CLIENT_ID)',
+    'google.disabledSub': 'ใช้ไม่ได้ตอนนี้ ใช้อีเมลแทนได้',
     'google.loginLabel': 'เข้าสู่ระบบด้วย Google',
     'google.loginSub': 'เลือกบัญชี Google ที่เคยลงทะเบียน',
     'google.signupLabel': 'สมัครด้วย Google',
@@ -437,7 +437,10 @@ export const STRINGS = {
     'home.aAnswer': 'ตอบเลย',
     'home.srcUser': 'ของเรา',
     'home.levelLabel': 'ระดับคำถาม',
-    'home.levelHint': 'เบาไปลึก: เริ่มจากคำถามสบาย ๆ แล้วค่อยลึกขึ้น',
+    'home.levelHint.all': 'เบาไปลึก: เริ่มจากคำถามสบาย ๆ แล้วค่อยลึกขึ้น',
+    'home.levelHint.open': 'เบา ๆ: คำถามสบาย ๆ ตลอดทั้งสำรับ',
+    'home.levelHint.mid': 'กลาง ๆ: คำถามที่ลึกขึ้นอีกนิด ตลอดทั้งสำรับ',
+    'home.levelHint.deep': 'ลึก: คำถามลึกตั้งแต่ใบแรก',
     'home.level.all': 'เบาไปลึก',
     'home.level.open': 'เบา ๆ',
     'home.level.mid': 'กลาง ๆ',
@@ -494,7 +497,7 @@ export const STRINGS = {
 
     // บันทึกไว้
     'saved.title': 'คำถามที่บันทึกไว้',
-    'saved.sub': 'แตะเพื่อกลับมาตอบคำถามรอบสอง',
+    'saved.sub': 'แตะเพื่อกลับมาตอบได้ทุกเมื่อ',
     'saved.emptyTitle': 'ยังไม่มีคำถามที่บันทึก',
     'saved.emptySub': 'กดปุ่มบันทึกที่หน้าหลักเพื่อเก็บคำถามไว้ถามทีหลัง',
     'saved.goHome': 'ไปหน้าหลัก',
@@ -624,8 +627,8 @@ export const STRINGS = {
     'support.proofSubmitting': 'กำลังส่ง...',
     'support.proofSuccess': 'ส่งเรียบร้อย ขอบคุณที่สนับสนุนนะ!',
     'support.thanksTitle': 'ขอบคุณที่สนับสนุน DeePer นะ',
-    'support.thanksMsg': 'เราได้รับหลักฐานการโอนแล้ว\nทุกการสนับสนุนช่วยให้ DeePer ไปต่อได้\nตรวจสอบเสร็จแล้วจะมีชื่อคุณในหน้าผู้สนับสนุน',
-    'support.proofUpdate': 'เราอัปเดตรายชื่อผู้สนับสนุนทุก ๆ 15 วัน',
+    'support.thanksMsg': 'เราได้รับหลักฐานการโอนแล้ว\nทุกการสนับสนุนช่วยให้ DeePer ไปต่อได้\nตรวจสอบเสร็จแล้วจะมีชื่อคุณในส่วนผู้สนับสนุนบนหน้าแรก',
+    'support.proofUpdate': 'รายชื่อจะขึ้นบนหน้าแรกของเว็บหลังตรวจสอบหลักฐานแล้ว',
 
     // ติดตามข่าวสาร (IG / TikTok)
     'social.teaser': 'ไม่พลาดข่าวสารและกิจกรรมของ DeePer ติดตามเราได้ทาง IG และ TikTok',
@@ -914,7 +917,7 @@ export const STRINGS = {
     'nav.profile': 'Profile',
 
     'google.disabledTitle': 'Sign in with Google',
-    'google.disabledSub': 'Not enabled yet (set GOOGLE_CLIENT_ID)',
+    'google.disabledSub': 'Not available right now. Use email instead.',
     'google.loginLabel': 'Sign in with Google',
     'google.loginSub': 'Choose your registered Google account',
     'google.signupLabel': 'Sign up with Google',
@@ -1111,7 +1114,10 @@ export const STRINGS = {
     'home.aAnswer': 'Answer',
     'home.srcUser': 'Yours',
     'home.levelLabel': 'Question depth',
-    'home.levelHint': 'Light → deep: starts easy and goes deeper as you play',
+    'home.levelHint.all': 'Light → deep: starts easy and goes deeper as you play',
+    'home.levelHint.open': 'Light: easy questions the whole way through',
+    'home.levelHint.mid': 'Medium: a little deeper the whole way through',
+    'home.levelHint.deep': 'Deep: deep questions from the first card',
     'home.level.all': 'Gradual',
     'home.level.open': 'Light',
     'home.level.mid': 'Medium',
@@ -1291,7 +1297,7 @@ export const STRINGS = {
     'support.proofSuccess': 'Submitted — thank you for your support!',
     'support.thanksTitle': 'Thank you for supporting DeePer',
     'support.thanksMsg': 'We’ve got your transfer slip.\nEvery bit of support keeps DeePer going.\nOnce it’s checked, your name will appear among our supporters',
-    'support.proofUpdate': 'We update the supporter list every 15 days',
+    'support.proofUpdate': 'Names appear on the home page once the proof has been checked',
 
     'social.teaser': "Don't miss DeePer news and events — follow us on IG and TikTok",
     'social.cta': 'Follow DeePer',
