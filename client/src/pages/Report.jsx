@@ -16,6 +16,9 @@ const CATEGORIES = ['idea', 'bug', 'problem'];
 // server-side, so only guests are asked how to reach them.
 export default function Report() {
   const nav = useNavigate();
+  const backTo = useLocation();
+  // Opened straight from a link there's no page to go back to.
+  const goBack = () => (backTo.key !== 'default' ? nav(-1) : nav('/', { replace: true }));
   const location = useLocation();
   const { user } = useAuth();
   const { t } = useI18n();
@@ -64,7 +67,7 @@ export default function Report() {
         </motion.p>
         <div className="stack" style={{ marginTop: 36 }}>
           <motion.div {...rise(0.86)}>
-            <button className="btn btn--primary" type="button" onClick={() => nav(-1)}>
+            <button className="btn btn--primary" type="button" onClick={goBack}>
               {t('common.back')}
             </button>
           </motion.div>
@@ -101,7 +104,7 @@ export default function Report() {
 
   return (
     <div className="page stagger form-page">
-      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>

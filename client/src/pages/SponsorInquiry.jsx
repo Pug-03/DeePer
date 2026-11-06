@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api } from '../api.js';
 import { useI18n } from '../store/i18n.jsx';
@@ -12,6 +12,9 @@ import { IcBack, IcSparkle } from '../components/icons.jsx';
 // the admin dashboard's sponsors tab.
 export default function SponsorInquiry() {
   const nav = useNavigate();
+  const location = useLocation();
+  // Opened straight from a link there's no page to go back to.
+  const goBack = () => (location.key !== 'default' ? nav(-1) : nav('/', { replace: true }));
   const { t } = useI18n();
   const toast = useToast();
 
@@ -58,7 +61,7 @@ export default function SponsorInquiry() {
           {t('sponsorForm.doneMsg')}
         </motion.p>
         <motion.div style={{ marginTop: 36 }} {...rise(0.86)}>
-          <button className="btn btn--primary" type="button" onClick={() => nav(-1)}>
+          <button className="btn btn--primary" type="button" onClick={goBack}>
             {t('common.back')}
           </button>
         </motion.div>
@@ -67,7 +70,7 @@ export default function SponsorInquiry() {
 
   return (
     <div className="page stagger form-page">
-      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 18 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>

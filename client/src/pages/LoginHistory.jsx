@@ -49,7 +49,10 @@ export default function LoginHistory() {
   const logoutDevice = async (it) => {
     const isSelf = it.id === currentId;
     const ok = await confirm({
+      title: t('loginHistory.logoutTitle'),
       message: isSelf ? t('loginHistory.logoutDeviceConfirmSelf') : t('loginHistory.logoutDeviceConfirm'),
+      confirmText: t('loginHistory.logoutDevice'),
+      danger: false,
     });
     if (!ok) return;
     setBusyId(it.id);
@@ -74,7 +77,12 @@ export default function LoginHistory() {
   };
 
   const logoutOtherDevices = async () => {
-    const ok = await confirm({ message: t('loginHistory.logoutOthersConfirm') });
+    const ok = await confirm({
+      title: t('loginHistory.logoutTitle'),
+      message: t('loginHistory.logoutOthersConfirm'),
+      confirmText: t('loginHistory.logoutDevice'),
+      danger: false,
+    });
     if (!ok) return;
     setLogoutOthersBusy(true);
     try {

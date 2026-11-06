@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth } from '../store/auth.jsx';
@@ -179,7 +180,7 @@ export default function AccountSettings() {
         </button>
       </div>
 
-      {showDelete && (
+      {showDelete && createPortal(
         <div className="modal-overlay fade-in" onClick={() => !deleteBusy && setShowDelete(false)}>
           <form
             className="modal glass glass--red pop-in"
@@ -222,7 +223,8 @@ export default function AccountSettings() {
               </button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
