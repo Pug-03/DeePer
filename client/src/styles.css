@@ -6997,6 +6997,10 @@ html.deep-water body::before {
   border-radius: 16px;
   box-shadow: 0 10px 30px -10px rgba(255, 29, 90, 0.6);
 }
+.launch-opened-cta {
+  width: min(320px, 100%);
+  margin: 24px auto 0;
+}
 .install-guide {
   max-height: calc(100dvh - 48px);
   overflow-y: auto;

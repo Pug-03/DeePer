@@ -746,6 +746,7 @@ function LaunchCountdown({ t, launch }) {
 // below with a little overshoot when scrolled into view (or right away if
 // the visitor is already looking at it when the clock hits zero).
 function LaunchOpened({ t }) {
+  const nav = useNavigate();
   const ref = useRef(null);
   const inView = useInView(ref, { amount: 0.4, once: true });
   // Fireworks keep going the whole time this is on screen, and start again
@@ -788,6 +789,13 @@ function LaunchOpened({ t }) {
             </span>
           </h2>
           <p className="stat-label">{t('welcome.launch.openSub')}</p>
+          <button
+            type="button"
+            className="btn btn--primary launch-opened-cta"
+            onClick={() => nav('/signup')}
+          >
+            {t('welcome.signup')}
+          </button>
         </motion.div>
       </div>
     </>
