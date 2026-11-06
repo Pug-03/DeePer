@@ -6002,6 +6002,14 @@ html.deep-water body::before {
   background: var(--red-bright);
   box-shadow: 0 0 10px 1px rgba(244, 63, 94, 0.7);
 }
+/* One fact per row on phones, so Thai and English stack the same way
+   whatever their lengths. The closing screen's list keeps its own layout. */
+@media (max-width: 600px) {
+  .how-facts:not(.end-facts) {
+    flex-direction: column;
+    align-items: center;
+  }
+}
 
 /* Features: lit panes floating up out of the dark (useRiseWithScroll),
    over a pool of red light, each with a glowing orb for its icon. */
