@@ -1454,6 +1454,15 @@ html[lang='th'] .qitem-cat {
 /* ---------- Answer page ---------- */
 .turn-tabs {
   display: flex;
+.answer-note {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  text-align: center;
+  text-wrap: balance;
+  white-space: pre-line;
+}
   gap: 10px;
   margin: 4px 0 16px;
 }

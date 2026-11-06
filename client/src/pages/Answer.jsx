@@ -113,6 +113,10 @@ export default function Answer() {
           onClick={() => setTurn('partner')}
         >
           <span className="turn-dot" style={{ background: partnerColor }} />
+      {/* A first-timer can't tell from the tabs alone that this is one shared
+          phone, or that either person can open the other's answer. */}
+      <p className="answer-note">{t('answer.howTo', { name: pName })}</p>
+
           {pName}
           {partnerAnswer.trim() && <IcCheck size={14} />}
         </button>
@@ -180,3 +184,4 @@ export default function Answer() {
     </div>
   );
 }
+        <p className="answer-note">{t('answer.saveHint')}</p>

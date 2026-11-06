@@ -145,7 +145,7 @@ export default function PartnerSettings() {
 
       <div className="header">
         <h1 className="h1">{t('profile.partnerSection')}</h1>
-        <p className="sub">{t('profile.partnerHint')}</p>
+        <p className="sub" style={{ whiteSpace: 'pre-line' }}>{t('profile.partnerHint')}</p>
       </div>
 
       <div className="glass" style={{ padding: 18 }}>
@@ -185,12 +185,12 @@ export default function PartnerSettings() {
           })}
         </div>
         <div className="field">
-          <label htmlFor="pt-name">{t('answer.partnerName')}</label>
+          <label htmlFor="pt-name">{t('profile.partnerNameLabel')}</label>
           <input
             id="pt-name"
             className="input"
             value={partnerName}
-            placeholder={t('answer.partnerDefault')}
+            placeholder={t('profile.partnerNamePh')}
             onChange={(e) => setPartnerName(e.target.value)}
             maxLength={30}
           />
@@ -269,7 +269,7 @@ export default function PartnerSettings() {
           busy={partnerBusy}
           done={savedFlash.done}
           disabled={!isDirty(activeCat)}
-          label={t('profile.save')}
+          label={t('profile.partnerSave')}
           busyLabel={t('profile.saving')}
           doneLabel={t('profile.saved')}
         />
