@@ -875,7 +875,7 @@ export default function Signup() {
               status={otpStatus}
               statusText={
                 otpStatus === 'error'
-                  ? err
+                  ? (typeof err === 'string' ? err : err?.message)
                   : otpStatus === 'success'
                     ? t('signup.otpVerified')
                     : otpMsg || t('signup.otpHint')
