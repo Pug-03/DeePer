@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { loadDeck, keepDeck, markAnswering, clearAnswering } from '../utils/deckMemory.js';
 import { useNavigate } from 'react-router-dom';
 import {
   motion,
@@ -833,9 +834,14 @@ export default function Home() {
   const [level] = useState(getQuestionLevel);
   const levelRef = useRef(level);
   levelRef.current = level;
-  const [deck, setDeck] = useState([]);
-  const [idx, setIdx] = useState(0);
-  const [status, setStatus] = useState('loading'); // loading | ready | error | empty
+  // Back on this tab mid-session, the deck carries on where it was instead of
+  // dealing light cards again (see utils/deckMemory.js).
+  const deckKeyOf = (cat) => `${user?.id}:${cat}:${level}`;
+  const [kept] = useState(() => loadDeck(deckKeyOf(category)));
+  const deckKey = useRef(kept ? deckKeyOf(category) : null);
+  const [deck, setDeck] = useState(kept ? kept.deck : []);
+  const [idx, setIdx] = useState(kept ? kept.idx : 0);
+  const [status, setStatus] = useState(kept ? 'ready' : 'loading'); // loading | ready | error | empty
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   // The swap wrapper clips x from the moment the swap starts until the deck
@@ -875,8 +881,8 @@ export default function Home() {
   // keyboard shortcuts below need this to know not to act on the swipe
   // card hidden underneath it.
   const [dialogOpen, setDialogOpen] = useState(false);
-  const seen = useRef(new Set());
-  const firstLoad = useRef(true);
+  const seen = useRef(kept ? kept.seen : new Set());
+  const firstLoad = useRef(!kept);
   const flyRegistry = useRef(null);
 
   // A top-up already on its way: quick skips through the last few cards
@@ -909,6 +915,7 @@ export default function Home() {
       fresh.forEach((q) => seen.current.add(q.id));
       setDeck((prev) => (reset ? fresh : [...prev, ...fresh]));
       if (reset) {
+        deckKey.current = deckKeyOf(cat);
         setIdx(0);
         setStatus(fresh.length ? 'ready' : 'empty');
       }
@@ -932,6 +939,9 @@ export default function Home() {
   // throwaway first mount) is dropped: applying it showed one question and
   // then swapped it for another a moment later.
   useEffect(() => {
+    clearAnswering();
+    // Only the deck restored on arriving here; a category switch deals fresh.
+    if (deckKey.current === deckKeyOf(category)) return undefined;
     let left = false;
     fetchBatch(category, { reset: true, silent: !firstLoad.current, stale: () => left });
     firstLoad.current = false;
@@ -1028,6 +1038,10 @@ export default function Home() {
   };
 
   const advance = useCallback(() => setIdx((i) => i + 1), []);
+
+  useEffect(() => {
+    if (status === 'ready' && deckKey.current) keepDeck(deckKey.current, deck, idx, seen.current);
+  }, [status, deck, idx]);
   // Set by a quick second tap on ✕: the card that comes up next is skipped as
   // soon as it's on top, so every tap sends exactly one card away.
   const skipNext = useRef(false);
@@ -1056,6 +1070,7 @@ export default function Home() {
 
   const goAnswer = () => {
     if (!current) return;
+    markAnswering(current.id);
     nav('/app/answer', { state: { question: { text: current.text, text_en: current.text_en, category } } });
   };
 

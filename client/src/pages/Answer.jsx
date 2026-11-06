@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
+import { finishAnswering } from '../utils/deckMemory.js';
 import { getCachedList, setCachedList, fetchList } from '../utils/listCache.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
@@ -70,6 +71,7 @@ export default function Answer() {
         if (saved) setCachedList(user?.id, 'saved', saved.filter((x) => x.id !== savedId));
       }
       fetchList(user?.id, 'history', { fresh: true }).catch(() => {});
+      finishAnswering();
       toast(
         <>
           <IcCheck size={16} /> {t('answer.saved')}
