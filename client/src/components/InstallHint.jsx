@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { Share, SquarePlus, EllipsisVertical, X } from 'lucide-react';
 import { useI18n } from '../store/i18n.jsx';
@@ -51,12 +52,17 @@ function hiddenForNow() {
 // The how-to itself: steps for the phone in hand, or the browser's own
 // install button where there is one.
 export function InstallGuide({ onClose }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [clipLang, setClipLang] = useState(lang === 'en' ? 'en' : 'th');
   const closeRef = useRef(null);
   const [canPrompt, setCanPrompt] = useState(!!deferredPrompt);
   const ios = isIOS();
+  // The clip shows an iPhone, so not on Android, where the steps differ.
+  const showClip = !canPrompt && !/Android/.test(navigator.userAgent);
   useEffect(() => {
-    closeRef.current?.focus();
+    // Without preventScroll, focusing the button at the bottom opened a tall guide
+    // scrolled to its end, with the title and clip language out of view.
+    closeRef.current?.focus({ preventScroll: true });
     const onKey = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -81,7 +87,10 @@ export function InstallGuide({ onClose }) {
         [SquarePlus, t('install.android2')],
         [null, t('install.android3')],
       ];
-  return (
+  // On the body, not in the page: the page's own entrance transform would
+  // otherwise make `fixed` measure from the page and push this off-screen
+  // once it's been scrolled.
+  return createPortal(
     <div className="modal-overlay fade-in" onClick={onClose}>
       <div
         className="modal glass glass--red pop-in modal--calm install-guide"
@@ -90,11 +99,40 @@ export function InstallGuide({ onClose }) {
         aria-labelledby="install-title"
         onClick={(e) => e.stopPropagation()}
       >
-        <img className="install-icon" src="/icon-180.png" alt="" width="64" height="64" />
+        {!showClip && <img className="install-icon" src="/icon-180.png" alt="" width="64" height="64" />}
         <h3 className="modal-title" id="install-title">
           {t('install.title')}
         </h3>
         <p className="modal-msg">{t('install.sub')}</p>
+        {showClip && (
+          <div className="install-clip">
+            <div className="lang-seg" role="group" aria-label={t('install.clipLang')}>
+              {['th', 'en'].map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  className={clipLang === l ? 'active' : ''}
+                  aria-pressed={clipLang === l}
+                  onClick={() => setClipLang(l)}
+                >
+                  {l === 'th' ? 'ไทย' : 'EN'}
+                </button>
+              ))}
+            </div>
+            {/* Only loads once played: it's a few MB, and most people opening
+                this just read the steps. */}
+            <video
+              key={clipLang}
+              className="install-video"
+              src={`/install/add-to-home-${clipLang}.mp4`}
+              poster={`/install/add-to-home-${clipLang}.jpg`}
+              controls
+              playsInline
+              preload="none"
+              aria-label={t('install.clipLabel')}
+            />
+          </div>
+        )}
         {canPrompt ? (
           <div className="modal-actions modal-actions--stacked">
             <button ref={closeRef} className="btn btn--ghost" onClick={onClose}>
@@ -127,7 +165,8 @@ export function InstallGuide({ onClose }) {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
