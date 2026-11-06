@@ -327,7 +327,9 @@ html[data-tour] .fade-up {
   color: transparent;
 }
 .hero-tagline {
-  margin: 8px auto 0;
+  /* Negative: the wordmark's tall line box leaves a gap below its glyphs.
+     Desktop sets its own margin in the min-width: 960px block. */
+  margin: -6px auto 0;
   max-width: 300px;
   font-size: 15px;
   line-height: 1.5;
