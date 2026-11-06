@@ -168,7 +168,7 @@ a {
   padding-bottom: calc(122px + var(--safe-b));
 }
 .page--home .deck {
-  min-height: 240px;
+  min-height: 224px;
 }
 
 /* Make route changes visible without moving the persistent bottom nav. */
@@ -1061,9 +1061,11 @@ html[data-tour] .fade-up {
    .deck's flex:1 below has nothing to grow into and the card collapses to
    its min-height. Both layers share the one grid cell. */
 .swap-stage {
+  position: relative;
   flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template: 1fr / 1fr;
+  grid-template: minmax(0, 1fr) / 1fr;
   /* Reaches out over the page's side padding to the screen edges, so the
      clip used while the deck slides away only trims what's off-screen and
      never cuts the cards' red glow (which used to blink off and back). */

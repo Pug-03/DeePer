@@ -1229,7 +1229,15 @@ export default function Home() {
           <motion.div
             // Fills the same space as the deck it replaces, so the page
             // doesn't go empty below a small form.
-            style={{ ...SWAP_LAYER, zIndex: 1, display: 'flex', flexDirection: 'column' }}
+            // Out of the layout while closed: its tall card otherwise held the
+            // stage open and pushed the deck's buttons under the bottom nav.
+            style={{
+              ...SWAP_LAYER,
+              zIndex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              ...(adding ? null : { position: 'absolute', inset: 0 }),
+            }}
             inert={adding ? undefined : ''}
             aria-hidden={!adding}
             // A short drop with a fade, so it settles in place instead of
