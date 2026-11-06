@@ -3959,11 +3959,6 @@ a.social-link:active {
 .dev-team-row-clickable .dev-team-role {
   display: block;
 }
-.dev-team-row-clickable .dev-team-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
 .dev-team-row-clickable:hover,
 .dev-team-row-clickable:focus-visible {
   background-color: rgba(255, 255, 255, 0.05);
@@ -3971,9 +3966,13 @@ a.social-link:active {
 .dev-team-row-clickable:active {
   transform: scale(0.98);
 }
+/* Inline, not a flex sibling: a long name wraps to two lines and a flex row
+   would push the icon out to the far edge instead of after the last word. */
 .dev-team-name-icon {
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: -0.12em;
   color: var(--text-dim);
-  flex-shrink: 0;
   transform-origin: 30% 30%;
   animation: dev-team-tap 2.4s ease-in-out infinite;
 }
@@ -6273,9 +6272,6 @@ html.deep-water body::before {
 }
 .landing-more .dev-team-name {
   font-size: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 .landing-more .dev-team-role {
   font-size: 14.5px;

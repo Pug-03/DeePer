@@ -1271,7 +1271,8 @@ function DevTeamCard({ dev, lang, nav }) {
           {avatar}
           <span className="dev-team-text">
             <span className="dev-team-name">
-              {name}
+              {/* Word joiner: the icon never drops onto a line by itself. */}
+              {name}{'⁠'}
               <IcMousePointer size={17} className="dev-team-name-icon" />
             </span>
             <span className="dev-team-role">{unbreakablePhrases(role)}</span>
