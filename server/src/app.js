@@ -130,6 +130,7 @@ const clientDist = join(__dirname, '..', '..', 'client', 'dist');
 if (fs.existsSync(clientDist)) {
   // index: false so "/" also goes through the fallback below and gets its
   // page-specific title and content.
+  app.use('/assets', express.static(join(clientDist, 'assets'), { immutable: true, maxAge: '1y', fallthrough: false }));
   app.use(express.static(clientDist, { index: false }));
   const indexHtml = fs.readFileSync(join(clientDist, 'index.html'), 'utf8');
   app.get('*', (req, res, next) => {
