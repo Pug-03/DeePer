@@ -1920,6 +1920,7 @@ export default function Welcome() {
       {/* Below the fold, every piece rises in on its own as it scrolls into
           view — dividers, headings, paragraphs, each feature row, each
           developer, each sponsor tier — one after another, not a whole
+        <div className="hero-air" aria-hidden="true" />
           section at once (same as the iOS app's WelcomeView). */}
       <div className="landing-more">
 

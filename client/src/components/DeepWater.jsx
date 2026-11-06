@@ -32,7 +32,7 @@ uniform float u_surf;
 uniform float u_rise;
 uniform float u_orb;
 uniform vec3 u_light;   // xy: where the visitor's light is (uv), z: how strong
-uniform float u_air;    // 1: draw the air and the surface line; 0: water only
+uniform float u_caus;   // 1: draw the caustic ripple; 0: skip it (phones)
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -73,12 +73,6 @@ void main() {
   vec2 q = vec2((uv.x - 0.5) * aspect, uv.y);
   float t = u_time;
 
-  // Above the water: the page's own backdrop (the body::before gradient
-  // with its red glow at the top), so the hero looks exactly as before.
-  vec3 air = mix(vec3(0.071, 0.039, 0.055), vec3(0.059, 0.055, 0.071), uv.y);
-  vec2 g = (uv - vec2(0.5, 1.1)) * vec2(u_res.x / 1200.0, u_res.y / 700.0);
-  air += vec3(0.957, 0.247, 0.369) * 0.16 * smoothstep(0.6, 0.0, length(g));
-
   float wave = sin(q.x * 9.0 + t * 0.9) * 0.006 + sin(q.x * 23.0 - t * 1.3) * 0.003;
   float surf = u_surf + wave;
   float dist = max(surf - uv.y, 0.0);          // screen heights below the surface
@@ -89,12 +83,9 @@ void main() {
   vec3 deep = mix(vec3(0.03, 0.012, 0.022), vec3(0.08, 0.026, 0.05), uv.y);
   vec3 col = mix(deep, shallow, lit);
 
-  // The surface itself: a bright rippling band right under the line.
-  // Phones (u_air 0: the hero draws the surface there) skip the caustic,
-  // the costliest part of the scene, which they'd barely show anyway.
-  float caus = u_air > 0.5 ? caustic(vec2(q.x * 0.6, uv.y * 0.35 + u_rise * 0.25), t * 0.35) : 0.0;
-  float band = exp(-dist * 9.0);
-  col += vec3(1.0, 0.42, 0.5) * band * (0.35 + caus * 0.55) * u_air;
+  // Light rippling just under the surface. Phones skip the caustic, the
+  // costliest part of the scene, which they'd barely show anyway.
+  float caus = u_caus > 0.5 ? caustic(vec2(q.x * 0.6, uv.y * 0.35 + u_rise * 0.25), t * 0.35) : 0.0;
   col += vec3(0.9, 0.3, 0.4) * caus * 0.07 * exp(-dist * 2.2);
 
   // Soft, uneven beams swaying down from the surface.
@@ -127,8 +118,7 @@ void main() {
   float v = smoothstep(1.25, 0.25, length((uv - 0.5) * vec2(aspect * 0.7, 1.0)));
   col *= mix(0.6, 1.0, v);
 
-  float above = smoothstep(surf - 0.004, surf + 0.012, uv.y);
-  gl_FragColor = vec4(mix(col, air, above * u_air), 1.0);
+  gl_FragColor = vec4(col, 1.0);
 }
 `;
 
@@ -158,7 +148,7 @@ function makeWater(canvas) {
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const coarse = window.matchMedia('(pointer: coarse)').matches;
   const u = Object.fromEntries(
-    ['res', 'time', 'surf', 'rise', 'orb', 'light', 'air'].map((k) => [k, gl.getUniformLocation(prog, `u_${k}`)]),
+    ['res', 'time', 'surf', 'rise', 'orb', 'light', 'caus'].map((k) => [k, gl.getUniformLocation(prog, `u_${k}`)]),
   );
   return {
     resize() {
@@ -176,9 +166,9 @@ function makeWater(canvas) {
         gl.viewport(0, 0, w, h);
       }
     },
-    draw(time, surf, rise, orb, light, air) {
+    draw(time, surf, rise, orb, light) {
       gl.uniform3f(u.light, light.x, light.y, light.z);
-      gl.uniform1f(u.air, air);
+      gl.uniform1f(u.caus, coarse ? 0 : 1);
       gl.uniform2f(u.res, canvas.width, canvas.height);
       gl.uniform1f(u.time, time);
       gl.uniform1f(u.surf, surf);
@@ -211,14 +201,13 @@ export default function DeepWater() {
     if (!water) return undefined;
     const root = document.documentElement;
     root.classList.add('deep-water');
-    // On touch screens the page scrolls on the phone's own scroller, which
-    // runs ahead of anything drawn here, so a surface line drawn in the
-    // canvas trailed the hero's buttons and wobbled mid-swipe. There the
-    // canvas draws only the water and the hero itself carries the air and
-    // the surface line (.deep-water--native-surface in styles.css), so the
-    // line moves exactly with the page.
-    const nativeSurface = window.matchMedia('(pointer: coarse)').matches;
-    root.classList.toggle('deep-water--native-surface', nativeSurface);
+    // The canvas draws only the water. The hero itself carries the air and
+    // the surface line (.deep-water--native-surface in styles.css), crisp at
+    // any size and moving exactly with the page: on a touch screen the page
+    // scrolls on the phone's own scroller, which runs ahead of anything
+    // drawn here, so a line drawn in the canvas wobbled mid-swipe.
+    root.classList.add('deep-water--native-surface');
+    const touch = window.matchMedia('(pointer: coarse)').matches;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const start = performance.now();
     let frame = 0;
@@ -275,7 +264,7 @@ export default function DeepWater() {
       // On a phone the specks drift on their own and don't rise with the
       // scroll: the canvas learns the scroll late and unevenly there, so
       // specks tied to it hopped while the page itself slid smoothly.
-      water.draw(reduce ? 0 : (now - start) / 1000, rest + y / H, nativeSurface ? 0 : y / H, orb, light, nativeSurface ? 0 : 1);
+      water.draw(reduce ? 0 : (now - start) / 1000, rest + y / H, touch ? 0 : y / H, orb, light);
       if (!reduce && !document.hidden) frame = requestAnimationFrame(tick);
     };
     const kick = () => {
