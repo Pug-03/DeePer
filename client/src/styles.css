@@ -6077,19 +6077,21 @@ html.deep-water body::before {
   will-change: transform, opacity;
   animation: floatBob 6s ease-in-out infinite;
 }
-.landing-more .feature-row:nth-child(2n),
-.landing-more .social-link:nth-child(2n),
-.landing-more .dev-team-entry:nth-child(2n) {
-  animation-delay: -2s;
-}
-.landing-more .feature-row:nth-child(3n),
-.landing-more .social-link:nth-child(3n),
-.landing-more .dev-team-entry:nth-child(3n) {
-  animation-delay: -4s;
-}
+/* A wave down the list: each row a beat behind the one above, in order. */
+.landing-more .feature-row:nth-child(2),
+.landing-more .social-link:nth-child(2),
+.landing-more .dev-team-entry:nth-child(2) { animation-delay: -5.5s; }
+.landing-more .feature-row:nth-child(3),
+.landing-more .social-link:nth-child(3),
+.landing-more .dev-team-entry:nth-child(3) { animation-delay: -5s; }
+.landing-more .feature-row:nth-child(4) { animation-delay: -4.5s; }
+.landing-more .feature-row:nth-child(5) { animation-delay: -4s; }
+.landing-more .feature-row:nth-child(6) { animation-delay: -3.5s; }
+.landing-more .feature-row:nth-child(7) { animation-delay: -3s; }
+.landing-more .feature-row:nth-child(8) { animation-delay: -2.5s; }
 @keyframes floatBob {
   0%, 100% { translate: 0 0; }
-  50% { translate: 0 -7px; }
+  50% { translate: 0 -3.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .landing-more .feature-row,
