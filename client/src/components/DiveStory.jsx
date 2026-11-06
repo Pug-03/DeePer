@@ -102,7 +102,9 @@ export default function DiveStory() {
           bubbles.forEach((b, j) => {
             const k = (p - BUBBLES[j].start) / BUBBLE_RUN;
             const o = smooth(0, 0.18, k) * (1 - smooth(0.7, 1, k));
-            const y = (0.55 - k) * vh * 1.15;
+            // On a phone a shorter rise: about twice the finger's speed
+            // rather than four times, which made the sharp text judder.
+            const y = soft ? (0.55 - k) * vh * 1.15 : (0.6 - k) * vh * 0.6;
             b.style.opacity = o.toFixed(3);
             b.style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${BUBBLES[j].scale})`;
           });
