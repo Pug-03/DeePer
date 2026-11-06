@@ -483,6 +483,10 @@ export const STRINGS = {
     'confirm.partnerAvatarMsg': 'ต้องการลบรูปของอีกฝ่ายจริงหรือไม่?',
     'answer.save': 'บันทึกคำตอบ',
     'answer.saving': 'กำลังบันทึก...',
+    'answer.leaveTitle': 'ออกโดยไม่บันทึกไหม?',
+    'answer.leaveMsg': 'คำตอบที่เขียนไว้จะหายไป',
+    'answer.leaveYes': 'ออก',
+    'answer.leaveNo': 'เขียนต่อ',
     // Non-breaking space before the trailing "นะ" so it can't be
     // stranded alone on its own line.
     'answer.needOne': `กรอกคำตอบอย่างน้อย${keepWord('หนึ่ง')}ช่องก่อน นะ`,
@@ -1151,6 +1155,10 @@ export const STRINGS = {
     'confirm.partnerAvatarMsg': 'Remove this photo?',
     'answer.save': 'Save answer',
     'answer.saving': 'Saving...',
+    'answer.leaveTitle': 'Leave without saving?',
+    'answer.leaveMsg': 'What you wrote will be lost.',
+    'answer.leaveYes': 'Leave',
+    'answer.leaveNo': 'Keep writing',
     'answer.needOne': 'Fill in at least one answer first',
     'answer.saved': 'Answer saved to history',
 

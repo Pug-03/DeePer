@@ -6,7 +6,7 @@ import { getCachedList, setCachedList, fetchList } from '../utils/listCache.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
 import { displayName, questionText, partnerLabel } from '../util.js';
-import { useToast } from '../components/ui.jsx';
+import { useToast, useConfirm } from '../components/ui.jsx';
 import { IcBack, IcCheck } from '../components/icons.jsx';
 
 export default function Answer() {
@@ -15,6 +15,7 @@ export default function Answer() {
   const { user } = useAuth();
   const { t, lang } = useI18n();
   const toast = useToast();
+  const confirm = useConfirm();
 
   const q = loc.state?.question;
   const savedId = loc.state?.savedId || null;
@@ -85,9 +86,24 @@ export default function Answer() {
     }
   };
 
+  const goBack = async () => {
+    const edited = myAnswer !== (preset?.my_answer || '') || partnerAnswer !== (preset?.partner_answer || '');
+    if (edited && (myAnswer.trim() || partnerAnswer.trim())) {
+      const leave = await confirm({
+        title: t('answer.leaveTitle'),
+        message: t('answer.leaveMsg'),
+        confirmText: t('answer.leaveYes'),
+        cancelText: t('answer.leaveNo'),
+        danger: false,
+      });
+      if (!leave) return;
+    }
+    nav(-1);
+  };
+
   return (
     <div className="page stagger">
-      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 14 }} onClick={() => nav(-1)}>
+      <button className="link back-btn" style={{ alignSelf: 'flex-start', marginBottom: 14 }} onClick={goBack}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <IcBack size={20} /> {t('common.back')}
         </span>
