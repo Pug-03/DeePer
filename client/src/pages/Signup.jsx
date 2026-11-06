@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api.js';
+import { useLaunch } from '../launch.js';
 import { setAdminToken } from '../admin/adminApi.js';
 import { useAuth } from '../store/auth.jsx';
 import { useI18n } from '../store/i18n.jsx';
@@ -272,7 +273,10 @@ export default function Signup() {
       setBusy(false);
     }
   };
-  const needInvite = config.invite_required && !inviteOk;
+  // Launch opens signup on its own; a tab open since before then still holds
+  // the config it loaded back then.
+  const { launched } = useLaunch();
+  const needInvite = config.invite_required && !inviteOk && !launched;
 
   useEffect(() => {
     if (!inviteLockedUntil) return undefined;
