@@ -95,6 +95,10 @@ export default function Answer() {
         <p style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.5, textAlign: 'center' }}>{questionText(q.text, q.text_en, lang)}</p>
       </div>
 
+      {/* A first-timer can't tell from the tabs alone that this is one shared
+          phone, or that either person can open the other's answer. */}
+      <p className="answer-note">{t('answer.howTo', { name: pName })}</p>
+
       {/* turn toggle — one device, take turns */}
       <div className="turn-tabs">
         <button
@@ -113,10 +117,6 @@ export default function Answer() {
           onClick={() => setTurn('partner')}
         >
           <span className="turn-dot" style={{ background: partnerColor }} />
-      {/* A first-timer can't tell from the tabs alone that this is one shared
-          phone, or that either person can open the other's answer. */}
-      <p className="answer-note">{t('answer.howTo', { name: pName })}</p>
-
           {pName}
           {partnerAnswer.trim() && <IcCheck size={14} />}
         </button>
@@ -180,8 +180,8 @@ export default function Answer() {
         <button className="btn btn--primary" onClick={save} disabled={busy}>
           {busy ? t('answer.saving') : t('answer.save')}
         </button>
+        <p className="answer-note">{t('answer.saveHint')}</p>
       </div>
     </div>
   );
 }
-        <p className="answer-note">{t('answer.saveHint')}</p>
